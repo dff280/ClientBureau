@@ -1,0 +1,16 @@
+.next
+node_modules
+npm-debug.log*
+.env
+.env.*
+!.env.production.example
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+Caddyfile
+next-dev.log
+next-dev.err.log
+next-start.log
+next-start.err.log
+coverage

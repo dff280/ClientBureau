@@ -1,0 +1,32 @@
+services:
+  client-bureau:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    networks:
+      - client-bureau
+
+  caddy:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    depends_on:
+      - client-bureau
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - client-bureau
+
+networks:
+  client-bureau:
+
+volumes:
+  caddy_data:
+  caddy_config:

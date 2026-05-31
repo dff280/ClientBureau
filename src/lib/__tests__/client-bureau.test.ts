@@ -1,0 +1,171 @@
+import { describe, expect, it } from "vitest"
+
+import { formDataToObject } from "@/lib/actions/result"
+import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
+import { calculateClientBureauScore, scoreToRiskLevel } from "@/lib/scoring"
+import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
+import {
+  getPublicClientProfile,
+  searchClients,
+  simulateApprovalPublication,
+  simulateSubmittedClientReport,
+} from "@/lib/repositories/client-bureau"
+import type { ClientReport } from "@/lib/types"
+
+const baseReport: ClientReport = {
+  id: "report_test",
+  contractorId: "contractor_test",
+  clientId: "client_test",
+  projectType: "Roof repair",
+  projectCity: "Orlando",
+  projectState: "FL",
+  contractAmount: 10000,
+  amountUnpaid: 0,
+  reportCategory: "Positive experience",
+  paymentStatus: "Paid on schedule",
+  reportSummary: "Contractor-submitted report states payment was made on schedule.",
+  detailedExperience: "Detailed test report.",
+  publicSummary: "Contractor-submitted report states payment was made on schedule.",
+  evidenceAttached: false,
+  status: "approved",
+  createdAt: "2026-01-01T00:00:00.000Z",
+}
+
+describe("Client Bureau scoring", () => {
+  it("maps scores to expected risk levels", () => {
+    expect(scoreToRiskLevel(91)).toBe("Low")
+    expect(scoreToRiskLevel(72)).toBe("Moderate")
+    expect(scoreToRiskLevel(52)).toBe("Elevated")
+    expect(scoreToRiskLevel(30)).toBe("High")
+  })
+
+  it("penalizes non-payment reports and rewards positive reports", () => {
+    const positive = calculateClientBureauScore([baseReport])
+    const nonPayment = calculateClientBureauScore([
+      {
+        ...baseReport,
+        id: "report_nonpayment",
+        amountUnpaid: 4500,
+        reportCategory: "Non-payment",
+      },
+    ])
+
+    expect(positive.score).toBeGreaterThan(nonPayment.score)
+    expect(nonPayment.riskLevel).toBe("Elevated")
+  })
+})
+
+describe("slug generation", () => {
+  it("creates canonical client profile slugs", () => {
+    expect(
+      buildClientSlug({
+        firstName: "John",
+        lastName: "Smith",
+        city: "Orlando",
+        state: "FL",
+      }),
+    ).toBe("john-smith-orlando-fl")
+  })
+
+  it("deduplicates slug collisions", () => {
+    expect(ensureUniqueSlug("john-smith-orlando-fl", ["john-smith-orlando-fl"])).toBe(
+      "john-smith-orlando-fl-2",
+    )
+  })
+})
+
+describe("search and public profiles", () => {
+  it("ranks matching search results and preserves private identifier language", () => {
+    const results = searchClients("John", { state: "FL" })
+
+    expect(results[0]?.publicSlug).toBe("john-smith-orlando-fl")
+    expect(results[0]?.matchScore).toBeGreaterThan(0)
+    expect(results[0]?.matchedBy).toContain("Name")
+  })
+
+  it("only returns public profile data with reviewable reports", () => {
+    const profile = getPublicClientProfile("daniel-reed-austin-tx")
+
+    expect(profile).toBeDefined()
+    expect(profile?.reports.every((report) => ["approved", "disputed"].includes(report.status))).toBe(true)
+    expect(JSON.stringify(profile)).not.toContain("@")
+  })
+})
+
+describe("schemas and mock actions", () => {
+  it("validates report submission and rejects impossible unpaid amounts", () => {
+    const parsed = clientReportSchema.safeParse({
+      firstName: "Alex",
+      lastName: "Morris",
+      city: "Miami",
+      state: "FL",
+      projectType: "Tile repair",
+      projectCity: "Miami",
+      projectState: "FL",
+      contractAmount: 1000,
+      amountUnpaid: 1200,
+      reportCategory: "Non-payment",
+      paymentStatus: "Final invoice unpaid",
+      reportSummary: "A contractor-submitted report states final invoice payment remains unresolved.",
+      detailedExperience:
+        "The contractor reported documented completion, invoice delivery, and follow-up messages.",
+    })
+
+    expect(parsed.success).toBe(false)
+  })
+
+  it("accepts client response requests with factual context", () => {
+    expect(
+      clientResponseSchema.safeParse({
+        name: "John Smith",
+        email: "john@example.com",
+        profileUrl: "/client/john-smith-orlando-fl",
+        requestType: "Dispute a report",
+        responseSummary:
+          "The client states payment timing was connected to a requested documentation review.",
+      }).success,
+    ).toBe(true)
+  })
+
+  it("converts form data and creates pending mock reports", () => {
+    const formData = new FormData()
+    formData.set("firstName", "Alex")
+    formData.set("lastName", "Morris")
+
+    expect(formDataToObject(formData)).toEqual({
+      firstName: "Alex",
+      lastName: "Morris",
+    })
+
+    const report = simulateSubmittedClientReport({
+      firstName: "Alex",
+      lastName: "Morris",
+      city: "Miami",
+      state: "FL",
+      projectType: "Tile repair",
+      projectCity: "Miami",
+      projectState: "FL",
+      contractAmount: 1000,
+      amountUnpaid: 250,
+      reportCategory: "Late payment",
+      paymentStatus: "Paid after reminders",
+      reportSummary: "A contractor-submitted report states payment was received after reminders.",
+      detailedExperience:
+        "The contractor reported documented reminders and eventual payment after invoice follow-up.",
+    })
+
+    expect(report.status).toBe("pending")
+    expect(report.moderationNote).toContain("/client/alex-morris-miami-fl")
+  })
+
+  it("simulates approval publication with score recalculation", () => {
+    const audit = simulateApprovalPublication(
+      "report_07",
+      "A contractor-submitted report describes repeated access cancellations before work could begin.",
+    )
+
+    expect(audit?.nextIsPublic).toBe(true)
+    expect(audit?.generatedSlug).toBe("elaine-parker-nashville-tn")
+    expect(audit?.recalculatedScore).toBeGreaterThan(0)
+  })
+})
