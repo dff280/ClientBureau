@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useActionState, useCallback, useEffect, useMemo, useState } from "react"
 import {
   AlertTriangle,
@@ -387,7 +386,6 @@ function ModerationWorkspace({
   item: AdminReviewItem
   onResolved: (status: AdminReview["status"]) => void
 }) {
-  const router = useRouter()
   const [state, action] = useActionState(reviewReportAction, initialReviewState)
   const report = item.report
   const client = item.client
@@ -405,9 +403,8 @@ function ModerationWorkspace({
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
     if (state.ok) {
       onResolved(state.data.status)
-      router.refresh()
     }
-  }, [onResolved, router, state])
+  }, [onResolved, state])
 
   return (
     <section className="rounded-md border border-slate-200 bg-white shadow-sm">

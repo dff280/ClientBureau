@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useActionState, useEffect } from "react"
 import { toast } from "sonner"
 
@@ -17,12 +18,16 @@ const initialUserState: ActionResult<User> = {
   message: "",
 }
 
-export function LoginForm() {
+export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+  const router = useRouter()
   const [state, action] = useActionState(mockLoginAction, initialUserState)
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
-  }, [state])
+    if (state.ok) {
+      router.replace(redirectTo ?? (state.data.role === "admin" ? "/admin" : "/dashboard"))
+    }
+  }, [redirectTo, router, state])
 
   return (
     <form action={action} className="grid gap-4">

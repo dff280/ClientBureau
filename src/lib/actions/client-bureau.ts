@@ -51,6 +51,14 @@ function evidenceFilesFromForm(formData: FormData) {
     .filter((value): value is File => value instanceof File && value.size > 0)
 }
 
+function actionErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof Error && error.message) {
+    return `${fallback} ${error.message}`
+  }
+
+  return fallback
+}
+
 export async function submitClientReportAction(
   _previousState: ActionResult<ClientReport>,
   formData: FormData,
@@ -245,12 +253,18 @@ export async function reviewReportAction(
     return fail("Your admin session expired. Refresh, log in, and try the moderation action again.")
   }
 
-  const review = await reviewReportService(
-    parsed.data.reportId,
-    parsed.data.decision,
-    parsed.data.editedPublicSummary,
-    admin.id,
-  )
+  let review: AdminReview
+
+  try {
+    review = await reviewReportService(
+      parsed.data.reportId,
+      parsed.data.decision,
+      parsed.data.editedPublicSummary,
+      admin.id,
+    )
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Moderation could not be saved."))
+  }
 
   revalidatePath("/admin/reviews")
   revalidatePath("/admin/reports")
@@ -286,7 +300,13 @@ export async function bulkReviewReportsAction(
     return fail("Your admin session expired. Refresh, log in, and try the bulk action again.")
   }
 
-  const result = await reviewReportsBulkService(parsed.data.reportIds, parsed.data.decision, admin.id)
+  let result: { updated: AdminReview[]; deletedIds: string[] }
+
+  try {
+    result = await reviewReportsBulkService(parsed.data.reportIds, parsed.data.decision, admin.id)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Bulk moderation could not be saved."))
+  }
 
   revalidatePath("/admin")
   revalidatePath("/admin/reports")
@@ -339,12 +359,18 @@ export async function adminDiscussionReviewAction(
     return fail("Your admin session expired. Refresh, log in, and try the discussion action again.")
   }
 
-  const discussion = await reviewCommunityDiscussionService(
-    parsed.data.discussionId,
-    parsed.data.decision,
-    parsed.data.moderatorNote,
-    admin,
-  )
+  let discussion: CommunityDiscussion | undefined
+
+  try {
+    discussion = await reviewCommunityDiscussionService(
+      parsed.data.discussionId,
+      parsed.data.decision,
+      parsed.data.moderatorNote,
+      admin,
+    )
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Discussion moderation could not be saved."))
+  }
 
   revalidatePath("/admin")
   revalidatePath("/admin/discussions")
@@ -378,7 +404,13 @@ export async function adminUpdateClientAction(
     return fail("Your admin session expired. Refresh, log in, and try editing again.")
   }
 
-  const client = await updateAdminClientRecordService({ ...parsed.data, reviewer: admin })
+  let client: ClientProfile
+
+  try {
+    client = await updateAdminClientRecordService({ ...parsed.data, reviewer: admin })
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Client profile could not be updated."))
+  }
 
   revalidatePath("/admin/clients")
   revalidatePath("/admin/audit-log")
@@ -405,7 +437,13 @@ export async function adminUpdateContractorAction(
     return fail("Your admin session expired. Refresh, log in, and try editing again.")
   }
 
-  const contractor = await updateAdminContractorRecordService({ ...parsed.data, reviewer: admin })
+  let contractor: ContractorProfile
+
+  try {
+    contractor = await updateAdminContractorRecordService({ ...parsed.data, reviewer: admin })
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Contractor profile could not be updated."))
+  }
 
   revalidatePath("/admin/contractors")
   revalidatePath("/admin/audit-log")
@@ -429,7 +467,13 @@ export async function adminDeleteRecordAction(
     return fail("Your admin session expired. Refresh, log in, and try deleting again.")
   }
 
-  const result = await deleteAdminRecordService(parsed.data.entityType, parsed.data.entityId, admin)
+  let result: AuditLogEntry | boolean
+
+  try {
+    result = await deleteAdminRecordService(parsed.data.entityType, parsed.data.entityId, admin)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Record could not be deleted."))
+  }
 
   revalidatePath("/admin")
   revalidatePath(`/admin/${parsed.data.entityType}s`)
@@ -473,28 +517,32 @@ export async function bulkUploadImportAction(
       : "Other"
     const amount = Number(row.amount ?? 0)
 
-    await submitClientReportService(
-      {
-        firstName: firstName || "Unknown",
-        lastName: lastParts.join(" ") || "Client",
-        businessName: undefined,
-        email: "",
-        phone: undefined,
-        city: String(row.city ?? "Unknown"),
-        state: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
-        projectType: reportType,
-        projectCity: String(row.city ?? "Unknown"),
-        projectState: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
-        contractAmount: amount,
-        amountUnpaid: amount,
-        reportCategory,
-        paymentStatus: String(row.status ?? "Pending admin import"),
-        reportSummary: String(row.summary ?? ""),
-        detailedExperience: String(row.notes ?? row.summary ?? ""),
-        evidenceAttached: false,
-      },
-      admin.id,
-    )
+    try {
+      await submitClientReportService(
+        {
+          firstName: firstName || "Unknown",
+          lastName: lastParts.join(" ") || "Client",
+          businessName: undefined,
+          email: "",
+          phone: undefined,
+          city: String(row.city ?? "Unknown"),
+          state: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
+          projectType: reportType,
+          projectCity: String(row.city ?? "Unknown"),
+          projectState: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
+          contractAmount: amount,
+          amountUnpaid: amount,
+          reportCategory,
+          paymentStatus: String(row.status ?? "Pending admin import"),
+          reportSummary: String(row.summary ?? ""),
+          detailedExperience: String(row.notes ?? row.summary ?? ""),
+          evidenceAttached: false,
+        },
+        admin.id,
+      )
+    } catch (error) {
+      return fail(actionErrorMessage(error, `CSV row for ${clientName || "unknown client"} could not be imported.`))
+    }
   }
 
   revalidatePath("/admin")

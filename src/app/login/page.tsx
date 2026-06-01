@@ -13,7 +13,14 @@ export const metadata: Metadata = {
   },
 }
 
-export default function LoginPage() {
+type LoginPageProps = {
+  searchParams: Promise<Partial<Record<"next", string>>>
+}
+
+export default async function LoginPage({ searchParams }: LoginPageProps) {
+  const next = (await searchParams).next
+  const redirectTo = next?.startsWith("/") && !next.startsWith("//") ? next : undefined
+
   return (
     <section className="bureau-section bg-slate-100">
       <div className="bureau-container flex justify-center">
@@ -26,7 +33,7 @@ export default function LoginPage() {
             </p>
           </CardHeader>
           <CardContent>
-            <LoginForm />
+            <LoginForm redirectTo={redirectTo} />
           </CardContent>
         </Card>
       </div>
