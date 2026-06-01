@@ -32,13 +32,13 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SECRET_KEY` or service role key
 5. Create the first admin by signing up normally, then update the `users.role` value to `admin` in Supabase.
+6. For extra protection against accidental role drift, add your owner email to `ADMIN_EMAILS` in `.env.production`.
 
 Admin promotion SQL:
 
 ```sql
-update public.users
-set role = 'admin'
-where email = 'YOUR_ADMIN_EMAIL@example.com';
+-- Prefer running supabase/admin-promote.sql.
+-- It creates the public.users row from auth.users if needed and sets role=admin.
 ```
 
 Then log out and log back in. The admin app is:
@@ -137,6 +137,7 @@ STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_PRO_MONTHLY=price_...
 STRIPE_PRICE_TEAM_MONTHLY=price_...
 NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=...
+ADMIN_EMAILS=owner@example.com
 ```
 
 Generate the server action encryption key:
@@ -228,11 +229,7 @@ After creating a contractor account and submitting a test report:
 
 1. Promote your admin account in Supabase:
 
-```sql
-update public.users
-set role = 'admin'
-where email = 'YOUR_ADMIN_EMAIL@example.com';
-```
+Run `supabase/admin-promote.sql` in Supabase SQL Editor after replacing `YOUR_ADMIN_EMAIL@example.com`.
 
 2. Open `https://clientbureau.com/admin/reports`.
 3. Edit the public summary so it uses reported-experience language.

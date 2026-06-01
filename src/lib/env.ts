@@ -12,6 +12,7 @@ const envSchema = z.object({
   STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
   STRIPE_PRICE_TEAM_MONTHLY: z.string().optional(),
   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: z.string().optional(),
+  ADMIN_EMAILS: z.string().optional(),
 })
 
 export type DataMode = "mock" | "supabase"
@@ -44,6 +45,13 @@ export function getStripeSecretKey() {
 
 export function getStripeWebhookSecret() {
   return readEnv().STRIPE_WEBHOOK_SECRET
+}
+
+export function getAdminEmails() {
+  return (readEnv().ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
 }
 
 export function requireProductionEnv(keys: string[]) {

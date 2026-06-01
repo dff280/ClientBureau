@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
 import type { Database } from "@/lib/database.types"
-import { getDataMode } from "@/lib/env"
+import { getAdminEmails, getDataMode } from "@/lib/env"
 import { users } from "@/lib/mock-data"
 import { hasSupabaseServiceConfig } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
@@ -30,6 +30,32 @@ function mapUser(row: UserRow): User {
   }
 }
 
+function isConfiguredAdminEmail(email?: string | null) {
+  if (!email) return false
+
+  return getAdminEmails().includes(email.trim().toLowerCase())
+}
+
+function fallbackUserFromAuth(user: {
+  id: string
+  email?: string | null
+  user_metadata: Record<string, unknown>
+  created_at: string
+}): User {
+  const fullName =
+    typeof user.user_metadata.full_name === "string"
+      ? user.user_metadata.full_name
+      : user.email ?? "Client Bureau user"
+
+  return {
+    id: user.id,
+    email: user.email ?? "",
+    fullName,
+    role: isConfiguredAdminEmail(user.email) ? "admin" : "contractor",
+    createdAt: user.created_at,
+  }
+}
+
 async function getUserProfile(userId: string, requestClient: Awaited<ReturnType<typeof createClient>>) {
   if (hasSupabaseServiceConfig()) {
     const service = createServiceClient()
@@ -41,6 +67,29 @@ async function getUserProfile(userId: string, requestClient: Awaited<ReturnType<
   }
 
   const { data, error } = await requestClient.from("users").select("*").eq("id", userId).maybeSingle()
+
+  if (error) throw new Error(error.message)
+
+  return data
+}
+
+async function upsertConfiguredAdminProfile(user: ReturnType<typeof fallbackUserFromAuth>) {
+  if (!hasSupabaseServiceConfig() || !isConfiguredAdminEmail(user.email)) return null
+
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from("users")
+    .upsert(
+      {
+        id: user.id,
+        email: user.email,
+        full_name: user.fullName,
+        role: "admin",
+      },
+      { onConflict: "id" },
+    )
+    .select("*")
+    .single()
 
   if (error) throw new Error(error.message)
 
@@ -60,19 +109,15 @@ export async function getCurrentUser(role: UserRole = "contractor"): Promise<Use
 
   if (error || !user) return null
 
+  const fallbackUser = fallbackUserFromAuth(user)
+  const configuredAdminProfile = await upsertConfiguredAdminProfile(fallbackUser)
+
+  if (configuredAdminProfile) return mapUser(configuredAdminProfile)
+
   const profile = await getUserProfile(user.id, supabase)
 
   if (!profile) {
-    return {
-      id: user.id,
-      email: user.email ?? "",
-      fullName:
-        typeof user.user_metadata.full_name === "string"
-          ? user.user_metadata.full_name
-          : user.email ?? "Client Bureau user",
-      role: "contractor",
-      createdAt: user.created_at,
-    }
+    return fallbackUser
   }
 
   return mapUser(profile)
