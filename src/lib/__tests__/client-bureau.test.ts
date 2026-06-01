@@ -4,6 +4,7 @@ import { formDataToObject } from "@/lib/actions/result"
 import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
 import { calculateClientBureauScore, scoreToRiskLevel } from "@/lib/scoring"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
+import { getInternalRedirectUrl } from "@/lib/urls"
 import {
   getPublicClientProfile,
   searchClients,
@@ -70,6 +71,27 @@ describe("slug generation", () => {
   it("deduplicates slug collisions", () => {
     expect(ensureUniqueSlug("john-smith-orlando-fl", ["john-smith-orlando-fl"])).toBe(
       "john-smith-orlando-fl-2",
+    )
+  })
+})
+
+describe("deployment URL helpers", () => {
+  it("does not redirect users to the internal Docker listener", () => {
+    const request = new Request("https://0.0.0.0:3000/api/auth/login")
+
+    expect(getInternalRedirectUrl("/admin", request).toString()).toBe("https://clientbureau.com/admin")
+  })
+
+  it("prefers the forwarded public host when Caddy provides it", () => {
+    const request = new Request("http://0.0.0.0:3000/api/auth/login", {
+      headers: {
+        "x-forwarded-host": "clientbureau.com",
+        "x-forwarded-proto": "https",
+      },
+    })
+
+    expect(getInternalRedirectUrl("/admin/reports", request).toString()).toBe(
+      "https://clientbureau.com/admin/reports",
     )
   })
 })

@@ -17,5 +17,9 @@ clientbureau.com, www.clientbureau.com {
 	@www host www.clientbureau.com
 	redir @www https://clientbureau.com{uri} permanent
 
-	reverse_proxy client-bureau:3000
+	reverse_proxy client-bureau:3000 {
+		header_up Host {host}
+		header_up X-Forwarded-Host {host}
+		header_up X-Forwarded-Proto {scheme}
+	}
 }

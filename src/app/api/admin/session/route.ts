@@ -37,7 +37,9 @@ export async function GET() {
           : "Set ADMIN_EMAILS on the VPS, rebuild, then log in at /login?next=/admin in this same browser."
         : "An auth cookie reached the server, but Supabase did not accept it. Log in again to refresh the session."
       : isAdmin
-        ? "Admin session is valid."
+        ? adminEmailAllowlistConfigured
+          ? "Admin session is valid."
+          : "Admin session is valid. Add ADMIN_EMAILS on the VPS so this account can self-repair if the role row drifts."
         : adminEmailAllowlistConfigured
           ? "This user is signed in but not admin. Confirm the email is in ADMIN_EMAILS and public.users has role=admin."
           : "This user is signed in but not admin. Set ADMIN_EMAILS or promote this email in public.users.",

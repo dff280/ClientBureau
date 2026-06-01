@@ -5,9 +5,10 @@ import { formDataToObject } from "@/lib/actions/result"
 import { getDataMode } from "@/lib/env"
 import { loginSchema } from "@/lib/schemas/client-bureau"
 import { createClient } from "@/lib/supabase/server"
+import { getInternalRedirectUrl } from "@/lib/urls"
 
 function redirectToLogin(request: Request, params: Record<string, string>) {
-  const url = new URL("/login", request.url)
+  const url = getInternalRedirectUrl("/login", request)
 
   for (const [key, value] of Object.entries(params)) {
     if (value) url.searchParams.set(key, value)
@@ -17,7 +18,7 @@ function redirectToLogin(request: Request, params: Record<string, string>) {
 }
 
 function redirectToPath(request: Request, path: string) {
-  return NextResponse.redirect(new URL(path, request.url), { status: 303 })
+  return NextResponse.redirect(getInternalRedirectUrl(path, request), { status: 303 })
 }
 
 export async function POST(request: Request) {
