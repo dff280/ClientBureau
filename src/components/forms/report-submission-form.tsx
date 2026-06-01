@@ -161,13 +161,20 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         <Label htmlFor="evidence">Evidence uploads</Label>
         <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-5">
           <UploadCloud className="mb-2 size-6 text-slate-500" aria-hidden="true" />
-          <Input id="evidence" name="evidence" type="file" multiple className="bg-white" />
+          <Input
+            id="evidence"
+            name="evidence"
+            type="file"
+            multiple
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.doc,.docx,image/*,application/pdf"
+            className="bg-white"
+          />
           <label className="mt-3 flex items-center gap-2 text-sm text-slate-700">
             <input type="checkbox" name="evidenceAttached" value="true" className="size-4 rounded border-slate-300" />
             Evidence is attached for moderator review
           </label>
           <p className="mt-2 text-xs text-slate-500">
-            Future Supabase Storage bucket: `report-evidence`.
+            Evidence is private by default. Supported examples: invoices, screenshots, contracts, photos, and PDFs.
           </p>
         </div>
       </div>

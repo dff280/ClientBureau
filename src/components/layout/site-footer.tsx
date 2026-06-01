@@ -6,7 +6,7 @@ const footerLinks = [
   { href: "/search", label: "Search Clients" },
   { href: "/submit-report", label: "Submit Report" },
   { href: "/client-response", label: "Client Response" },
-  { href: "/admin/reviews", label: "Admin Review" },
+  { href: "/admin", label: "Admin" },
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
   { href: "/report-policy", label: "Report Policy" },

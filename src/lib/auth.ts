@@ -72,11 +72,21 @@ export async function requireAuthenticatedUser(role: UserRole = "contractor") {
   return user
 }
 
+export async function requireContractorAccess() {
+  const user = await requireAuthenticatedUser()
+
+  if (!["contractor", "admin"].includes(user.role)) {
+    redirect("/login")
+  }
+
+  return user
+}
+
 export async function requireRole(role: UserRole) {
   const user = await requireAuthenticatedUser(role)
 
   if (user.role !== role) {
-    redirect(user.role === "admin" ? "/admin/reviews" : "/dashboard")
+    redirect(user.role === "admin" ? "/admin" : "/dashboard")
   }
 
   return user

@@ -7,10 +7,13 @@ import { createServiceClient } from "@/lib/supabase/service"
 import type { ClientReportInput, ClientResponseInput } from "@/lib/schemas/client-bureau"
 import type {
   AdminReview,
+  AdminWorkspaceData,
+  AuditLogEntry,
   ClientProfile,
   ClientReport,
   ClientResponse,
   ClientSearchResult,
+  CommunityDiscussion,
   ContractorProfile,
   PublicClientProfile,
   ReportEvidence,
@@ -32,8 +35,14 @@ type ReportEvidenceRow = Tables["report_evidence"]["Row"]
 type ClientResponseRow = Tables["client_responses"]["Row"]
 type SubscriptionRow = Tables["subscriptions"]["Row"]
 type AdminReviewRow = Tables["admin_reviews"]["Row"]
+type CommunityDiscussionRow = Tables["community_discussions"]["Row"]
+type AuditLogRow = Tables["audit_logs"]["Row"]
 
 const emptyHash = "sha256:empty-private"
+
+function isMissingRelationError(error: { message?: string; code?: string } | null | undefined) {
+  return error?.code === "42P01" || error?.message?.toLowerCase().includes("does not exist")
+}
 
 function mapUser(row: UserRow): User {
   return {
@@ -126,6 +135,44 @@ function mapResponse(row: ClientResponseRow): ClientResponse {
   }
 }
 
+function mapCommunityDiscussion(row: CommunityDiscussionRow): CommunityDiscussion {
+  return {
+    id: row.id,
+    clientId: row.client_id,
+    reportId: row.report_id ?? undefined,
+    authorName: row.author_name,
+    authorEmailHash: row.author_email_hash,
+    relationshipCategory: row.relationship_category,
+    commentBody: row.comment_body,
+    attachmentUrl: row.attachment_url ?? undefined,
+    status: row.status,
+    isVerified: row.is_verified,
+    moderatorNote: row.moderator_note ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    publishedAt: row.published_at ?? undefined,
+  }
+}
+
+function mapAuditLog(row: AuditLogRow): AuditLogEntry {
+  const metadata =
+    row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+      ? (row.metadata as Record<string, string | number | boolean | null>)
+      : undefined
+
+  return {
+    id: row.id,
+    actorId: row.actor_id ?? undefined,
+    actorName: row.actor_name ?? undefined,
+    action: row.action,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    summary: row.summary,
+    metadata,
+    createdAt: row.created_at,
+  }
+}
+
 function mapSubscriptionStatus(status: string): Subscription["status"] {
   if (["trialing", "active", "past_due", "canceled", "mock"].includes(status)) {
     return status as Subscription["status"]
@@ -171,6 +218,58 @@ function hashIdentifier(value?: string, type: "email" | "phone" = "email") {
   if (!normalized) return emptyHash
 
   return `sha256:${createHash("sha256").update(normalized).digest("hex")}`
+}
+
+async function logAdminAction(input: Omit<AuditLogEntry, "id" | "createdAt">) {
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("audit_logs").insert({
+    actor_id: input.actorId ?? null,
+    actor_name: input.actorName ?? null,
+    action: input.action,
+    entity_type: input.entityType,
+    entity_id: input.entityId,
+    summary: input.summary,
+    metadata: input.metadata ?? {},
+  })
+
+  if (error) throw new Error(error.message)
+}
+
+async function getOrCreateContractorProfileForUser(userId: string) {
+  const supabase = createServiceClient()
+  const { data: existing, error: existingError } = await supabase
+    .from("contractor_profiles")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (existingError) throw new Error(existingError.message)
+  if (existing) return existing
+
+  const { data: userRow, error: userError } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single()
+
+  if (userError) throw new Error(userError.message)
+
+  const { data, error } = await supabase
+    .from("contractor_profiles")
+    .insert({
+      user_id: userId,
+      business_name: userRow.role === "admin" ? "Client Bureau Admin Intake" : userRow.full_name,
+      trade: userRow.role === "admin" ? "Administrative report intake" : "Contractor",
+      city: "Orlando",
+      state: "FL",
+      verification_status: userRow.role === "admin" ? "verified" : "pending",
+    })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  return data
 }
 
 function reportTimeline(report: ClientReport): ReportTimelineEvent[] {
@@ -334,7 +433,7 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
   const reports = await getApprovedReportsForClient(profile.id)
   const reportIds = reports.map((report) => report.id)
 
-  const [{ data: responseRows, error: responseError }, evidenceResult] = await Promise.all([
+  const [{ data: responseRows, error: responseError }, evidenceResult, discussionResult] = await Promise.all([
     supabase
       .from("client_responses")
       .select("*")
@@ -344,10 +443,19 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
     reportIds.length > 0
       ? supabase.from("report_evidence").select("*").in("report_id", reportIds)
       : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("community_discussions")
+      .select("*")
+      .eq("client_id", profile.id)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false }),
   ])
 
   if (responseError) throw new Error(responseError.message)
   if (evidenceResult.error) throw new Error(evidenceResult.error.message)
+  if (discussionResult.error && !isMissingRelationError(discussionResult.error)) {
+    throw new Error(discussionResult.error.message)
+  }
 
   const positiveReports = reports.filter((report) =>
     ["Positive experience", "Would work with again"].includes(report.reportCategory),
@@ -358,6 +466,7 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
     reports,
     positiveReports,
     clientResponses: (responseRows ?? []).map(mapResponse),
+    communityDiscussions: discussionResult.error ? [] : (discussionResult.data ?? []).map(mapCommunityDiscussion),
     evidence: (evidenceResult.data ?? []).map(mapEvidence),
     timeline: reports
       .flatMap(reportTimeline)
@@ -463,13 +572,7 @@ export async function getContractorDashboardSupabase(userId: string) {
 
   if (userError) throw new Error(userError.message)
 
-  const { data: contractorRow, error: contractorError } = await supabase
-    .from("contractor_profiles")
-    .select("*")
-    .eq("user_id", userId)
-    .single()
-
-  if (contractorError) throw new Error(contractorError.message)
+  const contractorRow = await getOrCreateContractorProfileForUser(userId)
 
   const { data: reportRows, error: reportError } = await supabase
     .from("client_reports")
@@ -579,19 +682,69 @@ export async function getPendingAdminReviewsSupabase() {
   )
 }
 
+export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceData> {
+  const supabase = createServiceClient()
+  const [
+    usersResult,
+    contractorsResult,
+    clientsResult,
+    reportsResult,
+    evidenceResult,
+    responsesResult,
+    discussionsResult,
+    auditResult,
+    reviews,
+  ] = await Promise.all([
+    supabase.from("users").select("*").order("created_at", { ascending: false }),
+    supabase.from("contractor_profiles").select("*").order("created_at", { ascending: false }),
+    supabase.from("client_profiles").select("*").order("updated_at", { ascending: false }),
+    supabase.from("client_reports").select("*").order("created_at", { ascending: false }),
+    supabase.from("report_evidence").select("*").order("uploaded_at", { ascending: false }),
+    supabase.from("client_responses").select("*").order("created_at", { ascending: false }),
+    supabase.from("community_discussions").select("*").order("created_at", { ascending: false }),
+    supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200),
+    getPendingAdminReviewsSupabase(),
+  ])
+
+  for (const result of [
+    usersResult,
+    contractorsResult,
+    clientsResult,
+    reportsResult,
+    evidenceResult,
+    responsesResult,
+  ]) {
+    if (result.error) throw new Error(result.error.message)
+  }
+
+  if (discussionsResult.error && !isMissingRelationError(discussionsResult.error)) {
+    throw new Error(discussionsResult.error.message)
+  }
+
+  if (auditResult.error && !isMissingRelationError(auditResult.error)) {
+    throw new Error(auditResult.error.message)
+  }
+
+  return {
+    users: (usersResult.data ?? []).map(mapUser),
+    contractors: (contractorsResult.data ?? []).map(mapContractorProfile),
+    clients: (clientsResult.data ?? []).map(mapClientProfile),
+    reports: (reportsResult.data ?? []).map(mapClientReport),
+    evidence: (evidenceResult.data ?? []).map(mapEvidence),
+    responses: (responsesResult.data ?? []).map(mapResponse),
+    discussions: discussionsResult.error ? [] : (discussionsResult.data ?? []).map(mapCommunityDiscussion),
+    reviews,
+    auditLog: auditResult.error ? [] : (auditResult.data ?? []).map(mapAuditLog),
+  }
+}
+
 export async function submitClientReportSupabase(
   input: ClientReportInput,
   userId: string,
   evidenceFiles: File[] = [],
 ) {
   const supabase = createServiceClient()
-  const { data: contractorRow, error: contractorError } = await supabase
-    .from("contractor_profiles")
-    .select("*")
-    .eq("user_id", userId)
-    .single()
-
-  if (contractorError) throw new Error(contractorError.message)
+  const contractorRow = await getOrCreateContractorProfileForUser(userId)
 
   const clientRow = await findOrCreateClientProfile(input)
   const { data: reportRow, error: reportError } = await supabase
@@ -704,6 +857,101 @@ export async function submitClientResponseSupabase(input: ClientResponseInput) {
   return mapResponse(data)
 }
 
+export async function submitCommunityDiscussionSupabase(input: {
+  profileSlug: string
+  name: string
+  email: string
+  relationshipCategory: CommunityDiscussion["relationshipCategory"]
+  commentBody: string
+  attachmentUrl?: string
+  reportId?: string
+}) {
+  const supabase = createServiceClient()
+  const { data: clientRow, error: clientError } = await supabase
+    .from("client_profiles")
+    .select("*")
+    .eq("public_slug", input.profileSlug)
+    .eq("is_public", true)
+    .maybeSingle()
+
+  if (clientError) throw new Error(clientError.message)
+  if (!clientRow) throw new Error("No public profile was found for that discussion.")
+
+  const { data, error } = await supabase
+    .from("community_discussions")
+    .insert({
+      client_id: clientRow.id,
+      report_id: input.reportId || null,
+      author_name: input.name,
+      author_email_hash: hashIdentifier(input.email),
+      relationship_category: input.relationshipCategory,
+      comment_body: input.commentBody,
+      attachment_url: input.attachmentUrl ?? null,
+      status: "pending",
+    })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  return mapCommunityDiscussion(data)
+}
+
+export async function reviewCommunityDiscussionSupabase(
+  discussionId: string,
+  decision: "approved" | "rejected" | "deleted" | "verified",
+  moderatorNote?: string,
+  reviewer?: { id: string; fullName: string },
+) {
+  const supabase = createServiceClient()
+  const now = new Date().toISOString()
+
+  if (decision === "deleted") {
+    const { error } = await supabase.from("community_discussions").delete().eq("id", discussionId)
+    if (error) throw new Error(error.message)
+
+    await logAdminAction({
+      actorId: reviewer?.id,
+      actorName: reviewer?.fullName,
+      action: "deleted_discussion",
+      entityType: "discussion",
+      entityId: discussionId,
+      summary: "Deleted community discussion entry.",
+    })
+
+    return undefined
+  }
+
+  const nextStatus: CommunityDiscussion["status"] =
+    decision === "approved" || decision === "verified" ? "approved" : "rejected"
+  const discussionPayload = {
+    status: nextStatus,
+    moderator_note: moderatorNote || null,
+    published_at: nextStatus === "approved" ? now : null,
+    updated_at: now,
+    ...(decision === "verified" ? { is_verified: true } : {}),
+  }
+  const { data, error } = await supabase
+    .from("community_discussions")
+    .update(discussionPayload)
+    .eq("id", discussionId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  await logAdminAction({
+    actorId: reviewer?.id,
+    actorName: reviewer?.fullName,
+    action: `${decision}_discussion`,
+    entityType: "discussion",
+    entityId: discussionId,
+    summary: `Community discussion marked ${decision}.`,
+  })
+
+  return mapCommunityDiscussion(data)
+}
+
 export async function reviewReportSupabase(
   reportId: string,
   decision: "approved" | "rejected",
@@ -787,9 +1035,162 @@ export async function reviewReportSupabase(
 
   if (reviewError) throw new Error(reviewError.message)
 
+  await logAdminAction({
+    actorId: reviewerId,
+    action: decision === "approved" ? "approved_report" : "rejected_report",
+    entityType: "report",
+    entityId: reportId,
+    summary:
+      decision === "approved" && publishedProfile
+        ? `Approved report and published /client/${publishedProfile.publicSlug}.`
+        : "Rejected report and kept it private.",
+    metadata: {
+      publishedSlug: publishedProfile?.publicSlug ?? null,
+    },
+  })
+
   return {
     ...mapAdminReview(reviewRow),
     publishedProfileSlug: publishedProfile?.publicSlug,
     publishedProfileUrl: publishedProfile ? `/client/${publishedProfile.publicSlug}` : undefined,
   }
+}
+
+export async function reviewReportsBulkSupabase(
+  reportIds: string[],
+  decision: "approved" | "rejected" | "deleted",
+  reviewerId?: string,
+) {
+  const updated: AdminReview[] = []
+  const deletedIds: string[] = []
+
+  for (const reportId of reportIds) {
+    if (decision === "deleted") {
+      const supabase = createServiceClient()
+      const { error } = await supabase.from("client_reports").delete().eq("id", reportId)
+      if (error) throw new Error(error.message)
+      deletedIds.push(reportId)
+      await logAdminAction({
+        actorId: reviewerId,
+        action: "deleted_report",
+        entityType: "report",
+        entityId: reportId,
+        summary: "Deleted report from admin bulk action.",
+      })
+    } else {
+      updated.push(await reviewReportSupabase(reportId, decision, undefined, reviewerId))
+    }
+  }
+
+  return { updated, deletedIds }
+}
+
+export async function updateAdminClientRecordSupabase(input: {
+  clientId: string
+  firstName: string
+  lastName: string
+  businessName?: string
+  city: string
+  state: string
+  riskLevel: ClientProfile["riskLevel"]
+  clientBureauScore: number
+  isPublic?: boolean
+  moderatorNote?: string
+  reviewer?: { id: string; fullName: string }
+}) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("client_profiles")
+    .update({
+      first_name: input.firstName,
+      last_name: input.lastName,
+      business_name: input.businessName ?? null,
+      city: input.city,
+      state: input.state.toUpperCase(),
+      risk_level: input.riskLevel,
+      client_bureau_score: input.clientBureauScore,
+      is_public: Boolean(input.isPublic),
+    })
+    .eq("id", input.clientId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  await logAdminAction({
+    actorId: input.reviewer?.id,
+    actorName: input.reviewer?.fullName,
+    action: "edited_client",
+    entityType: "client",
+    entityId: input.clientId,
+    summary: input.moderatorNote || "Updated client profile fields and public visibility.",
+  })
+
+  return mapClientProfile(data)
+}
+
+export async function updateAdminContractorRecordSupabase(input: {
+  contractorId: string
+  businessName: string
+  trade: string
+  city: string
+  state: string
+  verificationStatus: ContractorProfile["verificationStatus"]
+  moderatorNote?: string
+  reviewer?: { id: string; fullName: string }
+}) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("contractor_profiles")
+    .update({
+      business_name: input.businessName,
+      trade: input.trade,
+      city: input.city,
+      state: input.state.toUpperCase(),
+      verification_status: input.verificationStatus,
+    })
+    .eq("id", input.contractorId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  await logAdminAction({
+    actorId: input.reviewer?.id,
+    actorName: input.reviewer?.fullName,
+    action: "edited_contractor",
+    entityType: "contractor",
+    entityId: input.contractorId,
+    summary: input.moderatorNote || "Updated contractor profile and verification status.",
+  })
+
+  return mapContractorProfile(data)
+}
+
+export async function deleteAdminRecordSupabase(
+  entityType: "client" | "contractor" | "report" | "discussion",
+  entityId: string,
+  reviewer?: { id: string; fullName: string },
+) {
+  const supabase = createServiceClient()
+  const tableByEntity = {
+    client: "client_profiles",
+    contractor: "contractor_profiles",
+    report: "client_reports",
+    discussion: "community_discussions",
+  } as const
+  const { error } = await supabase.from(tableByEntity[entityType]).delete().eq("id", entityId)
+
+  if (error) throw new Error(error.message)
+
+  await logAdminAction({
+    actorId: reviewer?.id,
+    actorName: reviewer?.fullName,
+    action: "deleted_record",
+    entityType,
+    entityId,
+    summary: `Deleted ${entityType} record from admin.`,
+  })
+
+  return true
 }

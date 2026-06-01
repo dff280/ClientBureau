@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useActionState, useEffect, useMemo, useState } from "react"
+import { useActionState, useCallback, useEffect, useMemo, useState } from "react"
 import {
   AlertTriangle,
   CheckCircle2,
@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import { reviewReportAction } from "@/lib/actions/client-bureau"
+import { bulkReviewReportsAction, reviewReportAction } from "@/lib/actions/client-bureau"
 import type {
   ActionResult,
   AdminReview,
@@ -46,6 +46,11 @@ export interface AdminReviewItem {
 type ReviewFilter = "needs_review" | "published" | "rejected" | "all"
 
 const initialReviewState: ActionResult<AdminReview> = {
+  ok: false,
+  message: "",
+}
+
+const initialBulkState: ActionResult<{ updated: AdminReview[]; deletedIds: string[] }> = {
   ok: false,
   message: "",
 }
@@ -83,23 +88,60 @@ function clientName(item: AdminReviewItem) {
 
 export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
   const [filter, setFilter] = useState<ReviewFilter>("needs_review")
-  const visibleItems = useMemo(
-    () => items.filter((item) => filterReview(item, filter)),
-    [filter, items],
+  const [localStatuses, setLocalStatuses] = useState<Record<string, AdminReview["status"]>>({})
+  const [deletedReportIds, setDeletedReportIds] = useState<string[]>([])
+  const [selectedReportIds, setSelectedReportIds] = useState<string[]>([])
+  const displayItems = useMemo(
+    () =>
+      items
+        .filter((item) => !deletedReportIds.includes(item.review.reportId))
+        .map((item) => ({
+          ...item,
+          review: {
+            ...item.review,
+            status: localStatuses[item.review.reportId] ?? item.review.status,
+          },
+        })),
+    [deletedReportIds, items, localStatuses],
   )
-  const [selectedId, setSelectedId] = useState(visibleItems[0]?.review.id ?? items[0]?.review.id ?? "")
+  const visibleItems = useMemo(
+    () => displayItems.filter((item) => filterReview(item, filter)),
+    [displayItems, filter],
+  )
+  const [selectedId, setSelectedId] = useState(visibleItems[0]?.review.id ?? displayItems[0]?.review.id ?? "")
   const selectedItem =
-    visibleItems.find((item) => item.review.id === selectedId) ?? visibleItems[0] ?? items[0]
+    visibleItems.find((item) => item.review.id === selectedId) ?? visibleItems[0] ?? displayItems[0]
 
   const counts = useMemo(
     () => ({
-      needsReview: items.filter((item) => filterReview(item, "needs_review")).length,
-      published: items.filter((item) => item.review.status === "approved").length,
-      rejected: items.filter((item) => item.review.status === "rejected").length,
-      evidence: items.filter((item) => item.evidence.length > 0).length,
+      needsReview: displayItems.filter((item) => filterReview(item, "needs_review")).length,
+      published: displayItems.filter((item) => item.review.status === "approved").length,
+      rejected: displayItems.filter((item) => item.review.status === "rejected").length,
+      evidence: displayItems.filter((item) => item.evidence.length > 0).length,
     }),
-    [items],
+    [displayItems],
   )
+  const selectedCsv = selectedReportIds.join(",")
+  const markReportStatus = useCallback((reportId: string, status: AdminReview["status"]) => {
+    setLocalStatuses((current) => ({ ...current, [reportId]: status }))
+    setSelectedReportIds((current) => current.filter((id) => id !== reportId))
+  }, [])
+  const markBulkResult = useCallback((result: { updated: AdminReview[]; deletedIds: string[] }) => {
+    if (result.deletedIds.length > 0) {
+      setDeletedReportIds((current) => [...new Set([...current, ...result.deletedIds])])
+      setSelectedReportIds((current) => current.filter((id) => !result.deletedIds.includes(id)))
+    }
+
+    if (result.updated.length > 0) {
+      setLocalStatuses((current) => ({
+        ...current,
+        ...Object.fromEntries(result.updated.map((review) => [review.reportId, review.status])),
+      }))
+      setSelectedReportIds((current) =>
+        current.filter((id) => !result.updated.some((review) => review.reportId === id)),
+      )
+    }
+  }, [])
 
   return (
     <div className="space-y-5">
@@ -138,6 +180,8 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
             </div>
           </div>
 
+          <BulkModerationBar selectedCsv={selectedCsv} selectedCount={selectedReportIds.length} onComplete={markBulkResult} />
+
           <div className="max-h-[calc(100vh-310px)] min-h-72 overflow-y-auto p-2">
             {visibleItems.length > 0 ? (
               <div className="space-y-2">
@@ -146,6 +190,14 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
                     key={item.review.id}
                     item={item}
                     selected={selectedItem?.review.id === item.review.id}
+                    checked={selectedReportIds.includes(item.review.reportId)}
+                    onCheckedChange={(checked) => {
+                      setSelectedReportIds((current) =>
+                        checked
+                          ? [...new Set([...current, item.review.reportId])]
+                          : current.filter((id) => id !== item.review.reportId),
+                      )
+                    }}
                     onSelect={() => setSelectedId(item.review.id)}
                   />
                 ))}
@@ -167,7 +219,11 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
         </section>
 
         {selectedItem ? (
-          <ModerationWorkspace key={selectedItem.review.id} item={selectedItem} />
+          <ModerationWorkspace
+            key={selectedItem.review.id}
+            item={selectedItem}
+            onResolved={(status) => markReportStatus(selectedItem.review.reportId, status)}
+          />
         ) : (
           <section className="rounded-md border border-slate-200 bg-white p-10 text-center shadow-sm">
             <Inbox className="mx-auto size-10 text-slate-400" aria-hidden="true" />
@@ -207,56 +263,130 @@ function Metric({
 function QueueButton({
   item,
   selected,
+  checked,
+  onCheckedChange,
   onSelect,
 }: {
   item: AdminReviewItem
   selected: boolean
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
   onSelect: () => void
 }) {
   const report = item.report
   const status = item.review.status
 
   return (
-    <button
-      type="button"
-      onClick={onSelect}
+    <div
       className={cn(
-        "w-full rounded-md border p-3 text-left transition",
+        "grid grid-cols-[auto_1fr] gap-2 rounded-md border p-2 transition",
         selected
           ? "border-slate-950 bg-slate-950 text-white"
           : "border-slate-200 bg-white text-slate-950 hover:border-slate-300 hover:bg-slate-50",
       )}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{clientName(item)}</p>
-          <p className={cn("mt-1 truncate text-xs", selected ? "text-slate-300" : "text-slate-500")}>
-            {report?.reportCategory ?? "Uncategorized"} / {report?.projectCity ?? "Project city"}
-          </p>
+      <Checkbox
+        aria-label={`Select ${clientName(item)}`}
+        checked={checked}
+        onCheckedChange={(value) => onCheckedChange(value === true)}
+        className="mt-1"
+      />
+      <button type="button" onClick={onSelect} className="min-w-0 text-left">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">{clientName(item)}</p>
+            <p className={cn("mt-1 truncate text-xs", selected ? "text-slate-300" : "text-slate-500")}>
+              {report?.reportCategory ?? "Uncategorized"} / {report?.projectCity ?? "Project city"}
+            </p>
+          </div>
+          <span
+            className={cn(
+              "rounded-md border px-2 py-1 text-[11px] font-semibold uppercase",
+              selected ? "border-white/20 text-white" : "border-slate-200 text-slate-600",
+            )}
+          >
+            {reviewPriority(item)}
+          </span>
         </div>
-        <span
-          className={cn(
-            "rounded-md border px-2 py-1 text-[11px] font-semibold uppercase",
-            selected ? "border-white/20 text-white" : "border-slate-200 text-slate-600",
-          )}
-        >
-          {reviewPriority(item)}
-        </span>
-      </div>
-      <div className={cn("mt-3 flex items-center gap-2 text-xs", selected ? "text-slate-300" : "text-slate-500")}>
-        {status === "queued" ? <Clock3 className="size-3.5" aria-hidden="true" /> : null}
-        {status === "needs_dispute_review" ? <AlertTriangle className="size-3.5" aria-hidden="true" /> : null}
-        {status === "approved" ? <CheckCircle2 className="size-3.5" aria-hidden="true" /> : null}
-        {status === "rejected" ? <XCircle className="size-3.5" aria-hidden="true" /> : null}
-        <span className="capitalize">{statusLabel(status)}</span>
-        <span>/</span>
-        <span>{item.evidence.length} evidence files</span>
-      </div>
-    </button>
+        <div className={cn("mt-3 flex items-center gap-2 text-xs", selected ? "text-slate-300" : "text-slate-500")}>
+          {status === "queued" ? <Clock3 className="size-3.5" aria-hidden="true" /> : null}
+          {status === "needs_dispute_review" ? <AlertTriangle className="size-3.5" aria-hidden="true" /> : null}
+          {status === "approved" ? <CheckCircle2 className="size-3.5" aria-hidden="true" /> : null}
+          {status === "rejected" ? <XCircle className="size-3.5" aria-hidden="true" /> : null}
+          <span className="capitalize">{statusLabel(status)}</span>
+          <span>/</span>
+          <span>{item.evidence.length} evidence files</span>
+        </div>
+      </button>
+    </div>
   )
 }
 
-function ModerationWorkspace({ item }: { item: AdminReviewItem }) {
+function BulkModerationBar({
+  selectedCsv,
+  selectedCount,
+  onComplete,
+}: {
+  selectedCsv: string
+  selectedCount: number
+  onComplete: (result: { updated: AdminReview[]; deletedIds: string[] }) => void
+}) {
+  const [state, action] = useActionState(bulkReviewReportsAction, initialBulkState)
+
+  useEffect(() => {
+    if (state.message) toast[state.ok ? "success" : "error"](state.message)
+    if (state.ok) onComplete(state.data)
+  }, [onComplete, state])
+
+  return (
+    <form action={action} className="border-b border-slate-200 bg-slate-50 p-3">
+      <input type="hidden" name="reportIds" value={selectedCsv} />
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold uppercase text-slate-500">{selectedCount} selected</p>
+        <div className="flex flex-wrap gap-2">
+          <PendingSubmitButton
+            size="sm"
+            name="decision"
+            value="approved"
+            variant="outline"
+            pendingText="Approving..."
+            disabled={selectedCount === 0}
+          >
+            Bulk approve
+          </PendingSubmitButton>
+          <PendingSubmitButton
+            size="sm"
+            name="decision"
+            value="rejected"
+            variant="outline"
+            pendingText="Rejecting..."
+            disabled={selectedCount === 0}
+          >
+            Bulk reject
+          </PendingSubmitButton>
+          <PendingSubmitButton
+            size="sm"
+            name="decision"
+            value="deleted"
+            variant="destructive"
+            pendingText="Deleting..."
+            disabled={selectedCount === 0}
+          >
+            Delete
+          </PendingSubmitButton>
+        </div>
+      </div>
+    </form>
+  )
+}
+
+function ModerationWorkspace({
+  item,
+  onResolved,
+}: {
+  item: AdminReviewItem
+  onResolved: (status: AdminReview["status"]) => void
+}) {
   const router = useRouter()
   const [state, action] = useActionState(reviewReportAction, initialReviewState)
   const report = item.report
@@ -273,8 +403,11 @@ function ModerationWorkspace({ item }: { item: AdminReviewItem }) {
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
-    if (state.ok) router.refresh()
-  }, [router, state])
+    if (state.ok) {
+      onResolved(state.data.status)
+      router.refresh()
+    }
+  }, [onResolved, router, state])
 
   return (
     <section className="rounded-md border border-slate-200 bg-white shadow-sm">

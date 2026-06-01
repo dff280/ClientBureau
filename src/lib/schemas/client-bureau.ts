@@ -2,6 +2,15 @@ import { z } from "zod"
 
 import { reportCategories, riskLevels } from "@/lib/types"
 
+export const discussionCategories = [
+  "Contractor Experience",
+  "Client Response",
+  "Resolution Update",
+  "Supporting Context",
+  "Dispute / Correction",
+  "Reference / Verification",
+] as const
+
 const requiredText = (label: string, min = 2) =>
   z
     .string()
@@ -93,6 +102,72 @@ export const adminReviewSchema = z.object({
   checklistPrivate: z.coerce.boolean().optional(),
 })
 
+export const bulkAdminReviewSchema = z.object({
+  reportIds: z
+    .string()
+    .trim()
+    .min(1, "Select at least one report.")
+    .transform((value) => value.split(",").map((item) => item.trim()).filter(Boolean)),
+  decision: z.enum(["approved", "rejected", "deleted"]),
+})
+
+export const communityDiscussionSchema = z
+  .object({
+    profileSlug: requiredText("Profile", 3),
+    reportId: optionalText,
+    name: requiredText("Name"),
+    email: z.email("Enter a valid email for moderation contact."),
+    relationshipCategory: z.enum(discussionCategories),
+    commentBody: requiredText("Comment", 30).max(
+      1800,
+      "Keep the public discussion comment under 1,800 characters.",
+    ),
+    attachmentUrl: optionalText,
+    truthfulCertification: z.coerce.boolean().optional(),
+  })
+  .refine((value) => value.truthfulCertification === true, {
+    path: ["truthfulCertification"],
+    message: "Confirm that the submission is truthful to the best of your knowledge.",
+  })
+
+export const adminDiscussionReviewSchema = z.object({
+  discussionId: requiredText("Discussion ID"),
+  decision: z.enum(["approved", "rejected", "deleted", "verified"]),
+  moderatorNote: z.string().trim().max(700).optional(),
+})
+
+export const adminClientUpdateSchema = z.object({
+  clientId: requiredText("Client ID"),
+  firstName: requiredText("First name"),
+  lastName: requiredText("Last name"),
+  businessName: optionalText,
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  riskLevel: z.enum(riskLevels),
+  clientBureauScore: z.coerce.number().min(0).max(100),
+  isPublic: z.coerce.boolean().optional(),
+  moderatorNote: z.string().trim().max(700).optional(),
+})
+
+export const adminContractorUpdateSchema = z.object({
+  contractorId: requiredText("Contractor ID"),
+  businessName: requiredText("Business name"),
+  trade: requiredText("Trade"),
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  verificationStatus: z.enum(["unverified", "pending", "verified"]),
+  moderatorNote: z.string().trim().max(700).optional(),
+})
+
+export const adminDeleteRecordSchema = z.object({
+  entityType: z.enum(["client", "contractor", "report", "discussion"]),
+  entityId: requiredText("Record ID"),
+})
+
+export const bulkUploadImportSchema = z.object({
+  rows: z.string().trim().min(2, "Upload preview rows before importing."),
+})
+
 export const searchSchema = z.object({
   query: z.string().trim().optional().default(""),
   state: z.string().trim().max(2).optional(),
@@ -105,3 +180,4 @@ export type ClientResponseInput = z.infer<typeof clientResponseSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type AdminReviewInput = z.infer<typeof adminReviewSchema>
+export type CommunityDiscussionInput = z.infer<typeof communityDiscussionSchema>

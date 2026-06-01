@@ -1,8 +1,10 @@
 import type {
   AdminReview,
+  AuditLogEntry,
   ClientProfile,
   ClientReport,
   ClientResponse,
+  CommunityDiscussion,
   ContractorProfile,
   ReportEvidence,
   SavedSearch,
@@ -313,6 +315,39 @@ export const clientResponses: ClientResponse[] = [
   },
 ]
 
+export const communityDiscussions: CommunityDiscussion[] = [
+  {
+    id: "discussion_01",
+    clientId: "client_01",
+    reportId: "report_01",
+    authorName: "Verified Orlando Remodeler",
+    authorEmailHash: "sha256:discussion-email-private-01",
+    relationshipCategory: "Contractor Experience",
+    commentBody:
+      "A contractor-submitted discussion entry says invoice and completion records were reviewed before this profile was published.",
+    status: "approved",
+    isVerified: true,
+    moderatorNote: "Approved as supporting context without exposing private identifiers.",
+    createdAt: "2026-05-20T16:25:00.000Z",
+    updatedAt: "2026-05-20T17:10:00.000Z",
+    publishedAt: "2026-05-20T17:10:00.000Z",
+  },
+  {
+    id: "discussion_02",
+    clientId: "client_03",
+    reportId: "report_06",
+    authorName: "Client response contact",
+    authorEmailHash: "sha256:discussion-email-private-02",
+    relationshipCategory: "Dispute / Correction",
+    commentBody:
+      "A response contact submitted additional timing context for the disputed fence repair report.",
+    status: "pending",
+    isVerified: false,
+    createdAt: "2026-05-28T12:15:00.000Z",
+    updatedAt: "2026-05-28T12:15:00.000Z",
+  },
+]
+
 export const subscriptions: Subscription[] = [
   {
     id: "sub_01",
@@ -343,6 +378,30 @@ export const adminReviews: AdminReview[] = [
     notes: "Client response received. Keep profile public and show active dispute context.",
     createdAt: "2026-04-05T12:30:00.000Z",
     updatedAt: "2026-04-06T14:15:00.000Z",
+  },
+]
+
+export const auditLogs: AuditLogEntry[] = [
+  {
+    id: "audit_01",
+    actorId: "user_admin_01",
+    actorName: "Client Bureau Review Team",
+    action: "approved_report",
+    entityType: "report",
+    entityId: "report_01",
+    summary: "Approved public summary and published client profile.",
+    metadata: { publicSlug: "john-smith-orlando-fl" },
+    createdAt: "2026-04-12T16:45:00.000Z",
+  },
+  {
+    id: "audit_02",
+    actorId: "user_admin_01",
+    actorName: "Client Bureau Review Team",
+    action: "queued_discussion",
+    entityType: "discussion",
+    entityId: "discussion_02",
+    summary: "Community discussion entry queued for moderation.",
+    createdAt: "2026-05-28T12:15:00.000Z",
   },
 ]
 

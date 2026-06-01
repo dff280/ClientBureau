@@ -19,6 +19,23 @@ export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
 export type SubscriptionTier = "free" | "pro" | "bureau_team"
 export type UserRole = "contractor" | "admin"
 export type VerificationStatus = "unverified" | "pending" | "verified"
+export type DiscussionCategory =
+  | "Contractor Experience"
+  | "Client Response"
+  | "Resolution Update"
+  | "Supporting Context"
+  | "Dispute / Correction"
+  | "Reference / Verification"
+export type DiscussionStatus = "pending" | "approved" | "rejected"
+export type AdminEntityType =
+  | "user"
+  | "contractor"
+  | "client"
+  | "report"
+  | "discussion"
+  | "evidence"
+  | "bulk_upload"
+  | "setting"
 export type TimelineEventType =
   | "submitted"
   | "evidence_uploaded"
@@ -144,6 +161,23 @@ export interface ClientResponse {
   publishedAt?: string
 }
 
+export interface CommunityDiscussion {
+  id: string
+  clientId: string
+  reportId?: string
+  authorName: string
+  authorEmailHash: string
+  relationshipCategory: DiscussionCategory
+  commentBody: string
+  attachmentUrl?: string
+  status: DiscussionStatus
+  isVerified: boolean
+  moderatorNote?: string
+  createdAt: string
+  updatedAt: string
+  publishedAt?: string
+}
+
 export interface Subscription {
   id: string
   contractorId: string
@@ -153,6 +187,51 @@ export interface Subscription {
   stripeSubscriptionId?: string
   stripePriceId?: string
   currentPeriodEnd?: string
+}
+
+export interface AuditLogEntry {
+  id: string
+  actorId?: string
+  actorName?: string
+  action: string
+  entityType: AdminEntityType
+  entityId: string
+  summary: string
+  metadata?: Record<string, string | number | boolean | null>
+  createdAt: string
+}
+
+export interface AdminWorkspaceData {
+  users: User[]
+  contractors: ContractorProfile[]
+  clients: ClientProfile[]
+  reports: ClientReport[]
+  evidence: ReportEvidence[]
+  responses: ClientResponse[]
+  discussions: CommunityDiscussion[]
+  reviews: {
+    review: AdminReview
+    report?: ClientReport
+    client?: ClientProfile
+    evidence: ReportEvidence[]
+    checklist: ReviewChecklistItem[]
+  }[]
+  auditLog: AuditLogEntry[]
+}
+
+export interface BulkUploadPreviewRow {
+  rowNumber: number
+  clientName: string
+  city: string
+  state: string
+  reportType: string
+  amount: number
+  date: string
+  summary: string
+  status: string
+  notes?: string
+  errors: string[]
+  duplicate: boolean
 }
 
 export interface AdminReview {
@@ -181,6 +260,7 @@ export interface PublicClientProfile extends ClientProfile {
   reports: ClientReport[]
   positiveReports: ClientReport[]
   clientResponses: ClientResponse[]
+  communityDiscussions: CommunityDiscussion[]
   evidence: ReportEvidence[]
   timeline: ReportTimelineEvent[]
   scoreFactors: ScoreFactor[]

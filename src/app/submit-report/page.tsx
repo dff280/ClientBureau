@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportSubmissionForm } from "@/components/forms/report-submission-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { requireRole } from "@/lib/auth"
+import { requireContractorAccess } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Submit Client Report",
@@ -24,7 +24,7 @@ export default async function SubmitReportPage({
 }: {
   searchParams: SubmitReportSearchParams
 }) {
-  await requireRole("contractor")
+  await requireContractorAccess()
 
   const defaults = await searchParams
 

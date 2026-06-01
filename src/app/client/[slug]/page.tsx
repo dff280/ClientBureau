@@ -1,14 +1,16 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { FilePlus2, MessageSquareText, ShieldAlert } from "lucide-react"
+import { CalendarClock, FilePlus2, MessageSquareText, ShieldAlert, ShieldCheck } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
 import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
 import { ReportTimeline } from "@/components/profile/report-timeline"
+import { CommunityDiscussionSection } from "@/components/profile/community-discussion-section"
 import { ScoreBreakdown } from "@/components/profile/score-breakdown"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
@@ -88,6 +90,11 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const concernReports = profile.reports.filter(
     (report) => !["Positive experience", "Would work with again"].includes(report.reportCategory),
   )
+  const openDisputes = profile.reports.filter((report) => report.status === "disputed").length
+  const resolvedReports = profile.reports.filter((report) =>
+    ["Paid", "resolved"].some((term) => report.paymentStatus.toLowerCase().includes(term.toLowerCase())),
+  ).length
+  const evidenceSummary = summarizeEvidence(profile.evidence)
 
   return (
     <article className="bg-slate-100">
@@ -100,9 +107,10 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
               <RiskBadge riskLevel={profile.riskLevel} />
-              <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold uppercase text-slate-500">
-                Public profile
-              </span>
+              <Badge className="rounded-md bg-emerald-700 text-white">
+                <ShieldCheck className="size-3" aria-hidden="true" />
+                Verified public record
+              </Badge>
             </div>
             <div>
               <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
@@ -142,8 +150,22 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   <span className="font-semibold text-slate-950">{profile.reportCount}</span>
                 </div>
                 <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Open disputes</span>
+                  <span className="font-semibold text-slate-950">{openDisputes}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Resolved reports</span>
+                  <span className="font-semibold text-slate-950">{resolvedReports}</span>
+                </div>
+                <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Public reports shown</span>
                   <span className="font-semibold text-slate-950">{profile.reports.length}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Last updated</span>
+                  <span className="text-right font-semibold text-slate-950">
+                    {new Date(profile.updatedAt).toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Payment reliability</span>
@@ -208,6 +230,11 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <h2 className="text-2xl font-semibold text-slate-950">Report timeline</h2>
               <ReportTimeline events={profile.timeline} />
             </div>
+
+            <CommunityDiscussionSection
+              profileSlug={profile.publicSlug}
+              discussions={profile.communityDiscussions}
+            />
           </div>
 
           <aside className="space-y-5">
@@ -231,6 +258,19 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 <p>Public profile is active.</p>
                 <p>All published reports are admin-approved or marked with dispute context.</p>
                 <p>Private matching identifiers are stored as hashes.</p>
+              </CardContent>
+            </Card>
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CalendarClock className="size-5 text-amber-700" aria-hidden="true" />
+                  Evidence on file
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm leading-6 text-slate-600">
+                {evidenceSummary.map((item) => (
+                  <p key={item}>{item}</p>
+                ))}
               </CardContent>
             </Card>
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -259,4 +299,20 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
       </section>
     </article>
   )
+}
+
+function summarizeEvidence(evidence: { fileType: string; fileName: string }[]) {
+  if (evidence.length === 0) return ["No public evidence files are displayed.", "Private uploads remain available only to moderators."]
+
+  const labels = new Set<string>()
+  for (const item of evidence) {
+    const value = `${item.fileType} ${item.fileName}`.toLowerCase()
+    if (value.includes("invoice")) labels.add("Invoices reviewed")
+    if (value.includes("pdf") || value.includes("contract")) labels.add("Documents reviewed")
+    if (value.includes("image") || value.includes("png") || value.includes("jpg") || value.includes("photo")) labels.add("Photos reviewed")
+    if (value.includes("screenshot")) labels.add("Screenshots reviewed")
+  }
+
+  labels.add("Evidence on file")
+  return Array.from(labels)
 }

@@ -6,7 +6,7 @@ import { RiskBadge } from "@/components/client/risk-badge"
 import { DashboardReports } from "@/components/dashboard/dashboard-reports"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { requireRole } from "@/lib/auth"
+import { requireContractorAccess } from "@/lib/auth"
 import {
   getContractorDashboardService,
   getPublicClientProfilesService,
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
-  const user = await requireRole("contractor")
+  const user = await requireContractorAccess()
   const [dashboard, clientProfiles] = await Promise.all([
     getContractorDashboardService(user.id),
     getPublicClientProfilesService(),

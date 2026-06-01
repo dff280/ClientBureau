@@ -23,7 +23,9 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
 ## 2. Supabase
 
 1. Create a fresh Supabase project.
-2. Open SQL Editor and run `supabase/migrations/0001_client_bureau_schema.sql`.
+2. Open SQL Editor and run the migrations in order:
+   - `supabase/migrations/0001_client_bureau_schema.sql`
+   - `supabase/migrations/0002_admin_discussions_audit.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -39,10 +41,10 @@ set role = 'admin'
 where email = 'YOUR_ADMIN_EMAIL@example.com';
 ```
 
-Then log out and log back in. The admin panel is:
+Then log out and log back in. The admin app is:
 
 ```text
-https://clientbureau.com/admin/reviews
+https://clientbureau.com/admin
 ```
 
 ## 3. Stripe Test Mode
@@ -199,7 +201,10 @@ Browser-check these routes on desktop and mobile:
 /search
 /submit-report
 /dashboard
-/admin/reviews
+/admin
+/admin/reports
+/admin/discussions
+/admin/uploads
 /client/john-smith-orlando-fl
 /terms
 /privacy
@@ -229,7 +234,7 @@ set role = 'admin'
 where email = 'YOUR_ADMIN_EMAIL@example.com';
 ```
 
-2. Open `https://clientbureau.com/admin/reviews`.
+2. Open `https://clientbureau.com/admin/reports`.
 3. Edit the public summary so it uses reported-experience language.
 4. Check:
    - Evidence reviewed

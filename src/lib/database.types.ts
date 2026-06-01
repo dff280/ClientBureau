@@ -5,6 +5,9 @@ import type {
   SubscriptionTier,
   UserRole,
   VerificationStatus,
+  DiscussionCategory,
+  DiscussionStatus,
+  AdminEntityType,
 } from "@/lib/types"
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
@@ -234,6 +237,68 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["admin_reviews"]["Insert"]>
         Relationships: []
       }
+      community_discussions: {
+        Row: {
+          id: string
+          client_id: string
+          report_id: string | null
+          author_name: string
+          author_email_hash: string
+          relationship_category: DiscussionCategory
+          comment_body: string
+          attachment_url: string | null
+          status: DiscussionStatus
+          is_verified: boolean
+          moderator_note: string | null
+          created_at: string
+          updated_at: string
+          published_at: string | null
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          report_id?: string | null
+          author_name: string
+          author_email_hash: string
+          relationship_category: DiscussionCategory
+          comment_body: string
+          attachment_url?: string | null
+          status?: DiscussionStatus
+          is_verified?: boolean
+          moderator_note?: string | null
+          created_at?: string
+          updated_at?: string
+          published_at?: string | null
+        }
+        Update: Partial<Database["public"]["Tables"]["community_discussions"]["Insert"]>
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          id: string
+          actor_id: string | null
+          actor_name: string | null
+          action: string
+          entity_type: AdminEntityType
+          entity_id: string
+          summary: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          action: string
+          entity_type: AdminEntityType
+          entity_id: string
+          summary: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["audit_logs"]["Insert"]>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -244,6 +309,9 @@ export interface Database {
       subscription_tier: SubscriptionTier
       user_role: UserRole
       verification_status: VerificationStatus
+      discussion_category: DiscussionCategory
+      discussion_status: DiscussionStatus
+      admin_entity_type: AdminEntityType
     }
   }
 }

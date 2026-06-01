@@ -1,8 +1,10 @@
 import {
   adminReviews,
+  auditLogs,
   clientProfiles,
   clientReports,
   clientResponses,
+  communityDiscussions,
   contractorProfiles,
   reportEvidence,
   savedSearches,
@@ -19,9 +21,13 @@ import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import type { ClientReportInput } from "@/lib/schemas/client-bureau"
 import type {
   AdminReview,
+  AdminWorkspaceData,
+  AuditLogEntry,
   ClientProfile,
   ClientReport,
   ClientSearchResult,
+  CommunityDiscussion,
+  DiscussionStatus,
   PublicationAudit,
   PublicClientProfile,
   ReportTimelineEvent,
@@ -101,10 +107,13 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
     ["Positive experience", "Would work with again"].includes(report.reportCategory),
   )
   const evidence = reportEvidence.filter((item) =>
-    clientReports.some((report) => report.clientId === client.id && report.id === item.reportId),
+    reviewableReports.some((report) => report.id === item.reportId),
   )
   const responses = clientResponses.filter(
     (response) => response.clientId === client.id && response.status === "published",
+  )
+  const discussions = communityDiscussions.filter(
+    (discussion) => discussion.clientId === client.id && discussion.status === "approved",
   )
 
   return {
@@ -112,6 +121,7 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
     reports,
     positiveReports,
     clientResponses: responses,
+    communityDiscussions: discussions,
     evidence,
     timeline: reviewableReports.flatMap(reportTimeline).sort((a, b) =>
       b.createdAt.localeCompare(a.createdAt),
@@ -121,6 +131,20 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
     disputeHistory: disputeHistoryLabel(
       clientReports.filter((report) => report.clientId === client.id),
     ),
+  }
+}
+
+export function getAdminWorkspaceData(): AdminWorkspaceData {
+  return {
+    users,
+    contractors: contractorProfiles,
+    clients: clientProfiles,
+    reports: clientReports,
+    evidence: reportEvidence,
+    responses: clientResponses,
+    discussions: communityDiscussions,
+    reviews: getPendingAdminReviews(),
+    auditLog: auditLogs,
   }
 }
 
@@ -370,6 +394,126 @@ export function reviewReport(
         : "Mock rejection keeps this report private.",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+  }
+}
+
+export function reviewReportsBulk(
+  reportIds: string[],
+  decision: "approved" | "rejected" | "deleted",
+): { updated: AdminReview[]; deletedIds: string[] } {
+  if (decision === "deleted") {
+    return {
+      updated: [],
+      deletedIds: reportIds,
+    }
+  }
+
+  return {
+    updated: reportIds.map((reportId) => reviewReport(reportId, decision)),
+    deletedIds: [],
+  }
+}
+
+export function submitCommunityDiscussion(
+  profileSlug: string,
+  input: {
+    name: string
+    relationshipCategory: CommunityDiscussion["relationshipCategory"]
+    commentBody: string
+    attachmentUrl?: string
+    reportId?: string
+  },
+) {
+  const profile = clientProfiles.find((client) => client.publicSlug === profileSlug)
+
+  if (!profile) {
+    throw new Error("No public profile was found for that discussion.")
+  }
+
+  return {
+    id: `discussion_mock_${Date.now()}`,
+    clientId: profile.id,
+    reportId: input.reportId,
+    authorName: input.name,
+    authorEmailHash: "sha256:pending-discussion-private",
+    relationshipCategory: input.relationshipCategory,
+    commentBody: input.commentBody,
+    attachmentUrl: input.attachmentUrl,
+    status: "pending" as const,
+    isVerified: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function reviewCommunityDiscussion(
+  discussionId: string,
+  decision: "approved" | "rejected" | "deleted" | "verified",
+  moderatorNote?: string,
+): CommunityDiscussion {
+  const discussion = communityDiscussions.find((candidate) => candidate.id === discussionId)
+  const now = new Date().toISOString()
+  const nextStatus: DiscussionStatus =
+    decision === "approved" || decision === "verified"
+      ? "approved"
+      : decision === "deleted"
+        ? "rejected"
+        : "rejected"
+
+  return {
+    ...(discussion ?? {
+      id: discussionId,
+      clientId: "client_01",
+      authorName: "Discussion contact",
+      authorEmailHash: "sha256:private",
+      relationshipCategory: "Supporting Context" as const,
+      commentBody: "Discussion entry was moderated.",
+      status: "pending" as const,
+      isVerified: false,
+      createdAt: now,
+      updatedAt: now,
+    }),
+    status: nextStatus,
+    isVerified: decision === "verified" ? true : (discussion?.isVerified ?? false),
+    moderatorNote,
+    updatedAt: now,
+    publishedAt: nextStatus === "approved" ? now : discussion?.publishedAt,
+  }
+}
+
+export function updateAdminClientRecord(input: Partial<ClientProfile> & { id: string }): ClientProfile {
+  const existing = clientProfiles.find((candidate) => candidate.id === input.id)
+  if (!existing) throw new Error("Client profile was not found.")
+
+  return {
+    ...existing,
+    ...input,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function updateAdminContractorRecord(
+  input: Partial<(typeof contractorProfiles)[number]> & { id: string },
+) {
+  const existing = contractorProfiles.find((candidate) => candidate.id === input.id)
+  if (!existing) throw new Error("Contractor profile was not found.")
+
+  return {
+    ...existing,
+    ...input,
+  }
+}
+
+export function deleteAdminRecord(entityType: string, entityId: string): AuditLogEntry {
+  return {
+    id: `audit_mock_delete_${Date.now()}`,
+    actorId: "user_admin_01",
+    actorName: "Client Bureau Review Team",
+    action: "deleted_record",
+    entityType: entityType as AuditLogEntry["entityType"],
+    entityId,
+    summary: `Mock delete action recorded for ${entityType} ${entityId}.`,
+    createdAt: new Date().toISOString(),
   }
 }
 

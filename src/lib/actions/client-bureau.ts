@@ -3,20 +3,44 @@
 import { revalidatePath } from "next/cache"
 
 import {
+  adminClientUpdateSchema,
+  adminContractorUpdateSchema,
+  adminDeleteRecordSchema,
+  adminDiscussionReviewSchema,
   adminReviewSchema,
+  bulkAdminReviewSchema,
+  bulkUploadImportSchema,
   clientReportSchema,
   clientResponseSchema,
+  communityDiscussionSchema,
   loginSchema,
   signupSchema,
 } from "@/lib/schemas/client-bureau"
-import type { ActionResult, AdminReview, ClientResponse, ClientReport, User } from "@/lib/types"
+import type {
+  ActionResult,
+  AdminReview,
+  AuditLogEntry,
+  ClientProfile,
+  ClientResponse,
+  ClientReport,
+  CommunityDiscussion,
+  ContractorProfile,
+  User,
+} from "@/lib/types"
+import { reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
-import { getCurrentUser, requireAuthenticatedUser, requireRole } from "@/lib/auth"
+import { getCurrentUser, requireAuthenticatedUser, requireContractorAccess } from "@/lib/auth"
 import { getDataMode } from "@/lib/env"
 import {
+  deleteAdminRecordService,
+  reviewCommunityDiscussionService,
   reviewReportService,
+  reviewReportsBulkService,
+  submitCommunityDiscussionService,
   submitClientReportService,
   submitClientResponseService,
+  updateAdminClientRecordService,
+  updateAdminContractorRecordService,
 } from "@/lib/repositories/client-bureau-service"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
@@ -37,12 +61,13 @@ export async function submitClientReportAction(
     return fail("Please correct the highlighted report fields.", zodFieldErrors(parsed.error))
   }
 
-  const user = await requireRole("contractor")
+  const user = await requireContractorAccess()
 
   const report = await submitClientReportService(parsed.data, user.id, evidenceFilesFromForm(formData))
 
   revalidatePath("/dashboard")
   revalidatePath("/admin/reviews")
+  revalidatePath("/admin/reports")
 
   return ok(report, "Report received. It is now queued for moderation review.")
 }
@@ -62,6 +87,7 @@ export async function submitClientResponseAction(
   const response = await submitClientResponseService(parsed.data)
 
   revalidatePath("/admin/reviews")
+  revalidatePath("/admin/reports")
 
   return ok(response, "Response received. It will appear after moderation review.")
 }
@@ -213,7 +239,11 @@ export async function reviewReportAction(
     })
   }
 
-  const admin = await requireRole("admin")
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try the moderation action again.")
+  }
 
   const review = await reviewReportService(
     parsed.data.reportId,
@@ -223,6 +253,7 @@ export async function reviewReportAction(
   )
 
   revalidatePath("/admin/reviews")
+  revalidatePath("/admin/reports")
   revalidatePath("/dashboard")
   revalidatePath("/search")
   revalidatePath("/sitemap.xml")
@@ -237,4 +268,239 @@ export async function reviewReportAction(
       ? `Report approved. Public profile is live${review.publishedProfileUrl ? ` at ${review.publishedProfileUrl}` : ""}.`
       : "Report rejected and kept private.",
   )
+}
+
+export async function bulkReviewReportsAction(
+  _previousState: ActionResult<{ updated: AdminReview[]; deletedIds: string[] }>,
+  formData: FormData,
+): Promise<ActionResult<{ updated: AdminReview[]; deletedIds: string[] }>> {
+  const parsed = bulkAdminReviewSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select reports before running a bulk moderation action.", zodFieldErrors(parsed.error))
+  }
+
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try the bulk action again.")
+  }
+
+  const result = await reviewReportsBulkService(parsed.data.reportIds, parsed.data.decision, admin.id)
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/reports")
+  revalidatePath("/admin/reviews")
+  revalidatePath("/admin/audit-log")
+  revalidatePath("/search")
+  revalidatePath("/sitemap.xml")
+
+  return ok(
+    result,
+    parsed.data.decision === "deleted"
+      ? `${result.deletedIds.length} report records deleted.`
+      : `${result.updated.length} report records marked ${parsed.data.decision}.`,
+  )
+}
+
+export async function submitCommunityDiscussionAction(
+  _previousState: ActionResult<CommunityDiscussion>,
+  formData: FormData,
+): Promise<ActionResult<CommunityDiscussion>> {
+  const parsed = communityDiscussionSchema.safeParse({
+    ...formDataToObject(formData),
+    truthfulCertification: formData.has("truthfulCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the highlighted discussion fields.", zodFieldErrors(parsed.error))
+  }
+
+  const discussion = await submitCommunityDiscussionService(parsed.data)
+
+  revalidatePath("/admin/discussions")
+
+  return ok(discussion, "Discussion submitted. It will appear publicly only after moderation approval.")
+}
+
+export async function adminDiscussionReviewAction(
+  _previousState: ActionResult<CommunityDiscussion | undefined>,
+  formData: FormData,
+): Promise<ActionResult<CommunityDiscussion | undefined>> {
+  const parsed = adminDiscussionReviewSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Review the discussion action fields.", zodFieldErrors(parsed.error))
+  }
+
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try the discussion action again.")
+  }
+
+  const discussion = await reviewCommunityDiscussionService(
+    parsed.data.discussionId,
+    parsed.data.decision,
+    parsed.data.moderatorNote,
+    admin,
+  )
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/discussions")
+  revalidatePath("/admin/audit-log")
+  revalidatePath("/sitemap.xml")
+
+  return ok(
+    discussion,
+    parsed.data.decision === "deleted"
+      ? "Discussion deleted."
+      : `Discussion marked ${parsed.data.decision}.`,
+  )
+}
+
+export async function adminUpdateClientAction(
+  _previousState: ActionResult<ClientProfile>,
+  formData: FormData,
+): Promise<ActionResult<ClientProfile>> {
+  const parsed = adminClientUpdateSchema.safeParse({
+    ...formDataToObject(formData),
+    isPublic: formData.has("isPublic"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the highlighted client fields.", zodFieldErrors(parsed.error))
+  }
+
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try editing again.")
+  }
+
+  const client = await updateAdminClientRecordService({ ...parsed.data, reviewer: admin })
+
+  revalidatePath("/admin/clients")
+  revalidatePath("/admin/audit-log")
+  revalidatePath("/search")
+  revalidatePath(`/client/${client.publicSlug}`)
+  revalidatePath("/sitemap.xml")
+
+  return ok(client, "Client profile updated.")
+}
+
+export async function adminUpdateContractorAction(
+  _previousState: ActionResult<ContractorProfile>,
+  formData: FormData,
+): Promise<ActionResult<ContractorProfile>> {
+  const parsed = adminContractorUpdateSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the highlighted contractor fields.", zodFieldErrors(parsed.error))
+  }
+
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try editing again.")
+  }
+
+  const contractor = await updateAdminContractorRecordService({ ...parsed.data, reviewer: admin })
+
+  revalidatePath("/admin/contractors")
+  revalidatePath("/admin/audit-log")
+
+  return ok(contractor, "Contractor profile updated.")
+}
+
+export async function adminDeleteRecordAction(
+  _previousState: ActionResult<AuditLogEntry | boolean>,
+  formData: FormData,
+): Promise<ActionResult<AuditLogEntry | boolean>> {
+  const parsed = adminDeleteRecordSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a record before deleting.", zodFieldErrors(parsed.error))
+  }
+
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try deleting again.")
+  }
+
+  const result = await deleteAdminRecordService(parsed.data.entityType, parsed.data.entityId, admin)
+
+  revalidatePath("/admin")
+  revalidatePath(`/admin/${parsed.data.entityType}s`)
+  revalidatePath("/admin/audit-log")
+  revalidatePath("/search")
+  revalidatePath("/sitemap.xml")
+
+  return ok(result, "Record deleted and audit entry created.")
+}
+
+export async function bulkUploadImportAction(
+  _previousState: ActionResult<{ imported: number }>,
+  formData: FormData,
+): Promise<ActionResult<{ imported: number }>> {
+  const parsed = bulkUploadImportSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Preview and select valid rows before importing.", zodFieldErrors(parsed.error))
+  }
+
+  const admin = await getCurrentUser("admin")
+
+  if (!admin || admin.role !== "admin") {
+    return fail("Your admin session expired. Refresh, log in, and try importing again.")
+  }
+
+  let rows: Array<Record<string, unknown>>
+
+  try {
+    rows = JSON.parse(parsed.data.rows) as Array<Record<string, unknown>>
+  } catch {
+    return fail("The selected CSV rows could not be parsed. Preview the upload again.")
+  }
+
+  for (const row of rows) {
+    const clientName = String(row.clientName ?? "").trim()
+    const [firstName, ...lastParts] = clientName.split(/\s+/)
+    const reportType = String(row.reportType ?? "Other")
+    const reportCategory = reportCategories.includes(reportType as (typeof reportCategories)[number])
+      ? (reportType as (typeof reportCategories)[number])
+      : "Other"
+    const amount = Number(row.amount ?? 0)
+
+    await submitClientReportService(
+      {
+        firstName: firstName || "Unknown",
+        lastName: lastParts.join(" ") || "Client",
+        businessName: undefined,
+        email: "",
+        phone: undefined,
+        city: String(row.city ?? "Unknown"),
+        state: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
+        projectType: reportType,
+        projectCity: String(row.city ?? "Unknown"),
+        projectState: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
+        contractAmount: amount,
+        amountUnpaid: amount,
+        reportCategory,
+        paymentStatus: String(row.status ?? "Pending admin import"),
+        reportSummary: String(row.summary ?? ""),
+        detailedExperience: String(row.notes ?? row.summary ?? ""),
+        evidenceAttached: false,
+      },
+      admin.id,
+    )
+  }
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/uploads")
+  revalidatePath("/admin/reports")
+  revalidatePath("/admin/audit-log")
+
+  return ok({ imported: rows.length }, `${rows.length} CSV rows imported as pending report records.`)
 }

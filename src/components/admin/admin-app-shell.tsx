@@ -2,7 +2,18 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ClipboardCheck, ExternalLink, LogOut, ShieldCheck } from "lucide-react"
+import {
+  ClipboardCheck,
+  FileSpreadsheet,
+  History,
+  LogOut,
+  MessageSquareText,
+  Settings,
+  ShieldCheck,
+  UploadCloud,
+  UserRound,
+  UsersRound,
+} from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Button } from "@/components/ui/button"
@@ -10,9 +21,44 @@ import { cn } from "@/lib/utils"
 
 const adminNav = [
   {
-    href: "/admin/reviews",
-    label: "Moderation",
+    href: "/admin",
+    label: "Command",
+    icon: ShieldCheck,
+  },
+  {
+    href: "/admin/reports",
+    label: "Reports",
     icon: ClipboardCheck,
+  },
+  {
+    href: "/admin/clients",
+    label: "Clients",
+    icon: UserRound,
+  },
+  {
+    href: "/admin/contractors",
+    label: "Contractors",
+    icon: UsersRound,
+  },
+  {
+    href: "/admin/discussions",
+    label: "Discussions",
+    icon: MessageSquareText,
+  },
+  {
+    href: "/admin/uploads",
+    label: "Uploads",
+    icon: UploadCloud,
+  },
+  {
+    href: "/admin/audit-log",
+    label: "Audit Log",
+    icon: History,
+  },
+  {
+    href: "/admin/settings",
+    label: "Settings",
+    icon: Settings,
   },
 ]
 
@@ -67,9 +113,9 @@ export function AdminAppShell({
             </div>
             <div className="grid gap-2">
               <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
-                <Link href="/" target="_blank">
-                  <ExternalLink aria-hidden="true" />
-                  Public site
+                <Link href="/submit-report">
+                  <FileSpreadsheet aria-hidden="true" />
+                  New report
                 </Link>
               </Button>
               <Button asChild variant="ghost" className="justify-start text-slate-300 hover:bg-white/10 hover:text-white">
