@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 
 import {
   adminClientUpdateSchema,
@@ -198,17 +199,16 @@ export async function mockLoginAction(
     if (error) return fail(error.message)
 
     const user = await getCurrentUser()
+    const nextValue = formData.get("next")
+    const next =
+      typeof nextValue === "string" && nextValue.startsWith("/") && !nextValue.startsWith("//")
+        ? nextValue
+        : user?.role === "admin"
+          ? "/admin"
+          : "/dashboard"
 
-    return ok(
-      user ?? {
-        id: "supabase-session",
-        email: parsed.data.email,
-        fullName: "Client Bureau user",
-        role: "contractor",
-        createdAt: new Date().toISOString(),
-      },
-      "Logged in.",
-    )
+    redirect(next)
+
   }
 
   return ok(

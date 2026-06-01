@@ -31,6 +31,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
   return (
     <form action={action} className="grid gap-4">
+      {redirectTo ? <input type="hidden" name="next" value={redirectTo} /> : null}
       {state.message ? (
         <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
           <AlertTitle>{state.ok ? "Session active" : "Login needs attention"}</AlertTitle>

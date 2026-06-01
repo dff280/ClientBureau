@@ -78,28 +78,34 @@ export async function getCurrentUser(role: UserRole = "contractor"): Promise<Use
   return mapUser(profile)
 }
 
-export async function requireAuthenticatedUser(role: UserRole = "contractor") {
+function loginRedirect(next?: string): never {
+  const target = next && next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : ""
+
+  redirect(`/login${target}`)
+}
+
+export async function requireAuthenticatedUser(role: UserRole = "contractor", next?: string) {
   const user = await getCurrentUser(role)
 
   if (!user) {
-    redirect("/login")
+    loginRedirect(next)
   }
 
   return user
 }
 
-export async function requireContractorAccess() {
-  const user = await requireAuthenticatedUser()
+export async function requireContractorAccess(next?: string) {
+  const user = await requireAuthenticatedUser("contractor", next)
 
   if (!["contractor", "admin"].includes(user.role)) {
-    redirect("/login")
+    loginRedirect(next)
   }
 
   return user
 }
 
-export async function requireRole(role: UserRole) {
-  const user = await requireAuthenticatedUser(role)
+export async function requireRole(role: UserRole, next?: string) {
+  const user = await requireAuthenticatedUser(role, next)
 
   if (user.role !== role) {
     redirect(user.role === "admin" ? "/admin" : "/dashboard")
