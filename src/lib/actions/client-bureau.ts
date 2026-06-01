@@ -1,5 +1,7 @@
 "use server"
 
+import { revalidatePath } from "next/cache"
+
 import {
   adminReviewSchema,
   clientReportSchema,
@@ -37,10 +39,12 @@ export async function submitClientReportAction(
 
   const user = await requireRole("contractor")
 
-  return ok(
-    await submitClientReportService(parsed.data, user.id, evidenceFilesFromForm(formData)),
-    "Report received. It is now queued for moderation review.",
-  )
+  const report = await submitClientReportService(parsed.data, user.id, evidenceFilesFromForm(formData))
+
+  revalidatePath("/dashboard")
+  revalidatePath("/admin/reviews")
+
+  return ok(report, "Report received. It is now queued for moderation review.")
 }
 
 export async function submitClientResponseAction(
@@ -55,10 +59,11 @@ export async function submitClientResponseAction(
 
   await requireAuthenticatedUser()
 
-  return ok(
-    await submitClientResponseService(parsed.data),
-    "Response received. It will appear after moderation review.",
-  )
+  const response = await submitClientResponseService(parsed.data)
+
+  revalidatePath("/admin/reviews")
+
+  return ok(response, "Response received. It will appear after moderation review.")
 }
 
 export async function mockSignupAction(
@@ -210,15 +215,26 @@ export async function reviewReportAction(
 
   const admin = await requireRole("admin")
 
+  const review = await reviewReportService(
+    parsed.data.reportId,
+    parsed.data.decision,
+    parsed.data.editedPublicSummary,
+    admin.id,
+  )
+
+  revalidatePath("/admin/reviews")
+  revalidatePath("/dashboard")
+  revalidatePath("/search")
+  revalidatePath("/sitemap.xml")
+
+  if (review.publishedProfileSlug) {
+    revalidatePath(`/client/${review.publishedProfileSlug}`)
+  }
+
   return ok(
-    await reviewReportService(
-      parsed.data.reportId,
-      parsed.data.decision,
-      parsed.data.editedPublicSummary,
-      admin.id,
-    ),
+    review,
     parsed.data.decision === "approved"
-      ? "Report approved. Publication audit is ready."
+      ? `Report approved. Public profile is live${review.publishedProfileUrl ? ` at ${review.publishedProfileUrl}` : ""}.`
       : "Report rejected and kept private.",
   )
 }

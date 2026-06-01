@@ -31,6 +31,20 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `SUPABASE_SECRET_KEY` or service role key
 5. Create the first admin by signing up normally, then update the `users.role` value to `admin` in Supabase.
 
+Admin promotion SQL:
+
+```sql
+update public.users
+set role = 'admin'
+where email = 'YOUR_ADMIN_EMAIL@example.com';
+```
+
+Then log out and log back in. The admin panel is:
+
+```text
+https://clientbureau.com/admin/reviews
+```
+
 ## 3. Stripe Test Mode
 
 1. In Stripe test mode, create products for Pro Contractor and Bureau Team.
@@ -202,3 +216,54 @@ Before allowing Google to index real client reports, confirm:
 - Admin approval publishes or updates the client profile.
 - Stripe test checkout completes and webhooks update subscription status.
 - cPanel or any existing web server is not bound to ports `80` or `443` for this domain.
+
+## 9. Admin Approval Smoke Test
+
+After creating a contractor account and submitting a test report:
+
+1. Promote your admin account in Supabase:
+
+```sql
+update public.users
+set role = 'admin'
+where email = 'YOUR_ADMIN_EMAIL@example.com';
+```
+
+2. Open `https://clientbureau.com/admin/reviews`.
+3. Edit the public summary so it uses reported-experience language.
+4. Check:
+   - Evidence reviewed
+   - Public summary is neutral and fact-based
+   - Phone and email are not visible publicly
+5. Click `Approve and publish`.
+6. Use the `Public profile` link shown in the admin panel.
+7. Confirm the public profile loads at:
+
+```text
+https://clientbureau.com/client/generated-client-slug
+```
+
+8. Confirm the profile is listed in the sitemap:
+
+```bash
+curl https://clientbureau.com/sitemap.xml | grep /client/
+```
+
+Useful Supabase checks:
+
+```sql
+select
+  cp.first_name,
+  cp.last_name,
+  cp.public_slug,
+  cp.is_public,
+  cp.client_bureau_score,
+  cp.risk_level,
+  cp.report_count,
+  cr.status,
+  cr.public_summary
+from public.client_reports cr
+join public.client_profiles cp on cp.id = cr.client_id
+order by cr.created_at desc
+limit 20;
+```

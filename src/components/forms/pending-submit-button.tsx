@@ -10,19 +10,20 @@ export function PendingSubmitButton({
   pendingText = "Submitting...",
   className,
   variant,
+  disabled,
   ...props
 }: {
   children: React.ReactNode
   pendingText?: string
   className?: string
   variant?: React.ComponentProps<typeof Button>["variant"]
-} & Omit<React.ComponentProps<typeof Button>, "type" | "disabled" | "children">) {
+} & Omit<React.ComponentProps<typeof Button>, "type" | "children">) {
   const { pending } = useFormStatus()
 
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={className}
       variant={variant}
       {...props}

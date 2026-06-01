@@ -740,13 +740,37 @@ export async function reviewReportSupabase(
 
   if (existingReviewError) throw new Error(existingReviewError.message)
 
+  let publishedProfile: ClientProfile | undefined
+
+  if (decision === "approved") {
+    const reports = await getApprovedReportsForClient(reportRow.client_id)
+    const calculated = calculateClientBureauScore(reports)
+
+    const { data: profileRow, error: profileUpdateError } = await supabase
+      .from("client_profiles")
+      .update({
+        is_public: true,
+        client_bureau_score: calculated.score,
+        risk_level: calculated.riskLevel,
+        report_count: calculated.reportCount,
+        updated_at: now,
+      })
+      .eq("id", reportRow.client_id)
+      .select("*")
+      .single()
+
+    if (profileUpdateError) throw new Error(profileUpdateError.message)
+
+    publishedProfile = mapClientProfile(profileRow)
+  }
+
   const reviewPayload = {
     reviewer_id: reviewerId ?? null,
     status: decision,
     edited_public_summary: editedPublicSummary ?? null,
     notes:
-      decision === "approved"
-        ? "Approved report published to the public client profile."
+      decision === "approved" && publishedProfile
+        ? `Approved report published at /client/${publishedProfile.publicSlug}.`
         : "Rejected report remains private.",
     updated_at: now,
   }
@@ -763,23 +787,9 @@ export async function reviewReportSupabase(
 
   if (reviewError) throw new Error(reviewError.message)
 
-  if (decision === "approved") {
-    const reports = await getApprovedReportsForClient(reportRow.client_id)
-    const calculated = calculateClientBureauScore(reports)
-
-    const { error: profileUpdateError } = await supabase
-      .from("client_profiles")
-      .update({
-        is_public: true,
-        client_bureau_score: calculated.score,
-        risk_level: calculated.riskLevel,
-        report_count: calculated.reportCount,
-        updated_at: now,
-      })
-      .eq("id", reportRow.client_id)
-
-    if (profileUpdateError) throw new Error(profileUpdateError.message)
+  return {
+    ...mapAdminReview(reviewRow),
+    publishedProfileSlug: publishedProfile?.publicSlug,
+    publishedProfileUrl: publishedProfile ? `/client/${publishedProfile.publicSlug}` : undefined,
   }
-
-  return mapAdminReview(reviewRow)
 }

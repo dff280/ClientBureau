@@ -162,6 +162,8 @@ export interface AdminReview {
   status: "queued" | "approved" | "rejected" | "needs_dispute_review"
   editedPublicSummary?: string
   notes?: string
+  publishedProfileSlug?: string
+  publishedProfileUrl?: string
   createdAt: string
   updatedAt: string
 }

@@ -1,7 +1,9 @@
 "use client"
 
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useActionState, useEffect, useMemo, useState } from "react"
-import { CheckCircle2, Eye, FileText, XCircle } from "lucide-react"
+import { CheckCircle2, ExternalLink, Eye, FileText, Inbox, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
@@ -36,11 +38,9 @@ const initialReviewState: ActionResult<AdminReview> = {
 }
 
 export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
-  const [reviews] = useState(items)
-  const queuedCount = useMemo(
-    () => reviews.filter((item) => item.review.status === "queued").length,
-    [reviews],
-  )
+  const queuedCount = useMemo(() => items.filter((item) => item.review.status === "queued").length, [items])
+  const approvedCount = useMemo(() => items.filter((item) => item.review.status === "approved").length, [items])
+  const rejectedCount = useMemo(() => items.filter((item) => item.review.status === "rejected").length, [items])
 
   return (
     <div className="space-y-6">
@@ -53,38 +53,63 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
         </Card>
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="p-5">
-            <p className="text-sm font-semibold uppercase text-slate-500">Total in panel</p>
-            <p className="mt-2 text-3xl font-semibold text-slate-950">{reviews.length}</p>
+            <p className="text-sm font-semibold uppercase text-slate-500">Approved</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{approvedCount}</p>
           </CardContent>
         </Card>
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="p-5">
-            <p className="text-sm font-semibold uppercase text-slate-500">Approval gate</p>
-            <p className="mt-2 text-sm font-medium leading-6 text-slate-700">
-              Evidence, neutral wording, and private identifier checks are required before publishing.
-            </p>
+            <p className="text-sm font-semibold uppercase text-slate-500">Rejected</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{rejectedCount}</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-5">
-        {reviews.map((item) => (
-          <ReviewCard key={item.review.id} item={item} />
-        ))}
-      </div>
+      {items.length > 0 ? (
+        <div className="grid gap-5">
+          {items.map((item) => (
+            <ReviewCard key={item.review.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="grid gap-3 p-8 text-center">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-md bg-slate-100 text-slate-700">
+              <Inbox className="size-6" aria-hidden="true" />
+            </div>
+            <h2 className="text-2xl font-semibold text-slate-950">No reports in review.</h2>
+            <p className="text-sm leading-6 text-slate-600">
+              New contractor submissions will appear here after they are queued for moderation.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
 
 function ReviewCard({ item }: { item: AdminReviewItem }) {
+  const router = useRouter()
   const [state, action] = useActionState(reviewReportAction, initialReviewState)
   const report = item.report
   const client = item.client
   const [summary, setSummary] = useState(report?.publicSummary ?? "")
+  const currentStatus = state.ok ? state.data.status : item.review.status
+  const publicHref = state.ok
+    ? state.data.publishedProfileUrl
+    : client?.isPublic
+      ? `/client/${client.publicSlug}`
+      : undefined
 
   useEffect(() => {
-    if (state.message) toast[state.ok ? "success" : "error"](state.message)
-  }, [state])
+    if (state.message) {
+      toast[state.ok ? "success" : "error"](state.message)
+    }
+
+    if (state.ok) {
+      router.refresh()
+    }
+  }, [router, state])
 
   return (
     <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -93,9 +118,19 @@ function ReviewCard({ item }: { item: AdminReviewItem }) {
           <CardTitle className="text-xl">
             {client ? `${client.firstName} ${client.lastName}` : "Client review"}
           </CardTitle>
-          <span className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold uppercase text-slate-600">
-            {state.ok ? state.data.status : item.review.status}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            {publicHref ? (
+              <Button asChild size="sm" variant="outline">
+                <Link href={publicHref} target="_blank">
+                  <ExternalLink aria-hidden="true" />
+                  Public profile
+                </Link>
+              </Button>
+            ) : null}
+            <span className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold uppercase text-slate-600">
+              {currentStatus}
+            </span>
+          </div>
         </div>
         <p className="text-sm leading-6 text-slate-600">
           {report?.reportCategory ?? "Report category"} | {report?.paymentStatus ?? "Payment status"}
@@ -112,7 +147,18 @@ function ReviewCard({ item }: { item: AdminReviewItem }) {
               >
                 {state.ok ? <CheckCircle2 className="size-4" aria-hidden="true" /> : null}
                 <AlertTitle>{state.ok ? "Review updated" : "Review needs attention"}</AlertTitle>
-                <AlertDescription>{state.message}</AlertDescription>
+                <AlertDescription className="space-y-2">
+                  <span>{state.message}</span>
+                  {state.ok && state.data.publishedProfileUrl ? (
+                    <Link
+                      href={state.data.publishedProfileUrl}
+                      target="_blank"
+                      className="block font-semibold underline underline-offset-4"
+                    >
+                      Open published public profile
+                    </Link>
+                  ) : null}
+                </AlertDescription>
               </Alert>
             ) : null}
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -141,11 +187,18 @@ function ReviewCard({ item }: { item: AdminReviewItem }) {
                 value="approved"
                 pendingText="Approving..."
                 className="bg-emerald-700 text-white hover:bg-emerald-800"
+                disabled={currentStatus === "approved"}
               >
                 <CheckCircle2 aria-hidden="true" />
                 Approve and publish
               </PendingSubmitButton>
-              <Button type="submit" name="decision" value="rejected" variant="destructive">
+              <Button
+                type="submit"
+                name="decision"
+                value="rejected"
+                variant="destructive"
+                disabled={currentStatus === "rejected"}
+              >
                 <XCircle aria-hidden="true" />
                 Reject
               </Button>
