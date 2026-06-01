@@ -32,7 +32,8 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
    - `SUPABASE_SECRET_KEY` or service role key
 5. Create the first admin by signing up normally, then update the `users.role` value to `admin` in Supabase.
-6. For extra protection against accidental role drift, add your owner email to `ADMIN_EMAILS` in `.env.production`.
+6. Add your exact owner login email to `ADMIN_EMAILS` in `.env.production`. The app uses this as a repair guard: a matching signed-in user is restored to `role=admin` with the Supabase service key.
+7. In Supabase Auth settings, set the site URL to `https://clientbureau.com` and add `https://clientbureau.com/auth/callback` as an allowed redirect URL.
 
 Admin promotion SQL:
 
@@ -46,6 +47,14 @@ Then log out and log back in. The admin app is:
 ```text
 https://clientbureau.com/admin
 ```
+
+If admin access fails, open:
+
+```text
+https://clientbureau.com/api/admin/session
+```
+
+Expected healthy values are `authenticated: true`, `isAdmin: true`, `adminEmailAllowlistConfigured: true`, and `serviceRoleConfigured: true`.
 
 ## 3. Stripe Test Mode
 
@@ -213,6 +222,14 @@ Browser-check these routes on desktop and mobile:
 /dispute-policy
 /moderation-policy
 ```
+
+Confirm auth health in the same browser you use for admin work:
+
+```text
+https://clientbureau.com/api/admin/session
+```
+
+If it returns `authenticated:false` and `authCookiePresent:false`, that browser is not logged in on `clientbureau.com`; use `https://clientbureau.com/login?next=/admin`. If it returns `adminEmailAllowlistConfigured:false`, update `.env.production`, rebuild, and log in again.
 
 Before allowing Google to index real client reports, confirm:
 

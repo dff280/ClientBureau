@@ -14,12 +14,17 @@ export const metadata: Metadata = {
 }
 
 type LoginPageProps = {
-  searchParams: Promise<Partial<Record<"next", string>>>
+  searchParams: Promise<Partial<Record<"error" | "loggedOut" | "next", string>>>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const next = (await searchParams).next
+  const params = await searchParams
+  const next = params.next
   const redirectTo = next?.startsWith("/") && !next.startsWith("//") ? next : undefined
+  const message =
+    params.error ??
+    (params.loggedOut ? "You have been logged out. Sign in again to continue." : undefined)
+  const messageVariant = params.error ? "destructive" : "default"
 
   return (
     <section className="bureau-section bg-slate-100">
@@ -29,11 +34,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <LockKeyhole className="size-8 text-slate-950" aria-hidden="true" />
             <CardTitle className="text-2xl">Login to Client Bureau</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
-              Mock form now. Supabase Auth should connect here with cookie-based server sessions.
+              Sign in with Supabase Auth. Admin accounts are routed to the isolated moderation console after role checks.
             </p>
           </CardHeader>
           <CardContent>
-            <LoginForm redirectTo={redirectTo} />
+            <LoginForm redirectTo={redirectTo} message={message} variant={messageVariant} />
           </CardContent>
         </Card>
       </div>

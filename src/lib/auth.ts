@@ -1,3 +1,4 @@
+import type { User as SupabaseAuthUser } from "@supabase/supabase-js"
 import { redirect } from "next/navigation"
 
 import type { Database } from "@/lib/database.types"
@@ -9,6 +10,7 @@ import { createServiceClient } from "@/lib/supabase/service"
 import type { User, UserRole } from "@/lib/types"
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
+type SupabaseAuthUserLike = Pick<SupabaseAuthUser, "id" | "email" | "user_metadata" | "created_at">
 
 export function getDemoUser(role: UserRole = "contractor") {
   const user = users.find((candidate) => candidate.role === role)
@@ -30,18 +32,13 @@ function mapUser(row: UserRow): User {
   }
 }
 
-function isConfiguredAdminEmail(email?: string | null) {
+export function isConfiguredAdminEmail(email?: string | null) {
   if (!email) return false
 
   return getAdminEmails().includes(email.trim().toLowerCase())
 }
 
-function fallbackUserFromAuth(user: {
-  id: string
-  email?: string | null
-  user_metadata: Record<string, unknown>
-  created_at: string
-}): User {
+function fallbackUserFromAuth(user: SupabaseAuthUserLike): User {
   const fullName =
     typeof user.user_metadata.full_name === "string"
       ? user.user_metadata.full_name
@@ -56,7 +53,7 @@ function fallbackUserFromAuth(user: {
   }
 }
 
-async function getUserProfile(userId: string, requestClient: Awaited<ReturnType<typeof createClient>>) {
+async function getUserProfile(userId: string, requestClient?: Awaited<ReturnType<typeof createClient>>) {
   if (hasSupabaseServiceConfig()) {
     const service = createServiceClient()
     const { data, error } = await service.from("users").select("*").eq("id", userId).maybeSingle()
@@ -66,11 +63,37 @@ async function getUserProfile(userId: string, requestClient: Awaited<ReturnType<
     return data
   }
 
+  if (!requestClient) return null
+
   const { data, error } = await requestClient.from("users").select("*").eq("id", userId).maybeSingle()
 
   if (error) throw new Error(error.message)
 
   return data
+}
+
+async function upsertFallbackUserProfile(user: User) {
+  if (!hasSupabaseServiceConfig()) return null
+
+  const service = createServiceClient()
+  const { data, error } = await service
+    .from("users")
+    .insert({
+      id: user.id,
+      email: user.email,
+      full_name: user.fullName,
+      role: user.role,
+    })
+    .select("*")
+    .single()
+
+  if (!error) return data
+
+  const duplicateKey = error.code === "23505"
+
+  if (!duplicateKey) throw new Error(error.message)
+
+  return getUserProfile(user.id)
 }
 
 async function upsertConfiguredAdminProfile(user: ReturnType<typeof fallbackUserFromAuth>) {
@@ -96,6 +119,28 @@ async function upsertConfiguredAdminProfile(user: ReturnType<typeof fallbackUser
   return data
 }
 
+export async function resolveAuthenticatedUserProfile(
+  authUser: SupabaseAuthUserLike,
+  requestClient?: Awaited<ReturnType<typeof createClient>>,
+): Promise<User> {
+  const fallbackUser = fallbackUserFromAuth(authUser)
+  const configuredAdminProfile = await upsertConfiguredAdminProfile(fallbackUser)
+
+  if (configuredAdminProfile) return mapUser(configuredAdminProfile)
+
+  const profile = await getUserProfile(authUser.id, requestClient)
+
+  if (profile) return mapUser(profile)
+
+  const createdProfile = await upsertFallbackUserProfile(fallbackUser)
+
+  return createdProfile ? mapUser(createdProfile) : fallbackUser
+}
+
+export function getSafeInternalPath(value?: unknown) {
+  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined
+}
+
 export async function getCurrentUser(role: UserRole = "contractor"): Promise<User | null> {
   if (getDataMode() === "mock") {
     return getDemoUser(role)
@@ -109,22 +154,12 @@ export async function getCurrentUser(role: UserRole = "contractor"): Promise<Use
 
   if (error || !user) return null
 
-  const fallbackUser = fallbackUserFromAuth(user)
-  const configuredAdminProfile = await upsertConfiguredAdminProfile(fallbackUser)
-
-  if (configuredAdminProfile) return mapUser(configuredAdminProfile)
-
-  const profile = await getUserProfile(user.id, supabase)
-
-  if (!profile) {
-    return fallbackUser
-  }
-
-  return mapUser(profile)
+  return resolveAuthenticatedUserProfile(user, supabase)
 }
 
 function loginRedirect(next?: string): never {
-  const target = next && next.startsWith("/") && !next.startsWith("//") ? `?next=${encodeURIComponent(next)}` : ""
+  const safeNext = getSafeInternalPath(next)
+  const target = safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""
 
   redirect(`/login${target}`)
 }

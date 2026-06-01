@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { useActionState, useEffect } from "react"
 import { toast } from "sonner"
 
@@ -10,7 +9,7 @@ import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { mockLoginAction, mockSignupAction } from "@/lib/actions/client-bureau"
+import { mockSignupAction } from "@/lib/actions/client-bureau"
 import type { ActionResult, User } from "@/lib/types"
 
 const initialUserState: ActionResult<User> = {
@@ -18,35 +17,31 @@ const initialUserState: ActionResult<User> = {
   message: "",
 }
 
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
-  const router = useRouter()
-  const [state, action] = useActionState(mockLoginAction, initialUserState)
-
-  useEffect(() => {
-    if (state.message) toast[state.ok ? "success" : "error"](state.message)
-    if (state.ok) {
-      router.replace(redirectTo ?? (state.data.role === "admin" ? "/admin" : "/dashboard"))
-    }
-  }, [redirectTo, router, state])
-
+export function LoginForm({
+  redirectTo,
+  message,
+  variant = "destructive",
+}: {
+  redirectTo?: string
+  message?: string
+  variant?: "default" | "destructive"
+}) {
   return (
-    <form action={action} className="grid gap-4">
+    <form action="/api/auth/login" method="post" className="grid gap-4">
       {redirectTo ? <input type="hidden" name="next" value={redirectTo} /> : null}
-      {state.message ? (
-        <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
-          <AlertTitle>{state.ok ? "Session active" : "Login needs attention"}</AlertTitle>
-          <AlertDescription>{state.message}</AlertDescription>
+      {message ? (
+        <Alert variant={variant} className="rounded-md">
+          <AlertTitle>{variant === "default" ? "Session update" : "Login needs attention"}</AlertTitle>
+          <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" placeholder="contractor@example.com" />
-        <FieldError name="email" errors={state.ok ? undefined : state.fieldErrors} />
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <Input id="password" name="password" type="password" placeholder="Password" />
-        <FieldError name="password" errors={state.ok ? undefined : state.fieldErrors} />
       </div>
       <PendingSubmitButton pendingText="Starting session..." className="bg-slate-950 text-white hover:bg-slate-800">
         Login

@@ -30,8 +30,13 @@ import type {
 } from "@/lib/types"
 import { reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
-import { getCurrentUser, requireAuthenticatedUser, requireContractorAccess } from "@/lib/auth"
-import { getDataMode } from "@/lib/env"
+import {
+  getCurrentUser,
+  requireAuthenticatedUser,
+  requireContractorAccess,
+  resolveAuthenticatedUserProfile,
+} from "@/lib/auth"
+import { getDataMode, getSiteUrl } from "@/lib/env"
 import {
   deleteAdminRecordService,
   reviewCommunityDiscussionService,
@@ -117,6 +122,7 @@ export async function mockSignupAction(
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
+        emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/dashboard`,
         data: {
           full_name: parsed.data.fullName,
           business_name: parsed.data.businessName,
@@ -191,14 +197,14 @@ export async function mockLoginAction(
 
   if (getDataMode() === "supabase") {
     const supabase = await createClient()
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
       password: parsed.data.password,
     })
 
     if (error) return fail(error.message)
 
-    const user = await getCurrentUser()
+    const user = data.user ? await resolveAuthenticatedUserProfile(data.user, supabase) : await getCurrentUser()
     const nextValue = formData.get("next")
     const next =
       typeof nextValue === "string" && nextValue.startsWith("/") && !nextValue.startsWith("//")
