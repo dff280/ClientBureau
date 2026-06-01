@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   const priceId = priceIdForTier(tier)
 
   if (!hasStripeConfig() || !priceId) {
-    return NextResponse.redirect(`${siteUrl}/pricing?checkout=mock&plan=${tier}`, 303)
+    return NextResponse.redirect(`${siteUrl}/pricing?checkout=unavailable&plan=${tier}`, 303)
   }
 
   const contractorId = await contractorIdForCurrentUser()
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
     custom_text: {
       submit: {
         message: tierConfig
-          ? `Start Client Bureau ${tierConfig.name} in Stripe test mode.`
-          : "Start Client Bureau in Stripe test mode.",
+          ? `Start Client Bureau ${tierConfig.name}.`
+          : "Start Client Bureau.",
       },
     },
   })

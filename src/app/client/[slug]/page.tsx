@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { CalendarClock, FilePlus2, MessageSquareText, ShieldAlert, ShieldCheck } from "lucide-react"
+import { CalendarClock, FilePlus2, HelpCircle, MessageSquareText, ShieldAlert, ShieldCheck } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
@@ -13,6 +13,7 @@ import { ScoreBreakdown } from "@/components/profile/score-breakdown"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
 import { getSiteUrl } from "@/lib/env"
 
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
   const name = `${profile.firstName} ${profile.lastName}`
   const location = `${profile.city}, ${profile.state}`
   const title = `${name} ${location} Contractor Client Report`
-  const description = `${name} in ${location}: Client Bureau profile with contractor-submitted report summaries, payment dispute context, risk level, and right-of-response information.`
+  const description = `${name} in ${location}: Client Bureau profile with moderated contractor-submitted report summaries, reported payment risk context, risk level, and right-of-response information.`
 
   return {
     title,
@@ -53,9 +54,9 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
     keywords: [
       name,
       location,
-      "contractor complaint",
+      "contractor-submitted client report",
       "unpaid invoice",
-      "payment dispute",
+      "reported payment risk",
       "client report",
       "Client Bureau",
     ],
@@ -144,6 +145,22 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
           <Card className="rounded-md border-slate-200 shadow-sm">
             <CardContent className="space-y-5 p-6">
               <ScoreGauge score={profile.clientBureauScore} />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
+                      <HelpCircle className="size-3.5" aria-hidden="true" />
+                      Score context
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Based on moderated reports, payment context, evidence summaries, disputes, resolutions, and positive reports.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Link href="/score-methodology" className="inline-flex text-xs font-semibold text-amber-700 hover:text-amber-800">
+                View score methodology
+              </Link>
               <div className="grid gap-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Report count</span>
@@ -230,6 +247,30 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <h2 className="text-2xl font-semibold text-slate-950">Report timeline</h2>
               <ReportTimeline events={profile.timeline} />
             </div>
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <MessageSquareText className="size-5 text-amber-700" aria-hidden="true" />
+                  Dispute and resolution context
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
+                <p>
+                  Open disputes: <span className="font-semibold text-slate-950">{openDisputes}</span>
+                </p>
+                <p>
+                  Resolved reports: <span className="font-semibold text-slate-950">{resolvedReports}</span>
+                </p>
+                <p>
+                  Clients may submit a response, correction request, dispute, or resolution update.
+                  Approved context appears publicly after moderation.
+                </p>
+                <Button asChild variant="outline">
+                  <Link href="/client-response">Submit response or correction</Link>
+                </Button>
+              </CardContent>
+            </Card>
 
             <CommunityDiscussionSection
               profileSlug={profile.publicSlug}

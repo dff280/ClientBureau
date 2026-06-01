@@ -5,6 +5,9 @@ import { PolicyPage } from "@/components/legal/policy-page"
 export const metadata: Metadata = {
   title: "Dispute and Response Policy",
   description: "Client Bureau policy for client right-of-response, disputes, corrections, and moderated profile context.",
+  alternates: {
+    canonical: "/dispute-policy",
+  },
 }
 
 export default function DisputePolicyPage() {

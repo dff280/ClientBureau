@@ -1,8 +1,10 @@
 import Link from "next/link"
+import type { Metadata } from "next"
 import {
   ArrowRight,
   BadgeCheck,
   FileCheck2,
+  FilePlus2,
   FileSearch,
   LockKeyhole,
   Scale,
@@ -19,21 +21,30 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
+export const metadata: Metadata = {
+  title: "Search Before You Sign",
+  description:
+    "Client Bureau helps contractors search moderated client-risk intelligence, submit documented reports, and review evidence-on-file summaries before accepting work.",
+  alternates: {
+    canonical: "/",
+  },
+}
+
 const features = [
   {
     icon: FileSearch,
-    title: "Pre-job client search",
-    text: "Search by identity, location, business name, phone hash, or email hash before signing.",
+    title: "Private matching",
+    text: "Search by name, location, business, phone, or email while private identifiers stay protected from public pages.",
   },
   {
     icon: FileCheck2,
-    title: "Documented report intake",
-    text: "Capture project facts, payment status, categories, and supporting evidence in one workflow.",
+    title: "Documented experiences",
+    text: "Capture project facts, payment timeline, dispute context, and supporting evidence for moderator review.",
   },
   {
     icon: Scale,
-    title: "Moderated public profiles",
-    text: "Approved summaries use careful wording, client response paths, and private identifier handling.",
+    title: "Fair public summaries",
+    text: "Published profiles use admin-approved summaries, evidence-on-file language, and client right-of-response.",
   },
 ]
 
@@ -51,14 +62,15 @@ export default function Home() {
             </div>
             <div className="space-y-5">
               <h1 className="max-w-3xl text-5xl font-semibold leading-tight tracking-normal sm:text-6xl">
-                Client Bureau
+                Search before you sign.
               </h1>
               <p className="max-w-2xl text-xl leading-8 text-slate-200">
                 Know who you&apos;re working with before the job starts.
               </p>
               <p className="max-w-2xl text-base leading-7 text-slate-300">
-                Search approved client profiles, review contractor-submitted reports, and
-                document your own project experience with moderation and right-of-response built in.
+                Client Bureau gives contractors moderated client-risk intelligence: private
+                matching, evidence-on-file summaries, documented contractor experiences, and
+                client response paths in one restrained trust platform.
               </p>
             </div>
             <form action="/search" className="grid max-w-3xl gap-3 rounded-md border border-white/10 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_auto]">
@@ -66,18 +78,26 @@ export default function Home() {
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                 <Input
                   name="q"
-                  placeholder="Search name, city, phone, email"
+                  placeholder="Search by client name, business, city, phone, or email"
                   className="h-12 border-0 pl-10 text-slate-950 shadow-none focus-visible:ring-0"
                 />
               </div>
               <Button className="h-12 bg-amber-500 px-6 text-slate-950 hover:bg-amber-400">
-                Search before signing
+                Search a client
               </Button>
             </form>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
+                <Link href="/submit-report">
+                  <FilePlus2 aria-hidden="true" />
+                  Submit a documented report
+                </Link>
+              </Button>
+            </div>
             <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-3">
-              <span>Admin-approved public reports</span>
+              <span>Admin-approved public summaries</span>
               <span>Private phone and email matching</span>
-              <span>SEO-ready profile pages</span>
+              <span>Client right-of-response</span>
             </div>
           </div>
           <div className="rounded-md border border-white/10 bg-white p-5 text-slate-950 shadow-2xl">
@@ -94,7 +114,7 @@ export default function Home() {
               {[
                 ["Report count", "2 approved reports"],
                 ["Payment reliability", "Payment concerns reported"],
-                ["Moderation", "Approved summaries only"],
+                ["Moderation", "Evidence reviewed privately"],
               ].map(([label, value]) => (
                 <div key={label} className="flex items-center justify-between rounded-md border border-slate-200 p-3">
                   <span className="text-sm font-medium text-slate-500">{label}</span>
@@ -115,12 +135,11 @@ export default function Home() {
           <div className="space-y-4">
             <p className="text-sm font-semibold uppercase text-amber-700">Search before you sign</p>
             <h2 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-              A client profile should be as easy to check as a business rating.
+              Client risk intelligence should be factual, moderated, and easy to check.
             </h2>
             <p className="leading-7 text-slate-600">
-              Client Bureau reverses the traditional bureau model for contractors. It helps your
-              team spot payment patterns, review documented experiences, and create a paper trail
-              before a job becomes expensive.
+              Client Bureau helps your team review documented payment patterns, dispute context,
+              and client responses before labor, materials, and scheduling risk are already committed.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
@@ -200,11 +219,11 @@ export default function Home() {
             <p className="text-sm font-semibold uppercase text-amber-300">Pricing preview</p>
             <h2 className="text-3xl font-semibold tracking-normal">Built for solo contractors and teams.</h2>
             <p className="leading-7 text-slate-300">
-              Checkout buttons are mocked for the MVP. The tier data is structured around future
-              Stripe products, prices, customers, and subscription status.
+              Start with basic client checks, then upgrade for deeper search, evidence workflows,
+              report tracking, and team-level review controls.
             </p>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pricingTiers.map((tier) => (
               <PricingCard key={tier.id} tier={tier} />
             ))}

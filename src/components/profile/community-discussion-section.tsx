@@ -35,8 +35,8 @@ export function CommunityDiscussionSection({
       <div className="space-y-2">
         <h2 className="text-2xl font-semibold text-slate-950">Community Discussion</h2>
         <p className="text-sm leading-6 text-slate-600">
-          Public entries are moderated before display. Pending, rejected, private, and internal
-          admin content is never shown on this profile.
+          Public entries are moderated before display. Unapproved, private, and internal
+          moderation content is never shown on this profile.
         </p>
       </div>
 

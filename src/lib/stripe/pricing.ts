@@ -1,7 +1,7 @@
 import type { SubscriptionTier } from "@/lib/types"
 
 export interface PricingTier {
-  id: SubscriptionTier
+  id: SubscriptionTier | "enterprise"
   name: string
   price: string
   cadence: string
@@ -17,10 +17,10 @@ export const pricingTiers: PricingTier[] = [
     name: "Free",
     price: "$0",
     cadence: "forever",
-    description: "For contractors checking the system before a first job.",
-    stripePriceId: "price_mock_free",
+    description: "For contractors who want a basic client check before accepting work.",
+    stripePriceId: "price_free",
     features: [
-      "Limited client search preview",
+      "Limited client profile search",
       "Create contractor profile",
       "Submit documented reports",
       "Client response visibility",
@@ -31,8 +31,8 @@ export const pricingTiers: PricingTier[] = [
     name: "Pro Contractor",
     price: "$29",
     cadence: "per month",
-    description: "For active contractors who want better intake protection.",
-    stripePriceId: "price_mock_pro_monthly",
+    description: "For active contractors who want stronger intake and payment-risk review.",
+    stripePriceId: "price_pro_monthly",
     featured: true,
     features: [
       "Unlimited client profile searches",
@@ -48,17 +48,27 @@ export const pricingTiers: PricingTier[] = [
     price: "$99",
     cadence: "per month",
     description: "For contractor teams managing higher client volume.",
-    stripePriceId: "price_mock_team_monthly",
+    stripePriceId: "price_team_monthly",
     features: [
       "Multi-seat contractor workspace",
       "Shared search history",
-      "Admin-ready reporting exports",
+      "Team reporting exports",
       "Team evidence library",
-      "Subscription hooks for Stripe Billing",
+      "Manager review controls",
+    ],
+  },
+  {
+    id: "enterprise",
+    name: "Enterprise",
+    price: "Custom",
+    cadence: "annual options",
+    description: "For regional groups, franchises, and larger contractor networks.",
+    stripePriceId: "price_enterprise",
+    features: [
+      "Custom seats and search volume",
+      "Priority moderation workflows",
+      "Policy review and onboarding support",
+      "Advanced audit and reporting needs",
     ],
   },
 ]
-
-export function createMockCheckoutHref(tier: SubscriptionTier) {
-  return `/pricing?checkout=mock&plan=${tier}`
-}

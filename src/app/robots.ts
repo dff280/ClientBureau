@@ -18,6 +18,7 @@ export default function robots(): MetadataRoute.Robots {
         "/report-policy",
         "/dispute-policy",
         "/moderation-policy",
+        "/score-methodology",
       ],
       disallow: [
         "/dashboard",

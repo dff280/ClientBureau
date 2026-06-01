@@ -143,8 +143,11 @@ describe("schemas and mock actions", () => {
         email: "john@example.com",
         profileUrl: "/client/john-smith-orlando-fl",
         requestType: "Dispute a report",
+        verificationMethod: "Email verification",
         responseSummary:
           "The client states payment timing was connected to a requested documentation review.",
+        contactCertification: true,
+        documentationCertification: true,
       }).success,
     ).toBe(true)
   })

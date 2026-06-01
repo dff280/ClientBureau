@@ -1,4 +1,5 @@
 import { Check } from "lucide-react"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,6 +7,8 @@ import type { PricingTier } from "@/lib/stripe/pricing"
 import { cn } from "@/lib/utils"
 
 export function PricingCard({ tier }: { tier: PricingTier }) {
+  const isEnterprise = tier.id === "enterprise"
+
   return (
     <Card
       className={cn(
@@ -39,19 +42,25 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
         </ul>
       </CardContent>
       <CardFooter>
-        <form action="/api/stripe/checkout" method="post" className="w-full">
-          <input type="hidden" name="tier" value={tier.id} />
-          <Button
-            type="submit"
-            className={cn(
-              "w-full",
-              tier.featured ? "bg-slate-950 text-white hover:bg-slate-800" : "",
-            )}
-            variant={tier.featured ? "default" : "outline"}
-          >
-            {tier.id === "free" ? "Create free account" : "Test checkout"}
+        {isEnterprise ? (
+          <Button asChild variant="outline" className="w-full">
+            <Link href="/signup?plan=enterprise">Contact Client Bureau</Link>
           </Button>
-        </form>
+        ) : (
+          <form action="/api/stripe/checkout" method="post" className="w-full">
+            <input type="hidden" name="tier" value={tier.id} />
+            <Button
+              type="submit"
+              className={cn(
+                "w-full",
+                tier.featured ? "bg-slate-950 text-white hover:bg-slate-800" : "",
+              )}
+              variant={tier.featured ? "default" : "outline"}
+            >
+              {tier.id === "free" ? "Create free account" : "Choose plan"}
+            </Button>
+          </form>
+        )}
       </CardFooter>
     </Card>
   )

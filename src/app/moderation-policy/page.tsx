@@ -5,6 +5,9 @@ import { PolicyPage } from "@/components/legal/policy-page"
 export const metadata: Metadata = {
   title: "Content Moderation Policy",
   description: "Client Bureau moderation policy for approving, rejecting, editing, and publishing contractor-submitted report summaries.",
+  alternates: {
+    canonical: "/moderation-policy",
+  },
 }
 
 export default function ModerationPolicyPage() {

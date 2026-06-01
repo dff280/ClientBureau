@@ -4,7 +4,10 @@ import { PolicyPage } from "@/components/legal/policy-page"
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Client Bureau MVP terms for contractor accounts, client reports, moderation, and subscriptions.",
+  description: "Client Bureau terms for contractor accounts, client reports, moderation, public profiles, and subscriptions.",
+  alternates: {
+    canonical: "/terms",
+  },
 }
 
 export default function TermsPage() {
@@ -12,7 +15,7 @@ export default function TermsPage() {
     <PolicyPage
       eyebrow="Terms"
       title="Terms of Service"
-      description="These MVP terms describe the intended use of Client Bureau accounts, reports, public profiles, and subscription features."
+      description="These terms describe the intended use of Client Bureau accounts, reports, public profiles, moderation, and subscription features."
       sections={[
         {
           title: "Permitted use",
@@ -24,7 +27,7 @@ export default function TermsPage() {
         },
         {
           title: "Subscriptions",
-          body: "Pricing tiers are structured for future Stripe Billing. During test mode, checkout can be exercised safely without live charges. Live billing should remain disabled until subscription webhooks and cancellation flows are verified.",
+          body: "Paid plans provide expanded search, reporting, evidence, team, and moderation workflow capabilities. Subscription access may change if billing is canceled, past due, or otherwise unavailable.",
         },
         {
           title: "No professional advice",

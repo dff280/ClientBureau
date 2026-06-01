@@ -27,7 +27,7 @@ const money = (label: string) =>
   z.coerce
     .number({ error: `${label} must be a number.` })
     .min(0, `${label} cannot be negative.`)
-    .max(10_000_000, `${label} is above the MVP review limit.`)
+    .max(10_000_000, `${label} is above the current review limit.`)
 
 export const clientReportSchema = z
   .object({
@@ -58,21 +58,47 @@ export const clientReportSchema = z
       "Keep the detailed experience under 3,000 characters.",
     ),
     evidenceAttached: z.coerce.boolean().optional(),
+    truthfulCertification: z.coerce.boolean().optional(),
+    documentationCertification: z.coerce.boolean().optional(),
+    publicSummaryCertification: z.coerce.boolean().optional(),
   })
   .refine((value) => value.amountUnpaid <= value.contractAmount, {
     path: ["amountUnpaid"],
     message: "Amount unpaid cannot exceed the contract amount.",
   })
+  .refine((value) => value.truthfulCertification === true, {
+    path: ["truthfulCertification"],
+    message: "Confirm that the report is truthful to the best of your knowledge.",
+  })
+  .refine((value) => value.documentationCertification === true, {
+    path: ["documentationCertification"],
+    message: "Confirm that documentation is available or accurately described.",
+  })
+  .refine((value) => value.publicSummaryCertification === true, {
+    path: ["publicSummaryCertification"],
+    message: "Confirm that the public summary avoids private or inflammatory claims.",
+  })
 
 export const clientResponseSchema = z.object({
   name: requiredText("Your name"),
   email: z.email("Enter a valid email for review contact."),
+  phone: optionalText,
   profileUrl: requiredText("Profile URL", 6),
-  requestType: z.enum(["Publish a response", "Dispute a report", "Request correction"]),
+  requestType: z.enum(["Publish a response", "Dispute a report", "Request correction", "Resolution update"]),
+  verificationMethod: z.enum(["Email verification", "Phone verification", "Business documentation"]).optional(),
+  attachmentUrl: optionalText,
   responseSummary: requiredText("Response summary", 30).max(
     1800,
     "Keep the response summary under 1,800 characters.",
   ),
+  contactCertification: z.coerce.boolean().optional(),
+  documentationCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.contactCertification === true, {
+  path: ["contactCertification"],
+  message: "Confirm that your contact information is accurate for moderation follow-up.",
+}).refine((value) => value.documentationCertification === true, {
+  path: ["documentationCertification"],
+  message: "Confirm that any submitted documentation is accurate and relevant.",
 })
 
 export const signupSchema = z.object({

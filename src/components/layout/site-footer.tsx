@@ -6,7 +6,7 @@ const footerLinks = [
   { href: "/search", label: "Search Clients" },
   { href: "/submit-report", label: "Submit Report" },
   { href: "/client-response", label: "Client Response" },
-  { href: "/admin", label: "Admin" },
+  { href: "/score-methodology", label: "Score Methodology" },
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
   { href: "/report-policy", label: "Report Policy" },
@@ -35,7 +35,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-slate-200 py-4">
         <div className="bureau-container flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>Copyright 2026 Client Bureau. MVP demonstration.</span>
+          <span>Copyright 2026 Client Bureau. All rights reserved.</span>
           <span>Public reports are moderated and presented as reported experiences.</span>
         </div>
       </div>

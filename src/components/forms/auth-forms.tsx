@@ -9,7 +9,7 @@ import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { mockSignupAction } from "@/lib/actions/client-bureau"
+import { signupAction } from "@/lib/actions/client-bureau"
 import type { ActionResult, User } from "@/lib/types"
 
 const initialUserState: ActionResult<User> = {
@@ -57,7 +57,7 @@ export function LoginForm({
 }
 
 export function SignupForm() {
-  const [state, action] = useActionState(mockSignupAction, initialUserState)
+  const [state, action] = useActionState(signupAction, initialUserState)
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)

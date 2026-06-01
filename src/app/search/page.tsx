@@ -14,6 +14,9 @@ export const metadata: Metadata = {
   title: "Search Clients",
   description:
     "Search Client Bureau for moderated client profiles, contractor-submitted reports, payment dispute history, and approved public report summaries.",
+  alternates: {
+    canonical: "/search",
+  },
   robots: {
     index: false,
     follow: false,
@@ -81,9 +84,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-2 p-5">
-              <p className="text-sm font-semibold uppercase text-slate-500">Demo access</p>
+              <p className="text-sm font-semibold uppercase text-slate-500">Private matching</p>
               <p className="text-sm leading-6 text-slate-600">
-                This MVP shows the authenticated search experience with seeded data and mock auth.
+                Search can use phone and email as private matching signals. Results show only
+                approved public summaries and non-sensitive identity fields.
               </p>
             </CardContent>
           </Card>

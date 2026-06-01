@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { FilePlus2, Search, ShieldCheck } from "lucide-react"
+import { CheckCircle2, CreditCard, FilePlus2, Search, ShieldCheck, UploadCloud } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { DashboardReports } from "@/components/dashboard/dashboard-reports"
@@ -34,11 +34,58 @@ export default async function DashboardPage() {
   if (!dashboard) return null
 
   const counts = {
-    pending: dashboard.reports.filter((report) => report.status === "pending").length,
-    approved: dashboard.reports.filter((report) => report.status === "approved").length,
-    rejected: dashboard.reports.filter((report) => report.status === "rejected").length,
-    disputed: dashboard.reports.filter((report) => report.status === "disputed").length,
-  }
+    Draft: 0,
+    Submitted: dashboard.reports.filter((report) => report.status === "pending").length,
+    "In Review": dashboard.reports.filter((report) => report.status === "pending").length,
+    "Needs More Info": 0,
+    Approved: dashboard.reports.filter((report) => report.status === "approved").length,
+    Rejected: dashboard.reports.filter((report) => report.status === "rejected").length,
+    Published: dashboard.reports.filter((report) => {
+      const client = clientProfiles.find((profile) => profile.id === report.clientId)
+      return report.status === "approved" && Boolean(client?.isPublic)
+    }).length,
+    Disputed: dashboard.reports.filter((report) => report.status === "disputed").length,
+    Resolved: dashboard.reports.filter((report) =>
+      ["resolved", "paid"].some((term) => report.paymentStatus.toLowerCase().includes(term)),
+    ).length,
+  } satisfies Record<string, number>
+  const subscriptionTier = dashboard.subscription?.tier ?? "free"
+  const subscriptionStatus =
+    !dashboard.subscription || dashboard.subscription.status === "mock"
+      ? "active"
+      : dashboard.subscription.status.replace("_", " ")
+  const onboarding = [
+    {
+      label: "Verify business",
+      complete: dashboard.contractor.verificationStatus === "verified",
+      href: "/dashboard",
+      icon: ShieldCheck,
+    },
+    {
+      label: "Search first client",
+      complete: dashboard.savedSearches.length > 0,
+      href: "/search",
+      icon: Search,
+    },
+    {
+      label: "Submit report",
+      complete: dashboard.reports.length > 0,
+      href: "/submit-report",
+      icon: FilePlus2,
+    },
+    {
+      label: "Upload evidence",
+      complete: dashboard.evidence.length > 0,
+      href: "/submit-report",
+      icon: UploadCloud,
+    },
+    {
+      label: "Choose plan",
+      complete: subscriptionTier !== "free",
+      href: "/pricing",
+      icon: CreditCard,
+    },
+  ]
 
   return (
     <section className="bureau-section bg-slate-100">
@@ -50,8 +97,8 @@ export default async function DashboardPage() {
               {dashboard.contractor.businessName}
             </h1>
             <p className="leading-7 text-slate-600">
-              Signed in as {dashboard.user.fullName}. Reports, evidence, and subscription status are
-              loaded through the active Client Bureau data adapter.
+              Signed in as {dashboard.user.fullName}. Track submitted reports, evidence, saved
+              searches, profile verification, and public profile publication status.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -70,12 +117,41 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {onboarding.map((item) => {
+            const Icon = item.icon
+
+            return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <Icon className="size-5 text-amber-700" aria-hidden="true" />
+                  {item.complete ? (
+                    <CheckCircle2 className="size-5 text-emerald-700" aria-label="Complete" />
+                  ) : (
+                    <span className="rounded-full border border-slate-300 px-2 py-0.5 text-xs font-semibold text-slate-500">
+                      Next
+                    </span>
+                  )}
+                </div>
+                <p className="mt-3 text-sm font-semibold text-slate-950">{item.label}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">
+                  {item.complete ? "Complete" : "Recommended account step"}
+                </p>
+              </Link>
+            )
+          })}
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9">
           {Object.entries(counts).map(([status, count]) => (
             <Card key={status} className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardContent className="p-5">
-                <p className="text-sm font-semibold uppercase text-slate-500">{status}</p>
-                <p className="mt-2 text-3xl font-semibold text-slate-950">{count}</p>
+                <p className="text-xs font-semibold uppercase text-slate-500">{status}</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-950">{count}</p>
               </CardContent>
             </Card>
           ))}
@@ -109,9 +185,16 @@ export default async function DashboardPage() {
                 <p>
                   Subscription:{" "}
                   <span className="font-semibold text-slate-950">
-                    {dashboard.subscription?.tier ?? "free"} / {dashboard.subscription?.status ?? "mock"}
+                    {subscriptionTier.replace("_", " ")} / {subscriptionStatus}
                   </span>
                 </p>
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                  <p className="font-semibold text-slate-950">Security controls</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">
+                    Email verification, stronger sign-in controls, rate-limit hooks, duplicate
+                    report checks, and appeal paths are tracked in the account workflow.
+                  </p>
+                </div>
               </CardContent>
             </Card>
 

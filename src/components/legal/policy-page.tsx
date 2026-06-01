@@ -41,10 +41,10 @@ export function PolicyPage({ eyebrow, title, description, sections }: PolicyPage
           <Card className="rounded-md border-amber-200 bg-amber-50 shadow-sm">
             <CardContent className="space-y-4 p-6 text-amber-950">
               <ShieldCheck className="size-8" aria-hidden="true" />
-              <h2 className="text-xl font-semibold">Launch note</h2>
+              <h2 className="text-xl font-semibold">Trust standard</h2>
               <p className="text-sm leading-6">
-                This page is operational policy copy for the MVP. Final legal terms should be
-                reviewed by qualified counsel before onboarding customers or indexing real reports.
+                Client Bureau is built around documented submissions, private matching, moderated
+                public summaries, evidence reviewed privately, and a clear response and correction path.
               </p>
             </CardContent>
           </Card>

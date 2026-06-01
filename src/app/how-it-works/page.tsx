@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "How It Works",
   description:
     "How contractors use Client Bureau to search client profiles, review contractor-submitted reports, submit documented experiences, and protect future jobs.",
+  alternates: {
+    canonical: "/how-it-works",
+  },
 }
 
 const workflow = [
@@ -31,7 +34,7 @@ const workflow = [
   {
     icon: ShieldCheck,
     title: "Protect",
-    text: "Admin approval can publish an SEO-friendly client profile while preserving moderation and response rights.",
+    text: "Approved summaries can help other contractors make more informed decisions while preserving moderation and response rights.",
   },
 ]
 
@@ -70,9 +73,9 @@ export default function HowItWorksPage() {
               Approval creates the public page.
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              In production, an admin approval action will create or update the client profile,
-              generate the public slug, recalculate score and risk level, mark the profile public,
-              and expose it through sitemap metadata.
+              When a report is approved, Client Bureau can create or update a public client profile
+              with a moderated summary, updated score factors, risk level, evidence-on-file summary,
+              and a neutral response path for the client.
             </p>
             <Button asChild className="mt-5 bg-slate-950 text-white hover:bg-slate-800">
               <Link href="/submit-report">Submit a report</Link>

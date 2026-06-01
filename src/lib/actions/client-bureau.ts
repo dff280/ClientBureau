@@ -1,7 +1,6 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 import { verifyAdminActionTokenFromForm } from "@/lib/admin-action-token"
 import {
@@ -15,7 +14,6 @@ import {
   clientReportSchema,
   clientResponseSchema,
   communityDiscussionSchema,
-  loginSchema,
   signupSchema,
 } from "@/lib/schemas/client-bureau"
 import type {
@@ -34,9 +32,7 @@ import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result
 import {
   getAuthCookieDiagnostics,
   getCurrentUser,
-  requireAuthenticatedUser,
   requireContractorAccess,
-  resolveAuthenticatedUserProfile,
 } from "@/lib/auth"
 import { getDataMode, getSiteUrl } from "@/lib/env"
 import {
@@ -124,17 +120,16 @@ export async function submitClientResponseAction(
     return fail("Please correct the highlighted response fields.", zodFieldErrors(parsed.error))
   }
 
-  await requireAuthenticatedUser()
-
   const response = await submitClientResponseService(parsed.data)
 
   revalidatePath("/admin/reviews")
   revalidatePath("/admin/reports")
+  revalidatePath("/admin/discussions")
 
-  return ok(response, "Response received. It will appear after moderation review.")
+  return ok(response, "Response received. It is queued for moderation and contact verification.")
 }
 
-export async function mockSignupAction(
+export async function signupAction(
   _previousState: ActionResult<User>,
   formData: FormData,
 ): Promise<ActionResult<User>> {
@@ -202,58 +197,14 @@ export async function mockSignupAction(
   }
 
   return ok(
-    {
-      id: "user_mock_signup",
-      email: parsed.data.email,
-      fullName: parsed.data.fullName,
-      role: "contractor",
-      createdAt: new Date().toISOString(),
-    },
-    "Contractor account created in mock mode.",
-  )
-}
-
-export async function mockLoginAction(
-  _previousState: ActionResult<User>,
-  formData: FormData,
-): Promise<ActionResult<User>> {
-  const parsed = loginSchema.safeParse(formDataToObject(formData))
-
-  if (!parsed.success) {
-    return fail("Please correct the highlighted login fields.", zodFieldErrors(parsed.error))
-  }
-
-  if (getDataMode() === "supabase") {
-    const supabase = await createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-    })
-
-    if (error) return fail(error.message)
-
-    const user = data.user ? await resolveAuthenticatedUserProfile(data.user, supabase) : await getCurrentUser()
-    const nextValue = formData.get("next")
-    const next =
-      typeof nextValue === "string" && nextValue.startsWith("/") && !nextValue.startsWith("//")
-        ? nextValue
-        : user?.role === "admin"
-          ? "/admin"
-          : "/dashboard"
-
-    redirect(next)
-
-  }
-
-  return ok(
-    {
-      id: "user_mock_login",
-      email: parsed.data.email,
-      fullName: "Mock Contractor",
-      role: "contractor",
-      createdAt: new Date().toISOString(),
-    },
-    "Logged in with mock auth.",
+      {
+        id: "user_local_signup",
+        email: parsed.data.email,
+        fullName: parsed.data.fullName,
+        role: "contractor",
+        createdAt: new Date().toISOString(),
+      },
+    "Contractor account created. You can now continue with Client Bureau tools.",
   )
 }
 

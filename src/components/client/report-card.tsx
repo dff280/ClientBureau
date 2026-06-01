@@ -12,12 +12,17 @@ export function ReportCard({ report }: { report: ClientReport }) {
           <Badge variant="outline" className="rounded-md border-slate-300 bg-white">
             {report.reportCategory}
           </Badge>
-          <span className="text-xs font-medium uppercase text-slate-500">{report.status}</span>
+          <span className="text-xs font-medium uppercase text-slate-500">
+            {report.status === "approved" ? "Admin-approved" : report.status}
+          </span>
         </div>
         <CardTitle className="text-lg text-slate-950">{report.projectType}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm leading-6 text-slate-700">{report.publicSummary}</p>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-semibold uppercase text-slate-500">Moderated summary</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">{report.publicSummary}</p>
+        </div>
         <div className="grid gap-3 text-sm sm:grid-cols-3">
           <div>
             <p className="text-xs font-semibold uppercase text-slate-500">Project</p>
@@ -33,7 +38,7 @@ export function ReportCard({ report }: { report: ClientReport }) {
             <p className="text-xs font-semibold uppercase text-slate-500">Evidence</p>
             <p className="inline-flex items-center gap-1 font-medium text-slate-900">
               <FileText className="size-4" aria-hidden="true" />
-              {report.evidenceAttached ? "Attached" : "Not attached"}
+              {report.evidenceAttached ? "Evidence on file" : "No evidence summary"}
             </p>
           </div>
         </div>

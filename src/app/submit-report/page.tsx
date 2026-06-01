@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   title: "Submit Client Report",
   description:
     "Submit a documented Client Bureau report with project details, payment status, report category, and evidence for moderation.",
+  alternates: {
+    canonical: "/submit-report",
+  },
   robots: {
     index: false,
     follow: false,
@@ -39,7 +42,7 @@ export default async function SubmitReportPage({
             </h1>
             <p className="max-w-3xl leading-7 text-slate-600">
               Reports stay pending until reviewed. Public summaries should describe verifiable
-              project facts and reported experience without claims about intent.
+              project facts and reported experience without private details or claims about intent.
             </p>
           </div>
 

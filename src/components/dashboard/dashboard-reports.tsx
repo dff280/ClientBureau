@@ -9,9 +9,22 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { ClientProfile, ClientReport, ReportEvidence, ReportStatus } from "@/lib/types"
+import type { ClientProfile, ClientReport, ReportEvidence } from "@/lib/types"
 
-const statuses: Array<"all" | ReportStatus> = ["all", "pending", "approved", "rejected", "disputed"]
+const statuses = [
+  "All",
+  "Draft",
+  "Submitted",
+  "In Review",
+  "Needs More Info",
+  "Approved",
+  "Rejected",
+  "Published",
+  "Disputed",
+  "Resolved",
+] as const
+
+type WorkflowStatus = (typeof statuses)[number]
 
 export function DashboardReports({
   reports,
@@ -22,8 +35,8 @@ export function DashboardReports({
   clients: ClientProfile[]
   evidence: ReportEvidence[]
 }) {
-  const [status, setStatus] = useState<"all" | ReportStatus>("all")
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(reports[0]?.id ?? null)
+  const [status, setStatus] = useState<WorkflowStatus>("All")
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
 
   const selectedReport = reports.find((report) => report.id === selectedReportId)
   const selectedClient = selectedReport
@@ -34,14 +47,31 @@ export function DashboardReports({
     : []
 
   const filteredReports = useMemo(
-    () => reports.filter((report) => status === "all" || report.status === status),
-    [reports, status],
+    () =>
+      reports.filter((report) => {
+        const client = clients.find((profile) => profile.id === report.clientId)
+
+        if (status === "All") return true
+        if (status === "Draft") return false
+        if (status === "Submitted" || status === "In Review") return report.status === "pending"
+        if (status === "Needs More Info") return report.moderationNote?.toLowerCase().includes("more info")
+        if (status === "Approved") return report.status === "approved"
+        if (status === "Rejected") return report.status === "rejected"
+        if (status === "Published") return report.status === "approved" && Boolean(client?.isPublic)
+        if (status === "Disputed") return report.status === "disputed"
+        if (status === "Resolved") {
+          return ["resolved", "paid"].some((term) => report.paymentStatus.toLowerCase().includes(term))
+        }
+
+        return true
+      }),
+    [clients, reports, status],
   )
 
   return (
     <>
       <div className="space-y-4">
-        <Tabs value={status} onValueChange={(value) => setStatus(value as "all" | ReportStatus)}>
+        <Tabs value={status} onValueChange={(value) => setStatus(value as WorkflowStatus)}>
           <TabsList className="flex h-auto flex-wrap justify-start gap-2 bg-transparent p-0">
             {statuses.map((item) => (
               <TabsTrigger
@@ -68,6 +98,7 @@ export function DashboardReports({
             {filteredReports.map((report) => {
               const client = clients.find((profile) => profile.id === report.clientId)
               const evidenceCount = evidence.filter((item) => item.reportId === report.id).length
+              const publicStatus = getWorkflowLabel(report, Boolean(client?.isPublic))
 
               return (
                 <TableRow key={report.id}>
@@ -84,7 +115,7 @@ export function DashboardReports({
                   <TableCell>{report.reportCategory}</TableCell>
                   <TableCell>
                     <span className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold uppercase text-slate-600">
-                      {report.status}
+                      {publicStatus}
                     </span>
                   </TableCell>
                   <TableCell>{evidenceCount} files</TableCell>
@@ -96,6 +127,13 @@ export function DashboardReports({
                 </TableRow>
               )
             })}
+            {filteredReports.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-sm text-slate-500">
+                  No reports match this status yet.
+                </TableCell>
+              </TableRow>
+            ) : null}
           </TableBody>
         </Table>
       </div>
@@ -153,4 +191,14 @@ export function DashboardReports({
       </Sheet>
     </>
   )
+}
+
+function getWorkflowLabel(report: ClientReport, isPublic: boolean) {
+  if (report.status === "pending") return "In Review"
+  if (report.status === "approved" && isPublic) return "Published"
+  if (report.status === "approved") return "Approved"
+  if (report.status === "rejected") return "Rejected"
+  if (report.status === "disputed") return "Disputed"
+
+  return report.status
 }

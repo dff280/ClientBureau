@@ -22,8 +22,8 @@ export default function SignupPage() {
             <ShieldCheck className="size-8 text-slate-950" aria-hidden="true" />
             <CardTitle className="text-2xl">Create contractor account</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
-              Verification status is captured in the profile and can later connect to manual or
-              third-party review.
+              Create a contractor profile so you can search clients, submit documented reports,
+              upload evidence, and track moderation status.
             </p>
           </CardHeader>
           <CardContent>

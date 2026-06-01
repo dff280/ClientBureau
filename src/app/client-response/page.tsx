@@ -3,12 +3,11 @@ import { MessageSquareText, Scale } from "lucide-react"
 
 import { ClientResponseForm } from "@/components/forms/client-response-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { requireAuthenticatedUser } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Client Response and Dispute",
   description:
-    "Client Bureau response and dispute intake for clients who want to respond to a contractor-submitted report or public profile.",
+    "Submit a Client Bureau response, dispute, correction request, or resolution update for moderated review.",
   robots: {
     index: false,
     follow: false,
@@ -18,8 +17,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function ClientResponsePage() {
-  await requireAuthenticatedUser()
-
   return (
     <section className="bureau-section bg-slate-100">
       <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -27,11 +24,12 @@ export default async function ClientResponsePage() {
           <div className="space-y-4">
             <p className="text-sm font-semibold uppercase text-amber-700">Client response</p>
             <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-              Respond to or dispute a public Client Bureau profile.
+              Respond, dispute, correct, or update a public profile.
             </h1>
             <p className="max-w-3xl leading-7 text-slate-600">
-              Clients may submit context for a published profile or report. Responses are reviewed
-              before publication and displayed with relevant report context.
+              Client Bureau provides a right-of-response path for people named in public profiles.
+              Submissions are verified, moderated, and displayed only when they add relevant public
+              context without exposing private information.
             </p>
           </div>
 
@@ -51,8 +49,9 @@ export default async function ClientResponsePage() {
               <MessageSquareText className="size-8 text-slate-950" aria-hidden="true" />
               <h2 className="text-xl font-semibold text-slate-950">Right of response</h2>
               <p className="text-sm leading-6 text-slate-600">
-                Approved client responses appear on public profiles after moderation. Disputed
-                reports remain labeled with relevant review context.
+                Approved responses, correction notes, and resolution updates can appear on public
+                profiles after moderation. Active disputes are labeled without declaring either
+                side correct.
               </p>
             </CardContent>
           </Card>
@@ -61,8 +60,8 @@ export default async function ClientResponsePage() {
               <Scale className="size-8" aria-hidden="true" />
               <h2 className="text-xl font-semibold">Review standard</h2>
               <p className="text-sm leading-6">
-                Client Bureau may edit response summaries for clarity, relevance, privacy, and
-                legally safer public presentation.
+                Moderators review identity, profile match, documentation, privacy, relevance, and
+                tone before deciding what should be published.
               </p>
             </CardContent>
           </Card>

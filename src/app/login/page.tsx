@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Login to Client Bureau contractor search, reporting, dashboard, and admin tools.",
+  description: "Login to Client Bureau for contractor client search, documented reports, and account management.",
   robots: {
     index: false,
     follow: false,
@@ -34,7 +34,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <LockKeyhole className="size-8 text-slate-950" aria-hidden="true" />
             <CardTitle className="text-2xl">Login to Client Bureau</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
-              Sign in with Supabase Auth. Admin accounts are routed to the isolated moderation console after role checks.
+              Access your contractor dashboard, saved searches, submitted reports, and review status.
             </p>
           </CardHeader>
           <CardContent>

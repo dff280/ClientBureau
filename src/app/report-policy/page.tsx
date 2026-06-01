@@ -5,6 +5,9 @@ import { PolicyPage } from "@/components/legal/policy-page"
 export const metadata: Metadata = {
   title: "Report Policy",
   description: "Client Bureau report policy for contractor-submitted reports, evidence, private identifiers, and publication rules.",
+  alternates: {
+    canonical: "/report-policy",
+  },
 }
 
 export default function ReportPolicyPage() {

@@ -5,6 +5,9 @@ import { PolicyPage } from "@/components/legal/policy-page"
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description: "Client Bureau privacy policy for contractor accounts, private matching identifiers, evidence, and client responses.",
+  alternates: {
+    canonical: "/privacy",
+  },
 }
 
 export default function PrivacyPage() {
@@ -20,7 +23,7 @@ export default function PrivacyPage() {
         },
         {
           title: "Evidence files",
-          body: "Report evidence is intended for admin-only review in a private Supabase Storage bucket. Public profiles should show moderated summaries, not raw evidence files, unless a future policy explicitly allows publication.",
+          body: "Report evidence is reviewed privately by moderators. Public profiles show evidence summaries such as invoices reviewed, documents reviewed, or photos reviewed, not raw files.",
         },
         {
           title: "Account data",
@@ -28,7 +31,7 @@ export default function PrivacyPage() {
         },
         {
           title: "Retention and deletion",
-          body: "Production launch should define retention windows for rejected reports, evidence, responses, and subscription records before real customer onboarding begins.",
+          body: "Client Bureau may retain account records, submitted reports, evidence, responses, and moderation history as needed to operate the platform, resolve disputes, enforce policies, and meet legal obligations.",
         },
       ]}
     />
