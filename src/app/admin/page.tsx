@@ -5,7 +5,6 @@ import { ClipboardCheck, MessageSquareText, ShieldCheck, UploadCloud } from "luc
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { requireRole } from "@/lib/auth"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -19,7 +18,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminHomePage() {
-  await requireRole("admin")
   const data = await getAdminWorkspaceDataService()
   const pendingReports = data.reviews.filter((item) =>
     ["queued", "needs_dispute_review"].includes(item.review.status),
@@ -42,7 +40,7 @@ export default async function AdminHomePage() {
             </p>
           </div>
           <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-            <Link href="/admin/reports">
+            <Link href="/admin/reports" prefetch={false}>
               <ClipboardCheck aria-hidden="true" />
               Open report queue
             </Link>
@@ -107,7 +105,11 @@ function QuickLink({
   badge: string
 }) {
   return (
-    <Link href={href} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300">
+    <Link
+      href={href}
+      prefetch={false}
+      className="rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-slate-300"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex size-10 items-center justify-center rounded-md bg-slate-950 text-white">{icon}</div>
         <Badge variant="outline" className="rounded-md">

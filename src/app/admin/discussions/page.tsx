@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 
 import { DiscussionModerationPanel } from "@/components/admin/discussion-moderation-panel"
-import { requireRole } from "@/lib/auth"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminDiscussionsPage() {
-  await requireRole("admin")
   const data = await getAdminWorkspaceDataService()
 
   return (

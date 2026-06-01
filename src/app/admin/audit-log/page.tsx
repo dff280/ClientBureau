@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 
 import { Badge } from "@/components/ui/badge"
-import { requireRole } from "@/lib/auth"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -12,7 +11,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminAuditLogPage() {
-  await requireRole("admin")
   const data = await getAdminWorkspaceDataService()
 
   return (

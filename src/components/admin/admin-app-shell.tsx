@@ -94,6 +94,7 @@ export function AdminAppShell({
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   className={cn(
                     "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white",
                     isActive && "bg-white text-slate-950 hover:bg-white hover:text-slate-950",
@@ -147,6 +148,7 @@ export function AdminAppShell({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 className={cn(
                   "rounded-md border border-white/10 px-3 py-2 text-sm font-medium text-slate-300",
                   pathname === item.href && "bg-white text-slate-950",

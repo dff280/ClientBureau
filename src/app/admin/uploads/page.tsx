@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 
 import { BulkUploadPanel } from "@/components/admin/bulk-upload-panel"
-import { requireRole } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Admin Uploads",
@@ -11,8 +10,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminUploadsPage() {
-  await requireRole("admin")
-
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
