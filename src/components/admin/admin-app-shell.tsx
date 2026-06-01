@@ -15,6 +15,7 @@ import {
   UsersRound,
 } from "lucide-react"
 
+import { AdminActionTokenProvider } from "@/components/admin/admin-action-token-context"
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -64,16 +65,19 @@ const adminNav = [
 
 export function AdminAppShell({
   adminName,
+  adminActionToken,
   children,
 }: {
   adminName: string
+  adminActionToken: string
   children: React.ReactNode
 }) {
   const pathname = usePathname()
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-slate-950 lg:block">
+    <AdminActionTokenProvider token={adminActionToken}>
+      <div className="min-h-screen bg-slate-950 text-white">
+        <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-slate-950 lg:block">
         <div className="flex h-full flex-col">
           <div className="border-b border-white/10 p-5">
             <div className="rounded-md bg-white p-3 text-slate-950">
@@ -128,9 +132,9 @@ export function AdminAppShell({
             </div>
           </div>
         </div>
-      </aside>
+        </aside>
 
-      <div className="lg:pl-72">
+        <div className="lg:pl-72">
         <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 px-4 py-3 backdrop-blur lg:hidden">
           <div className="flex items-center justify-between gap-3">
             <div className="rounded-md bg-white px-3 py-2 text-slate-950">
@@ -160,8 +164,9 @@ export function AdminAppShell({
           </nav>
         </header>
 
-        <div className="min-h-screen bg-slate-100 text-slate-950">{children}</div>
+          <div className="min-h-screen bg-slate-100 text-slate-950">{children}</div>
+        </div>
       </div>
-    </div>
+    </AdminActionTokenProvider>
   )
 }

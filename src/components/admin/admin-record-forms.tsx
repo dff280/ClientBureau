@@ -4,6 +4,7 @@ import { useActionState, useEffect } from "react"
 import { CheckCircle2, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
+import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Button } from "@/components/ui/button"
@@ -37,6 +38,7 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
   return (
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <form action={action} className="grid gap-3 lg:grid-cols-[1.2fr_1.2fr_1fr_90px_120px_auto] lg:items-end">
+        <AdminActionTokenInput />
         <input type="hidden" name="clientId" value={client.id} />
         <LabeledInput label="First name" name="firstName" defaultValue={client.firstName} errors={state.ok ? undefined : state.fieldErrors} />
         <LabeledInput label="Last name" name="lastName" defaultValue={client.lastName} errors={state.ok ? undefined : state.fieldErrors} />
@@ -74,6 +76,7 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
         </PendingSubmitButton>
       </form>
       <form action={deleteAction} className="mt-3 flex justify-end">
+        <AdminActionTokenInput />
         <input type="hidden" name="entityType" value="client" />
         <input type="hidden" name="entityId" value={client.id} />
         <Button type="submit" variant="ghost" size="sm" className="text-rose-700 hover:text-rose-800">
@@ -100,6 +103,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
   return (
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <form action={action} className="grid gap-3 lg:grid-cols-[1.4fr_1.2fr_1fr_90px_140px_auto] lg:items-end">
+        <AdminActionTokenInput />
         <input type="hidden" name="contractorId" value={contractor.id} />
         <LabeledInput label="Business" name="businessName" defaultValue={contractor.businessName} errors={state.ok ? undefined : state.fieldErrors} />
         <LabeledInput label="Trade" name="trade" defaultValue={contractor.trade} errors={state.ok ? undefined : state.fieldErrors} />
@@ -128,6 +132,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
         </div>
       </form>
       <form action={deleteAction} className="mt-3 flex justify-end">
+        <AdminActionTokenInput />
         <input type="hidden" name="entityType" value="contractor" />
         <input type="hidden" name="entityId" value={contractor.id} />
         <Button type="submit" variant="ghost" size="sm" className="text-rose-700 hover:text-rose-800">

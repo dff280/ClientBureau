@@ -4,6 +4,7 @@ import { useActionState, useCallback, useEffect, useMemo, useState } from "react
 import { CheckCircle2, ShieldCheck, Trash2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
+import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
@@ -101,6 +102,7 @@ function DiscussionCard({
 
   return (
     <form action={action} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <AdminActionTokenInput />
       <input type="hidden" name="discussionId" value={discussion.id} />
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div className="space-y-2">

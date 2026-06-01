@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -339,6 +340,7 @@ function BulkModerationBar({
 
   return (
     <form action={action} className="border-b border-slate-200 bg-slate-50 p-3">
+      <AdminActionTokenInput />
       <input type="hidden" name="reportIds" value={selectedCsv} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase text-slate-500">{selectedCount} selected</p>
@@ -438,6 +440,7 @@ function ModerationWorkspace({
       </div>
 
       <form action={action} className="grid gap-0 xl:grid-cols-[1fr_340px]">
+        <AdminActionTokenInput />
         <input type="hidden" name="reportId" value={report?.id ?? item.review.reportId} />
 
         <div className="space-y-6 p-5">

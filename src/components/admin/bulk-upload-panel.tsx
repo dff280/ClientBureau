@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from "react"
 import { CheckCircle2, FileSpreadsheet, UploadCloud } from "lucide-react"
 import { toast } from "sonner"
 
+import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Textarea } from "@/components/ui/textarea"
@@ -60,6 +61,7 @@ export function BulkUploadPanel() {
               Select ready rows
             </button>
             <form action={action}>
+              <AdminActionTokenInput />
               <input type="hidden" name="rows" value={JSON.stringify(selected)} />
               <PendingSubmitButton
                 pendingText="Importing..."

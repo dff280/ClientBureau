@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 
+import { verifyAdminActionTokenFromForm } from "@/lib/admin-action-token"
 import {
   adminClientUpdateSchema,
   adminContractorUpdateSchema,
@@ -66,22 +67,29 @@ function actionErrorMessage(error: unknown, fallback: string) {
   return fallback
 }
 
-async function getAdminMutationUser(context: string) {
+async function getAdminMutationUser(context: string, formData: FormData) {
   const admin = await getCurrentUser("admin")
 
   if (admin?.role === "admin") {
     return { ok: true as const, admin }
   }
 
+  const tokenResult = await verifyAdminActionTokenFromForm(formData)
+
+  if (tokenResult.ok) {
+    return { ok: true as const, admin: tokenResult.admin }
+  }
+
   const diagnostics = await getAuthCookieDiagnostics()
   const hasReadableToken = diagnostics.supabaseAuthCookieHasAccessToken
   const cookieSummary = `cookies=${diagnostics.authCookieCount}, readableToken=${hasReadableToken ? "yes" : "no"}`
+  const tokenSummary = `adminActionToken=${tokenResult.reason}`
 
   return {
     ok: false as const,
     message: hasReadableToken
-      ? `Your admin profile could not be verified for this ${context} action. Refresh /admin, confirm /api/admin/session shows isAdmin=true, and try again. (${cookieSummary})`
-      : `This ${context} action did not receive a readable Supabase admin session cookie. Log in again at /login?next=/admin and retry from clientbureau.com. (${cookieSummary})`,
+      ? `Your admin profile could not be verified for this ${context} action. Refresh /admin, confirm /api/admin/session shows isAdmin=true, and try again. (${cookieSummary}; ${tokenSummary})`
+      : `This ${context} action did not receive a readable Supabase admin session cookie. Refresh /admin and retry from clientbureau.com. (${cookieSummary}; ${tokenSummary})`,
   }
 }
 
@@ -273,7 +281,7 @@ export async function reviewReportAction(
     })
   }
 
-  const adminResult = await getAdminMutationUser("moderation")
+  const adminResult = await getAdminMutationUser("moderation", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)
@@ -321,7 +329,7 @@ export async function bulkReviewReportsAction(
     return fail("Select reports before running a bulk moderation action.", zodFieldErrors(parsed.error))
   }
 
-  const adminResult = await getAdminMutationUser("bulk moderation")
+  const adminResult = await getAdminMutationUser("bulk moderation", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)
@@ -381,7 +389,7 @@ export async function adminDiscussionReviewAction(
     return fail("Review the discussion action fields.", zodFieldErrors(parsed.error))
   }
 
-  const adminResult = await getAdminMutationUser("discussion moderation")
+  const adminResult = await getAdminMutationUser("discussion moderation", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)
@@ -427,7 +435,7 @@ export async function adminUpdateClientAction(
     return fail("Please correct the highlighted client fields.", zodFieldErrors(parsed.error))
   }
 
-  const adminResult = await getAdminMutationUser("client edit")
+  const adminResult = await getAdminMutationUser("client edit", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)
@@ -461,7 +469,7 @@ export async function adminUpdateContractorAction(
     return fail("Please correct the highlighted contractor fields.", zodFieldErrors(parsed.error))
   }
 
-  const adminResult = await getAdminMutationUser("contractor edit")
+  const adminResult = await getAdminMutationUser("contractor edit", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)
@@ -492,7 +500,7 @@ export async function adminDeleteRecordAction(
     return fail("Select a record before deleting.", zodFieldErrors(parsed.error))
   }
 
-  const adminResult = await getAdminMutationUser("delete")
+  const adminResult = await getAdminMutationUser("delete", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)
@@ -526,7 +534,7 @@ export async function bulkUploadImportAction(
     return fail("Preview and select valid rows before importing.", zodFieldErrors(parsed.error))
   }
 
-  const adminResult = await getAdminMutationUser("bulk import")
+  const adminResult = await getAdminMutationUser("bulk import", formData)
 
   if (!adminResult.ok) {
     return fail(adminResult.message)

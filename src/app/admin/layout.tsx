@@ -1,4 +1,5 @@
 import { AdminAppShell } from "@/components/admin/admin-app-shell"
+import { createAdminActionToken } from "@/lib/admin-action-token"
 import { requireRole } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
@@ -10,6 +11,11 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   const admin = await requireRole("admin", "/admin")
+  const adminActionToken = await createAdminActionToken(admin)
 
-  return <AdminAppShell adminName={admin.fullName}>{children}</AdminAppShell>
+  return (
+    <AdminAppShell adminName={admin.fullName} adminActionToken={adminActionToken}>
+      {children}
+    </AdminAppShell>
+  )
 }
