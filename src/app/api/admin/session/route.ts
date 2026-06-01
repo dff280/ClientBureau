@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
 
-import { getCurrentUser } from "@/lib/auth"
+import { getAuthCookieDiagnostics, getCurrentUser } from "@/lib/auth"
 import { getAdminEmails, getDataMode } from "@/lib/env"
 import { hasSupabaseServiceConfig } from "@/lib/supabase/config"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
-  const cookieStore = await cookies()
-  const authCookieCount = cookieStore
-    .getAll()
-    .filter((cookie) => cookie.name.startsWith("sb-") || cookie.name.includes("auth-token")).length
+  const cookieDiagnostics = await getAuthCookieDiagnostics()
+  const { authCookieCount } = cookieDiagnostics
   const user = await getCurrentUser("admin")
   const isAdmin = user?.role === "admin"
   const status = !user ? "signed_out" : isAdmin ? "admin" : "not_admin"
@@ -26,7 +23,7 @@ export async function GET() {
     isAdmin,
     status,
     authCookiePresent: authCookieCount > 0,
-    authCookieCount,
+    ...cookieDiagnostics,
     adminEmailAllowlistConfigured,
     serviceRoleConfigured,
     loginUrl: "/login?next=/admin",

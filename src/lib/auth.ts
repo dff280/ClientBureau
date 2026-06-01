@@ -1,4 +1,5 @@
 import type { User as SupabaseAuthUser } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
 import type { Database } from "@/lib/database.types"
@@ -11,6 +12,7 @@ import type { User, UserRole } from "@/lib/types"
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
 type SupabaseAuthUserLike = Pick<SupabaseAuthUser, "id" | "email" | "user_metadata" | "created_at">
+type CookieLike = { name: string; value: string }
 
 export function getDemoUser(role: UserRole = "contractor") {
   const user = users.find((candidate) => candidate.role === role)
@@ -51,6 +53,144 @@ function fallbackUserFromAuth(user: SupabaseAuthUserLike): User {
     role: isConfiguredAdminEmail(user.email) ? "admin" : "contractor",
     createdAt: user.created_at,
   }
+}
+
+function authCookieBaseName(name: string) {
+  return name.replace(/\.\d+$/, "")
+}
+
+function authCookieChunkIndex(name: string) {
+  const match = /\.(\d+)$/.exec(name)
+
+  return match ? Number(match[1]) : 0
+}
+
+function getSupabaseAuthCookiePayloads(cookieList: CookieLike[]) {
+  const groups = new Map<string, CookieLike[]>()
+
+  for (const cookie of cookieList) {
+    if (!cookie.name.startsWith("sb-") || !cookie.name.includes("auth-token")) continue
+
+    const baseName = authCookieBaseName(cookie.name)
+    groups.set(baseName, [...(groups.get(baseName) ?? []), cookie])
+  }
+
+  return [...groups.values()].map((group) =>
+    group
+      .sort((left, right) => authCookieChunkIndex(left.name) - authCookieChunkIndex(right.name))
+      .map((cookie) => cookie.value)
+      .join(""),
+  )
+}
+
+function decodeBase64Url(value: string) {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/")
+  const padding = "=".repeat((4 - (normalized.length % 4)) % 4)
+
+  return Buffer.from(`${normalized}${padding}`, "base64").toString("utf8")
+}
+
+function parseAuthCookiePayload(value: string): unknown {
+  const candidates = [value]
+
+  try {
+    candidates.push(decodeURIComponent(value))
+  } catch {
+    // Cookie values are not always URI encoded.
+  }
+
+  for (const candidate of candidates) {
+    const decoded = candidate.startsWith("base64-") ? decodeBase64Url(candidate.slice("base64-".length)) : candidate
+
+    try {
+      const parsed = JSON.parse(decoded) as unknown
+
+      if (typeof parsed === "string") {
+        return JSON.parse(parsed) as unknown
+      }
+
+      return parsed
+    } catch {
+      // Try the next representation.
+    }
+  }
+
+  return null
+}
+
+function findAccessToken(value: unknown, depth = 0): string | null {
+  if (depth > 4 || !value) return null
+
+  if (typeof value === "object" && "access_token" in value) {
+    const token = (value as { access_token?: unknown }).access_token
+
+    if (typeof token === "string" && token.length > 0) return token
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const token = findAccessToken(item, depth + 1)
+
+      if (token) return token
+    }
+
+    return null
+  }
+
+  if (typeof value === "object") {
+    for (const item of Object.values(value)) {
+      const token = findAccessToken(item, depth + 1)
+
+      if (token) return token
+    }
+  }
+
+  return null
+}
+
+async function getAccessTokenFromSupabaseCookie() {
+  const cookieStore = await cookies()
+  const payloads = getSupabaseAuthCookiePayloads(cookieStore.getAll())
+
+  for (const payload of payloads) {
+    const token = findAccessToken(parseAuthCookiePayload(payload))
+
+    if (token) return token
+  }
+
+  return null
+}
+
+export async function getAuthCookieDiagnostics() {
+  const cookieStore = await cookies()
+  const payloads = getSupabaseAuthCookiePayloads(cookieStore.getAll())
+
+  return {
+    authCookieCount: cookieStore
+      .getAll()
+      .filter((cookie) => cookie.name.startsWith("sb-") || cookie.name.includes("auth-token")).length,
+    supabaseAuthCookieGroups: payloads.length,
+    supabaseAuthCookieHasAccessToken: payloads.some((payload) => Boolean(findAccessToken(parseAuthCookiePayload(payload)))),
+  }
+}
+
+async function getAuthUserFromCookieFallback(requestClient?: Awaited<ReturnType<typeof createClient>>) {
+  const accessToken = await getAccessTokenFromSupabaseCookie()
+
+  if (!accessToken) return null
+
+  const verifier = hasSupabaseServiceConfig() ? createServiceClient() : requestClient
+
+  if (!verifier) return null
+
+  const {
+    data: { user },
+    error,
+  } = await verifier.auth.getUser(accessToken)
+
+  if (error || !user) return null
+
+  return user
 }
 
 async function getUserProfile(userId: string, requestClient?: Awaited<ReturnType<typeof createClient>>) {
@@ -152,9 +292,11 @@ export async function getCurrentUser(role: UserRole = "contractor"): Promise<Use
     error,
   } = await supabase.auth.getUser()
 
-  if (error || !user) return null
+  const authUser = error || !user ? await getAuthUserFromCookieFallback(supabase) : user
 
-  return resolveAuthenticatedUserProfile(user, supabase)
+  if (!authUser) return null
+
+  return resolveAuthenticatedUserProfile(authUser, supabase)
 }
 
 function loginRedirect(next?: string): never {

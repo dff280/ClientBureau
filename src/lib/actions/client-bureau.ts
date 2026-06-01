@@ -31,6 +31,7 @@ import type {
 import { reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
 import {
+  getAuthCookieDiagnostics,
   getCurrentUser,
   requireAuthenticatedUser,
   requireContractorAccess,
@@ -63,6 +64,25 @@ function actionErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback
+}
+
+async function getAdminMutationUser(context: string) {
+  const admin = await getCurrentUser("admin")
+
+  if (admin?.role === "admin") {
+    return { ok: true as const, admin }
+  }
+
+  const diagnostics = await getAuthCookieDiagnostics()
+  const hasReadableToken = diagnostics.supabaseAuthCookieHasAccessToken
+  const cookieSummary = `cookies=${diagnostics.authCookieCount}, readableToken=${hasReadableToken ? "yes" : "no"}`
+
+  return {
+    ok: false as const,
+    message: hasReadableToken
+      ? `Your admin profile could not be verified for this ${context} action. Refresh /admin, confirm /api/admin/session shows isAdmin=true, and try again. (${cookieSummary})`
+      : `This ${context} action did not receive a readable Supabase admin session cookie. Log in again at /login?next=/admin and retry from clientbureau.com. (${cookieSummary})`,
+  }
 }
 
 export async function submitClientReportAction(
@@ -253,12 +273,13 @@ export async function reviewReportAction(
     })
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("moderation")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try the moderation action again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let review: AdminReview
 
   try {
@@ -300,12 +321,13 @@ export async function bulkReviewReportsAction(
     return fail("Select reports before running a bulk moderation action.", zodFieldErrors(parsed.error))
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("bulk moderation")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try the bulk action again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let result: { updated: AdminReview[]; deletedIds: string[] }
 
   try {
@@ -359,12 +381,13 @@ export async function adminDiscussionReviewAction(
     return fail("Review the discussion action fields.", zodFieldErrors(parsed.error))
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("discussion moderation")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try the discussion action again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let discussion: CommunityDiscussion | undefined
 
   try {
@@ -404,12 +427,13 @@ export async function adminUpdateClientAction(
     return fail("Please correct the highlighted client fields.", zodFieldErrors(parsed.error))
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("client edit")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try editing again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let client: ClientProfile
 
   try {
@@ -437,12 +461,13 @@ export async function adminUpdateContractorAction(
     return fail("Please correct the highlighted contractor fields.", zodFieldErrors(parsed.error))
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("contractor edit")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try editing again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let contractor: ContractorProfile
 
   try {
@@ -467,12 +492,13 @@ export async function adminDeleteRecordAction(
     return fail("Select a record before deleting.", zodFieldErrors(parsed.error))
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("delete")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try deleting again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let result: AuditLogEntry | boolean
 
   try {
@@ -500,12 +526,13 @@ export async function bulkUploadImportAction(
     return fail("Preview and select valid rows before importing.", zodFieldErrors(parsed.error))
   }
 
-  const admin = await getCurrentUser("admin")
+  const adminResult = await getAdminMutationUser("bulk import")
 
-  if (!admin || admin.role !== "admin") {
-    return fail("Your admin session expired. Refresh, log in, and try importing again.")
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
   }
 
+  const { admin } = adminResult
   let rows: Array<Record<string, unknown>>
 
   try {
