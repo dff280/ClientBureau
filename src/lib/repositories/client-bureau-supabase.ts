@@ -123,6 +123,27 @@ function mapEvidence(row: ReportEvidenceRow): ReportEvidence {
   }
 }
 
+function mapPublicEvidence(row: ReportEvidenceRow): ReportEvidence {
+  const value = `${row.file_type} ${row.file_name}`.toLowerCase()
+  let fileName = "Evidence on file"
+
+  if (value.includes("invoice")) fileName = "Invoice evidence on file"
+  else if (value.includes("contract") || value.includes("pdf")) fileName = "Document evidence on file"
+  else if (value.includes("screenshot")) fileName = "Screenshot evidence on file"
+  else if (value.includes("png") || value.includes("jpg") || value.includes("image") || value.includes("photo")) {
+    fileName = "Photo evidence on file"
+  }
+
+  return {
+    id: row.id,
+    reportId: row.report_id,
+    fileName,
+    fileType: row.file_type,
+    storagePath: "private",
+    uploadedAt: row.uploaded_at,
+  }
+}
+
 function mapResponse(row: ClientResponseRow): ClientResponse {
   return {
     id: row.id,
@@ -467,7 +488,7 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
     positiveReports,
     clientResponses: (responseRows ?? []).map(mapResponse),
     communityDiscussions: discussionResult.error ? [] : (discussionResult.data ?? []).map(mapCommunityDiscussion),
-    evidence: (evidenceResult.data ?? []).map(mapEvidence),
+    evidence: (evidenceResult.data ?? []).map(mapPublicEvidence),
     timeline: reports
       .flatMap(reportTimeline)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),

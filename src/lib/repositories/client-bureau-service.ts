@@ -1,7 +1,13 @@
-import { getDataMode } from "@/lib/env"
+import { getDataMode, getPlatformFeatureDataMode } from "@/lib/env"
 import {
+  assignMockModerationCase,
+  createIntakeAssessment,
+  createWatchlistItem,
+  deleteReportDraft,
   getContractorDashboard,
   getAdminWorkspaceData,
+  getAdminModerationCrmData,
+  getContractorRiskOpsData,
   getPendingAdminReviews,
   getPublicClientProfile,
   getPublicClientProfiles,
@@ -9,12 +15,16 @@ import {
   reviewReport,
   reviewReportsBulk,
   reviewCommunityDiscussion,
+  saveReportDraft,
   searchClients,
+  setMockModerationDecisionReason,
   simulateSubmittedClientReport,
   submitCommunityDiscussion,
   submitClientResponse,
   updateAdminClientRecord,
   updateAdminContractorRecord,
+  updateMockModerationCase,
+  updateWatchlistItem,
 } from "@/lib/repositories/client-bureau"
 import {
   deleteAdminRecordSupabase,
@@ -33,8 +43,24 @@ import {
   updateAdminClientRecordSupabase,
   updateAdminContractorRecordSupabase,
 } from "@/lib/repositories/client-bureau-supabase"
-import type { ClientReportInput, ClientResponseInput } from "@/lib/schemas/client-bureau"
-import type { ClientProfile, CommunityDiscussion, ContractorProfile, SearchFilters, User } from "@/lib/types"
+import type {
+  ClientReportInput,
+  ClientResponseInput,
+  IntakeAssessmentInput,
+  ReportDraftInput,
+  WatchlistItemInput,
+} from "@/lib/schemas/client-bureau"
+import type {
+  ClientProfile,
+  CommunityDiscussion,
+  ContractorProfile,
+  ModerationCaseStatus,
+  ModerationDecisionReason,
+  ModerationPriority,
+  SearchFilters,
+  User,
+  WatchlistStatus,
+} from "@/lib/types"
 import { hasSupabaseServiceConfig } from "@/lib/supabase/config"
 
 function shouldUseSupabase() {
@@ -47,6 +73,14 @@ function shouldUseSupabase() {
   }
 
   return true
+}
+
+function shouldUsePlatformSupabase() {
+  if (getPlatformFeatureDataMode() === "mock") return false
+
+  throw new Error(
+    "PLATFORM_FEATURE_DATA_MODE=supabase requires applying the platform expansion migration and wiring the Supabase feature adapter.",
+  )
 }
 
 export async function getPublicClientProfilesService() {
@@ -83,6 +117,18 @@ export async function getAdminWorkspaceDataService() {
   if (shouldUseSupabase()) return getAdminWorkspaceDataSupabase()
 
   return getAdminWorkspaceData()
+}
+
+export async function getContractorRiskOpsDataService(userId: string) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return getContractorRiskOpsData(userId)
+}
+
+export async function getAdminModerationCrmDataService() {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return getAdminModerationCrmData()
 }
 
 export async function submitClientReportService(
@@ -190,4 +236,96 @@ export async function deleteAdminRecordService(
   if (shouldUseSupabase()) return deleteAdminRecordSupabase(entityType, entityId, reviewer)
 
   return deleteAdminRecord(entityType, entityId)
+}
+
+export async function createWatchlistItemService(userId: string, input: WatchlistItemInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = getContractorDashboard(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createWatchlistItem({
+    contractorId: dashboard.contractor.id,
+    clientId: input.clientId,
+    watchReason: input.watchReason,
+    alertLevel: input.alertLevel,
+  })
+}
+
+export async function updateWatchlistItemService(itemId: string, status: WatchlistStatus) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return updateWatchlistItem(itemId, status)
+}
+
+export async function saveReportDraftService(userId: string, input: ReportDraftInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = getContractorDashboard(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return saveReportDraft({
+    contractorId: dashboard.contractor.id,
+    draftId: input.draftId,
+    clientId: input.clientId,
+    clientName: input.clientName,
+    projectType: input.projectType,
+    estimatedValue: input.estimatedValue,
+    amountAtRisk: input.amountAtRisk,
+    summary: input.summary,
+    nextStep: input.nextStep,
+    status: input.status,
+  })
+}
+
+export async function deleteReportDraftService(draftId: string) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return deleteReportDraft(draftId)
+}
+
+export async function createIntakeAssessmentService(userId: string, input: IntakeAssessmentInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = getContractorDashboard(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createIntakeAssessment({
+    contractorId: dashboard.contractor.id,
+    clientName: input.clientName,
+    city: input.city,
+    state: input.state,
+    projectValue: input.projectValue,
+    depositReceived: Boolean(input.depositReceived),
+    contractSigned: Boolean(input.contractSigned),
+    privateMatchConfirmed: Boolean(input.privateMatchConfirmed),
+    notes: input.notes,
+  })
+}
+
+export async function assignModerationCaseService(caseId: string, admin: User, assignedTo: string) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return assignMockModerationCase(caseId, assignedTo, admin.fullName)
+}
+
+export async function updateModerationCaseService(
+  caseId: string,
+  priority: ModerationPriority,
+  status: ModerationCaseStatus,
+  escalationNote?: string,
+) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return updateMockModerationCase(caseId, priority, status, escalationNote)
+}
+
+export async function setModerationDecisionReasonService(
+  caseId: string,
+  decisionReason: ModerationDecisionReason,
+  moderatorNote?: string,
+) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return setMockModerationDecisionReason(caseId, decisionReason, moderatorNote)
 }

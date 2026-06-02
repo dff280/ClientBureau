@@ -1,7 +1,12 @@
 import type { Metadata } from "next"
 
+import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
 import { AdminReviewPanel } from "@/components/admin/admin-review-panel"
-import { getPendingAdminReviewsService } from "@/lib/repositories/client-bureau-service"
+import {
+  getAdminModerationCrmDataService,
+  getAdminWorkspaceDataService,
+  getPendingAdminReviewsService,
+} from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
   title: "Admin Reports",
@@ -16,7 +21,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminReportsPage() {
-  const reviews = await getPendingAdminReviewsService()
+  const [reviews, workspace, moderationCrm] = await Promise.all([
+    getPendingAdminReviewsService(),
+    getAdminWorkspaceDataService(),
+    getAdminModerationCrmDataService(),
+  ])
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -37,6 +46,7 @@ export default async function AdminReportsPage() {
             <span className="text-slate-600">review records loaded</span>
           </div>
         </header>
+        {moderationCrm ? <AdminModerationCrm data={moderationCrm} users={workspace.users} /> : null}
         <AdminReviewPanel items={reviews} />
       </div>
     </section>

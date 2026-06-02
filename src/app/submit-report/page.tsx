@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { ClipboardCheck, FileText, ShieldCheck } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportSubmissionForm } from "@/components/forms/report-submission-form"
@@ -60,12 +61,36 @@ export default async function SubmitReportPage({
           <LegalNotice />
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader>
-              <CardTitle>Moderation checklist</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardCheck className="size-5 text-amber-700" aria-hidden="true" />
+                Moderation checklist
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
               <p>Use project facts, dates, invoices, and completion records.</p>
               <p>Avoid personal attacks or claims about motive.</p>
               <p>Approved reports can create an SEO-friendly public client profile.</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="size-5 text-amber-700" aria-hidden="true" />
+                Evidence status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
+              <p>Invoices, contracts, photos, PDFs, and screenshots stay private for moderator review.</p>
+              <p>Public pages show only evidence summaries, such as documents reviewed or invoices reviewed.</p>
+            </CardContent>
+          </Card>
+          <Card className="rounded-md border-slate-200 bg-slate-950 text-white shadow-sm">
+            <CardContent className="space-y-3 p-5">
+              <ShieldCheck className="size-6 text-amber-300" aria-hidden="true" />
+              <h2 className="font-semibold">Need more time?</h2>
+              <p className="text-sm leading-6 text-slate-300">
+                Use the dashboard draft workflow to keep intake notes, evidence status, and next steps organized before final submission.
+              </p>
             </CardContent>
           </Card>
         </aside>

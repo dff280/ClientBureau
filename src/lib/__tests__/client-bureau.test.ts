@@ -6,11 +6,33 @@ import { calculateClientBureauScore, scoreToRiskLevel } from "@/lib/scoring"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
+  assignModerationCase,
+  countWatchlistAlerts,
+  filterModerationCases,
+  intakeRiskRecommendation,
+  isValidDecisionReason,
+  rankWatchlistItems,
+  reportDraftCompletionPercentage,
+} from "@/lib/platform-features"
+import {
   getPublicClientProfile,
   searchClients,
   simulateApprovalPublication,
   simulateSubmittedClientReport,
 } from "@/lib/repositories/client-bureau"
+import {
+  clientProfiles,
+  contractorWatchlist,
+  moderationCases,
+  reportDrafts,
+} from "@/lib/mock-data"
+import {
+  intakeAssessmentSchema,
+  moderationCaseAssignmentSchema,
+  moderationDecisionReasonSchema,
+  reportDraftSchema,
+  watchlistItemSchema,
+} from "@/lib/schemas/client-bureau"
 import type { ClientReport } from "@/lib/types"
 
 const baseReport: ClientReport = {
@@ -192,5 +214,105 @@ describe("schemas and mock actions", () => {
     expect(audit?.nextIsPublic).toBe(true)
     expect(audit?.generatedSlug).toBe("elaine-parker-nashville-tn")
     expect(audit?.recalculatedScore).toBeGreaterThan(0)
+  })
+})
+
+describe("platform expansion feature utilities", () => {
+  it("ranks watchlist alerts by priority and counts active high-signal items", () => {
+    const ranked = rankWatchlistItems(contractorWatchlist, clientProfiles)
+
+    expect(ranked[0]?.alertLevel).toBe("urgent")
+    expect(countWatchlistAlerts(contractorWatchlist)).toBe(2)
+  })
+
+  it("calculates report draft completion percentage", () => {
+    expect(reportDraftCompletionPercentage(reportDrafts[0])).toBe(100)
+  })
+
+  it("recommends intake controls from payment and private-match signals", () => {
+    expect(
+      intakeRiskRecommendation({
+        projectValue: 12000,
+        depositReceived: false,
+        contractSigned: true,
+        privateMatchConfirmed: true,
+      }),
+    ).toBe("Use milestone billing")
+  })
+
+  it("filters and assigns moderation cases", () => {
+    expect(filterModerationCases(moderationCases, "escalated")).toHaveLength(1)
+
+    const assigned = assignModerationCase(moderationCases[0], "user_admin_01", "Review Team")
+
+    expect(assigned.status).toBe("assigned")
+    expect(assigned.assignedToName).toBe("Review Team")
+  })
+
+  it("validates supported moderation decision reasons", () => {
+    expect(isValidDecisionReason("private_information")).toBe(true)
+    expect(isValidDecisionReason("unsafe_reason")).toBe(false)
+  })
+})
+
+describe("platform expansion schemas", () => {
+  it("validates contractor watchlist creation", () => {
+    expect(
+      watchlistItemSchema.safeParse({
+        clientId: "client_01",
+        watchReason: "Review before accepting another job.",
+        alertLevel: "high",
+      }).success,
+    ).toBe(true)
+  })
+
+  it("validates report drafts and amount-at-risk constraints", () => {
+    expect(
+      reportDraftSchema.safeParse({
+        clientName: "John Smith",
+        projectType: "Bathroom remodel",
+        estimatedValue: 5000,
+        amountAtRisk: 7000,
+        summary: "Draft describes a documented project timeline.",
+        nextStep: "Attach invoice",
+        status: "draft",
+      }).success,
+    ).toBe(false)
+  })
+
+  it("validates intake and moderation action inputs", () => {
+    expect(
+      intakeAssessmentSchema.safeParse({
+        clientName: "Maria Alvarez",
+        city: "Tampa",
+        state: "FL",
+        projectValue: 5200,
+        depositReceived: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      moderationCaseAssignmentSchema.safeParse({
+        caseId: "case_01",
+        assignedTo: "user_admin_01",
+      }).success,
+    ).toBe(true)
+
+    expect(
+      moderationDecisionReasonSchema.safeParse({
+        caseId: "case_01",
+        decisionReason: "private_information",
+      }).success,
+    ).toBe(true)
+  })
+
+  it("keeps public profile output limited to public moderated data", () => {
+    const profile = getPublicClientProfile("john-smith-orlando-fl")
+    const serialized = JSON.stringify(profile)
+
+    expect(profile?.reports.every((report) => ["approved", "disputed"].includes(report.status))).toBe(true)
+    expect(serialized).not.toContain("pending")
+    expect(serialized).not.toContain("rejected")
+    expect(serialized).not.toContain("signed-completion-form.pdf")
   })
 })

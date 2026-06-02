@@ -201,9 +201,78 @@ export const searchSchema = z.object({
   category: z.enum(reportCategories).optional(),
 })
 
+export const watchlistItemSchema = z.object({
+  clientId: requiredText("Client ID"),
+  watchReason: requiredText("Watch reason", 12).max(240, "Keep the watch reason under 240 characters."),
+  alertLevel: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
+})
+
+export const updateWatchlistItemSchema = z.object({
+  itemId: requiredText("Watchlist item ID"),
+  status: z.enum(["active", "cleared"]),
+})
+
+export const reportDraftSchema = z.object({
+  draftId: optionalText,
+  clientId: optionalText,
+  clientName: requiredText("Client name"),
+  projectType: requiredText("Project type"),
+  estimatedValue: money("Estimated project value"),
+  amountAtRisk: money("Amount at risk"),
+  summary: requiredText("Draft summary", 20).max(700, "Keep the draft summary under 700 characters."),
+  nextStep: requiredText("Next step", 8).max(240, "Keep the next step under 240 characters."),
+  status: z.enum(["draft", "ready_to_submit", "submitted"]).default("draft"),
+}).refine((value) => value.amountAtRisk <= value.estimatedValue, {
+  path: ["amountAtRisk"],
+  message: "Amount at risk cannot exceed the estimated project value.",
+})
+
+export const deleteReportDraftSchema = z.object({
+  draftId: requiredText("Draft ID"),
+})
+
+export const intakeAssessmentSchema = z.object({
+  clientName: requiredText("Client name"),
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  projectValue: money("Project value"),
+  depositReceived: z.coerce.boolean().optional(),
+  contractSigned: z.coerce.boolean().optional(),
+  privateMatchConfirmed: z.coerce.boolean().optional(),
+  notes: z.string().trim().max(700).optional(),
+})
+
+export const moderationCaseAssignmentSchema = z.object({
+  caseId: requiredText("Case ID"),
+  assignedTo: requiredText("Reviewer ID"),
+})
+
+export const moderationCaseUpdateSchema = z.object({
+  caseId: requiredText("Case ID"),
+  priority: z.enum(["low", "normal", "high", "urgent"]),
+  status: z.enum(["unassigned", "assigned", "escalated", "closed"]),
+  escalationNote: z.string().trim().max(700).optional(),
+})
+
+export const moderationDecisionReasonSchema = z.object({
+  caseId: requiredText("Case ID"),
+  decisionReason: z.enum([
+    "approved_with_edits",
+    "insufficient_evidence",
+    "private_information",
+    "neutrality_issue",
+    "duplicate_report",
+    "policy_rejection",
+  ]),
+  moderatorNote: z.string().trim().max(700).optional(),
+})
+
 export type ClientReportInput = z.infer<typeof clientReportSchema>
 export type ClientResponseInput = z.infer<typeof clientResponseSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type AdminReviewInput = z.infer<typeof adminReviewSchema>
 export type CommunityDiscussionInput = z.infer<typeof communityDiscussionSchema>
+export type WatchlistItemInput = z.infer<typeof watchlistItemSchema>
+export type ReportDraftInput = z.infer<typeof reportDraftSchema>
+export type IntakeAssessmentInput = z.infer<typeof intakeAssessmentSchema>

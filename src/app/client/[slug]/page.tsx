@@ -205,6 +205,13 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
+            <div className="grid gap-3 md:grid-cols-4">
+              <TrustMetric label="Approved reports" value={String(profile.reports.length)} />
+              <TrustMetric label="Open disputes" value={String(openDisputes)} />
+              <TrustMetric label="Resolved reports" value={String(resolvedReports)} />
+              <TrustMetric label="Evidence" value={evidenceSummary.includes("Evidence on file") ? "On file" : "Private"} />
+            </div>
+
             <div className="space-y-3">
               <h2 className="text-3xl font-semibold text-slate-950">Approved report summaries</h2>
               <p className="max-w-3xl text-sm leading-6 text-slate-600">
@@ -339,6 +346,15 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
         </div>
       </section>
     </article>
+  )
+}
+
+function TrustMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
+    </div>
   )
 }
 

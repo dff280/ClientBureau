@@ -3,9 +3,13 @@ import type React from "react"
 import Link from "next/link"
 import { ClipboardCheck, MessageSquareText, ShieldCheck, UploadCloud } from "lucide-react"
 
+import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
+import {
+  getAdminModerationCrmDataService,
+  getAdminWorkspaceDataService,
+} from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
   title: "Admin Command",
@@ -18,12 +22,16 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminHomePage() {
-  const data = await getAdminWorkspaceDataService()
+  const [data, moderationCrm] = await Promise.all([
+    getAdminWorkspaceDataService(),
+    getAdminModerationCrmDataService(),
+  ])
   const pendingReports = data.reviews.filter((item) =>
     ["queued", "needs_dispute_review"].includes(item.review.status),
   ).length
   const pendingDiscussions = data.discussions.filter((item) => item.status === "pending").length
   const publicClients = data.clients.filter((item) => item.isPublic).length
+  const escalatedCases = moderationCrm?.cases.filter((item) => item.status === "escalated").length ?? 0
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -51,7 +59,7 @@ export default async function AdminHomePage() {
           <Metric label="Pending reports" value={pendingReports} />
           <Metric label="Pending discussions" value={pendingDiscussions} />
           <Metric label="Public clients" value={publicClients} />
-          <Metric label="Audit events" value={data.auditLog.length} />
+          <Metric label="Escalations" value={escalatedCases} />
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
@@ -77,6 +85,8 @@ export default async function AdminHomePage() {
             badge="CSV"
           />
         </div>
+
+        {moderationCrm ? <AdminModerationCrm data={moderationCrm} users={data.users} compact /> : null}
       </div>
     </section>
   )

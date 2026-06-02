@@ -26,6 +26,7 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
 2. Open SQL Editor and run the migrations in order:
    - `supabase/migrations/0001_client_bureau_schema.sql`
    - `supabase/migrations/0002_admin_discussions_audit.sql`
+   - `supabase/migrations/0003_platform_expansion.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -94,7 +95,7 @@ git remote add origin https://github.com/YOUR_ACCOUNT/client-bureau.git
 git push -u origin main
 ```
 
-Use a private GitHub repository until legal copy, moderation workflow, and test billing are verified.
+Use a private GitHub repository until legal copy, moderation workflow, and billing are verified.
 
 ## 5. Prepare The VPS
 
@@ -137,11 +138,12 @@ Minimum production values:
 
 ```text
 DATA_MODE=supabase
+PLATFORM_FEATURE_DATA_MODE=mock
 NEXT_PUBLIC_SITE_URL=https://clientbureau.com
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
 SUPABASE_SECRET_KEY=...
-STRIPE_SECRET_KEY=sk_test_...
+STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_PRO_MONTHLY=price_...
 STRIPE_PRICE_TEAM_MONTHLY=price_...
@@ -166,6 +168,8 @@ Generate the server action encryption key:
 ```bash
 openssl rand -base64 32
 ```
+
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until the platform expansion Supabase adapter is intentionally enabled. The tables are documented in migration `0003`, while the live app continues to use safe typed feature data by default.
 
 ## 6. Start The App
 

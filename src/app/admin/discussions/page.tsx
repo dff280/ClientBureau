@@ -12,6 +12,9 @@ export const dynamic = "force-dynamic"
 
 export default async function AdminDiscussionsPage() {
   const data = await getAdminWorkspaceDataService()
+  const pending = data.discussions.filter((item) => item.status === "pending").length
+  const approved = data.discussions.filter((item) => item.status === "approved").length
+  const verified = data.discussions.filter((item) => item.isVerified).length
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -25,8 +28,23 @@ export default async function AdminDiscussionsPage() {
             Create, approve, reject, delete, verify, and assign community discussion entries before they appear publicly.
           </p>
         </header>
+        <div className="grid gap-3 md:grid-cols-4">
+          <Metric label="Pending" value={pending} />
+          <Metric label="Approved" value={approved} />
+          <Metric label="Verified" value={verified} />
+          <Metric label="Total entries" value={data.discussions.length} />
+        </div>
         <DiscussionModerationPanel discussions={data.discussions} clients={data.clients} reports={data.reports} />
       </div>
     </section>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
+    </div>
   )
 }

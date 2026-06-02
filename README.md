@@ -23,7 +23,7 @@ npm run dev
 
 Then open `http://localhost:3000`.
 
-Local development defaults to `DATA_MODE=mock`, so Supabase and Stripe secrets are not required.
+Local development defaults to `DATA_MODE=mock` and `PLATFORM_FEATURE_DATA_MODE=mock`, so Supabase and Stripe secrets are not required.
 
 ## Environment
 
@@ -31,6 +31,7 @@ Copy `.env.example` to `.env.local` when connecting services.
 
 ```bash
 DATA_MODE=mock
+PLATFORM_FEATURE_DATA_MODE=mock
 NEXT_PUBLIC_SITE_URL=https://clientbureau.com
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
@@ -58,7 +59,7 @@ NEXT_PUBLIC_LINKEDIN_URL=
 
 - Mock and Supabase repository adapters live under `src/lib/repositories/`.
 - Supabase client helpers are in `src/lib/supabase/`.
-- The database and RLS migration is in `supabase/migrations/0001_client_bureau_schema.sql`.
+- Database and RLS migrations live in `supabase/migrations/`, including the platform expansion migration for future live Risk Ops and Moderation CRM tables.
 - Stripe tier data, checkout, and webhook helpers are in `src/lib/stripe/` and `src/app/api/stripe/`.
 - Public client profile pages are generated from approved profiles and included in `sitemap.ts`.
 

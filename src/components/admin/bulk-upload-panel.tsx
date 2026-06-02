@@ -29,8 +29,8 @@ export function BulkUploadPanel() {
   }, [state])
 
   return (
-    <div className="grid gap-5 xl:grid-cols-[420px_1fr]">
-      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
+      <section className="min-w-0 rounded-md border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-2">
           <UploadCloud className="size-5 text-amber-700" aria-hidden="true" />
           <h2 className="font-semibold text-slate-950">CSV intake</h2>
@@ -46,7 +46,7 @@ export function BulkUploadPanel() {
         </div>
       </section>
 
-      <section className="rounded-md border border-slate-200 bg-white shadow-sm">
+      <section className="min-w-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-200 p-4">
           <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
             <div>
@@ -81,7 +81,7 @@ export function BulkUploadPanel() {
             </Alert>
           ) : null}
         </div>
-        <div className="overflow-x-auto">
+        <div className="max-w-full overflow-x-auto">
           <table className="w-full min-w-[800px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

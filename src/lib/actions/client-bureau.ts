@@ -14,17 +14,29 @@ import {
   clientReportSchema,
   clientResponseSchema,
   communityDiscussionSchema,
+  deleteReportDraftSchema,
+  intakeAssessmentSchema,
   signupSchema,
+  moderationCaseAssignmentSchema,
+  moderationCaseUpdateSchema,
+  moderationDecisionReasonSchema,
+  reportDraftSchema,
+  updateWatchlistItemSchema,
+  watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
 import type {
   ActionResult,
   AdminReview,
   AuditLogEntry,
+  ClientIntakeAssessment,
   ClientProfile,
   ClientResponse,
   ClientReport,
   CommunityDiscussion,
   ContractorProfile,
+  ContractorWatchlistItem,
+  ModerationCase,
+  ReportDraft,
   User,
 } from "@/lib/types"
 import { reportCategories } from "@/lib/types"
@@ -37,14 +49,22 @@ import {
 import { getDataMode, getSiteUrl } from "@/lib/env"
 import {
   deleteAdminRecordService,
+  assignModerationCaseService,
+  createIntakeAssessmentService,
+  createWatchlistItemService,
+  deleteReportDraftService,
   reviewCommunityDiscussionService,
   reviewReportService,
   reviewReportsBulkService,
+  saveReportDraftService,
+  setModerationDecisionReasonService,
   submitCommunityDiscussionService,
   submitClientReportService,
   submitClientResponseService,
   updateAdminClientRecordService,
   updateAdminContractorRecordService,
+  updateModerationCaseService,
+  updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
@@ -543,4 +563,208 @@ export async function bulkUploadImportAction(
   revalidatePath("/admin/audit-log")
 
   return ok({ imported: rows.length }, `${rows.length} CSV rows imported as pending report records.`)
+}
+
+export async function createWatchlistItemAction(
+  _previousState: ActionResult<ContractorWatchlistItem>,
+  formData: FormData,
+): Promise<ActionResult<ContractorWatchlistItem>> {
+  const parsed = watchlistItemSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the watchlist fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const item = await createWatchlistItemService(user.id, parsed.data)
+    if (!item) return fail("Watchlist feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(item, "Client added to the contractor watchlist.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Watchlist item could not be created."))
+  }
+}
+
+export async function updateWatchlistItemAction(
+  _previousState: ActionResult<ContractorWatchlistItem>,
+  formData: FormData,
+): Promise<ActionResult<ContractorWatchlistItem>> {
+  const parsed = updateWatchlistItemSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a watchlist item before updating it.", zodFieldErrors(parsed.error))
+  }
+
+  await requireContractorAccess()
+
+  try {
+    const item = await updateWatchlistItemService(parsed.data.itemId, parsed.data.status)
+    if (!item) return fail("Watchlist feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(item, parsed.data.status === "cleared" ? "Watchlist alert cleared." : "Watchlist alert restored.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Watchlist item could not be updated."))
+  }
+}
+
+export async function saveReportDraftAction(
+  _previousState: ActionResult<ReportDraft>,
+  formData: FormData,
+): Promise<ActionResult<ReportDraft>> {
+  const parsed = reportDraftSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the draft fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const draft = await saveReportDraftService(user.id, parsed.data)
+    if (!draft) return fail("Report draft feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(draft, "Report draft saved.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Report draft could not be saved."))
+  }
+}
+
+export async function deleteReportDraftAction(
+  _previousState: ActionResult<AuditLogEntry | boolean>,
+  formData: FormData,
+): Promise<ActionResult<AuditLogEntry | boolean>> {
+  const parsed = deleteReportDraftSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a draft before deleting.", zodFieldErrors(parsed.error))
+  }
+
+  await requireContractorAccess()
+
+  try {
+    const result = await deleteReportDraftService(parsed.data.draftId)
+    if (!result) return fail("Report draft feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(result, "Report draft deleted.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Report draft could not be deleted."))
+  }
+}
+
+export async function createIntakeAssessmentAction(
+  _previousState: ActionResult<ClientIntakeAssessment>,
+  formData: FormData,
+): Promise<ActionResult<ClientIntakeAssessment>> {
+  const parsed = intakeAssessmentSchema.safeParse({
+    ...formDataToObject(formData),
+    depositReceived: formData.has("depositReceived"),
+    contractSigned: formData.has("contractSigned"),
+    privateMatchConfirmed: formData.has("privateMatchConfirmed"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the intake assessment fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const assessment = await createIntakeAssessmentService(user.id, parsed.data)
+    if (!assessment) return fail("Intake assessment feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(assessment, `Intake assessment created. Recommendation: ${assessment.recommendation}.`)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Intake assessment could not be created."))
+  }
+}
+
+export async function assignModerationCaseAction(
+  _previousState: ActionResult<ModerationCase>,
+  formData: FormData,
+): Promise<ActionResult<ModerationCase>> {
+  const parsed = moderationCaseAssignmentSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a moderation case and reviewer.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("case assignment", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const caseItem = await assignModerationCaseService(parsed.data.caseId, adminResult.admin, parsed.data.assignedTo)
+    if (!caseItem) return fail("Moderation case feature data is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reports")
+    return ok(caseItem, "Moderation case assigned.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Moderation case could not be assigned."))
+  }
+}
+
+export async function updateModerationCaseAction(
+  _previousState: ActionResult<ModerationCase>,
+  formData: FormData,
+): Promise<ActionResult<ModerationCase>> {
+  const parsed = moderationCaseUpdateSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the moderation case fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("case update", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const caseItem = await updateModerationCaseService(
+      parsed.data.caseId,
+      parsed.data.priority,
+      parsed.data.status,
+      parsed.data.escalationNote,
+    )
+    if (!caseItem) return fail("Moderation case feature data is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reports")
+    return ok(caseItem, "Moderation case updated.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Moderation case could not be updated."))
+  }
+}
+
+export async function setModerationDecisionReasonAction(
+  _previousState: ActionResult<ModerationCase>,
+  formData: FormData,
+): Promise<ActionResult<ModerationCase>> {
+  const parsed = moderationDecisionReasonSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a valid decision reason.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("decision reason", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const caseItem = await setModerationDecisionReasonService(
+      parsed.data.caseId,
+      parsed.data.decisionReason,
+      parsed.data.moderatorNote,
+    )
+    if (!caseItem) return fail("Moderation case feature data is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reports")
+    return ok(caseItem, "Decision reason saved.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Decision reason could not be saved."))
+  }
 }

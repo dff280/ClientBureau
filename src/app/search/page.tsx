@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { FilePlus2, LockKeyhole } from "lucide-react"
+import { FilePlus2, LockKeyhole, Radar, ShieldCheck } from "lucide-react"
 
 import { ClientSearchForm } from "@/components/search/client-search-form"
 import { SearchResultCard } from "@/components/search/search-result-card"
@@ -83,12 +83,19 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             </p>
           </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-2 p-5">
-              <p className="text-sm font-semibold uppercase text-slate-500">Private matching</p>
+            <CardContent className="space-y-4 p-5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
+                <p className="text-sm font-semibold uppercase text-slate-500">Private matching</p>
+              </div>
               <p className="text-sm leading-6 text-slate-600">
                 Search can use phone and email as private matching signals. Results show only
                 approved public summaries and non-sensitive identity fields.
               </p>
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+                <Radar className="mb-2 size-4 text-amber-700" aria-hidden="true" />
+                Add search findings to your contractor watchlist from the dashboard before scheduling work.
+              </div>
             </CardContent>
           </Card>
         </div>

@@ -19,6 +19,18 @@ export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
 export type SubscriptionTier = "free" | "pro" | "bureau_team"
 export type UserRole = "contractor" | "admin"
 export type VerificationStatus = "unverified" | "pending" | "verified"
+export type WatchlistStatus = "active" | "cleared"
+export type ReportDraftStatus = "draft" | "ready_to_submit" | "submitted"
+export type EvidenceReviewStatus = "missing" | "uploaded" | "review_pending" | "reviewed" | "needs_more_info"
+export type ModerationPriority = "low" | "normal" | "high" | "urgent"
+export type ModerationCaseStatus = "unassigned" | "assigned" | "escalated" | "closed"
+export type ModerationDecisionReason =
+  | "approved_with_edits"
+  | "insufficient_evidence"
+  | "private_information"
+  | "neutrality_issue"
+  | "duplicate_report"
+  | "policy_rejection"
 export type DiscussionCategory =
   | "Contractor Experience"
   | "Client Response"
@@ -83,6 +95,78 @@ export interface ClientProfile {
   createdAt: string
   updatedAt: string
   isPublic: boolean
+}
+
+export interface ContractorWatchlistItem {
+  id: string
+  contractorId: string
+  clientId: string
+  status: WatchlistStatus
+  watchReason: string
+  alertLevel: ModerationPriority
+  lastSignal: string
+  privateMatch: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ReportDraft {
+  id: string
+  contractorId: string
+  clientId?: string
+  clientName: string
+  projectType: string
+  estimatedValue: number
+  amountAtRisk: number
+  summary: string
+  nextStep: string
+  status: ReportDraftStatus
+  updatedAt: string
+}
+
+export interface ClientIntakeAssessment {
+  id: string
+  contractorId: string
+  clientName: string
+  city: string
+  state: string
+  projectValue: number
+  depositReceived: boolean
+  contractSigned: boolean
+  privateMatchConfirmed: boolean
+  recommendation: "Proceed" | "Request deposit" | "Use milestone billing" | "Review before scheduling"
+  score: number
+  notes: string
+  createdAt: string
+}
+
+export interface EvidenceReviewSummary {
+  id: string
+  reportId: string
+  contractorId: string
+  status: EvidenceReviewStatus
+  label: string
+  fileCount: number
+  reviewedCount: number
+  lastUpdatedAt: string
+}
+
+export interface ContractorActivityItem {
+  id: string
+  contractorId: string
+  title: string
+  description: string
+  createdAt: string
+  tone: "neutral" | "positive" | "warning"
+}
+
+export interface ContractorRiskOpsData {
+  watchlist: ContractorWatchlistItem[]
+  reportDrafts: ReportDraft[]
+  intakeAssessments: ClientIntakeAssessment[]
+  evidenceSummaries: EvidenceReviewSummary[]
+  activity: ContractorActivityItem[]
+  recommendedActions: string[]
 }
 
 export interface ClientReport {
@@ -199,6 +283,52 @@ export interface AuditLogEntry {
   summary: string
   metadata?: Record<string, string | number | boolean | null>
   createdAt: string
+}
+
+export interface ModerationCase {
+  id: string
+  reportId?: string
+  discussionId?: string
+  clientId?: string
+  title: string
+  summary: string
+  priority: ModerationPriority
+  status: ModerationCaseStatus
+  queueStage: "triage" | "evidence_review" | "summary_edit" | "decision" | "published"
+  assignedTo?: string
+  assignedToName?: string
+  dueAt: string
+  decisionReason?: ModerationDecisionReason
+  escalationNote?: string
+  publicSummaryPreview?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AdminWorkloadMetric {
+  id: string
+  label: string
+  value: number
+  helper: string
+  tone: "slate" | "amber" | "emerald" | "rose"
+}
+
+export interface BulkImportBatch {
+  id: string
+  fileName: string
+  createdBy: string
+  createdAt: string
+  totalRows: number
+  readyRows: number
+  duplicateRows: number
+  importedRows: number
+  status: "staged" | "imported" | "needs_review"
+}
+
+export interface AdminModerationCrmData {
+  cases: ModerationCase[]
+  workload: AdminWorkloadMetric[]
+  importBatches: BulkImportBatch[]
 }
 
 export interface AdminWorkspaceData {

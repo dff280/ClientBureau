@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 
+import { getPlatformFeatureDataMode } from "@/lib/env"
+
 export const metadata: Metadata = {
   title: "Admin Settings",
   robots: { index: false, follow: false },
@@ -8,6 +10,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminSettingsPage() {
+  const platformFeatureMode = getPlatformFeatureDataMode()
+
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
@@ -26,6 +30,8 @@ export default async function AdminSettingsPage() {
             ["Evidence privacy", "Uploads are private by default. Public profiles show only evidence summaries such as invoices reviewed or photos reviewed."],
             ["Discussion moderation", "Community discussion entries default to pending and require approval before public display."],
             ["Route protection", "Admin routes require the admin role. Normal users cannot access internal sections."],
+            ["Feature data mode", `Platform expansion workflows currently read from ${platformFeatureMode} feature data.`],
+            ["Decision reasons", "Moderation cases require a decision reason before final closure in the CRM workflow."],
           ].map(([title, text]) => (
             <div key={title} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="font-semibold text-slate-950">{title}</h2>

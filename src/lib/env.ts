@@ -2,6 +2,7 @@ import { z } from "zod"
 
 const envSchema = z.object({
   DATA_MODE: z.enum(["mock", "supabase"]).default("mock"),
+  PLATFORM_FEATURE_DATA_MODE: z.enum(["mock", "supabase"]).default("mock"),
   NEXT_PUBLIC_SITE_URL: z.url().default("https://clientbureau.com"),
   NEXT_PUBLIC_SUPABASE_URL: z.url().optional().or(z.literal("")),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
@@ -28,6 +29,7 @@ const envSchema = z.object({
 })
 
 export type DataMode = "mock" | "supabase"
+export type PlatformFeatureDataMode = "mock" | "supabase"
 
 function readEnv() {
   return envSchema.parse(process.env)
@@ -35,6 +37,10 @@ function readEnv() {
 
 export function getDataMode(): DataMode {
   return readEnv().DATA_MODE
+}
+
+export function getPlatformFeatureDataMode(): PlatformFeatureDataMode {
+  return readEnv().PLATFORM_FEATURE_DATA_MODE
 }
 
 export function isSupabaseDataMode() {

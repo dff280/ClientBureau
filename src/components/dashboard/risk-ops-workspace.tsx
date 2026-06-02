@@ -1,0 +1,432 @@
+"use client"
+
+import Link from "next/link"
+import { useActionState, useEffect, useMemo } from "react"
+import {
+  AlertTriangle,
+  ClipboardCheck,
+  FileText,
+  Gauge,
+  ListChecks,
+  PlusCircle,
+  Radar,
+  Search,
+  ShieldCheck,
+  XCircle,
+} from "lucide-react"
+import { toast } from "sonner"
+
+import { FieldError } from "@/components/forms/field-error"
+import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  createIntakeAssessmentAction,
+  createWatchlistItemAction,
+  deleteReportDraftAction,
+  saveReportDraftAction,
+  updateWatchlistItemAction,
+} from "@/lib/actions/client-bureau"
+import {
+  countWatchlistAlerts,
+  rankWatchlistItems,
+  reportDraftCompletionPercentage,
+} from "@/lib/platform-features"
+import type {
+  ActionResult,
+  AuditLogEntry,
+  ClientIntakeAssessment,
+  ClientProfile,
+  ContractorRiskOpsData,
+  ContractorWatchlistItem,
+  ReportDraft,
+} from "@/lib/types"
+import { cn } from "@/lib/utils"
+
+const watchState: ActionResult<ContractorWatchlistItem> = { ok: false, message: "" }
+const draftState: ActionResult<ReportDraft> = { ok: false, message: "" }
+const deleteDraftState: ActionResult<AuditLogEntry | boolean> = { ok: false, message: "" }
+const intakeState: ActionResult<ClientIntakeAssessment> = { ok: false, message: "" }
+
+export function RiskOpsWorkspace({
+  riskOps,
+  clients,
+}: {
+  riskOps: ContractorRiskOpsData
+  clients: ClientProfile[]
+}) {
+  const rankedWatchlist = useMemo(
+    () => rankWatchlistItems(riskOps.watchlist, clients),
+    [clients, riskOps.watchlist],
+  )
+  const activeAlertCount = countWatchlistAlerts(riskOps.watchlist)
+  const readyDrafts = riskOps.reportDrafts.filter((draft) => draft.status === "ready_to_submit").length
+  const evidenceNeedingReview = riskOps.evidenceSummaries.filter((item) =>
+    ["review_pending", "needs_more_info", "missing"].includes(item.status),
+  ).length
+
+  return (
+    <div className="space-y-6">
+      <div className="grid gap-4 lg:grid-cols-4">
+        <RiskMetric label="Watchlist alerts" value={activeAlertCount} helper="High-priority client signals" tone="amber" />
+        <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
+        <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
+        <RiskMetric label="Intake reviews" value={riskOps.intakeAssessments.length} helper="Recent pre-contract checks" tone="slate" />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Radar className="size-5 text-amber-700" aria-hidden="true" />
+              Client watchlist
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 p-5">
+            <WatchlistCreateForm clients={clients} />
+            <div className="grid gap-3">
+              {rankedWatchlist.map((item) => (
+                <WatchlistCard key={item.id} item={item} client={clients.find((client) => client.id === item.clientId)} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ListChecks className="size-5 text-amber-700" aria-hidden="true" />
+              Intake assessment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5 p-5">
+            <IntakeAssessmentForm />
+            <div className="space-y-3">
+              {riskOps.intakeAssessments.map((assessment) => (
+                <div key={assessment.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-950">{assessment.clientName}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {assessment.city}, {assessment.state} / ${assessment.projectValue.toLocaleString()}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="rounded-md bg-white">
+                      {assessment.recommendation}
+                    </Badge>
+                  </div>
+                  <Progress value={assessment.score} className="mt-3" />
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{assessment.notes}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <FileText className="size-5 text-amber-700" aria-hidden="true" />
+              Report draft control
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.95fr_1.05fr]">
+            <ReportDraftForm clients={clients} />
+            <div className="space-y-3">
+              {riskOps.reportDrafts.map((draft) => (
+                <DraftCard key={draft.id} draft={draft} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-5">
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
+                Evidence status center
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {riskOps.evidenceSummaries.map((item) => (
+                <div key={item.id} className="rounded-md border border-slate-200 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-slate-950">{item.label}</p>
+                    <Badge variant="outline" className="rounded-md capitalize">
+                      {item.status.replaceAll("_", " ")}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {item.reviewedCount}/{item.fileCount} reviewed / updated {new Date(item.lastUpdatedAt).toLocaleDateString()}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-lg">Recommended actions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {riskOps.recommendedActions.map((action) => (
+                <div key={action} className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-700">
+                  <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
+                  {action}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="text-xl">Recent risk operations activity</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 p-5 md:grid-cols-3">
+          {riskOps.activity.map((item) => (
+            <div key={item.id} className="rounded-md border border-slate-200 p-4">
+              <Badge
+                variant="outline"
+                className={cn(
+                  "rounded-md capitalize",
+                  item.tone === "positive" && "border-emerald-200 bg-emerald-50 text-emerald-800",
+                  item.tone === "warning" && "border-amber-200 bg-amber-50 text-amber-900",
+                )}
+              >
+                {item.tone}
+              </Badge>
+              <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.description}</p>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+function WatchlistCreateForm({ clients }: { clients: ClientProfile[] }) {
+  const [state, action] = useActionState(createWatchlistItemAction, watchState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="grid gap-3 lg:grid-cols-[1fr_130px]">
+        <select name="clientId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          {clients.map((client) => (
+            <option key={client.id} value={client.id}>
+              {client.firstName} {client.lastName} / {client.city}, {client.state}
+            </option>
+          ))}
+        </select>
+        <select name="alertLevel" defaultValue="high" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_auto]">
+        <Input name="watchReason" placeholder="Reason to watch before accepting additional work" />
+        <PendingSubmitButton pendingText="Adding..." className="bg-slate-950 text-white hover:bg-slate-800">
+          <PlusCircle aria-hidden="true" />
+          Watch client
+        </PendingSubmitButton>
+      </div>
+      <FieldError name="watchReason" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function WatchlistCard({ item, client }: { item: ContractorWatchlistItem; client?: ClientProfile }) {
+  const [state, action] = useActionState(updateWatchlistItemAction, watchState)
+
+  useToastState(state)
+
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="rounded-md bg-slate-950 text-white">{item.alertLevel}</Badge>
+            {item.privateMatch ? <Badge variant="outline" className="rounded-md">Private match checked</Badge> : null}
+          </div>
+          <h3 className="mt-3 font-semibold text-slate-950">
+            {client ? `${client.firstName} ${client.lastName}` : "Client watch item"}
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">{client ? `${client.city}, ${client.state}` : "Location pending"}</p>
+          <p className="mt-3 text-sm leading-6 text-slate-700">{item.watchReason}</p>
+          <p className="mt-2 text-xs leading-5 text-slate-500">{item.lastSignal}</p>
+        </div>
+        <form action={action}>
+          <input type="hidden" name="itemId" value={item.id} />
+          <input type="hidden" name="status" value={item.status === "active" ? "cleared" : "active"} />
+          <PendingSubmitButton size="sm" variant="outline" pendingText="Saving...">
+            <XCircle aria-hidden="true" />
+            {item.status === "active" ? "Clear" : "Restore"}
+          </PendingSubmitButton>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function IntakeAssessmentForm() {
+  const [state, action] = useActionState(createIntakeAssessmentAction, intakeState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="grid gap-3 sm:grid-cols-[1fr_110px_90px]">
+        <Input name="clientName" placeholder="Client name" />
+        <Input name="city" placeholder="City" />
+        <Input name="state" placeholder="FL" className="uppercase" />
+      </div>
+      <Input name="projectValue" type="number" placeholder="Project value" />
+      <Textarea name="notes" placeholder="Intake notes for your team" className="min-h-20" />
+      <div className="grid gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2">
+          <Checkbox name="depositReceived" />
+          Deposit received
+        </label>
+        <label className="flex items-center gap-2">
+          <Checkbox name="contractSigned" />
+          Contract signed
+        </label>
+        <label className="flex items-center gap-2">
+          <Checkbox name="privateMatchConfirmed" />
+          Private match reviewed
+        </label>
+      </div>
+      <PendingSubmitButton pendingText="Assessing..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Gauge aria-hidden="true" />
+        Create assessment
+      </PendingSubmitButton>
+      <FieldError name="clientName" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function ReportDraftForm({ clients }: { clients: ClientProfile[] }) {
+  const [state, action] = useActionState(saveReportDraftAction, draftState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <select name="clientId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="">No matched profile yet</option>
+        {clients.map((client) => (
+          <option key={client.id} value={client.id}>
+            {client.firstName} {client.lastName}
+          </option>
+        ))}
+      </select>
+      <Input name="clientName" placeholder="Client name" />
+      <Input name="projectType" placeholder="Project type" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="estimatedValue" type="number" placeholder="Estimated value" />
+        <Input name="amountAtRisk" type="number" placeholder="Amount at risk" />
+      </div>
+      <Textarea name="summary" placeholder="Draft summary" />
+      <Input name="nextStep" placeholder="Next action" />
+      <select name="status" defaultValue="draft" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="draft">Draft</option>
+        <option value="ready_to_submit">Ready to submit</option>
+      </select>
+      <PendingSubmitButton pendingText="Saving..." className="bg-slate-950 text-white hover:bg-slate-800">
+        Save draft
+      </PendingSubmitButton>
+      <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function DraftCard({ draft }: { draft: ReportDraft }) {
+  const [state, action] = useActionState(deleteReportDraftAction, deleteDraftState)
+  const completion = reportDraftCompletionPercentage(draft)
+
+  useToastState(state)
+
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <Badge variant="outline" className="rounded-md capitalize">
+            {draft.status.replaceAll("_", " ")}
+          </Badge>
+          <h3 className="mt-3 font-semibold text-slate-950">{draft.clientName}</h3>
+          <p className="mt-1 text-sm text-slate-500">{draft.projectType} / ${draft.estimatedValue.toLocaleString()}</p>
+        </div>
+        <form action={action}>
+          <input type="hidden" name="draftId" value={draft.id} />
+          <PendingSubmitButton size="sm" variant="ghost" pendingText="Deleting..." className="text-rose-700">
+            Delete
+          </PendingSubmitButton>
+        </form>
+      </div>
+      <Progress value={completion} className="mt-4" />
+      <p className="mt-2 text-xs text-slate-500">{completion}% complete</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{draft.summary}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button asChild size="sm" variant="outline">
+          <Link href="/submit-report">Continue draft</Link>
+        </Button>
+        <Button asChild size="sm" variant="ghost">
+          <Link href="/search">
+            <Search aria-hidden="true" />
+            Compare clients
+          </Link>
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function RiskMetric({
+  label,
+  value,
+  helper,
+  tone,
+}: {
+  label: string
+  value: number
+  helper: string
+  tone: "slate" | "amber" | "emerald" | "rose"
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-white text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    rose: "border-rose-200 bg-rose-50 text-rose-950",
+  }[tone]
+
+  return (
+    <div className={cn("rounded-md border p-4 shadow-sm", toneClass)}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+        {tone === "rose" || tone === "amber" ? <AlertTriangle className="size-4 opacity-70" aria-hidden="true" /> : null}
+      </div>
+      <p className="mt-2 text-3xl font-semibold">{value}</p>
+      <p className="mt-1 text-xs opacity-70">{helper}</p>
+    </div>
+  )
+}
+
+function useToastState<T>(state: ActionResult<T>) {
+  useEffect(() => {
+    if (state.message) toast[state.ok ? "success" : "error"](state.message)
+  }, [state])
+}

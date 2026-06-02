@@ -1,16 +1,23 @@
 import {
   adminReviews,
+  adminModerationCrm,
   auditLogs,
   clientProfiles,
   clientReports,
   clientResponses,
   communityDiscussions,
+  contractorRiskOps,
   contractorProfiles,
   reportEvidence,
   savedSearches,
   subscriptions,
   users,
 } from "@/lib/mock-data"
+import {
+  assignModerationCase,
+  intakeAssessmentScore,
+  intakeRiskRecommendation,
+} from "@/lib/platform-features"
 import {
   calculateClientBureauScore,
   disputeHistoryLabel,
@@ -27,9 +34,16 @@ import type {
   ClientReport,
   ClientSearchResult,
   CommunityDiscussion,
+  ContractorRiskOpsData,
   DiscussionStatus,
+  ModerationCase,
+  ModerationDecisionReason,
+  ModerationPriority,
+  ModerationCaseStatus,
   PublicationAudit,
   PublicClientProfile,
+  ReportDraft,
+  ReportDraftStatus,
   ReportTimelineEvent,
   ReviewChecklistItem,
   ReviewChecklistStatus,
@@ -108,7 +122,11 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
   )
   const evidence = reportEvidence.filter((item) =>
     reviewableReports.some((report) => report.id === item.reportId),
-  )
+  ).map((item) => ({
+    ...item,
+    fileName: publicEvidenceLabel(item),
+    storagePath: "private",
+  }))
   const responses = clientResponses.filter(
     (response) => response.clientId === client.id && response.status === "published",
   )
@@ -132,6 +150,19 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
       clientReports.filter((report) => report.clientId === client.id),
     ),
   }
+}
+
+function publicEvidenceLabel(item: { fileName: string; fileType: string }) {
+  const value = `${item.fileType} ${item.fileName}`.toLowerCase()
+
+  if (value.includes("invoice")) return "Invoice evidence on file"
+  if (value.includes("contract") || value.includes("pdf")) return "Document evidence on file"
+  if (value.includes("screenshot")) return "Screenshot evidence on file"
+  if (value.includes("png") || value.includes("jpg") || value.includes("image") || value.includes("photo")) {
+    return "Photo evidence on file"
+  }
+
+  return "Evidence on file"
 }
 
 export function getAdminWorkspaceData(): AdminWorkspaceData {
@@ -264,6 +295,174 @@ export function getContractorDashboard(userId: string) {
     evidence,
     savedSearches: savedSearches.filter((search) => search.contractorId === contractor.id),
     subscription,
+  }
+}
+
+export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData | undefined {
+  const contractor = contractorProfiles.find((profile) => profile.userId === userId)
+
+  if (!contractor) return undefined
+
+  return {
+    watchlist: contractorRiskOps.watchlist.filter((item) => item.contractorId === contractor.id),
+    reportDrafts: contractorRiskOps.reportDrafts.filter((item) => item.contractorId === contractor.id),
+    intakeAssessments: contractorRiskOps.intakeAssessments.filter((item) => item.contractorId === contractor.id),
+    evidenceSummaries: contractorRiskOps.evidenceSummaries.filter((item) => item.contractorId === contractor.id),
+    activity: contractorRiskOps.activity.filter((item) => item.contractorId === contractor.id),
+    recommendedActions: contractorRiskOps.recommendedActions,
+  }
+}
+
+export function getAdminModerationCrmData() {
+  return adminModerationCrm
+}
+
+export function createWatchlistItem(input: {
+  contractorId: string
+  clientId: string
+  watchReason: string
+  alertLevel: ModerationPriority
+}) {
+  const now = new Date().toISOString()
+  const client = clientProfiles.find((candidate) => candidate.id === input.clientId)
+
+  return {
+    id: `watch_${Date.now()}`,
+    contractorId: input.contractorId,
+    clientId: input.clientId,
+    status: "active" as const,
+    watchReason: input.watchReason,
+    alertLevel: input.alertLevel,
+    lastSignal: client
+      ? `${client.riskLevel} reported risk profile with ${client.reportCount} approved public reports.`
+      : "Client added for private intake review.",
+    privateMatch: true,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function updateWatchlistItem(itemId: string, status: "active" | "cleared") {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.watchlist.find((item) => item.id === itemId)
+
+  return {
+    ...(existing ?? contractorRiskOps.watchlist[0]),
+    id: itemId,
+    status,
+    updatedAt: now,
+  }
+}
+
+export function saveReportDraft(input: {
+  contractorId: string
+  draftId?: string
+  clientId?: string
+  clientName: string
+  projectType: string
+  estimatedValue: number
+  amountAtRisk: number
+  summary: string
+  nextStep: string
+  status: ReportDraftStatus
+}): ReportDraft {
+  const now = new Date().toISOString()
+
+  return {
+    id: input.draftId || `draft_${Date.now()}`,
+    contractorId: input.contractorId,
+    clientId: input.clientId,
+    clientName: input.clientName,
+    projectType: input.projectType,
+    estimatedValue: input.estimatedValue,
+    amountAtRisk: input.amountAtRisk,
+    summary: input.summary,
+    nextStep: input.nextStep,
+    status: input.status,
+    updatedAt: now,
+  }
+}
+
+export function deleteReportDraft(draftId: string) {
+  return {
+    id: `audit_delete_draft_${Date.now()}`,
+    actorId: "user_contractor_01",
+    actorName: "Contractor workspace",
+    action: "deleted_report_draft",
+    entityType: "report" as const,
+    entityId: draftId,
+    summary: "Report draft removed from contractor workspace.",
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export function createIntakeAssessment(input: {
+  contractorId: string
+  clientName: string
+  city: string
+  state: string
+  projectValue: number
+  depositReceived: boolean
+  contractSigned: boolean
+  privateMatchConfirmed: boolean
+  notes?: string
+}) {
+  const score = intakeAssessmentScore(input)
+
+  return {
+    id: `intake_${Date.now()}`,
+    contractorId: input.contractorId,
+    clientName: input.clientName,
+    city: input.city,
+    state: input.state.toUpperCase(),
+    projectValue: input.projectValue,
+    depositReceived: input.depositReceived,
+    contractSigned: input.contractSigned,
+    privateMatchConfirmed: input.privateMatchConfirmed,
+    recommendation: intakeRiskRecommendation(input),
+    score,
+    notes: input.notes || "Assessment created from contractor intake workflow.",
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export function assignMockModerationCase(caseId: string, reviewerId: string, reviewerName: string) {
+  const existing = adminModerationCrm.cases.find((item) => item.id === caseId) ?? adminModerationCrm.cases[0]
+
+  return assignModerationCase(existing, reviewerId, reviewerName)
+}
+
+export function updateMockModerationCase(
+  caseId: string,
+  priority: ModerationPriority,
+  status: ModerationCaseStatus,
+  escalationNote?: string,
+): ModerationCase {
+  const existing = adminModerationCrm.cases.find((item) => item.id === caseId) ?? adminModerationCrm.cases[0]
+
+  return {
+    ...existing,
+    id: caseId,
+    priority,
+    status,
+    escalationNote,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function setMockModerationDecisionReason(
+  caseId: string,
+  decisionReason: ModerationDecisionReason,
+  moderatorNote?: string,
+): ModerationCase {
+  const existing = adminModerationCrm.cases.find((item) => item.id === caseId) ?? adminModerationCrm.cases[0]
+
+  return {
+    ...existing,
+    id: caseId,
+    decisionReason,
+    escalationNote: moderatorNote ?? existing.escalationNote,
+    updatedAt: new Date().toISOString(),
   }
 }
 

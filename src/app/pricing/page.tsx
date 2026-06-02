@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { CheckCircle2, HelpCircle } from "lucide-react"
+import { CheckCircle2, HelpCircle, Radar } from "lucide-react"
 
 import { PricingCard } from "@/components/pricing/pricing-card"
 import { Card, CardContent } from "@/components/ui/card"
@@ -21,7 +21,8 @@ export default function PricingPage() {
     ["Client profile search", "Limited", "Unlimited", "Team shared", "Custom"],
     ["Documented report submission", "Included", "Included", "Included", "Included"],
     ["Evidence uploads", "Basic", "Expanded", "Team library", "Custom retention"],
-    ["Saved searches", "-", "Included", "Shared", "Advanced"],
+    ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
+    ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
     ["Moderation priority", "Standard", "Priority", "Team priority", "Dedicated review"],
     ["Audit and exports", "-", "-", "Included", "Custom"],
   ]
@@ -36,7 +37,7 @@ export default function PricingPage() {
           </h1>
           <p className="leading-7 text-slate-600">
             Start with basic search and report submission. Upgrade when you need deeper client
-            review, saved searches, evidence workflows, team visibility, and faster moderation.
+            review, watchlists, intake assessment, evidence workflows, team visibility, and faster moderation.
           </p>
           <div className="inline-flex rounded-md border border-slate-200 bg-white p-1 text-sm font-semibold text-slate-600">
             <span className="rounded-sm bg-slate-950 px-4 py-2 text-white">Monthly</span>
@@ -104,6 +105,11 @@ export default function PricingPage() {
           </Card>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
+              <Radar className="size-8 text-amber-700" aria-hidden="true" />
+              <h2 className="text-2xl font-semibold text-slate-950">Risk Ops is built into Pro.</h2>
+              <p className="text-sm leading-6 text-slate-600">
+                Pro Contractor adds watchlists, draft reports, saved searches, and intake assessment workflows for repeat client review.
+              </p>
               <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>
               {[

@@ -1,21 +1,32 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { CheckCircle2, CreditCard, FilePlus2, Search, ShieldCheck, UploadCloud } from "lucide-react"
+import {
+  CheckCircle2,
+  CreditCard,
+  FilePlus2,
+  Radar,
+  Search,
+  ShieldCheck,
+  UploadCloud,
+} from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { DashboardReports } from "@/components/dashboard/dashboard-reports"
+import { RiskOpsWorkspace } from "@/components/dashboard/risk-ops-workspace"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { requireContractorAccess } from "@/lib/auth"
 import {
   getContractorDashboardService,
+  getContractorRiskOpsDataService,
   getPublicClientProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
   title: "Contractor Dashboard",
   description:
-    "Client Bureau contractor dashboard for profile status, submitted reports, evidence uploads, saved searches, and subscription state.",
+    "Client Bureau contractor dashboard for profile status, submitted reports, evidence uploads, saved searches, watchlist alerts, and intake assessment workflows.",
   robots: {
     index: false,
     follow: false,
@@ -26,34 +37,28 @@ export const dynamic = "force-dynamic"
 
 export default async function DashboardPage() {
   const user = await requireContractorAccess()
-  const [dashboard, clientProfiles] = await Promise.all([
+  const [dashboard, clientProfiles, riskOps] = await Promise.all([
     getContractorDashboardService(user.id),
     getPublicClientProfilesService(),
+    getContractorRiskOpsDataService(user.id),
   ])
 
-  if (!dashboard) return null
+  if (!dashboard || !riskOps) return null
 
-  const counts = {
-    Draft: 0,
-    Submitted: dashboard.reports.filter((report) => report.status === "pending").length,
-    "In Review": dashboard.reports.filter((report) => report.status === "pending").length,
-    "Needs More Info": 0,
-    Approved: dashboard.reports.filter((report) => report.status === "approved").length,
-    Rejected: dashboard.reports.filter((report) => report.status === "rejected").length,
-    Published: dashboard.reports.filter((report) => {
-      const client = clientProfiles.find((profile) => profile.id === report.clientId)
-      return report.status === "approved" && Boolean(client?.isPublic)
-    }).length,
-    Disputed: dashboard.reports.filter((report) => report.status === "disputed").length,
-    Resolved: dashboard.reports.filter((report) =>
-      ["resolved", "paid"].some((term) => report.paymentStatus.toLowerCase().includes(term)),
-    ).length,
-  } satisfies Record<string, number>
   const subscriptionTier = dashboard.subscription?.tier ?? "free"
   const subscriptionStatus =
     !dashboard.subscription || dashboard.subscription.status === "mock"
       ? "active"
       : dashboard.subscription.status.replace("_", " ")
+  const reportCounts = {
+    submitted: dashboard.reports.filter((report) => report.status === "pending").length,
+    approved: dashboard.reports.filter((report) => report.status === "approved").length,
+    published: dashboard.reports.filter((report) => {
+      const client = clientProfiles.find((profile) => profile.id === report.clientId)
+      return report.status === "approved" && Boolean(client?.isPublic)
+    }).length,
+    disputed: dashboard.reports.filter((report) => report.status === "disputed").length,
+  }
   const onboarding = [
     {
       label: "Verify business",
@@ -86,37 +91,62 @@ export default async function DashboardPage() {
       icon: CreditCard,
     },
   ]
+  const onboardingProgress = Math.round((onboarding.filter((item) => item.complete).length / onboarding.length) * 100)
 
   return (
-    <section className="bureau-section bg-slate-100">
-      <div className="bureau-container space-y-8">
-        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-700">Contractor dashboard</p>
-            <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-              {dashboard.contractor.businessName}
-            </h1>
-            <p className="leading-7 text-slate-600">
-              Signed in as {dashboard.user.fullName}. Track submitted reports, evidence, saved
-              searches, profile verification, and public profile publication status.
-            </p>
+    <section className="bg-slate-100">
+      <div className="border-b border-slate-200 bg-slate-950 text-white">
+        <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[1fr_380px] lg:items-end">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
+              <Radar className="size-4" aria-hidden="true" />
+              Contractor Risk Ops
+            </div>
+            <div>
+              <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
+                {dashboard.contractor.businessName}
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
+                Signed in as {dashboard.user.fullName}. Review client-risk signals, manage draft
+                reports, track evidence status, and keep project intake decisions documentable.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
+                <Link href="/search">
+                  <Search aria-hidden="true" />
+                  Search clients
+                </Link>
+              </Button>
+              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
+                <Link href="/submit-report">
+                  <FilePlus2 aria-hidden="true" />
+                  Submit report
+                </Link>
+              </Button>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-3">
-            <Button asChild variant="outline">
-              <Link href="/search">
-                <Search aria-hidden="true" />
-                Search clients
-              </Link>
-            </Button>
-            <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/submit-report">
-                <FilePlus2 aria-hidden="true" />
-                Submit new report
-              </Link>
-            </Button>
-          </div>
+          <Card className="rounded-md border-white/10 bg-white/5 text-white shadow-2xl">
+            <CardContent className="space-y-5 p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-slate-400">Account health</p>
+                  <p className="mt-2 text-3xl font-semibold">{onboardingProgress}%</p>
+                </div>
+                <RiskBadge riskLevel={dashboard.contractor.verificationStatus === "verified" ? "Low" : "Moderate"} />
+              </div>
+              <Progress value={onboardingProgress} />
+              <div className="grid gap-2 text-sm text-slate-300">
+                <p>Plan: <span className="font-semibold text-white">{subscriptionTier.replace("_", " ")} / {subscriptionStatus}</span></p>
+                <p>Trade: <span className="font-semibold text-white">{dashboard.contractor.trade}</span></p>
+                <p>Market: <span className="font-semibold text-white">{dashboard.contractor.city}, {dashboard.contractor.state}</span></p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
+      </div>
 
+      <div className="bureau-container space-y-8 py-8">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {onboarding.map((item) => {
             const Icon = item.icon
@@ -146,18 +176,16 @@ export default async function DashboardPage() {
           })}
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9">
-          {Object.entries(counts).map(([status, count]) => (
-            <Card key={status} className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardContent className="p-5">
-                <p className="text-xs font-semibold uppercase text-slate-500">{status}</p>
-                <p className="mt-2 text-2xl font-semibold text-slate-950">{count}</p>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Metric label="Submitted" value={reportCounts.submitted} />
+          <Metric label="Approved" value={reportCounts.approved} />
+          <Metric label="Published" value={reportCounts.published} />
+          <Metric label="Disputed" value={reportCounts.disputed} />
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[340px_1fr]">
+        <RiskOpsWorkspace riskOps={riskOps} clients={clientProfiles} />
+
+        <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
           <div className="space-y-5">
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
@@ -168,31 +196,22 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3 text-sm text-slate-600">
                 <p>
-                  Trade: <span className="font-semibold text-slate-950">{dashboard.contractor.trade}</span>
-                </p>
-                <p>
-                  Location:{" "}
-                  <span className="font-semibold text-slate-950">
-                    {dashboard.contractor.city}, {dashboard.contractor.state}
-                  </span>
-                </p>
-                <p>
                   Verification:{" "}
                   <span className="font-semibold capitalize text-slate-950">
                     {dashboard.contractor.verificationStatus}
                   </span>
                 </p>
                 <p>
-                  Subscription:{" "}
+                  License:{" "}
                   <span className="font-semibold text-slate-950">
-                    {subscriptionTier.replace("_", " ")} / {subscriptionStatus}
+                    {dashboard.contractor.licenseNumber ?? "Not provided"}
                   </span>
                 </p>
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                   <p className="font-semibold text-slate-950">Security controls</p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">
                     Email verification, stronger sign-in controls, rate-limit hooks, duplicate
-                    report checks, and appeal paths are tracked in the account workflow.
+                    checks, and appeal paths are tracked in the account workflow.
                   </p>
                 </div>
               </CardContent>
@@ -204,12 +223,16 @@ export default async function DashboardPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 {dashboard.savedSearches.map((search) => (
-                  <div key={search.id} className="rounded-md border border-slate-200 p-3 text-sm">
+                  <Link
+                    key={search.id}
+                    href={`/search?q=${encodeURIComponent(search.query)}${search.state ? `&state=${search.state}` : ""}`}
+                    className="block rounded-md border border-slate-200 p-3 text-sm transition hover:border-amber-300"
+                  >
                     <p className="font-semibold text-slate-950">{search.query}</p>
                     <p className="text-slate-500">
                       {search.city}, {search.state}
                     </p>
-                  </div>
+                  </Link>
                 ))}
               </CardContent>
             </Card>
@@ -224,28 +247,16 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         </div>
-
-        <div className="grid gap-5 md:grid-cols-3">
-          {clientProfiles
-            .filter((profile) => profile.isPublic)
-            .slice(0, 3)
-            .map((profile) => (
-              <Card key={profile.id} className="rounded-md border-slate-200 bg-white shadow-sm">
-                <CardContent className="space-y-3 p-5">
-                  <div className="flex items-center justify-between gap-3">
-                    <h2 className="font-semibold text-slate-950">
-                      {profile.firstName} {profile.lastName}
-                    </h2>
-                    <RiskBadge riskLevel={profile.riskLevel} />
-                  </div>
-                  <p className="text-sm text-slate-600">
-                    {profile.city}, {profile.state} | Score {profile.clientBureauScore}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-        </div>
       </div>
     </section>
+  )
+}
+
+function Metric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
+    </div>
   )
 }
