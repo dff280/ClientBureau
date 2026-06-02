@@ -56,13 +56,13 @@ https://clientbureau.com/api/admin/session
 
 Expected healthy values are `authenticated: true`, `isAdmin: true`, `adminEmailAllowlistConfigured: true`, and `serviceRoleConfigured: true`.
 
-## 3. Stripe Test Mode
+## 3. Stripe Billing
 
-1. In Stripe test mode, create products for Pro Contractor and Bureau Team.
+1. Create products for Pro Contractor and Bureau Team.
 2. Create recurring monthly prices and copy them into:
    - `STRIPE_PRICE_PRO_MONTHLY`
    - `STRIPE_PRICE_TEAM_MONTHLY`
-3. Copy the test secret key into `STRIPE_SECRET_KEY`.
+3. Copy the Stripe secret key into `STRIPE_SECRET_KEY`.
 4. Add a webhook endpoint:
 
 ```text
@@ -88,7 +88,7 @@ Install Git for Windows locally if needed, then from the project folder:
 ```bash
 git init
 git add .
-git commit -m "Launch Client Bureau MVP"
+git commit -m "Launch Client Bureau"
 git branch -M main
 git remote add origin https://github.com/YOUR_ACCOUNT/client-bureau.git
 git push -u origin main
@@ -147,6 +147,18 @@ STRIPE_PRICE_PRO_MONTHLY=price_...
 STRIPE_PRICE_TEAM_MONTHLY=price_...
 NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=...
 ADMIN_EMAILS=owner@example.com
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+NEXT_PUBLIC_META_PIXEL_ID=
+NEXT_PUBLIC_CONTACT_PHONE=
+NEXT_PUBLIC_CONTACT_STREET=
+NEXT_PUBLIC_CONTACT_CITY=
+NEXT_PUBLIC_CONTACT_STATE=
+NEXT_PUBLIC_CONTACT_ZIP=
+NEXT_PUBLIC_FACEBOOK_URL=
+NEXT_PUBLIC_X_URL=
+NEXT_PUBLIC_INSTAGRAM_URL=
+NEXT_PUBLIC_YOUTUBE_URL=
+NEXT_PUBLIC_LINKEDIN_URL=
 ```
 
 Generate the server action encryption key:
@@ -237,7 +249,7 @@ Before allowing Google to index real client reports, confirm:
 - Pending and rejected reports do not appear on public profiles.
 - Client response and dispute links are visible on public profiles.
 - Admin approval publishes or updates the client profile.
-- Stripe test checkout completes and webhooks update subscription status.
+- Stripe checkout completes and webhooks update subscription status.
 - cPanel or any existing web server is not bound to ports `80` or `443` for this domain.
 
 ## 9. Admin Approval Smoke Test

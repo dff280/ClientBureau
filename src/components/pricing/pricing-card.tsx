@@ -44,7 +44,7 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
       <CardFooter>
         {isEnterprise ? (
           <Button asChild variant="outline" className="w-full">
-            <Link href="/signup?plan=enterprise">Contact Client Bureau</Link>
+            <Link href="/enterprise">View enterprise</Link>
           </Button>
         ) : (
           <form action="/api/stripe/checkout" method="post" className="w-full">

@@ -13,6 +13,18 @@ const envSchema = z.object({
   STRIPE_PRICE_TEAM_MONTHLY: z.string().optional(),
   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: z.string().optional(),
   ADMIN_EMAILS: z.string().optional(),
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
+  NEXT_PUBLIC_META_PIXEL_ID: z.string().optional(),
+  NEXT_PUBLIC_CONTACT_PHONE: z.string().optional(),
+  NEXT_PUBLIC_CONTACT_STREET: z.string().optional(),
+  NEXT_PUBLIC_CONTACT_CITY: z.string().optional(),
+  NEXT_PUBLIC_CONTACT_STATE: z.string().optional(),
+  NEXT_PUBLIC_CONTACT_ZIP: z.string().optional(),
+  NEXT_PUBLIC_FACEBOOK_URL: z.url().optional().or(z.literal("")),
+  NEXT_PUBLIC_X_URL: z.url().optional().or(z.literal("")),
+  NEXT_PUBLIC_INSTAGRAM_URL: z.url().optional().or(z.literal("")),
+  NEXT_PUBLIC_YOUTUBE_URL: z.url().optional().or(z.literal("")),
+  NEXT_PUBLIC_LINKEDIN_URL: z.url().optional().or(z.literal("")),
 })
 
 export type DataMode = "mock" | "supabase"
@@ -52,6 +64,40 @@ export function getAdminEmails() {
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
+}
+
+export function getAnalyticsConfig() {
+  const env = readEnv()
+
+  return {
+    gaMeasurementId: env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+    metaPixelId: env.NEXT_PUBLIC_META_PIXEL_ID,
+  }
+}
+
+export function getPublicContactInfo() {
+  const env = readEnv()
+
+  return {
+    phone: env.NEXT_PUBLIC_CONTACT_PHONE,
+    street: env.NEXT_PUBLIC_CONTACT_STREET,
+    city: env.NEXT_PUBLIC_CONTACT_CITY,
+    state: env.NEXT_PUBLIC_CONTACT_STATE,
+    zip: env.NEXT_PUBLIC_CONTACT_ZIP,
+  }
+}
+
+export function getPublicSocialLinks() {
+  const env = readEnv()
+  const links = [
+    { label: "Facebook", url: env.NEXT_PUBLIC_FACEBOOK_URL },
+    { label: "X", url: env.NEXT_PUBLIC_X_URL },
+    { label: "Instagram", url: env.NEXT_PUBLIC_INSTAGRAM_URL },
+    { label: "YouTube", url: env.NEXT_PUBLIC_YOUTUBE_URL },
+    { label: "LinkedIn", url: env.NEXT_PUBLIC_LINKEDIN_URL },
+  ]
+
+  return links.filter((link): link is { label: string; url: string } => Boolean(link.url))
 }
 
 export function requireProductionEnv(keys: string[]) {

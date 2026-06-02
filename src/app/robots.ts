@@ -12,6 +12,9 @@ export default function robots(): MetadataRoute.Robots {
         "/",
         "/client/",
         "/pricing",
+        "/about",
+        "/contact",
+        "/enterprise",
         "/how-it-works",
         "/terms",
         "/privacy",
@@ -19,6 +22,7 @@ export default function robots(): MetadataRoute.Robots {
         "/dispute-policy",
         "/moderation-policy",
         "/score-methodology",
+        "/llms.txt",
       ],
       disallow: [
         "/dashboard",

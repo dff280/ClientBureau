@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Pricing for Contractor Client Reports",
   description:
     "Client Bureau pricing for contractors and teams that need moderated client-risk intelligence, documented reports, evidence workflows, and team controls.",
   alternates: {
@@ -96,6 +96,9 @@ export default function PricingPage() {
               </p>
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
                 <Link href="/signup">Create contractor account</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/enterprise">Explore enterprise</Link>
               </Button>
             </CardContent>
           </Card>

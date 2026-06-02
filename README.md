@@ -1,6 +1,6 @@
 # Client Bureau
 
-Client Bureau is a production-ready MVP scaffold for a contractor-first client reporting platform. It is built with Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, Supabase-ready data boundaries, and Stripe-ready pricing structures.
+Client Bureau is a contractor-first client-risk intelligence platform for documented experiences, moderated public summaries, private matching, and client response workflows. It is built with Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui, Supabase-ready data boundaries, and Stripe-ready pricing structures.
 
 ## Stack
 
@@ -9,7 +9,7 @@ Client Bureau is a production-ready MVP scaffold for a contractor-first client r
 - Tailwind CSS v4
 - shadcn/ui
 - Supabase-ready auth, Postgres, storage, and RLS schema
-- Stripe test-mode subscription checkout and webhook route
+- Stripe-ready subscription checkout and webhook route
 - Typed mock server actions with zod validation
 - Focused Vitest coverage for scoring, slugs, search, schemas, and mock approval
 - Docker + Caddy deployment files for a VPS launch
@@ -40,6 +40,18 @@ STRIPE_WEBHOOK_SECRET=
 STRIPE_PRICE_PRO_MONTHLY=
 STRIPE_PRICE_TEAM_MONTHLY=
 NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=
+NEXT_PUBLIC_GA_MEASUREMENT_ID=
+NEXT_PUBLIC_META_PIXEL_ID=
+NEXT_PUBLIC_CONTACT_PHONE=
+NEXT_PUBLIC_CONTACT_STREET=
+NEXT_PUBLIC_CONTACT_CITY=
+NEXT_PUBLIC_CONTACT_STATE=
+NEXT_PUBLIC_CONTACT_ZIP=
+NEXT_PUBLIC_FACEBOOK_URL=
+NEXT_PUBLIC_X_URL=
+NEXT_PUBLIC_INSTAGRAM_URL=
+NEXT_PUBLIC_YOUTUBE_URL=
+NEXT_PUBLIC_LINKEDIN_URL=
 ```
 
 ## Integration Notes
@@ -67,8 +79,9 @@ Full VPS, DNS, Supabase, Stripe, GitHub upload, and update instructions are in `
 npm run lint
 npm test
 npm run build
+npm run seo:check
 ```
 
 ## Audit Note
 
-`npm audit` currently reports two moderate advisories through Next.js' bundled PostCSS dependency. The available automated fix suggests a major downgrade path, so this MVP leaves the dependency tree intact and should revisit the advisory when an upstream Next.js patch is available.
+`npm audit` may report advisories through bundled framework dependencies. Review available patches before forcing dependency changes that alter the Next.js runtime path.

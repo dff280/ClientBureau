@@ -7,6 +7,7 @@ import { FilePlus2, LayoutDashboard, LogIn, LogOut, Menu, Search, UserCircle } f
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { publicSocialLinks } from "@/lib/public-site"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +28,8 @@ const navItems = [
   { href: "/search", label: "Search" },
   { href: "/how-it-works", label: "How It Works" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
 ]
 
 type SessionState = {
@@ -104,6 +107,24 @@ export function SiteHeader() {
                     {item.label}
                   </Link>
                 ))}
+                {publicSocialLinks.length > 0 ? (
+                  <div className="mt-3 border-t border-slate-200 pt-3">
+                    <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Social</p>
+                    <div className="grid gap-2">
+                      {publicSocialLinks.map((link) => (
+                        <a
+                          key={link.label}
+                          href={link.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-md border border-slate-200 px-3 py-2 text-slate-700 transition hover:bg-slate-50"
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
                 {session.authenticated ? (
                   <Link
                     href="/api/auth/logout"
@@ -195,6 +216,21 @@ export function SiteHeader() {
                   Create account
                 </Link>
               </Button>
+              {publicSocialLinks.length > 0 ? (
+                <div className="hidden items-center gap-1 xl:flex">
+                  {publicSocialLinks.slice(0, 3).map((link) => (
+                    <a
+                      key={link.label}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md px-2 py-1 text-xs font-semibold text-slate-500 hover:text-slate-950"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              ) : null}
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { SiteAnalytics } from "@/components/analytics/site-analytics";
 import { AppShell } from "@/components/layout/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -28,19 +29,27 @@ export const metadata: Metadata = {
     "Client Bureau helps contractors search clients, review contractor-submitted reports, and submit documented client experiences before accepting jobs.",
   keywords: [
     "Client Bureau",
-    "contractor complaint",
-    "unpaid invoice",
-    "payment dispute",
-    "client report",
+    "contractor client reports",
+    "client-risk intelligence",
+    "documented contractor experiences",
+    "moderated client reports",
+    "evidence on file",
     "contractor client search",
   ],
   openGraph: {
     title: "Client Bureau",
-    description: "Know who you're working with before the job starts.",
+    description:
+      "Moderated client-risk intelligence for contractors before the job starts.",
     url: getSiteUrl(),
     siteName: "Client Bureau",
     locale: "en_US",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Client Bureau",
+    description:
+      "Moderated client-risk intelligence for contractors before the job starts.",
   },
   robots: {
     index: true,
@@ -63,6 +72,7 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
           <Toaster richColors position="top-right" />
         </TooltipProvider>
+        <SiteAnalytics />
       </body>
     </html>
   );
