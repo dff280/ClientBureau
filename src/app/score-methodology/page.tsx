@@ -108,7 +108,7 @@ export default function ScoreMethodologyPage() {
               <HelpCircle className="size-8 text-slate-950" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">What the score is not</h2>
               <p className="text-sm leading-6 text-slate-600">
-                The score is not a legal finding, consumer credit score, collection decision,
+                The score is not a legal finding, consumer credit score, payment enforcement decision,
                 accusation, or guarantee of future behavior. It summarizes moderated, documented
                 contractor experiences and relevant profile context.
               </p>

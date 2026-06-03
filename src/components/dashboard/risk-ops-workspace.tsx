@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useEffect, useMemo } from "react"
+import { useActionState, useEffect, useMemo, useState } from "react"
 import {
   AlertTriangle,
   BellRing,
@@ -107,22 +107,71 @@ const contractPacketState: ActionResult<ContractPacket> = { ok: false, message: 
 const contractShareState: ActionResult<ContractPacket> = { ok: false, message: "" }
 const evidenceVaultState: ActionResult<EvidenceVaultItem> = { ok: false, message: "" }
 
+type WorkflowMode = {
+  title: string
+  eyebrow: string
+  text: string
+  cta: string
+  href?: string
+  tab?: string
+  icon: typeof Search
+  tools: string[]
+}
+
+const workflowModes: WorkflowMode[] = [
+  {
+    title: "Screen & decide",
+    eyebrow: "Before you accept work",
+    text: "Search the client, review private-match signals, run an intake assessment, and decide what contract or deposit controls are needed.",
+    cta: "Search a client",
+    href: "/search",
+    icon: Search,
+    tools: ["Search", "Watchlist", "Intake assessment"],
+  },
+  {
+    title: "Agree & sign",
+    eyebrow: "Before you schedule",
+    text: "Prepare a private agreement link the client can review and sign, then track invite, signature, deposit, and milestone status.",
+    cta: "Open contracts",
+    tab: "contracts",
+    icon: Signature,
+    tools: ["Agreement drafts", "Signing links", "Client invite"],
+  },
+  {
+    title: "Document & resolve",
+    eyebrow: "When a job needs records",
+    text: "Keep evidence private, continue report drafts, log respectful payment follow-up, and maintain readiness checklists for review.",
+    cta: "Submit a report",
+    href: "/submit-report",
+    icon: ClipboardCheck,
+    tools: ["Evidence", "Reports", "Payment follow-up"],
+  },
+]
+
 const workspaceGuide = [
   {
-    title: "Screen the client",
+    title: "Client pipeline",
+    text: "A private list of leads and active jobs so you know which client needs screening, a contract, follow-up, or closeout.",
+  },
+  {
+    title: "Watchlist",
     text: "Search profiles, check private matches, save watchlist alerts, and decide what controls are needed before accepting work.",
   },
   {
-    title: "Control the agreement",
-    text: "Create a contract signing link, invite the client, track signature status, and attach deposit or milestone timing.",
+    title: "Client Work Files",
+    text: "One private file per important client tying together searches, reports, evidence, payment follow-up, and agreement links.",
   },
   {
-    title: "Document the job",
-    text: "Keep report drafts, evidence, invoices, completion records, and change-order notes organized before moderation.",
+    title: "Contract signing links",
+    text: "Private links clients can review and sign. This is the start of the client invite and agreement management path.",
   },
   {
-    title: "Resolve payment issues",
-    text: "Log factual follow-up, payment plans, response windows, and lien-readiness checklists without exposing private records.",
+    title: "Payment follow-up",
+    text: "A private record of invoice timelines, contact attempts, payment plans, and resolution status. It is not automated payment enforcement.",
+  },
+  {
+    title: "Notice readiness",
+    text: "Private checklists for state-specific review of deadlines, documents, and contract context before any sensitive notice is considered.",
   },
 ]
 
@@ -150,6 +199,7 @@ export function RiskOpsWorkspace({
   const lienDraftsRequiringReview = riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length
   const rankedPipeline = useMemo(() => rankClientPipelineItems(riskOps.clientPipeline), [riskOps.clientPipeline])
   const stageCounts = useMemo(() => pipelineStageCounts(riskOps.clientPipeline), [riskOps.clientPipeline])
+  const [activeTab, setActiveTab] = useState("overview")
   const todaysWork = useMemo(
     () =>
       buildTodaysWorkItems({
@@ -170,13 +220,14 @@ export function RiskOpsWorkspace({
       <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase text-amber-700">How this workspace works</p>
+            <p className="text-xs font-semibold uppercase text-amber-700">Start here</p>
             <h2 className="mt-1 text-2xl font-semibold tracking-normal text-slate-950">
-              One operating system from first client check to signed agreement.
+              Choose the job workflow you need right now.
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Use the tabs as short work areas. Each one handles a specific contractor decision so
-              you do not have to scroll through everything at once.
+              Client Bureau is organized around the contractor decision cycle: screen before you
+              accept work, get the agreement signed before scheduling, and keep private records if
+              a job needs documentation or resolution.
             </p>
           </div>
           <Button asChild variant="outline">
@@ -186,47 +237,96 @@ export function RiskOpsWorkspace({
             </Link>
           </Button>
         </div>
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {workspaceGuide.map((item) => (
-            <div key={item.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-              <p className="font-semibold text-slate-950">{item.title}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
-            </div>
-          ))}
+        <div className="mt-5 grid gap-3 lg:grid-cols-3">
+          {workflowModes.map((item) => {
+            const Icon = item.icon
+
+            return (
+              <div key={item.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-amber-700">{item.eyebrow}</p>
+                    <h3 className="mt-2 text-lg font-semibold text-slate-950">{item.title}</h3>
+                  </div>
+                  <Icon className="size-5 shrink-0 text-amber-700" aria-hidden="true" />
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.text}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {item.tools.map((tool) => (
+                    <Badge key={tool} variant="outline" className="rounded-md bg-white">
+                      {tool}
+                    </Badge>
+                  ))}
+                </div>
+                {item.href ? (
+                  <Button asChild size="sm" variant="outline" className="mt-4 bg-white">
+                    <Link href={item.href}>{item.cta}</Link>
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-4 bg-white"
+                    onClick={() => item.tab && setActiveTab(item.tab)}
+                  >
+                    {item.cta}
+                  </Button>
+                )}
+              </div>
+            )
+          })}
         </div>
+        <Accordion type="single" collapsible className="mt-4">
+          <AccordionItem value="tool-guide" className="rounded-md border border-slate-200 bg-white px-4">
+            <AccordionTrigger className="py-3 text-sm font-semibold text-slate-950">
+              What each tool does
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
+              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {workspaceGuide.map((item) => (
+                  <div key={item.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                    <p className="font-semibold text-slate-950">{item.title}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-8">
-        <RiskMetric label="Today" value={todaysWork.length} helper="Ranked work items" tone="slate" />
+        <RiskMetric label="Today" value={todaysWork.length} helper="Next best actions" tone="slate" />
         <RiskMetric label="Pipeline" value={openPipelineItems} helper="Open client records" tone="slate" />
-        <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="High-priority client signals" tone="amber" />
+        <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="Monitoring changes" tone="amber" />
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
-        <RiskMetric label="Recovery cases" value={openRecoveryCases} helper="Open payment follow-up" tone="amber" />
-        <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="State-specific review" tone="rose" />
-        <RiskMetric label="Contracts" value={openContractPackets} helper="Signing links before scheduling" tone="emerald" />
+        <RiskMetric label="Payment follow-up" value={openRecoveryCases} helper="Open private records" tone="amber" />
+        <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="Readiness checklists" tone="rose" />
+        <RiskMetric label="Contracts" value={openContractPackets} helper="Client signing links" tone="emerald" />
       </div>
 
-      <Tabs defaultValue="overview" className="space-y-5">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
         <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
             <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>
-            <TabsTrigger value="pipeline" className="px-3 py-2">Client Pipeline</TabsTrigger>
-            <TabsTrigger value="watchlist" className="px-3 py-2">Watchlist</TabsTrigger>
+            <TabsTrigger value="pipeline" className="px-3 py-2">Pipeline</TabsTrigger>
+            <TabsTrigger value="watchlist" className="px-3 py-2">Screening</TabsTrigger>
             <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
             <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
             <TabsTrigger value="evidence" className="px-3 py-2">Evidence</TabsTrigger>
-            <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
+            <TabsTrigger value="recovery" className="px-3 py-2">Payment</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
             <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
-            <TabsTrigger value="activity" className="px-3 py-2">Activity</TabsTrigger>
+            <TabsTrigger value="activity" className="px-3 py-2">Timeline</TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent value="overview" className="space-y-5">
           <WorkspaceIntro
-            title="Today's risk operations"
-            text="A compressed work queue for urgent client signals, report drafts, recovery follow-up, evidence review, and contract signing links."
+            title="Today's work"
+            text="A short work queue for urgent client signals, report drafts, payment follow-up, evidence review, and contract signing links."
           />
           <Accordion type="multiple" defaultValue={["today", "rooms"]} className="gap-4">
             <AccordionItem value="today" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
@@ -405,8 +505,8 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="recovery" className="space-y-5">
           <WorkspaceIntro
-            title="Payment recovery and lien-readiness controls"
-            text="Create documented outreach, call logs, and private notice-readiness packets with review gates before anything is sent."
+            title="Payment follow-up and notice readiness"
+            text="Create documented outreach, call logs, and private notice-readiness checklists with review gates before any sensitive communication is considered."
           />
           <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -447,8 +547,8 @@ export function RiskOpsWorkspace({
               ))}
               {riskOps.lienNoticeDrafts.length === 0 ? (
                 <EmptyState
-                  title="No notice packets yet"
-                  text="Create a private readiness packet to track deadline review, contract context, evidence, and state-specific notice checks."
+                  title="No readiness checklists yet"
+                  text="Create a private checklist to track deadline review, contract context, evidence, and state-specific notice checks."
                 />
               ) : null}
             </div>
@@ -515,7 +615,7 @@ export function RiskOpsWorkspace({
             />
             <ToolExplainer
               title="What it does not do yet"
-              text="Client Bureau does not automatically hold funds, collect debts, file liens, or send legal notices from this workflow."
+              text="Client Bureau does not automatically hold funds, place calls, file liens, or send legal notices from this workflow."
             />
             <ToolExplainer
               title="Future payment path"
@@ -595,12 +695,12 @@ export function RiskOpsWorkspace({
               {riskOps.reportDrafts.map((draft) => (
                 <DraftCard key={draft.id} draft={draft} />
               ))}
-              {riskOps.reportDrafts.length === 0 ? (
-                <EmptyState
-                  title="No draft reports yet"
-                  text="Save a draft when you need time to collect invoice, access, communication, or completion details before submission."
-                />
-              ) : null}
+                {riskOps.reportDrafts.length === 0 ? (
+                  <EmptyState
+                    title="No draft reports yet"
+                    text="Save a draft when you need time to gather invoice, access, communication, or completion details before submission."
+                  />
+                ) : null}
             </div>
           </CardContent>
         </Card>
@@ -704,12 +804,12 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="activity" className="space-y-5">
           <WorkspaceIntro
-            title="Recent operations activity"
+            title="Recent workspace activity"
             text="Use this timeline to confirm recent reports, saved searches, approvals, evidence changes, and resolution work."
           />
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
-          <CardTitle className="text-xl">Recent risk operations activity</CardTitle>
+          <CardTitle className="text-xl">Recent contractor workspace activity</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 p-5 md:grid-cols-3">
           {riskOps.activity.map((item) => (
@@ -790,7 +890,7 @@ function PipelineCreateForm({ clients }: { clients: ClientProfile[] }) {
       </div>
       <Input name="estimatedValue" type="number" placeholder="Estimated value" />
       <Input name="dueAt" type="datetime-local" aria-label="Due date" />
-      <Textarea name="nextAction" placeholder="Next action before scheduling or collecting payment" className="min-h-20" />
+      <Textarea name="nextAction" placeholder="Next action before scheduling or payment follow-up" className="min-h-20" />
       <label className="flex items-center gap-2 text-sm text-slate-700">
         <Checkbox name="privateMatch" />
         Private match reviewed
@@ -1124,7 +1224,7 @@ function PaymentRecoveryForm() {
       <select name="preferredChannel" defaultValue="email" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
         <option value="email">Email reminder</option>
         <option value="phone">Documented phone call</option>
-        <option value="letter">Letter packet</option>
+        <option value="letter">Mailed letter</option>
         <option value="client_portal">Client portal message</option>
       </select>
       <Textarea
@@ -1320,7 +1420,7 @@ function LienNoticeDraftForm() {
       </label>
       <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
         <Landmark aria-hidden="true" />
-        Create packet
+        Create readiness checklist
       </PendingSubmitButton>
       <FieldError name="reviewCertification" errors={state.ok ? undefined : state.fieldErrors} />
     </form>
@@ -1407,7 +1507,7 @@ function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
         {item.projectType} / ${item.contractValue.toLocaleString()} / deposit ${item.depositRequired.toLocaleString()}
       </p>
       <Progress value={completion} className="mt-4" />
-      <p className="mt-2 text-xs text-slate-500">{completion}% packet readiness</p>
+      <p className="mt-2 text-xs text-slate-500">{completion}% agreement readiness</p>
       <p className="mt-3 text-sm leading-6 text-slate-700">{item.summary}</p>
       <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
         {item.nextStep}
@@ -1433,7 +1533,7 @@ function ContractPacketForm() {
         <option value="notice_of_nonpayment">Notice of non-payment</option>
       </select>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input name="packetValue" type="number" placeholder="Packet value" />
+        <Input name="packetValue" type="number" placeholder="Agreement value" />
         <Input name="depositRequired" type="number" placeholder="Deposit required" />
       </div>
       <Input name="milestoneCount" type="number" placeholder="Milestone count" />

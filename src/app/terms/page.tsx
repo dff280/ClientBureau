@@ -31,7 +31,7 @@ export default function TermsPage() {
         },
         {
           title: "No professional advice",
-          body: "Client Bureau does not provide legal, credit, collection, or business advice. Contractors remain responsible for independent decision-making before accepting work.",
+          body: "Client Bureau does not provide legal, credit, payment enforcement, or business advice. Contractors remain responsible for independent decision-making before accepting work.",
         },
       ]}
     />

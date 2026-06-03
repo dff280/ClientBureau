@@ -772,9 +772,9 @@ export async function createLienNoticeDraftAction(
     if (!noticeDraft) return fail("Lien notice feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(noticeDraft, "Lien notice readiness packet created for state-specific review.")
+    return ok(noticeDraft, "Notice readiness checklist created for state-specific review.")
   } catch (error) {
-    return fail(actionErrorMessage(error, "Lien notice readiness packet could not be created."))
+    return fail(actionErrorMessage(error, "Notice readiness checklist could not be created."))
   }
 }
 
@@ -798,9 +798,9 @@ export async function createContractWorkspaceItemAction(
     if (!contractItem) return fail("Contract workspace feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(contractItem, "Contract packet created.")
+    return ok(contractItem, "Agreement draft created.")
   } catch (error) {
-    return fail(actionErrorMessage(error, "Contract packet could not be created."))
+    return fail(actionErrorMessage(error, "Agreement draft could not be created."))
   }
 }
 

@@ -205,7 +205,7 @@ export default async function AdminHomePage() {
             />
             <div className="grid gap-4 lg:grid-cols-4">
               <QuickLink href="/admin/contractors" icon={<ShieldCheck className="size-5" />} title="Contractor profiles" text="Modify contractor profile, trade, city/state, and verification status." badge={`${data.contractors.length} accounts`} />
-              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Ops preview" text="View the contractor operations workspace as product context." badge="Risk Ops" />
+              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contractor workspace" text="View the contractor command center as product context." badge="Workspace" />
               <QuickLink href="/pricing" icon={<Settings className="size-5" />} title="Plan controls" text="Review plan positioning and operational limits." badge="Plans" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Account audit" text="Track admin changes to contractor records." badge="Audit" />
             </div>
@@ -252,7 +252,7 @@ export default async function AdminHomePage() {
                 href="/admin/settings"
                 icon={<Landmark className="size-5" />}
                 title="Lien readiness"
-                text="Keep notice packets private until deadlines, recipients, and documents are reviewed."
+                text="Keep notice-readiness checklists private until deadlines, recipients, and documents are reviewed."
                 badge={`${lienPackets} review`}
               />
               <QuickLink
@@ -274,7 +274,7 @@ export default async function AdminHomePage() {
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults and safeguard language." badge={`${contractLinks} active`} />
               <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contract workspace" text="Preview contractor-side signing link creation and status tracking." badge="Ops" />
-              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track packet status, reviewer actions, and settings changes." badge="Audit" />
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track agreement status, reviewer actions, and settings changes." badge="Audit" />
             </div>
             {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}
           </TabsContent>

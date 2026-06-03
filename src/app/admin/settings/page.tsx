@@ -33,8 +33,8 @@ export default async function AdminSettingsPage() {
             ["Feature data mode", `Platform expansion workflows currently read from ${platformFeatureMode} feature data.`],
             ["Decision reasons", "Moderation cases require a decision reason before final closure in the CRM workflow."],
             ["Payment recovery", "Recovery actions require factual invoice context, documented contact attempts, response windows, and respectful communication language."],
-            ["Phone outreach", "Call workflows are logged as documented outreach. The platform does not place automated collection calls."],
-            ["Lien-readiness packets", "Lien notice tools create private readiness packets only. State-specific deadlines, recipients, delivery methods, and contract terms must be reviewed before sending."],
+            ["Phone outreach", "Call workflows are logged as documented outreach. The platform does not place automated payment calls."],
+            ["Notice-readiness checklists", "Lien notice tools create private readiness checklists only. State-specific deadlines, recipients, delivery methods, and contract terms must be reviewed before sending."],
             ["Contract signing links", "Contract workspace records track scope, deposit, milestone billing, change orders, payment plans, client invite status, and signed-document status."],
             ["Resolution path", "Disputes, corrections, partial payments, and resolved reports should be reflected in moderation notes and public summaries only after review."],
           ].map(([title, text]) => (

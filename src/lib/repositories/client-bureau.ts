@@ -538,7 +538,7 @@ export function createLienNoticeDraft(
     requiredReview: true,
     nextStep: "Review state-specific deadline, notice recipient, delivery method, and contract terms before sending.",
     jurisdictionNote:
-      "Mechanics lien and notice requirements vary by state, role, project type, and deadline. This creates a readiness packet only.",
+      "Mechanics lien and notice requirements vary by state, role, project type, and deadline. This creates a readiness checklist only.",
     createdAt: now,
     updatedAt: now,
   }

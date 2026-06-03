@@ -363,7 +363,7 @@ export const contractPacketSchema = z.object({
     "completion_certificate",
     "notice_of_nonpayment",
   ]),
-  packetValue: money("Packet value"),
+  packetValue: money("Agreement value"),
   depositRequired: money("Deposit required"),
   milestoneCount: z.coerce
     .number({ error: "Milestone count must be a number." })
@@ -374,11 +374,11 @@ export const contractPacketSchema = z.object({
   nextAction: requiredText("Next action", 8).max(240, "Keep the next action under 240 characters."),
 }).refine((value) => value.depositRequired <= value.packetValue, {
   path: ["depositRequired"],
-  message: "Deposit required cannot exceed the packet value.",
+  message: "Deposit required cannot exceed the agreement value.",
 })
 
 export const updateContractPacketStatusSchema = z.object({
-  packetId: requiredText("Contract packet ID"),
+  packetId: requiredText("Contract link ID"),
   status: z.enum(["draft", "review_ready", "sent", "signed", "expired", "archived"]),
 })
 

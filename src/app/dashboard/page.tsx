@@ -27,7 +27,7 @@ import {
 export const metadata: Metadata = {
   title: "Contractor Dashboard",
   description:
-    "Client Bureau contractor dashboard for profile status, submitted reports, evidence uploads, saved searches, watchlist alerts, and intake assessment workflows.",
+    "Client Bureau contractor dashboard for client screening, agreement signing links, submitted reports, evidence, saved searches, and payment follow-up workflows.",
   robots: {
     index: false,
     follow: false,
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
   if (!riskOps) {
     return (
       <DashboardSetupState
-        title="Risk Ops is being prepared."
+        title="Your contractor command center is being prepared."
         message="Your contractor profile is active, but the operations workspace did not load. You can still search clients and submit documented reports while this feature workspace initializes."
       />
     )
@@ -117,16 +117,16 @@ export default async function DashboardPage() {
           <div className="space-y-5">
             <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
               <Radar className="size-4" aria-hidden="true" />
-              Contractor Risk Ops
+              Contractor Command Center
             </div>
             <div>
               <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
                 {dashboard.contractor.businessName}
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
-                Signed in as {dashboard.user.fullName}. Review client-risk signals, manage draft
-                reports, send contract signing links, track evidence status, and keep project
-                intake decisions documentable.
+                Signed in as {dashboard.user.fullName}. Search clients before you schedule,
+                prepare agreement links, manage report drafts, track private evidence, and keep
+                payment follow-up organized in one place.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

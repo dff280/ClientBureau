@@ -68,7 +68,7 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
                 <ShieldCheck className="size-7 text-amber-300" aria-hidden="true" />
                 <p className="font-semibold">Private workflow</p>
                 <p className="text-sm leading-6 text-slate-300">
-                  This page is not a public client profile, report, collection notice, lien filing,
+                  This page is not a public client profile, report, payment demand notice, lien filing,
                   or evidence repository.
                 </p>
               </CardContent>

@@ -415,9 +415,9 @@ describe("platform expansion feature utilities", () => {
   })
 
   it("creates private contract signing links and records client signatures", () => {
-    const seeded = getContractPacketByShareToken("new-intake-client-roof-repair-contract-packet-02")
+    const seeded = getContractPacketByShareToken("new-intake-client-roof-repair-agreement-link-02")
 
-    expect(seeded?.shareUrl).toBe("/contract/new-intake-client-roof-repair-contract-packet-02")
+    expect(seeded?.shareUrl).toBe("/contract/new-intake-client-roof-repair-agreement-link-02")
 
     const link = createContractShareLink("contractor_01", {
       packetId: "contract_packet_02",
@@ -427,13 +427,13 @@ describe("platform expansion feature utilities", () => {
       inviteClient: true,
     })
 
-    expect(link.shareUrl).toBe("/contract/new-intake-client-roof-repair-contract-packet-02")
+    expect(link.shareUrl).toBe("/contract/new-intake-client-roof-repair-agreement-link-02")
     expect(link.clientEmailMasked).not.toContain("client@example.com")
     expect(link.clientInviteStatus).toBe("invited")
     expect(link.signatureStatus).toBe("awaiting_client")
 
     const signed = signContractShare({
-      shareToken: "new-intake-client-roof-repair-contract-packet-02",
+      shareToken: "new-intake-client-roof-repair-agreement-link-02",
       signerName: "Client Contact",
       signerEmail: "client@example.com",
       signatureName: "Client Contact",
@@ -603,7 +603,7 @@ describe("platform expansion schemas", () => {
         depositRequired: 750,
         milestoneCount: 2,
         requiredBeforeScheduling: true,
-        nextAction: "Review packet before scheduling.",
+        nextAction: "Review agreement before scheduling.",
       }).success,
     ).toBe(true)
 
