@@ -35,7 +35,7 @@ export default async function AdminSettingsPage() {
             ["Payment recovery", "Recovery actions require factual invoice context, documented contact attempts, response windows, and respectful communication language."],
             ["Phone outreach", "Call workflows are logged as documented outreach. The platform does not place automated collection calls."],
             ["Lien-readiness packets", "Lien notice tools create private readiness packets only. State-specific deadlines, recipients, delivery methods, and contract terms must be reviewed before sending."],
-            ["Contract packets", "Contract workspace records track scope, deposit, milestone billing, change orders, payment plans, completion records, and signed-document status."],
+            ["Contract signing links", "Contract workspace records track scope, deposit, milestone billing, change orders, payment plans, client invite status, and signed-document status."],
             ["Resolution path", "Disputes, corrections, partial payments, and resolved reports should be reflected in moderation notes and public summaries only after review."],
           ].map(([title, text]) => (
             <div key={title} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">

@@ -125,7 +125,8 @@ export default async function DashboardPage() {
               </h1>
               <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300">
                 Signed in as {dashboard.user.fullName}. Review client-risk signals, manage draft
-                reports, track evidence status, and keep project intake decisions documentable.
+                reports, send contract signing links, track evidence status, and keep project
+                intake decisions documentable.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

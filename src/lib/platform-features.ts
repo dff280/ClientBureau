@@ -216,7 +216,7 @@ export function buildTodaysWorkItems(input: {
     }))
 
   const contracts = input.contracts
-    .filter((item) => !["signed", "archived"].includes(item.status))
+    .filter((item) => !["signed", "archived"].includes(item.status) && item.signatureStatus !== "fully_signed")
     .slice(0, 2)
     .map((item) => ({
       id: `contract_${item.id}`,
@@ -301,7 +301,18 @@ export function contractPacketCompletionPercentage(item: ContractPacket) {
     updatedAt: item.updatedAt,
   })
 
-  return item.requiredBeforeScheduling ? Math.max(base, 80) : base
+  const shareBonus = item.shareToken ? 8 : 0
+  const signatureBonus =
+    item.signatureStatus === "fully_signed"
+      ? 12
+      : item.signatureStatus === "client_signed" || item.signatureStatus === "contractor_signed"
+        ? 8
+        : item.signatureStatus === "awaiting_client"
+          ? 4
+          : 0
+  const readiness = item.requiredBeforeScheduling ? Math.max(base, 80) : base
+
+  return Math.min(100, readiness + shareBonus + signatureBonus)
 }
 
 export function filterAdminSavedViews(views: AdminSavedView[], scope: AdminSavedViewScope | "all") {

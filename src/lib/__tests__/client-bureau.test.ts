@@ -37,7 +37,10 @@ import {
 } from "@/lib/platform-features"
 import {
   getPublicClientProfile,
+  createContractShareLink,
+  getContractPacketByShareToken,
   searchClients,
+  signContractShare,
   simulateApprovalPublication,
   simulateSubmittedClientReport,
 } from "@/lib/repositories/client-bureau"
@@ -65,6 +68,8 @@ import {
   clientPipelineItemSchema,
   clientRiskRoomSchema,
   contractPacketSchema,
+  contractShareLinkSchema,
+  contractSignatureSchema,
   lienNoticeDraftSchema,
   paymentPlanSchema,
   paymentRecoveryAttemptSchema,
@@ -409,6 +414,38 @@ describe("platform expansion feature utilities", () => {
     expect(filterAdminSavedViews(adminSavedViews, "recovery")).toHaveLength(1)
   })
 
+  it("creates private contract signing links and records client signatures", () => {
+    const seeded = getContractPacketByShareToken("new-intake-client-roof-repair-contract-packet-02")
+
+    expect(seeded?.shareUrl).toBe("/contract/new-intake-client-roof-repair-contract-packet-02")
+
+    const link = createContractShareLink("contractor_01", {
+      packetId: "contract_packet_02",
+      clientEmail: "client@example.com",
+      paymentMode: "deposit_request",
+      paymentSummary: "Deposit is requested before scheduling materials.",
+      inviteClient: true,
+    })
+
+    expect(link.shareUrl).toBe("/contract/new-intake-client-roof-repair-contract-packet-02")
+    expect(link.clientEmailMasked).not.toContain("client@example.com")
+    expect(link.clientInviteStatus).toBe("invited")
+    expect(link.signatureStatus).toBe("awaiting_client")
+
+    const signed = signContractShare({
+      shareToken: "new-intake-client-roof-repair-contract-packet-02",
+      signerName: "Client Contact",
+      signerEmail: "client@example.com",
+      signatureName: "Client Contact",
+      consentToElectronicSignature: true,
+      authorityCertification: true,
+      recordsCertification: true,
+    })
+
+    expect(signed.signatureStatus).toBe("client_signed")
+    expect(signed.clientInviteStatus).toBe("joined")
+  })
+
   it("detects obvious private evidence leaks in public-facing payloads", () => {
     expect(hasPrivatePublicLeak({ storagePath: "report-evidence/report_01/final-invoice.pdf" })).toBe(true)
     expect(hasPrivatePublicLeak({ summary: "Evidence reviewed privately." })).toBe(false)
@@ -571,6 +608,34 @@ describe("platform expansion schemas", () => {
     ).toBe(true)
 
     expect(updateContractPacketStatusSchema.safeParse({ packetId: "contract_packet_01", status: "signed" }).success).toBe(true)
+    expect(
+      contractShareLinkSchema.safeParse({
+        packetId: "contract_packet_01",
+        clientEmail: "client@example.com",
+        paymentMode: "milestone_schedule",
+        paymentSummary: "Milestone payment timing is attached for review.",
+        inviteClient: true,
+      }).success,
+    ).toBe(true)
+    expect(
+      contractSignatureSchema.safeParse({
+        shareToken: "contract-token",
+        signerName: "Client Contact",
+        signerEmail: "client@example.com",
+        signatureName: "Client Contact",
+        consentToElectronicSignature: true,
+        authorityCertification: true,
+        recordsCertification: true,
+      }).success,
+    ).toBe(true)
+    expect(
+      contractSignatureSchema.safeParse({
+        shareToken: "contract-token",
+        signerName: "Client Contact",
+        signerEmail: "client@example.com",
+        signatureName: "Client Contact",
+      }).success,
+    ).toBe(false)
     expect(updateEvidenceVaultStatusSchema.safeParse({ evidenceId: "vault_01", status: "reviewed" }).success).toBe(true)
     expect(adminSavedViewSchema.safeParse({ scope: "reports", name: "High priority", filterSummary: "priority=high" }).success).toBe(true)
     expect(

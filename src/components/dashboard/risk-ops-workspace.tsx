@@ -10,6 +10,7 @@ import {
   FileText,
   Gauge,
   Landmark,
+  Link2,
   ListChecks,
   PhoneCall,
   PlusCircle,
@@ -38,6 +39,7 @@ import {
   createClientPipelineItemAction,
   createContractWorkspaceItemAction,
   createContractPacketAction,
+  createContractShareLinkAction,
   createIntakeAssessmentAction,
   createLienNoticeDraftAction,
   createPaymentRecoveryCaseAction,
@@ -102,7 +104,27 @@ const riskRoomState: ActionResult<ClientRiskRoom> = { ok: false, message: "" }
 const recoveryAttemptState: ActionResult<PaymentRecoveryAttempt> = { ok: false, message: "" }
 const paymentPlanState: ActionResult<PaymentPlan> = { ok: false, message: "" }
 const contractPacketState: ActionResult<ContractPacket> = { ok: false, message: "" }
+const contractShareState: ActionResult<ContractPacket> = { ok: false, message: "" }
 const evidenceVaultState: ActionResult<EvidenceVaultItem> = { ok: false, message: "" }
+
+const workspaceGuide = [
+  {
+    title: "Screen the client",
+    text: "Search profiles, check private matches, save watchlist alerts, and decide what controls are needed before accepting work.",
+  },
+  {
+    title: "Control the agreement",
+    text: "Create a contract signing link, invite the client, track signature status, and attach deposit or milestone timing.",
+  },
+  {
+    title: "Document the job",
+    text: "Keep report drafts, evidence, invoices, completion records, and change-order notes organized before moderation.",
+  },
+  {
+    title: "Resolve payment issues",
+    text: "Log factual follow-up, payment plans, response windows, and lien-readiness checklists without exposing private records.",
+  },
+]
 
 export function RiskOpsWorkspace({
   riskOps,
@@ -145,6 +167,35 @@ export function RiskOpsWorkspace({
 
   return (
     <div className="space-y-6">
+      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase text-amber-700">How this workspace works</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-normal text-slate-950">
+              One operating system from first client check to signed agreement.
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Use the tabs as short work areas. Each one handles a specific contractor decision so
+              you do not have to scroll through everything at once.
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href="/score-methodology">
+              <ShieldCheck aria-hidden="true" />
+              Review score method
+            </Link>
+          </Button>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {workspaceGuide.map((item) => (
+            <div key={item.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <p className="font-semibold text-slate-950">{item.title}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-8">
         <RiskMetric label="Today" value={todaysWork.length} helper="Ranked work items" tone="slate" />
         <RiskMetric label="Pipeline" value={openPipelineItems} helper="Open client records" tone="slate" />
@@ -153,7 +204,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Recovery cases" value={openRecoveryCases} helper="Open payment follow-up" tone="amber" />
         <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="State-specific review" tone="rose" />
-        <RiskMetric label="Contracts" value={openContractPackets} helper="Packets before scheduling" tone="emerald" />
+        <RiskMetric label="Contracts" value={openContractPackets} helper="Signing links before scheduling" tone="emerald" />
       </div>
 
       <Tabs defaultValue="overview" className="space-y-5">
@@ -175,7 +226,7 @@ export function RiskOpsWorkspace({
         <TabsContent value="overview" className="space-y-5">
           <WorkspaceIntro
             title="Today's risk operations"
-            text="A compressed work queue for urgent client signals, report drafts, recovery follow-up, evidence review, and contract packets."
+            text="A compressed work queue for urgent client signals, report drafts, recovery follow-up, evidence review, and contract signing links."
           />
           <Accordion type="multiple" defaultValue={["today", "rooms"]} className="gap-4">
             <AccordionItem value="today" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
@@ -205,7 +256,7 @@ export function RiskOpsWorkspace({
             </AccordionItem>
             <AccordionItem value="rooms" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
               <AccordionTrigger className="py-4 text-base font-semibold text-slate-950">
-                Private Risk Rooms
+                Client Work Files
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
@@ -216,8 +267,8 @@ export function RiskOpsWorkspace({
                     ))}
                     {riskOps.riskRooms.length === 0 ? (
                       <EmptyState
-                        title="No private risk rooms yet"
-                        text="Create one room per important client to group searches, reports, evidence, recovery notes, and contract packets."
+                        title="No client work files yet"
+                        text="Create one private file per important client to group searches, reports, evidence, recovery notes, and contract signing links."
                       />
                     ) : null}
                   </div>
@@ -454,15 +505,32 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="contracts" className="space-y-5">
           <WorkspaceIntro
-            title="Contract and packet controls"
-            text="Build reusable scope, deposit, milestone billing, change-order, completion, and payment-plan packets."
+            title="Contracts and client signing links"
+            text="Create private agreement links clients can review and sign, invite the client into the workflow, and track signature plus payment timing before work starts."
           />
+          <div className="grid gap-3 md:grid-cols-3">
+            <ToolExplainer
+              title="What this does"
+              text="Contract links give the client a private review page for scope, price, deposit, milestones, and electronic signature."
+            />
+            <ToolExplainer
+              title="What it does not do yet"
+              text="Client Bureau does not automatically hold funds, collect debts, file liens, or send legal notices from this workflow."
+            />
+            <ToolExplainer
+              title="Future payment path"
+              text="Deposit and milestone coordination is staged here so a reviewed payment layer can be added cleanly later."
+            />
+          </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
             <Signature className="size-5 text-amber-700" aria-hidden="true" />
-            Contract workspace
+            Agreement builder
           </CardTitle>
+          <p className="text-sm leading-6 text-slate-600">
+            Draft the agreement controls you want attached to a client signing link.
+          </p>
         </CardHeader>
         <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
           <ContractWorkspaceForm />
@@ -472,8 +540,8 @@ export function RiskOpsWorkspace({
             ))}
             {riskOps.contractDocuments.length === 0 ? (
               <EmptyState
-                title="No contract packets yet"
-                text="Create reusable contract packets for scope, deposits, milestones, payment plans, completion records, and change orders."
+                title="No agreement templates yet"
+                text="Create reusable agreement controls for scope, deposits, milestones, payment plans, completion records, and change orders."
               />
             ) : null}
           </div>
@@ -484,8 +552,11 @@ export function RiskOpsWorkspace({
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <FolderKanban className="size-5 text-amber-700" aria-hidden="true" />
-                Contract packets
+                Contract signing links
               </CardTitle>
+              <p className="text-sm leading-6 text-slate-600">
+                Prepare a private link, send it to the client, track signature status, and coordinate deposit or milestone timing.
+              </p>
             </CardHeader>
             <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
               <ContractPacketForm />
@@ -495,8 +566,8 @@ export function RiskOpsWorkspace({
                 ))}
                 {riskOps.contractPackets.length === 0 ? (
                   <EmptyState
-                    title="No contract packets yet"
-                    text="Create contract packets for service agreements, change orders, payment plans, completion certificates, and notice packets."
+                    title="No contract signing links yet"
+                    text="Create links for service agreements, change orders, payment plans, completion certificates, and private notice records."
                   />
                 ) : null}
               </div>
@@ -675,6 +746,15 @@ function WorkspaceIntro({ title, text }: { title: string; text: string }) {
   )
 }
 
+function ToolExplainer({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-amber-700">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
 function PipelineCreateForm({ clients }: { clients: ClientProfile[] }) {
   const [state, action] = useActionState(createClientPipelineItemAction, pipelineState)
 
@@ -784,11 +864,11 @@ function RiskRoomForm({ clients }: { clients: ClientProfile[] }) {
         <Input name="city" placeholder="City" />
         <Input name="state" placeholder="FL" className="uppercase" />
       </div>
-      <Input name="headline" placeholder="Private room headline" />
-      <Textarea name="summary" placeholder="Decision context, linked workflow notes, and next risk controls" className="min-h-24" />
+      <Input name="headline" placeholder="Client work file headline" />
+      <Textarea name="summary" placeholder="Search notes, contract controls, evidence, payment follow-up, and next decision" className="min-h-24" />
       <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
         <PlusCircle aria-hidden="true" />
-        Create risk room
+        Create client file
       </PendingSubmitButton>
       <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
     </form>
@@ -808,7 +888,7 @@ function RiskRoomCard({ room }: { room: ClientRiskRoom }) {
 
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-      <Badge variant="outline" className="rounded-md">Private room</Badge>
+      <Badge variant="outline" className="rounded-md">Private client file</Badge>
       <h3 className="mt-3 font-semibold text-slate-950">{room.clientName}</h3>
       <p className="mt-1 text-xs text-slate-500">
         {room.city}, {room.state} / {linkedCount} linked records
@@ -1301,7 +1381,7 @@ function ContractWorkspaceForm() {
       <Textarea name="summary" placeholder="Scope, payment, and documentation controls" className="min-h-20" />
       <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
         <Signature aria-hidden="true" />
-        Create contract packet
+        Create agreement draft
       </PendingSubmitButton>
       <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
       <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
@@ -1364,7 +1444,7 @@ function ContractPacketForm() {
       </label>
       <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
         <Signature aria-hidden="true" />
-        Create packet
+        Create signing link
       </PendingSubmitButton>
       <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
     </form>
@@ -1372,28 +1452,88 @@ function ContractPacketForm() {
 }
 
 function ContractPacketCard({ item }: { item: ContractPacket }) {
-  const [state, action] = useActionState(updateContractPacketStatusAction, contractPacketState)
-  const completion = contractPacketCompletionPercentage(item)
+  const [statusState, statusAction] = useActionState(updateContractPacketStatusAction, contractPacketState)
+  const [shareState, shareAction] = useActionState(createContractShareLinkAction, contractShareState)
+  const displayItem = shareState.ok ? shareState.data : statusState.ok ? statusState.data : item
+  const completion = contractPacketCompletionPercentage(displayItem)
+  const shareUrl = displayItem.shareUrl
+  const shareUrlLabel = shareUrl?.startsWith("/") ? shareUrl : shareUrl?.replace(/^https?:\/\//, "")
 
-  useToastState(state)
+  useToastState(statusState)
+  useToastState(shareState)
 
   return (
     <div className="rounded-md border border-slate-200 p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" className="rounded-md capitalize">{item.status.replaceAll("_", " ")}</Badge>
-        <Badge variant="secondary" className="rounded-md capitalize">{item.templateType.replaceAll("_", " ")}</Badge>
-        {item.requiredBeforeScheduling ? <Badge className="rounded-md bg-amber-700 text-white">Before scheduling</Badge> : null}
+        <Badge variant="outline" className="rounded-md capitalize">{displayItem.status.replaceAll("_", " ")}</Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">{displayItem.templateType.replaceAll("_", " ")}</Badge>
+        {displayItem.requiredBeforeScheduling ? <Badge className="rounded-md bg-amber-700 text-white">Before scheduling</Badge> : null}
+        {displayItem.signatureStatus ? (
+          <Badge variant="outline" className="rounded-md capitalize">
+            {displayItem.signatureStatus.replaceAll("_", " ")}
+          </Badge>
+        ) : null}
       </div>
-      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <h3 className="mt-3 font-semibold text-slate-950">{displayItem.clientName}</h3>
       <p className="mt-1 text-sm text-slate-500">
-        {item.projectType} / ${item.packetValue.toLocaleString()} / deposit ${item.depositRequired.toLocaleString()}
+        {displayItem.projectType} / ${displayItem.packetValue.toLocaleString()} / deposit ${displayItem.depositRequired.toLocaleString()}
       </p>
       <Progress value={completion} className="mt-4" />
-      <p className="mt-2 text-xs text-slate-500">{completion}% packet readiness / {item.milestoneCount} milestones</p>
-      <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
-      <form action={action} className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-        <input type="hidden" name="packetId" value={item.id} />
-        <select name="status" defaultValue={item.status} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+      <p className="mt-2 text-xs text-slate-500">{completion}% link readiness / {displayItem.milestoneCount} milestones</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{displayItem.nextAction}</p>
+
+      <div className="mt-4 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+        <div className="grid gap-2 sm:grid-cols-2">
+          <span>Client invite: {displayItem.clientInviteStatus?.replaceAll("_", " ") ?? "not invited"}</span>
+          <span>Share status: {displayItem.shareStatus?.replaceAll("_", " ") ?? "draft"}</span>
+          <span>Client contact: {displayItem.clientEmailMasked ?? "not added"}</span>
+          <span>Payment mode: {displayItem.paymentMode?.replaceAll("_", " ") ?? "none"}</span>
+        </div>
+        {displayItem.paymentSummary ? <p>{displayItem.paymentSummary}</p> : null}
+        {shareUrl ? (
+          <div className="flex flex-col gap-2 rounded-md border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="truncate font-medium text-slate-950">{shareUrlLabel}</span>
+            <Button asChild size="sm" variant="outline">
+              <Link href={shareUrl} target="_blank" rel="noreferrer">
+                <Link2 aria-hidden="true" />
+                Open link
+              </Link>
+            </Button>
+          </div>
+        ) : (
+          <p className="rounded-md border border-dashed border-slate-300 bg-white p-3">
+            Add the client email below to prepare a private signing link.
+          </p>
+        )}
+      </div>
+
+      <form action={shareAction} className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3">
+        <input type="hidden" name="packetId" value={displayItem.id} />
+        <div className="grid gap-2 sm:grid-cols-[1fr_170px]">
+          <Input name="clientEmail" type="email" placeholder="Client email for signing link" />
+          <select name="paymentMode" defaultValue={displayItem.paymentMode ?? "none"} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+            <option value="none">No payment request</option>
+            <option value="deposit_request">Deposit request</option>
+            <option value="milestone_schedule">Milestone schedule</option>
+            <option value="platform_review">Payment review</option>
+          </select>
+        </div>
+        <Textarea name="clientMessage" placeholder="Short note shown with the private signing link" className="min-h-16" />
+        <Textarea name="paymentSummary" placeholder="Deposit, milestone, or payment coordination note" defaultValue={displayItem.paymentSummary} className="min-h-16" />
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <Checkbox name="inviteClient" defaultChecked={displayItem.clientInviteStatus === "invited" || displayItem.clientInviteStatus === "joined"} />
+          Invite client to join this contract workspace
+        </label>
+        <PendingSubmitButton pendingText="Preparing..." className="bg-slate-950 text-white hover:bg-slate-800">
+          <Send aria-hidden="true" />
+          Prepare signing link
+        </PendingSubmitButton>
+        <FieldError name="clientEmail" errors={shareState.ok ? undefined : shareState.fieldErrors} />
+      </form>
+
+      <form action={statusAction} className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+        <input type="hidden" name="packetId" value={displayItem.id} />
+        <select name="status" defaultValue={displayItem.status} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
           <option value="draft">Draft</option>
           <option value="review_ready">Review ready</option>
           <option value="sent">Sent</option>

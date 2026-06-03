@@ -24,7 +24,8 @@ export default function PricingPage() {
     ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
     ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
     ["Payment recovery workflow", "-", "Private tracking", "Team workflow", "Partner handoff"],
-    ["Contract packets", "-", "Service agreement and change-order tracking", "Shared packet controls", "Custom templates"],
+    ["Contract signing links", "-", "Client review, e-signature, and change-order tracking", "Shared link controls", "Custom templates"],
+    ["Client invite portal", "-", "Private agreement link", "Team-managed invites", "Custom onboarding"],
     ["Lien readiness packets", "-", "Private checklist", "Team review", "Specialist workflow"],
     ["Moderation priority", "Standard", "Priority", "Team priority", "Dedicated review"],
     ["Audit and exports", "-", "-", "Included", "Custom"],
@@ -113,7 +114,7 @@ export default function PricingPage() {
               <h2 className="text-2xl font-semibold text-slate-950">Risk Ops is built into Pro.</h2>
               <p className="text-sm leading-6 text-slate-600">
                 Pro Contractor adds watchlists, draft reports, saved searches, intake assessments,
-                payment recovery tracking, lien-readiness packets, and contract controls for repeat client review.
+                payment recovery tracking, lien-readiness packets, contract signing links, and client invite controls for repeat client review.
               </p>
               <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>

@@ -99,7 +99,7 @@ const painPoints = [
 ]
 
 const beforeSteps = ["Accept job", "Buy materials", "Schedule crew", "Hope client pays"]
-const afterSteps = ["Search client", "Review history", "Check risk score", "Document everything", "Protect the business"]
+const afterSteps = ["Search client", "Review history", "Send contract link", "Document evidence", "Track payment timing"]
 
 const businessTypes = [
   "Contractors",
@@ -267,8 +267,8 @@ export default async function Home() {
               </p>
               <p className="text-sm leading-6 text-slate-200">
                 Client Bureau is built for businesses that need better pre-client decisions, not
-                after-the-fact arguments. Search first, document the job, use contract controls,
-                and keep recovery or lien-readiness work private until it is reviewed.
+                after-the-fact arguments. Search first, send a clear agreement link, document the
+                job, and keep recovery or lien-readiness work private until it is reviewed.
               </p>
             </CardContent>
           </Card>
@@ -452,7 +452,8 @@ export default async function Home() {
             </h2>
             <p className="text-sm leading-6 text-slate-600">
               Free supports basic checks and report submission. Pro and Team add watchlists, saved
-              searches, alerts, intake assessments, evidence workflow, and shared operations.
+              searches, alerts, intake assessments, evidence workflow, contract signing links, and
+              shared operations.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

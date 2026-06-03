@@ -48,6 +48,47 @@ begin
     );
   end if;
 
+  if not exists (select 1 from pg_type where typname = 'contract_share_status') then
+    create type public.contract_share_status as enum (
+      'draft',
+      'sent',
+      'viewed',
+      'client_joined',
+      'signed',
+      'payment_pending',
+      'completed',
+      'expired'
+    );
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'contract_signature_status') then
+    create type public.contract_signature_status as enum (
+      'not_sent',
+      'awaiting_client',
+      'client_signed',
+      'contractor_signed',
+      'fully_signed',
+      'declined'
+    );
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'client_invite_status') then
+    create type public.client_invite_status as enum (
+      'not_invited',
+      'invited',
+      'joined'
+    );
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'contract_payment_mode') then
+    create type public.contract_payment_mode as enum (
+      'none',
+      'deposit_request',
+      'milestone_schedule',
+      'platform_review'
+    );
+  end if;
+
   if not exists (select 1 from pg_type where typname = 'evidence_vault_status') then
     create type public.evidence_vault_status as enum (
       'uploaded',
@@ -158,6 +199,17 @@ create table if not exists public.contract_packets (
   milestone_count integer not null default 0,
   required_before_scheduling boolean not null default false,
   next_action text not null,
+  share_token text unique,
+  share_url text,
+  client_email_hash text,
+  client_email_masked text,
+  client_invite_status public.client_invite_status not null default 'not_invited',
+  signature_status public.contract_signature_status not null default 'not_sent',
+  share_status public.contract_share_status not null default 'draft',
+  payment_mode public.contract_payment_mode not null default 'none',
+  payment_summary text,
+  client_signed_at timestamptz,
+  contractor_signed_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -232,6 +284,10 @@ create index if not exists payment_plans_case_idx
 
 create index if not exists contract_packets_contractor_idx
   on public.contract_packets(contractor_id, status, updated_at desc);
+
+create index if not exists contract_packets_share_token_idx
+  on public.contract_packets(share_token)
+  where share_token is not null;
 
 create index if not exists evidence_vault_contractor_idx
   on public.evidence_vault_items(contractor_id, status, updated_at desc);

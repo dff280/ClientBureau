@@ -93,6 +93,24 @@ export type PaymentRecoveryAttemptOutcome =
   | "needs_follow_up"
 export type PaymentPlanStatus = "proposed" | "accepted" | "active" | "completed" | "missed" | "paused"
 export type ContractPacketStatus = "draft" | "review_ready" | "sent" | "signed" | "expired" | "archived"
+export type ContractShareStatus =
+  | "draft"
+  | "sent"
+  | "viewed"
+  | "client_joined"
+  | "signed"
+  | "payment_pending"
+  | "completed"
+  | "expired"
+export type ContractSignatureStatus =
+  | "not_sent"
+  | "awaiting_client"
+  | "client_signed"
+  | "contractor_signed"
+  | "fully_signed"
+  | "declined"
+export type ClientInviteStatus = "not_invited" | "invited" | "joined"
+export type ContractPaymentMode = "none" | "deposit_request" | "milestone_schedule" | "platform_review"
 export type EvidenceVaultStatus = "uploaded" | "mapped" | "review_pending" | "reviewed" | "needs_more_info" | "archived"
 export type AdminSavedViewScope =
   | "reports"
@@ -371,6 +389,16 @@ export interface ContractPacket {
   milestoneCount: number
   requiredBeforeScheduling: boolean
   nextAction: string
+  shareToken?: string
+  shareUrl?: string
+  clientEmailMasked?: string
+  clientInviteStatus?: ClientInviteStatus
+  signatureStatus?: ContractSignatureStatus
+  shareStatus?: ContractShareStatus
+  paymentMode?: ContractPaymentMode
+  paymentSummary?: string
+  clientSignedAt?: string
+  contractorSignedAt?: string
   createdAt: string
   updatedAt: string
 }

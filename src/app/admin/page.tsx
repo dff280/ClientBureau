@@ -53,7 +53,7 @@ export default async function AdminHomePage() {
   const escalatedCases = moderationCrm?.cases.filter((item) => item.status === "escalated").length ?? 0
   const recoveryCases = riskOps ? countOpenRecoveryCases(riskOps.paymentRecoveryCases) : 0
   const lienPackets = riskOps?.lienNoticeDrafts.filter((item) => item.requiredReview).length ?? 0
-  const contractPackets = riskOps?.contractDocuments.filter((item) => item.status !== "archived").length ?? 0
+  const contractLinks = riskOps?.contractPackets.filter((item) => item.status !== "archived").length ?? 0
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -84,7 +84,7 @@ export default async function AdminHomePage() {
           <Metric label="Escalations" value={escalatedCases} />
           <Metric label="Recovery cases" value={recoveryCases} />
           <Metric label="Notice review" value={lienPackets} />
-          <Metric label="Contracts" value={contractPackets} />
+          <Metric label="Contract links" value={contractLinks} />
         </div>
 
         <Tabs defaultValue="overview" className="space-y-5">
@@ -108,6 +108,20 @@ export default async function AdminHomePage() {
               title="Today's operating view"
               text="Start with the moderation queue, then move into client, contractor, upload, or safeguard workflows as needed."
             />
+            <div className="grid gap-4 lg:grid-cols-5">
+              {[
+                ["Reports", "Approve only moderated, documented public summaries."],
+                ["Clients", "Control public visibility, profile health, and SEO-safe identity fields."],
+                ["Contractors", "Review accounts, verification, plan readiness, and report behavior."],
+                ["Contracts", "Oversee private signing links, client invites, and payment coordination status."],
+                ["Recovery", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
+              ].map(([title, text]) => (
+                <div key={title} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="font-semibold text-slate-950">{title}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+                </div>
+              ))}
+            </div>
             <div className="grid gap-4 lg:grid-cols-4">
               <QuickLink
                 href="/admin/reports"
@@ -245,8 +259,8 @@ export default async function AdminHomePage() {
                 href="/admin/settings"
                 icon={<Signature className="size-5" />}
                 title="Contract controls"
-                text="Track agreement templates, change orders, payment plans, completion records, and packet status."
-                badge={`${contractPackets} active`}
+                text="Track signing links, client invite status, signatures, and payment coordination."
+                badge={`${contractLinks} active`}
               />
             </div>
             {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}
@@ -254,12 +268,12 @@ export default async function AdminHomePage() {
 
           <TabsContent value="contracts" className="space-y-5">
             <AdminModuleIntro
-              title="Contract packet oversight"
-              text="Track agreement templates, change orders, payment plans, completion records, and packets required before scheduling."
+              title="Contract signing link oversight"
+              text="Track agreement templates, private signing links, client invites, payment coordination, and contracts required before scheduling."
             />
             <div className="grid gap-4 lg:grid-cols-3">
-              <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review contract packet defaults and safeguard language." badge={`${contractPackets} active`} />
-              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contract workspace" text="Preview contractor-side packet creation and status tracking." badge="Ops" />
+              <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults and safeguard language." badge={`${contractLinks} active`} />
+              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contract workspace" text="Preview contractor-side signing link creation and status tracking." badge="Ops" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track packet status, reviewer actions, and settings changes." badge="Audit" />
             </div>
             {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}

@@ -316,8 +316,8 @@ export const clientRiskRoomSchema = z.object({
   clientName: requiredText("Client name"),
   city: requiredText("City"),
   state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
-  headline: requiredText("Risk room headline", 8).max(160, "Keep the headline under 160 characters."),
-  summary: requiredText("Risk room summary", 20).max(900, "Keep the summary under 900 characters."),
+  headline: requiredText("Client work file headline", 8).max(160, "Keep the headline under 160 characters."),
+  summary: requiredText("Client work file summary", 20).max(900, "Keep the summary under 900 characters."),
 })
 
 export const paymentRecoveryAttemptSchema = z.object({
@@ -380,6 +380,34 @@ export const contractPacketSchema = z.object({
 export const updateContractPacketStatusSchema = z.object({
   packetId: requiredText("Contract packet ID"),
   status: z.enum(["draft", "review_ready", "sent", "signed", "expired", "archived"]),
+})
+
+export const contractShareLinkSchema = z.object({
+  packetId: requiredText("Contract link ID"),
+  clientEmail: z.email("Enter a valid client email for the private signing link."),
+  clientMessage: z.string().trim().max(700, "Keep the client message under 700 characters.").optional(),
+  paymentMode: z.enum(["none", "deposit_request", "milestone_schedule", "platform_review"]).default("none"),
+  paymentSummary: z.string().trim().max(700, "Keep the payment summary under 700 characters.").optional(),
+  inviteClient: z.coerce.boolean().optional(),
+})
+
+export const contractSignatureSchema = z.object({
+  shareToken: requiredText("Signing link token"),
+  signerName: requiredText("Signer name"),
+  signerEmail: z.email("Enter a valid email for signature verification."),
+  signatureName: requiredText("Typed signature"),
+  consentToElectronicSignature: z.coerce.boolean().optional(),
+  authorityCertification: z.coerce.boolean().optional(),
+  recordsCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.consentToElectronicSignature === true, {
+  path: ["consentToElectronicSignature"],
+  message: "Confirm consent to use electronic records and signatures for this agreement.",
+}).refine((value) => value.authorityCertification === true, {
+  path: ["authorityCertification"],
+  message: "Confirm you are authorized to sign this agreement.",
+}).refine((value) => value.recordsCertification === true, {
+  path: ["recordsCertification"],
+  message: "Confirm you can access and retain the agreement records electronically.",
 })
 
 export const updateEvidenceVaultStatusSchema = z.object({
@@ -454,6 +482,8 @@ export type PaymentRecoveryAttemptInput = z.infer<typeof paymentRecoveryAttemptS
 export type PaymentPlanInput = z.infer<typeof paymentPlanSchema>
 export type ContractPacketInput = z.infer<typeof contractPacketSchema>
 export type UpdateContractPacketStatusInput = z.infer<typeof updateContractPacketStatusSchema>
+export type ContractShareLinkInput = z.infer<typeof contractShareLinkSchema>
+export type ContractSignatureInput = z.infer<typeof contractSignatureSchema>
 export type UpdateEvidenceVaultStatusInput = z.infer<typeof updateEvidenceVaultStatusSchema>
 export type AdminSavedViewInput = z.infer<typeof adminSavedViewSchema>
 export type RecoveryComplianceReviewInput = z.infer<typeof recoveryComplianceReviewSchema>

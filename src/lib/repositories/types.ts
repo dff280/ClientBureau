@@ -33,6 +33,8 @@ import type {
   ClientReportInput,
   ClientRiskRoomInput,
   ContractPacketInput,
+  ContractShareLinkInput,
+  ContractSignatureInput,
   ContractWorkspaceItemInput,
   IntakeAssessmentInput,
   LienNoticeDraftInput,
@@ -72,6 +74,8 @@ export interface ClientBureauRepository {
   createPaymentPlan(userId: string, input: PaymentPlanInput): PaymentPlan
   createContractPacket(userId: string, input: ContractPacketInput): ContractPacket
   updateContractPacketStatus(input: UpdateContractPacketStatusInput): ContractPacket
+  createContractShareLink(userId: string, input: ContractShareLinkInput): ContractPacket
+  signContractShare(input: ContractSignatureInput): ContractPacket
   updateEvidenceVaultStatus(input: UpdateEvidenceVaultStatusInput): EvidenceVaultItem
   saveAdminQueueView(userId: string, input: AdminSavedViewInput): AdminSavedView
   reviewRecoveryCompliance(userId: string, input: RecoveryComplianceReviewInput): RecoveryComplianceReview

@@ -8,6 +8,7 @@ import {
   createLienNoticeDraft,
   createPaymentRecoveryCase,
   createContractPacket,
+  createContractShareLink,
   createPaymentPlan,
   createWatchlistItem,
   deleteReportDraft,
@@ -18,6 +19,7 @@ import {
   getPendingAdminReviews,
   getPublicClientProfile,
   getPublicClientProfiles,
+  getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
   reviewRecoveryCompliance,
@@ -28,6 +30,7 @@ import {
   saveReportDraft,
   searchClients,
   setMockModerationDecisionReason,
+  signContractShare,
   simulateSubmittedClientReport,
   submitCommunityDiscussion,
   submitClientResponse,
@@ -63,6 +66,8 @@ import type {
   ClientPipelineItemInput,
   ClientRiskRoomInput,
   ContractPacketInput,
+  ContractShareLinkInput,
+  ContractSignatureInput,
   ContractWorkspaceItemInput,
   IntakeAssessmentInput,
   LienNoticeDraftInput,
@@ -420,6 +425,27 @@ export async function updateContractPacketStatusService(input: UpdateContractPac
   if (shouldUsePlatformSupabase()) return undefined
 
   return updateContractPacketStatus(input)
+}
+
+export async function createContractShareLinkService(userId: string, input: ContractShareLinkInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createContractShareLink(dashboard.contractor.id, input)
+}
+
+export async function getContractShareByTokenService(token: string) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return getContractPacketByShareToken(token)
+}
+
+export async function signContractShareService(input: ContractSignatureInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return signContractShare(input)
 }
 
 export async function updateEvidenceVaultStatusService(input: UpdateEvidenceVaultStatusInput) {

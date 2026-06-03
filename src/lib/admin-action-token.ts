@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
 
 import { ADMIN_ACTION_TOKEN_FIELD } from "@/lib/admin-action-token-field"
-import { getSupabaseServerKey } from "@/lib/env"
+import { getDataMode, getSupabaseServerKey } from "@/lib/env"
 import { hasSupabaseServiceConfig } from "@/lib/supabase/config"
 import { createServiceClient } from "@/lib/supabase/service"
 import type { User } from "@/lib/types"
@@ -34,7 +34,7 @@ function getAdminActionSecret() {
 
   if (secret) return secret
 
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV !== "production" || getDataMode() === "mock") {
     return "client-bureau-local-admin-action-secret"
   }
 

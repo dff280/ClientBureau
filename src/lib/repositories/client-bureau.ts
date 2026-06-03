@@ -36,6 +36,8 @@ import type {
   ClientReportInput,
   ContractWorkspaceItemInput,
   ContractPacketInput,
+  ContractShareLinkInput,
+  ContractSignatureInput,
   LienNoticeDraftInput,
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
@@ -302,7 +304,7 @@ export function simulateSubmittedClientReport(input: ClientReportInput): ClientR
     publicSummary: input.reportSummary,
     evidenceAttached: Boolean(input.evidenceAttached),
     status: "pending",
-    moderationNote: `Mock client ${clientId} would publish at /client/${publicSlug} after approval.`,
+    moderationNote: `After approval, the public profile can publish at /client/${publicSlug}.`,
     createdAt: new Date().toISOString(),
   }
 }
@@ -685,6 +687,10 @@ export function createContractPacket(contractorId: string, input: ContractPacket
     milestoneCount: input.milestoneCount,
     requiredBeforeScheduling: Boolean(input.requiredBeforeScheduling),
     nextAction: input.nextAction,
+    clientInviteStatus: "not_invited",
+    signatureStatus: "not_sent",
+    shareStatus: "draft",
+    paymentMode: "none",
     createdAt: now,
     updatedAt: now,
   }
@@ -698,6 +704,115 @@ export function updateContractPacketStatus(input: UpdateContractPacketStatusInpu
     id: input.packetId,
     status: input.status,
     updatedAt: new Date().toISOString(),
+  }
+}
+
+function contractShareToken(item: Pick<ContractPacket, "id" | "clientName" | "projectType">) {
+  const slug = [item.clientName, item.projectType, item.id]
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72)
+
+  return slug || item.id
+}
+
+export function contractSharePath(token: string) {
+  return `/contract/${token}`
+}
+
+function maskEmail(email: string) {
+  const [name = "", domain = ""] = email.toLowerCase().split("@")
+  const visible = name.length <= 2 ? name[0] ?? "*" : `${name.slice(0, 2)}***`
+  const domainParts = domain.split(".")
+  const domainName = domainParts[0] ?? ""
+  const suffix = domainParts.slice(1).join(".")
+
+  return `${visible}@${domainName.slice(0, 1)}***${suffix ? `.${suffix}` : ""}`
+}
+
+function withShareDefaults(item: ContractPacket): ContractPacket {
+  const token = item.shareToken ?? contractShareToken(item)
+
+  return {
+    ...item,
+    shareToken: token,
+    shareUrl: item.shareUrl ?? contractSharePath(token),
+    clientInviteStatus: item.clientInviteStatus ?? "not_invited",
+    signatureStatus: item.signatureStatus ?? "not_sent",
+    shareStatus: item.shareStatus ?? "draft",
+    paymentMode: item.paymentMode ?? "none",
+  }
+}
+
+export function getContractPacketByShareToken(token: string): ContractPacket | undefined {
+  const existing = contractorRiskOps.contractPackets.find((item) => {
+    const itemToken = item.shareToken ?? contractShareToken(item)
+
+    return itemToken === token
+  })
+
+  return existing ? withShareDefaults(existing) : undefined
+}
+
+export function createContractShareLink(
+  contractorId: string,
+  input: ContractShareLinkInput,
+): ContractPacket {
+  const existing = contractorRiskOps.contractPackets.find(
+    (item) => item.id === input.packetId && item.contractorId === contractorId,
+  ) ?? contractorRiskOps.contractPackets.find((item) => item.id === input.packetId)
+
+  const now = new Date().toISOString()
+  const base = withShareDefaults(existing ?? contractorRiskOps.contractPackets[0])
+  const token = base.shareToken ?? contractShareToken(base)
+  const paymentMode = input.paymentMode ?? "none"
+
+  return {
+    ...base,
+    id: input.packetId,
+    contractorId,
+    status: "sent",
+    shareToken: token,
+    shareUrl: contractSharePath(token),
+    clientEmailMasked: maskEmail(input.clientEmail),
+    clientInviteStatus: input.inviteClient ? "invited" : "not_invited",
+    signatureStatus: "awaiting_client",
+    shareStatus: "sent",
+    paymentMode,
+    paymentSummary:
+      input.paymentSummary ||
+      (paymentMode === "deposit_request"
+        ? `Deposit request tracked for $${base.depositRequired.toLocaleString()} before scheduling.`
+        : paymentMode === "milestone_schedule"
+          ? `${base.milestoneCount || 1} milestone payment schedule attached to the agreement workflow.`
+          : paymentMode === "platform_review"
+            ? "Payment coordination is marked for platform review before any payment workflow is activated."
+            : "No payment request is active on this contract link."),
+    nextAction: "Private signing link prepared. Send it to the client, then track view, signature, and payment coordination status.",
+    updatedAt: now,
+  }
+}
+
+export function signContractShare(input: ContractSignatureInput): ContractPacket {
+  const now = new Date().toISOString()
+  const existing = getContractPacketByShareToken(input.shareToken)
+
+  if (!existing) {
+    throw new Error("Contract signing link was not found.")
+  }
+
+  return {
+    ...existing,
+    status: "signed",
+    clientEmailMasked: existing.clientEmailMasked ?? maskEmail(input.signerEmail),
+    clientInviteStatus: "joined",
+    signatureStatus: "client_signed",
+    shareStatus: existing.paymentMode && existing.paymentMode !== "none" ? "payment_pending" : "signed",
+    clientSignedAt: now,
+    nextAction: "Client signature recorded. Contractor should countersign, store the final agreement, and confirm payment timing before work starts.",
+    updatedAt: now,
   }
 }
 
@@ -911,8 +1026,8 @@ export function reviewReport(
     editedPublicSummary,
     notes:
       decision === "approved"
-        ? `Mock approval publishes /client/${audit?.generatedSlug ?? "generated-slug"} and recalculates score to ${audit?.recalculatedScore ?? "N/A"}.`
-        : "Mock rejection keeps this report private.",
+        ? `Approval publishes /client/${audit?.generatedSlug ?? "generated-slug"} and recalculates score to ${audit?.recalculatedScore ?? "N/A"}.`
+        : "Rejection keeps this report private.",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
@@ -1033,7 +1148,7 @@ export function deleteAdminRecord(entityType: string, entityId: string): AuditLo
     action: "deleted_record",
     entityType: entityType as AuditLogEntry["entityType"],
     entityId,
-    summary: `Mock delete action recorded for ${entityType} ${entityId}.`,
+    summary: `Delete action recorded for ${entityType} ${entityId}.`,
     createdAt: new Date().toISOString(),
   }
 }

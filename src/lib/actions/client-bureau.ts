@@ -17,6 +17,8 @@ import {
   clientResponseSchema,
   clientRiskRoomSchema,
   contractPacketSchema,
+  contractShareLinkSchema,
+  contractSignatureSchema,
   communityDiscussionSchema,
   contractWorkspaceItemSchema,
   deleteReportDraftSchema,
@@ -75,6 +77,7 @@ import {
   deleteAdminRecordService,
   assignModerationCaseService,
   createContractWorkspaceItemService,
+  createContractShareLinkService,
   createClientPipelineItemService,
   createClientRiskRoomService,
   createIntakeAssessmentService,
@@ -85,6 +88,7 @@ import {
   createWatchlistItemService,
   deleteReportDraftService,
   logPaymentRecoveryAttemptService,
+  signContractShareService,
   reviewRecoveryComplianceService,
   reviewCommunityDiscussionService,
   reviewReportService,
@@ -856,19 +860,19 @@ export async function createRiskRoomAction(
   const parsed = clientRiskRoomSchema.safeParse(formDataToObject(formData))
 
   if (!parsed.success) {
-    return fail("Please correct the risk room fields.", zodFieldErrors(parsed.error))
+    return fail("Please correct the client work file fields.", zodFieldErrors(parsed.error))
   }
 
   const user = await requireContractorAccess()
 
   try {
     const room = await createClientRiskRoomService(user.id, parsed.data)
-    if (!room) return fail("Risk room feature data is not available yet.")
+    if (!room) return fail("Client work file feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(room, "Private client risk room created.")
+    return ok(room, "Private client work file created.")
   } catch (error) {
-    return fail(actionErrorMessage(error, "Risk room could not be created."))
+    return fail(actionErrorMessage(error, "Client work file could not be created."))
   }
 }
 
@@ -928,19 +932,19 @@ export async function createContractPacketAction(
   })
 
   if (!parsed.success) {
-    return fail("Please correct the contract packet fields.", zodFieldErrors(parsed.error))
+    return fail("Please correct the contract link fields.", zodFieldErrors(parsed.error))
   }
 
   const user = await requireContractorAccess()
 
   try {
     const packet = await createContractPacketService(user.id, parsed.data)
-    if (!packet) return fail("Contract packet feature data is not available yet.")
+    if (!packet) return fail("Contract link feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(packet, "Contract packet created.")
+    return ok(packet, "Contract signing link workspace created.")
   } catch (error) {
-    return fail(actionErrorMessage(error, "Contract packet could not be created."))
+    return fail(actionErrorMessage(error, "Contract signing link could not be created."))
   }
 }
 
@@ -951,19 +955,75 @@ export async function updateContractPacketStatusAction(
   const parsed = updateContractPacketStatusSchema.safeParse(formDataToObject(formData))
 
   if (!parsed.success) {
-    return fail("Select a contract packet and status.", zodFieldErrors(parsed.error))
+    return fail("Select a contract link and status.", zodFieldErrors(parsed.error))
   }
 
   await requireContractorAccess()
 
   try {
     const packet = await updateContractPacketStatusService(parsed.data)
-    if (!packet) return fail("Contract packet feature data is not available yet.")
+    if (!packet) return fail("Contract link feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(packet, `Contract packet marked ${packet.status.replaceAll("_", " ")}.`)
+    return ok(packet, `Contract link marked ${packet.status.replaceAll("_", " ")}.`)
   } catch (error) {
-    return fail(actionErrorMessage(error, "Contract packet status could not be updated."))
+    return fail(actionErrorMessage(error, "Contract link status could not be updated."))
+  }
+}
+
+export async function createContractShareLinkAction(
+  _previousState: ActionResult<ContractPacket>,
+  formData: FormData,
+): Promise<ActionResult<ContractPacket>> {
+  const parsed = contractShareLinkSchema.safeParse({
+    ...formDataToObject(formData),
+    inviteClient: formData.has("inviteClient"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the private signing link fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const packet = await createContractShareLinkService(user.id, parsed.data)
+    if (!packet) return fail("Contract signing link feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    if (packet.shareUrl) revalidatePath(packet.shareUrl)
+
+    return ok(packet, "Private contract signing link is ready to share with the client.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Contract signing link could not be prepared."))
+  }
+}
+
+export async function signContractShareAction(
+  _previousState: ActionResult<ContractPacket>,
+  formData: FormData,
+): Promise<ActionResult<ContractPacket>> {
+  const parsed = contractSignatureSchema.safeParse({
+    ...formDataToObject(formData),
+    consentToElectronicSignature: formData.has("consentToElectronicSignature"),
+    authorityCertification: formData.has("authorityCertification"),
+    recordsCertification: formData.has("recordsCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please complete the signing fields and certifications.", zodFieldErrors(parsed.error))
+  }
+
+  try {
+    const packet = await signContractShareService(parsed.data)
+    if (!packet) return fail("Contract signing link feature data is not available yet.")
+
+    revalidatePath(`/contract/${parsed.data.shareToken}`)
+    revalidatePath("/dashboard")
+
+    return ok(packet, "Signature recorded. The contractor can countersign and confirm payment timing.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Contract signature could not be recorded."))
   }
 }
 
