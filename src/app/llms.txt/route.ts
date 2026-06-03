@@ -1,5 +1,6 @@
 import { getSiteUrl } from "@/lib/env"
 import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
+import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 export const dynamic = "force-dynamic"
 
@@ -8,6 +9,9 @@ export async function GET() {
   const profiles = (await getPublicClientProfilesService()).filter((profile) => profile.isPublic).slice(0, 5)
   const profileLinks = profiles
     .map((profile) => `- [${profile.firstName} ${profile.lastName} client profile](${siteUrl}/client/${profile.publicSlug})`)
+    .join("\n")
+  const landingLinks = allSeoLandingPages
+    .map((page) => `- [${page.title}](${siteUrl}${page.canonicalPath})`)
     .join("\n")
 
   const body = `# Client Bureau
@@ -28,6 +32,10 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 - [Content Moderation Policy](${siteUrl}/moderation-policy)
 - [Privacy Policy](${siteUrl}/privacy)
 - [Terms of Service](${siteUrl}/terms)
+
+## Public Landing Pages
+
+${landingLinks}
 
 ## Public Client Profile Examples
 

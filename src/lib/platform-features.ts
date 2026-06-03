@@ -6,6 +6,7 @@ import type {
   ModerationCaseStatus,
   ModerationDecisionReason,
   ReportDraft,
+  WatchlistAlert,
 } from "@/lib/types"
 
 const requiredDraftFields: Array<keyof ReportDraft> = [
@@ -45,6 +46,19 @@ export function reportDraftCompletionPercentage(draft: ReportDraft) {
 
 export function countWatchlistAlerts(items: ContractorWatchlistItem[]) {
   return items.filter((item) => item.status === "active" && ["urgent", "high"].includes(item.alertLevel)).length
+}
+
+export function countUnreadMonitoringAlerts(alerts: WatchlistAlert[]) {
+  return alerts.filter((alert) => !alert.readAt && ["urgent", "high"].includes(alert.severity)).length
+}
+
+export function rankMonitoringAlerts(alerts: WatchlistAlert[]) {
+  return [...alerts].sort((a, b) => {
+    const aScore = priorityWeight[a.severity] ?? 1
+    const bScore = priorityWeight[b.severity] ?? 1
+
+    return bScore - aScore || b.createdAt.localeCompare(a.createdAt)
+  })
 }
 
 export function rankWatchlistItems(items: ContractorWatchlistItem[], clients: ClientProfile[]) {

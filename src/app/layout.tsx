@@ -22,15 +22,18 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Client Bureau | Contractor Client Reports",
+    default: "Client Bureau | Business Client Intelligence",
     template: "%s | Client Bureau",
   },
   description:
-    "Client Bureau helps contractors search clients, review contractor-submitted reports, and submit documented client experiences before accepting jobs.",
+    "Client Bureau helps business owners search clients, review moderated reports, and submit documented client experiences before accepting work.",
   keywords: [
     "Client Bureau",
     "contractor client reports",
     "client-risk intelligence",
+    "business client intelligence",
+    "business owner protection",
+    "client reporting network",
     "documented contractor experiences",
     "moderated client reports",
     "evidence on file",
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Client Bureau",
     description:
-      "Moderated client-risk intelligence for contractors before the job starts.",
+      "Moderated client-risk intelligence before the job starts.",
     url: getSiteUrl(),
     siteName: "Client Bureau",
     locale: "en_US",
@@ -49,7 +52,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Client Bureau",
     description:
-      "Moderated client-risk intelligence for contractors before the job starts.",
+      "Moderated client-risk intelligence before the job starts.",
   },
   robots: {
     index: true,

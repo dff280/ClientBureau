@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next"
 
 import { getSiteUrl } from "@/lib/env"
 import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
+import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 const siteUrl = getSiteUrl()
 
@@ -91,6 +92,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly" as const,
     priority: 0.9,
   }))
+  const landingRoutes = allSeoLandingPages.map((page) => ({
+    url: `${siteUrl}${page.canonicalPath}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: page.kind === "clients" ? 0.75 : 0.7,
+  }))
 
-  return [...publicRoutes, ...clientRoutes]
+  return [...publicRoutes, ...landingRoutes, ...clientRoutes]
 }

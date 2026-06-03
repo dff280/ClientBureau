@@ -35,6 +35,16 @@ export function ReportCard({ report }: { report: ClientReport }) {
             <p className="font-medium text-slate-900">{report.paymentStatus}</p>
           </div>
           <div>
+            <p className="text-xs font-semibold uppercase text-slate-500">Reported unpaid</p>
+            <p className="font-medium text-slate-900">{formatCurrency(report.amountUnpaid)}</p>
+          </div>
+        </div>
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
+          <div>
+            <p className="text-xs font-semibold uppercase text-slate-500">Resolution status</p>
+            <p className="font-medium text-slate-900">{report.resolutionStatus ?? "Unresolved"}</p>
+          </div>
+          <div>
             <p className="text-xs font-semibold uppercase text-slate-500">Evidence</p>
             <p className="inline-flex items-center gap-1 font-medium text-slate-900">
               <FileText className="size-4" aria-hidden="true" />
@@ -45,4 +55,12 @@ export function ReportCard({ report }: { report: ClientReport }) {
       </CardContent>
     </Card>
   )
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value)
 }

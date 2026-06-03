@@ -8,6 +8,31 @@ begin
     create type public.watchlist_status as enum ('active', 'cleared');
   end if;
 
+  if not exists (select 1 from pg_type where typname = 'watchlist_alert_event_type') then
+    create type public.watchlist_alert_event_type as enum (
+      'new_report',
+      'new_discussion',
+      'client_response',
+      'dispute_opened',
+      'case_resolved',
+      'risk_score_changed',
+      'payment_status_changed'
+    );
+  end if;
+
+  if not exists (select 1 from pg_type where typname = 'report_resolution_status') then
+    create type public.report_resolution_status as enum (
+      'Unresolved',
+      'Partially paid',
+      'Paid in full',
+      'Settled',
+      'Disputed',
+      'Resolved',
+      'Removed',
+      'Admin verified'
+    );
+  end if;
+
   if not exists (select 1 from pg_type where typname = 'report_draft_status') then
     create type public.report_draft_status as enum ('draft', 'ready_to_submit', 'submitted');
   end if;
@@ -36,6 +61,9 @@ begin
   end if;
 end $$;
 
+alter table public.client_reports
+  add column if not exists resolution_status public.report_resolution_status;
+
 create table if not exists public.contractor_watchlist_items (
   id uuid primary key default gen_random_uuid(),
   contractor_id uuid not null references public.contractor_profiles(id) on delete cascade,
@@ -47,6 +75,27 @@ create table if not exists public.contractor_watchlist_items (
   private_match boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
+);
+
+create table if not exists public.watchlist_alerts (
+  id uuid primary key default gen_random_uuid(),
+  contractor_id uuid not null references public.contractor_profiles(id) on delete cascade,
+  client_id uuid references public.client_profiles(id) on delete cascade,
+  profile_slug text,
+  event_type public.watchlist_alert_event_type not null,
+  title text not null,
+  description text not null,
+  severity public.moderation_priority not null default 'normal',
+  created_at timestamptz not null default now(),
+  read_at timestamptz
+);
+
+create table if not exists public.contractor_verification_badges (
+  id uuid primary key default gen_random_uuid(),
+  contractor_id uuid not null references public.contractor_profiles(id) on delete cascade,
+  label text not null,
+  verified_at timestamptz not null default now(),
+  expires_at timestamptz
 );
 
 create table if not exists public.report_drafts (
@@ -124,6 +173,12 @@ create table if not exists public.bulk_import_batches (
 create index if not exists contractor_watchlist_contractor_idx
   on public.contractor_watchlist_items(contractor_id, status, updated_at desc);
 
+create index if not exists watchlist_alerts_contractor_idx
+  on public.watchlist_alerts(contractor_id, severity, created_at desc);
+
+create index if not exists contractor_verification_badges_contractor_idx
+  on public.contractor_verification_badges(contractor_id, label);
+
 create index if not exists report_drafts_contractor_idx
   on public.report_drafts(contractor_id, status, updated_at desc);
 
@@ -137,6 +192,8 @@ create index if not exists moderation_cases_assignee_idx
   on public.moderation_cases(assigned_to, status);
 
 alter table public.contractor_watchlist_items enable row level security;
+alter table public.watchlist_alerts enable row level security;
+alter table public.contractor_verification_badges enable row level security;
 alter table public.report_drafts enable row level security;
 alter table public.client_intake_assessments enable row level security;
 alter table public.evidence_review_summaries enable row level security;
@@ -148,6 +205,28 @@ create policy "Contractors manage their watchlist"
 on public.contractor_watchlist_items for all
 using (public.is_admin() or contractor_id in (select id from public.contractor_profiles where user_id = auth.uid()))
 with check (public.is_admin() or contractor_id in (select id from public.contractor_profiles where user_id = auth.uid()));
+
+drop policy if exists "Contractors read their watchlist alerts" on public.watchlist_alerts;
+create policy "Contractors read their watchlist alerts"
+on public.watchlist_alerts for select
+using (public.is_admin() or contractor_id in (select id from public.contractor_profiles where user_id = auth.uid()));
+
+drop policy if exists "Admins manage watchlist alerts" on public.watchlist_alerts;
+create policy "Admins manage watchlist alerts"
+on public.watchlist_alerts for all
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "Contractors read verification badges" on public.contractor_verification_badges;
+create policy "Contractors read verification badges"
+on public.contractor_verification_badges for select
+using (public.is_admin() or contractor_id in (select id from public.contractor_profiles where user_id = auth.uid()));
+
+drop policy if exists "Admins manage verification badges" on public.contractor_verification_badges;
+create policy "Admins manage verification badges"
+on public.contractor_verification_badges for all
+using (public.is_admin())
+with check (public.is_admin());
 
 drop policy if exists "Contractors manage their report drafts" on public.report_drafts;
 create policy "Contractors manage their report drafts"

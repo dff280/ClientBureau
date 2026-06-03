@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto"
 
 import type { Database } from "@/lib/database.types"
-import { calculateClientBureauScore, disputeHistoryLabel, getScoreFactors, paymentReliabilityLabel } from "@/lib/scoring"
+import {
+  calculateClientBureauScore,
+  disputeHistoryLabel,
+  getReportedBalanceSummary,
+  getScoreCategoryBreakdown,
+  getScoreFactors,
+  paymentReliabilityLabel,
+} from "@/lib/scoring"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
 import type { ClientReportInput, ClientResponseInput } from "@/lib/schemas/client-bureau"
@@ -64,6 +71,12 @@ function mapContractorProfile(row: ContractorProfileRow): ContractorProfile {
     state: row.state,
     licenseNumber: row.license_number ?? undefined,
     verificationStatus: row.verification_status,
+    verificationBadges:
+      row.verification_status === "verified"
+        ? ["Verified business", "Verified email"]
+        : row.verification_status === "pending"
+          ? ["Verified email"]
+          : [],
     createdAt: row.created_at,
   }
 }
@@ -106,10 +119,25 @@ function mapClientReport(row: ClientReportRow): ClientReport {
     publicSummary: row.public_summary,
     evidenceAttached: row.evidence_attached,
     status: row.status,
+    resolutionStatus: inferResolutionStatus(row.payment_status, row.status, row.amount_unpaid),
     moderationNote: row.moderation_note ?? undefined,
     createdAt: row.created_at,
     approvedAt: row.approved_at ?? undefined,
   }
+}
+
+function inferResolutionStatus(paymentStatus: string, reportStatus: ClientReport["status"], amountUnpaid: number) {
+  const normalized = paymentStatus.toLowerCase()
+
+  if (reportStatus === "disputed") return "Disputed" as const
+  if (normalized.includes("settled")) return "Settled" as const
+  if (normalized.includes("resolved")) return "Resolved" as const
+  if (normalized.includes("paid in full") || (normalized.includes("paid") && amountUnpaid === 0)) {
+    return "Paid in full" as const
+  }
+  if (normalized.includes("partially paid") || normalized.includes("partial")) return "Partially paid" as const
+
+  return amountUnpaid > 0 ? "Unresolved" as const : "Admin verified" as const
 }
 
 function mapEvidence(row: ReportEvidenceRow): ReportEvidence {
@@ -493,6 +521,8 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
       .flatMap(reportTimeline)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     scoreFactors: getScoreFactors(reports),
+    scoreBreakdown: getScoreCategoryBreakdown(reports),
+    balanceSummary: getReportedBalanceSummary(reports),
     paymentReliability: paymentReliabilityLabel(profile.clientBureauScore),
     disputeHistory: disputeHistoryLabel(reports),
   }

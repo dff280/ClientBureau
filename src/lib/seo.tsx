@@ -14,7 +14,7 @@ export function getOrganizationSchema() {
     logo: `${siteUrl}/icon`,
     slogan: "Know who you're working with before the job starts.",
     description:
-      "Client Bureau is a moderated client-risk intelligence platform for contractors reviewing documented client reports before accepting work.",
+      "Client Bureau is a moderated client-risk intelligence platform for business owners reviewing documented client reports before accepting work.",
     ...(sameAs.length > 0 ? { sameAs } : {}),
   }
 }
@@ -47,7 +47,7 @@ export function getSoftwareApplicationSchema() {
     operatingSystem: "Web",
     url: siteUrl,
     description:
-      "Contractor client search, moderated report submission, evidence-on-file summaries, and client response workflows.",
+      "Business client search, moderated report submission, evidence-on-file summaries, and client response workflows.",
     offers: {
       "@type": "Offer",
       price: "0",

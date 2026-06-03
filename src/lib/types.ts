@@ -16,10 +16,34 @@ export const riskLevels = ["Low", "Moderate", "Elevated", "High"] as const
 export type ReportCategory = (typeof reportCategories)[number]
 export type RiskLevel = (typeof riskLevels)[number]
 export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
+export type ReportResolutionStatus =
+  | "Unresolved"
+  | "Partially paid"
+  | "Paid in full"
+  | "Settled"
+  | "Disputed"
+  | "Resolved"
+  | "Removed"
+  | "Admin verified"
 export type SubscriptionTier = "free" | "pro" | "bureau_team"
 export type UserRole = "contractor" | "admin"
 export type VerificationStatus = "unverified" | "pending" | "verified"
+export type VerificationBadge =
+  | "Verified business"
+  | "Verified identity"
+  | "Verified license"
+  | "Verified insurance"
+  | "Verified email"
+  | "Verified phone"
 export type WatchlistStatus = "active" | "cleared"
+export type WatchlistAlertEventType =
+  | "new_report"
+  | "new_discussion"
+  | "client_response"
+  | "dispute_opened"
+  | "case_resolved"
+  | "risk_score_changed"
+  | "payment_status_changed"
 export type ReportDraftStatus = "draft" | "ready_to_submit" | "submitted"
 export type EvidenceReviewStatus = "missing" | "uploaded" | "review_pending" | "reviewed" | "needs_more_info"
 export type ModerationPriority = "low" | "normal" | "high" | "urgent"
@@ -75,6 +99,7 @@ export interface ContractorProfile {
   state: string
   licenseNumber?: string
   verificationStatus: VerificationStatus
+  verificationBadges?: VerificationBadge[]
   createdAt: string
 }
 
@@ -108,6 +133,19 @@ export interface ContractorWatchlistItem {
   privateMatch: boolean
   createdAt: string
   updatedAt: string
+}
+
+export interface WatchlistAlert {
+  id: string
+  contractorId: string
+  clientId?: string
+  profileSlug?: string
+  eventType: WatchlistAlertEventType
+  title: string
+  description: string
+  severity: "low" | "normal" | "high" | "urgent"
+  createdAt: string
+  readAt?: string
 }
 
 export interface ReportDraft {
@@ -162,6 +200,7 @@ export interface ContractorActivityItem {
 
 export interface ContractorRiskOpsData {
   watchlist: ContractorWatchlistItem[]
+  watchlistAlerts: WatchlistAlert[]
   reportDrafts: ReportDraft[]
   intakeAssessments: ClientIntakeAssessment[]
   evidenceSummaries: EvidenceReviewSummary[]
@@ -185,6 +224,7 @@ export interface ClientReport {
   publicSummary: string
   evidenceAttached: boolean
   status: ReportStatus
+  resolutionStatus?: ReportResolutionStatus
   moderationNote?: string
   createdAt: string
   approvedAt?: string
@@ -213,6 +253,21 @@ export interface ScoreFactor {
   impact: number
   tone: "positive" | "negative" | "neutral"
   description: string
+}
+
+export interface ScoreCategoryBreakdown {
+  label: string
+  score: number
+  description: string
+  tone: "positive" | "neutral" | "warning" | "critical"
+}
+
+export interface ReportedBalanceSummary {
+  totalReportedUnpaid: number
+  unresolvedAmount: number
+  resolvedAmount: number
+  resolvedReportCount: number
+  openDisputeCount: number
 }
 
 export interface PublicationAudit {
@@ -394,6 +449,8 @@ export interface PublicClientProfile extends ClientProfile {
   evidence: ReportEvidence[]
   timeline: ReportTimelineEvent[]
   scoreFactors: ScoreFactor[]
+  scoreBreakdown: ScoreCategoryBreakdown[]
+  balanceSummary: ReportedBalanceSummary
   paymentReliability: string
   disputeHistory: string
 }

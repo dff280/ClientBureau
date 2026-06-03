@@ -1,4 +1,10 @@
-import type { ClientReport, RiskLevel, ScoreFactor } from "@/lib/types"
+import type {
+  ClientReport,
+  ReportedBalanceSummary,
+  RiskLevel,
+  ScoreCategoryBreakdown,
+  ScoreFactor,
+} from "@/lib/types"
 
 const categoryWeights: Record<ClientReport["reportCategory"], number> = {
   "Non-payment": -24,
@@ -95,6 +101,127 @@ export function getScoreFactors(reports: ClientReport[]): ScoreFactor[] {
           : "No active published dispute context is attached.",
     },
   ]
+}
+
+export function getReportedBalanceSummary(reports: ClientReport[]): ReportedBalanceSummary {
+  const reviewableReports = reports.filter((report) =>
+    ["approved", "disputed"].includes(report.status),
+  )
+  const resolvedStatuses = ["Paid in full", "Settled", "Resolved", "Admin verified"]
+  const resolvedReports = reviewableReports.filter((report) =>
+    report.resolutionStatus
+      ? resolvedStatuses.includes(report.resolutionStatus)
+      : ["paid", "settled", "resolved"].some((term) => report.paymentStatus.toLowerCase().includes(term)),
+  )
+  const disputedReports = reviewableReports.filter((report) =>
+    report.status === "disputed" || report.resolutionStatus === "Disputed",
+  )
+  const totalReportedUnpaid = reviewableReports.reduce((total, report) => total + report.amountUnpaid, 0)
+  const resolvedAmount = resolvedReports.reduce((total, report) => total + report.amountUnpaid, 0)
+
+  return {
+    totalReportedUnpaid,
+    resolvedAmount,
+    unresolvedAmount: Math.max(0, totalReportedUnpaid - resolvedAmount),
+    resolvedReportCount: resolvedReports.length,
+    openDisputeCount: disputedReports.length,
+  }
+}
+
+export function getScoreCategoryBreakdown(reports: ClientReport[]): ScoreCategoryBreakdown[] {
+  const reviewableReports = reports.filter((report) =>
+    ["approved", "disputed"].includes(report.status),
+  )
+  const balance = getReportedBalanceSummary(reviewableReports)
+  const positiveReports = reviewableReports.filter((report) =>
+    ["Positive experience", "Would work with again"].includes(report.reportCategory),
+  )
+  const evidenceCount = reviewableReports.filter((report) => report.evidenceAttached).length
+  const recentConcernCount = reviewableReports.filter((report) => {
+    const createdAt = new Date(report.approvedAt ?? report.createdAt).getTime()
+    const daysOld = (Date.now() - createdAt) / (1000 * 60 * 60 * 24)
+
+    return daysOld <= 180 && !["Positive experience", "Would work with again"].includes(report.reportCategory)
+  }).length
+  const reportVolumeScore = Math.max(30, Math.min(96, 92 - reviewableReports.length * 8 + positiveReports.length * 7))
+  const paymentScore = Math.max(24, Math.min(96, 92 - Math.round(balance.unresolvedAmount / 350)))
+  const disputeScore = Math.max(30, Math.min(96, 90 - balance.openDisputeCount * 18 + balance.resolvedReportCount * 8))
+  const evidenceScore = reviewableReports.length === 0
+    ? 72
+    : Math.max(45, Math.min(95, 60 + Math.round((evidenceCount / reviewableReports.length) * 35)))
+  const resolutionScore = Math.max(35, Math.min(96, 72 + balance.resolvedReportCount * 9 - balance.openDisputeCount * 10))
+  const recencyScore = Math.max(35, Math.min(96, 88 - recentConcernCount * 13 + positiveReports.length * 4))
+
+  return [
+    {
+      label: "Payment reliability",
+      score: paymentScore,
+      tone: toneForScore(paymentScore),
+      description:
+        balance.unresolvedAmount > 0
+          ? `$${balance.unresolvedAmount.toLocaleString()} remains represented as unresolved reported balance.`
+          : "Approved reports do not currently show an unresolved unpaid balance.",
+    },
+    {
+      label: "Dispute activity",
+      score: disputeScore,
+      tone: toneForScore(disputeScore),
+      description:
+        balance.openDisputeCount > 0
+          ? `${balance.openDisputeCount} active dispute or response context item${balance.openDisputeCount === 1 ? "" : "s"} is attached.`
+          : "No active published dispute context is attached.",
+    },
+    {
+      label: "Report volume",
+      score: reportVolumeScore,
+      tone: toneForScore(reportVolumeScore),
+      description: `${reviewableReports.length} approved or disputed public report${reviewableReports.length === 1 ? "" : "s"} contribute to this profile.`,
+    },
+    {
+      label: "Evidence confidence",
+      score: evidenceScore,
+      tone: toneForScore(evidenceScore),
+      description:
+        evidenceCount > 0
+          ? `${evidenceCount} report${evidenceCount === 1 ? " has" : "s have"} evidence reviewed privately.`
+          : "No public evidence summary is currently attached.",
+    },
+    {
+      label: "Resolution history",
+      score: resolutionScore,
+      tone: toneForScore(resolutionScore),
+      description:
+        balance.resolvedReportCount > 0
+          ? `${balance.resolvedReportCount} report${balance.resolvedReportCount === 1 ? " includes" : "s include"} resolved or paid context.`
+          : "No resolved report update is currently published.",
+    },
+    {
+      label: "Positive reports",
+      score: Math.max(45, Math.min(96, 70 + positiveReports.length * 10)),
+      tone: positiveReports.length > 0 ? "positive" : "neutral",
+      description:
+        positiveReports.length > 0
+          ? `${positiveReports.length} positive contractor report${positiveReports.length === 1 ? "" : "s"} support this profile.`
+          : "No approved positive reports are currently published.",
+    },
+    {
+      label: "Recency",
+      score: recencyScore,
+      tone: toneForScore(recencyScore),
+      description:
+        recentConcernCount > 0
+          ? `${recentConcernCount} concern report${recentConcernCount === 1 ? " is" : "s are"} recent enough to affect intake decisions.`
+          : "No recent concern reports are currently emphasized.",
+    },
+  ]
+}
+
+function toneForScore(score: number): ScoreCategoryBreakdown["tone"] {
+  if (score >= 80) return "positive"
+  if (score >= 65) return "neutral"
+  if (score >= 45) return "warning"
+
+  return "critical"
 }
 
 export function paymentReliabilityLabel(score: number) {

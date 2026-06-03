@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
 export const metadata: Metadata = {
-  title: "Pricing for Contractor Client Reports",
+  title: "Pricing for Client Risk Intelligence",
   description:
-    "Client Bureau pricing for contractors and teams that need moderated client-risk intelligence, documented reports, evidence workflows, and team controls.",
+    "Client Bureau pricing for business owners and teams that need moderated client-risk intelligence, watchlists, alerts, evidence workflows, and team controls.",
   alternates: {
     canonical: "/pricing",
   },
@@ -33,11 +33,12 @@ export default function PricingPage() {
         <div className="mx-auto max-w-3xl space-y-4 text-center">
           <p className="text-sm font-semibold uppercase text-amber-700">Pricing</p>
           <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-            Choose the level of client-risk intelligence your work needs.
+            Choose the level of client-risk intelligence your business needs.
           </h1>
           <p className="leading-7 text-slate-600">
-            Start with basic search and report submission. Upgrade when you need deeper client
-            review, watchlists, intake assessment, evidence workflows, team visibility, and faster moderation.
+            Start with basic search and report submission. Upgrade when client checks become part
+            of intake: watchlists, monitoring alerts, intake assessments, evidence workflows, team
+            visibility, and faster moderation.
           </p>
           <div className="inline-flex rounded-md border border-slate-200 bg-white p-1 text-sm font-semibold text-slate-600">
             <span className="rounded-sm bg-slate-950 px-4 py-2 text-white">Monthly</span>
@@ -56,7 +57,7 @@ export default function PricingPage() {
             <div className="border-b border-slate-200 p-6">
               <h2 className="text-2xl font-semibold text-slate-950">Feature comparison</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Plans are designed around search volume, report workflow depth, and team controls.
+                Plans are designed around search volume, monitoring, report workflow depth, and team controls.
               </p>
             </div>
             <div className="overflow-x-auto">

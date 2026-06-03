@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useActionState, useEffect, useMemo } from "react"
 import {
   AlertTriangle,
+  BellRing,
   ClipboardCheck,
   FileText,
   Gauge,
@@ -34,7 +35,9 @@ import {
 } from "@/lib/actions/client-bureau"
 import {
   countWatchlistAlerts,
+  countUnreadMonitoringAlerts,
   rankWatchlistItems,
+  rankMonitoringAlerts,
   reportDraftCompletionPercentage,
 } from "@/lib/platform-features"
 import type {
@@ -45,6 +48,7 @@ import type {
   ContractorRiskOpsData,
   ContractorWatchlistItem,
   ReportDraft,
+  WatchlistAlert,
 } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
@@ -64,7 +68,9 @@ export function RiskOpsWorkspace({
     () => rankWatchlistItems(riskOps.watchlist, clients),
     [clients, riskOps.watchlist],
   )
+  const rankedAlerts = useMemo(() => rankMonitoringAlerts(riskOps.watchlistAlerts), [riskOps.watchlistAlerts])
   const activeAlertCount = countWatchlistAlerts(riskOps.watchlist)
+  const unreadMonitoringAlerts = countUnreadMonitoringAlerts(riskOps.watchlistAlerts)
   const readyDrafts = riskOps.reportDrafts.filter((draft) => draft.status === "ready_to_submit").length
   const evidenceNeedingReview = riskOps.evidenceSummaries.filter((item) =>
     ["review_pending", "needs_more_info", "missing"].includes(item.status),
@@ -73,7 +79,7 @@ export function RiskOpsWorkspace({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 lg:grid-cols-4">
-        <RiskMetric label="Watchlist alerts" value={activeAlertCount} helper="High-priority client signals" tone="amber" />
+        <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="High-priority client signals" tone="amber" />
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Intake reviews" value={riskOps.intakeAssessments.length} helper="Recent pre-contract checks" tone="slate" />
@@ -128,6 +134,25 @@ export function RiskOpsWorkspace({
           </CardContent>
         </Card>
       </div>
+
+      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <BellRing className="size-5 text-amber-700" aria-hidden="true" />
+            Monitoring alerts
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 p-5 md:grid-cols-3">
+          {rankedAlerts.map((alert) => (
+            <MonitoringAlertCard key={alert.id} alert={alert} client={clients.find((client) => client.id === alert.clientId)} />
+          ))}
+          {rankedAlerts.length === 0 ? (
+            <div className="rounded-md border border-dashed border-slate-300 p-6 text-sm text-slate-600 md:col-span-3">
+              No monitoring alerts yet. Watch a client to track new reports, responses, disputes, score changes, and resolved-case updates.
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -278,6 +303,31 @@ function WatchlistCard({ item, client }: { item: ContractorWatchlistItem; client
           </PendingSubmitButton>
         </form>
       </div>
+    </div>
+  )
+}
+
+function MonitoringAlertCard({ alert, client }: { alert: WatchlistAlert; client?: ClientProfile }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className={cn("rounded-md text-white", alert.severity === "urgent" ? "bg-rose-700" : alert.severity === "high" ? "bg-amber-700" : "bg-slate-700")}>
+          {alert.severity}
+        </Badge>
+        <Badge variant="outline" className="rounded-md capitalize">
+          {alert.eventType.replaceAll("_", " ")}
+        </Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{alert.title}</h3>
+      <p className="mt-1 text-xs text-slate-500">
+        {client ? `${client.firstName} ${client.lastName} / ${client.city}, ${client.state}` : "Private match alert"}
+      </p>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{alert.description}</p>
+      {alert.profileSlug ? (
+        <Button asChild size="sm" variant="outline" className="mt-3">
+          <Link href={`/client/${alert.profileSlug}`}>Review profile</Link>
+        </Button>
+      ) : null}
     </div>
   )
 }

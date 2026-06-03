@@ -19,6 +19,7 @@ import type {
   SavedSearch,
   Subscription,
   User,
+  WatchlistAlert,
 } from "@/lib/types"
 
 export const users: User[] = [
@@ -48,6 +49,7 @@ export const contractorProfiles: ContractorProfile[] = [
     state: "FL",
     licenseNumber: "FL-CBC-49201",
     verificationStatus: "pending",
+    verificationBadges: ["Verified business", "Verified email", "Verified phone"],
     createdAt: "2026-02-03T14:00:00.000Z",
   },
 ]
@@ -143,6 +145,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report states that a final invoice remained partially unpaid after documented completion of a kitchen remodel.",
     evidenceAttached: true,
     status: "approved",
+    resolutionStatus: "Unresolved",
     moderationNote: "Published summary is limited to documented timeline and payment status.",
     createdAt: "2026-04-08T14:31:00.000Z",
     approvedAt: "2026-04-12T16:45:00.000Z",
@@ -165,6 +168,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report describes multiple change requests outside the original scope before payment was resolved.",
     evidenceAttached: true,
     status: "approved",
+    resolutionStatus: "Resolved",
     moderationNote: "Approved as a reported experience with payment resolved.",
     createdAt: "2026-03-06T09:10:00.000Z",
     approvedAt: "2026-03-10T11:40:00.000Z",
@@ -187,6 +191,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report describes clear communication and payment within the agreed invoice window.",
     evidenceAttached: false,
     status: "approved",
+    resolutionStatus: "Paid in full",
     createdAt: "2026-05-01T12:00:00.000Z",
     approvedAt: "2026-05-02T17:00:00.000Z",
   },
@@ -208,6 +213,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report says the project was organized and the invoice was paid before the due date.",
     evidenceAttached: false,
     status: "approved",
+    resolutionStatus: "Paid in full",
     createdAt: "2026-05-08T15:00:00.000Z",
     approvedAt: "2026-05-10T17:00:00.000Z",
   },
@@ -229,6 +235,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report states that a payment reversal was opened after completion documents were delivered.",
     evidenceAttached: true,
     status: "approved",
+    resolutionStatus: "Unresolved",
     moderationNote: "Public summary avoids intent claims and names only the reported payment event.",
     createdAt: "2026-02-11T16:45:00.000Z",
     approvedAt: "2026-02-15T10:20:00.000Z",
@@ -251,6 +258,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report says payment was received after multiple notices and a documented delay.",
     evidenceAttached: true,
     status: "disputed",
+    resolutionStatus: "Disputed",
     moderationNote: "Published with active dispute flag and right-of-response link.",
     createdAt: "2026-04-01T11:05:00.000Z",
   },
@@ -272,6 +280,7 @@ export const clientReports: ClientReport[] = [
       "A contractor-submitted report describes repeated access cancellations before work could begin.",
     evidenceAttached: true,
     status: "pending",
+    resolutionStatus: "Unresolved",
     createdAt: "2026-05-22T10:00:00.000Z",
   },
 ]
@@ -457,6 +466,43 @@ export const contractorWatchlist: ContractorWatchlistItem[] = [
     privateMatch: false,
     createdAt: "2026-05-14T12:00:00.000Z",
     updatedAt: "2026-05-28T15:45:00.000Z",
+  },
+]
+
+export const watchlistAlerts: WatchlistAlert[] = [
+  {
+    id: "alert_01",
+    contractorId: "contractor_01",
+    clientId: "client_01",
+    profileSlug: "john-smith-orlando-fl",
+    eventType: "payment_status_changed",
+    title: "Reported unpaid balance still unresolved",
+    description: "A watched Orlando profile still shows an unresolved reported balance before additional work is accepted.",
+    severity: "high",
+    createdAt: "2026-05-31T10:00:00.000Z",
+  },
+  {
+    id: "alert_02",
+    contractorId: "contractor_01",
+    clientId: "client_03",
+    profileSlug: "daniel-reed-austin-tx",
+    eventType: "dispute_opened",
+    title: "Dispute context attached",
+    description: "A watched profile has active response or dispute context. Review the public summary before scheduling.",
+    severity: "urgent",
+    createdAt: "2026-05-30T14:20:00.000Z",
+  },
+  {
+    id: "alert_03",
+    contractorId: "contractor_01",
+    clientId: "client_02",
+    profileSlug: "maria-alvarez-tampa-fl",
+    eventType: "case_resolved",
+    title: "Positive payment context available",
+    description: "A watched Tampa profile includes positive reports and paid-in-full context.",
+    severity: "normal",
+    createdAt: "2026-05-28T09:30:00.000Z",
+    readAt: "2026-05-29T09:30:00.000Z",
   },
 ]
 
@@ -682,6 +728,7 @@ export const bulkImportBatches: BulkImportBatch[] = [
 
 export const contractorRiskOps: ContractorRiskOpsData = {
   watchlist: contractorWatchlist,
+  watchlistAlerts,
   reportDrafts,
   intakeAssessments,
   evidenceSummaries: evidenceReviewSummaries,

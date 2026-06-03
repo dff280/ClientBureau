@@ -1,16 +1,25 @@
 import { describe, expect, it } from "vitest"
 
 import { formDataToObject } from "@/lib/actions/result"
+import sitemap from "@/app/sitemap"
+import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
 import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
-import { calculateClientBureauScore, scoreToRiskLevel } from "@/lib/scoring"
+import {
+  calculateClientBureauScore,
+  getReportedBalanceSummary,
+  getScoreCategoryBreakdown,
+  scoreToRiskLevel,
+} from "@/lib/scoring"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
   assignModerationCase,
+  countUnreadMonitoringAlerts,
   countWatchlistAlerts,
   filterModerationCases,
   intakeRiskRecommendation,
   isValidDecisionReason,
+  rankMonitoringAlerts,
   rankWatchlistItems,
   reportDraftCompletionPercentage,
 } from "@/lib/platform-features"
@@ -25,7 +34,9 @@ import {
   contractorWatchlist,
   moderationCases,
   reportDrafts,
+  watchlistAlerts,
 } from "@/lib/mock-data"
+import { allSeoLandingPages, getSeoLandingPage } from "@/lib/seo-landing-pages"
 import {
   intakeAssessmentSchema,
   moderationCaseAssignmentSchema,
@@ -75,6 +86,32 @@ describe("Client Bureau scoring", () => {
 
     expect(positive.score).toBeGreaterThan(nonPayment.score)
     expect(nonPayment.riskLevel).toBe("Elevated")
+  })
+
+  it("explains score categories and reported balances", () => {
+    const reports = [
+      {
+        ...baseReport,
+        id: "report_unresolved",
+        amountUnpaid: 3000,
+        reportCategory: "Non-payment" as const,
+        resolutionStatus: "Unresolved" as const,
+      },
+      {
+        ...baseReport,
+        id: "report_resolved",
+        amountUnpaid: 1200,
+        reportCategory: "Late payment" as const,
+        resolutionStatus: "Paid in full" as const,
+      },
+    ]
+    const balance = getReportedBalanceSummary(reports)
+    const categories = getScoreCategoryBreakdown(reports)
+
+    expect(balance.totalReportedUnpaid).toBe(4200)
+    expect(balance.unresolvedAmount).toBe(3000)
+    expect(categories.map((category) => category.label)).toContain("Payment reliability")
+    expect(categories).toHaveLength(7)
   })
 })
 
@@ -133,6 +170,40 @@ describe("search and public profiles", () => {
     expect(profile).toBeDefined()
     expect(profile?.reports.every((report) => ["approved", "disputed"].includes(report.status))).toBe(true)
     expect(JSON.stringify(profile)).not.toContain("@")
+  })
+
+  it("adds score breakdown and balance summaries to public profiles", () => {
+    const profile = getPublicClientProfile("john-smith-orlando-fl")
+
+    expect(profile?.scoreBreakdown.length).toBeGreaterThanOrEqual(6)
+    expect(profile?.balanceSummary.totalReportedUnpaid).toBe(4200)
+    expect(JSON.stringify(profile)).not.toContain("final-invoice.pdf")
+  })
+})
+
+describe("public SEO landing pages", () => {
+  it("defines the requested public landing page clusters", () => {
+    expect(getSeoLandingPage("clients", "florida")?.canonicalPath).toBe("/clients/florida")
+    expect(getSeoLandingPage("reports", "non-payment")?.reportCategory).toBe("Non-payment")
+    expect(getSeoLandingPage("industries", "service-businesses")?.title).toContain("Service Businesses")
+    expect(allSeoLandingPages.length).toBe(12)
+  })
+
+  it("includes SEO landing pages in the sitemap", async () => {
+    const urls = (await sitemap()).map((entry) => entry.url)
+
+    expect(urls).toContain("https://clientbureau.com/clients/florida")
+    expect(urls).toContain("https://clientbureau.com/reports/high-risk")
+    expect(urls).toContain("https://clientbureau.com/industries/contractors")
+  })
+
+  it("generates careful metadata for public client profiles", async () => {
+    const metadata = await generateClientProfileMetadata({
+      params: Promise.resolve({ slug: "john-smith-orlando-fl" }),
+    })
+
+    expect(String(metadata.title)).toContain("John Smith")
+    expect(String(metadata.description)).toContain("moderated contractor-submitted")
   })
 })
 
@@ -223,6 +294,13 @@ describe("platform expansion feature utilities", () => {
 
     expect(ranked[0]?.alertLevel).toBe("urgent")
     expect(countWatchlistAlerts(contractorWatchlist)).toBe(2)
+  })
+
+  it("ranks monitoring alerts and counts unread high-signal events", () => {
+    const ranked = rankMonitoringAlerts(watchlistAlerts)
+
+    expect(ranked[0]?.severity).toBe("urgent")
+    expect(countUnreadMonitoringAlerts(watchlistAlerts)).toBe(2)
   })
 
   it("calculates report draft completion percentage", () => {

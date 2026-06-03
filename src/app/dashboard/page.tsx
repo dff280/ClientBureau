@@ -207,6 +207,19 @@ export default async function DashboardPage() {
                     {dashboard.contractor.licenseNumber ?? "Not provided"}
                   </span>
                 </p>
+                <div>
+                  <p className="font-semibold text-slate-950">Verification badges</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {(dashboard.contractor.verificationBadges?.length
+                      ? dashboard.contractor.verificationBadges
+                      : ["Verified email"]
+                    ).map((badge) => (
+                      <span key={badge} className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
+                        {badge}
+                      </span>
+                    ))}
+                  </div>
+                </div>
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                   <p className="font-semibold text-slate-950">Security controls</p>
                   <p className="mt-1 text-xs leading-5 text-slate-500">

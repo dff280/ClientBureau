@@ -12,6 +12,7 @@ import {
   savedSearches,
   subscriptions,
   users,
+  watchlistAlerts,
 } from "@/lib/mock-data"
 import {
   assignModerationCase,
@@ -21,6 +22,8 @@ import {
 import {
   calculateClientBureauScore,
   disputeHistoryLabel,
+  getReportedBalanceSummary,
+  getScoreCategoryBreakdown,
   getScoreFactors,
   paymentReliabilityLabel,
 } from "@/lib/scoring"
@@ -145,6 +148,8 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
       b.createdAt.localeCompare(a.createdAt),
     ),
     scoreFactors: getScoreFactors(reviewableReports),
+    scoreBreakdown: getScoreCategoryBreakdown(reviewableReports),
+    balanceSummary: getReportedBalanceSummary(reviewableReports),
     paymentReliability: paymentReliabilityLabel(client.clientBureauScore),
     disputeHistory: disputeHistoryLabel(
       clientReports.filter((report) => report.clientId === client.id),
@@ -305,6 +310,7 @@ export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData 
 
   return {
     watchlist: contractorRiskOps.watchlist.filter((item) => item.contractorId === contractor.id),
+    watchlistAlerts: watchlistAlerts.filter((item) => item.contractorId === contractor.id),
     reportDrafts: contractorRiskOps.reportDrafts.filter((item) => item.contractorId === contractor.id),
     intakeAssessments: contractorRiskOps.intakeAssessments.filter((item) => item.contractorId === contractor.id),
     evidenceSummaries: contractorRiskOps.evidenceSummaries.filter((item) => item.contractorId === contractor.id),

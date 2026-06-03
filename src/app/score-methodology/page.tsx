@@ -16,6 +16,22 @@ export const metadata: Metadata = {
 
 const factors = [
   {
+    title: "Payment reliability",
+    text: "Reported unpaid balances, payment status, paid-in-full context, and unresolved amounts influence payment reliability.",
+  },
+  {
+    title: "Dispute activity",
+    text: "Active responses, disputes, correction requests, and moderation notes add context without declaring either party correct.",
+  },
+  {
+    title: "Evidence confidence",
+    text: "Evidence is reviewed privately. Public pages may summarize evidence types without exposing invoices, contracts, files, emails, or phone numbers.",
+  },
+  {
+    title: "Resolution history",
+    text: "Paid, settled, resolved, or admin-verified updates can improve context because outcomes matter alongside the original report.",
+  },
+  {
     title: "Approved report categories",
     text: "Categories such as late payment, non-payment, chargeback, and positive experience carry different weights after moderation.",
   },
@@ -24,20 +40,12 @@ const factors = [
     text: "Reported unpaid amounts, paid-after-follow-up notes, documented resolutions, and active dispute context influence the score.",
   },
   {
-    title: "Evidence-on-file signals",
-    text: "Evidence is reviewed privately. Public pages may summarize evidence types without exposing invoices, contracts, files, emails, or phone numbers.",
-  },
-  {
     title: "Report volume and recency",
     text: "Multiple approved reports may increase confidence. Newer reports and resolved items are weighed with additional context.",
   },
   {
     title: "Positive reports",
     text: "Approved positive experiences and would-work-with-again reports can improve the score and help profiles avoid one-sided presentation.",
-  },
-  {
-    title: "Responses and disputes",
-    text: "Client responses, correction requests, active disputes, and resolution updates are considered without declaring either side correct.",
   },
 ]
 
@@ -52,9 +60,9 @@ export default function ScoreMethodologyPage() {
               How the Client Bureau Score is interpreted.
             </h1>
             <p className="max-w-3xl leading-7 text-slate-600">
-              The score is a contractor-risk intelligence signal based on moderated,
-              contractor-submitted reports, evidence context, response history, and resolution
-              signals. It is designed to support judgment, not replace it.
+              The score is a client-risk intelligence signal based on moderated,
+              contractor-submitted reports, evidence context, response history, balance status,
+              positive reports, and resolution signals. It is designed to support judgment, not replace it.
             </p>
           </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">

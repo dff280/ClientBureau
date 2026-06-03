@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { CalendarClock, FilePlus2, HelpCircle, MessageSquareText, ShieldAlert, ShieldCheck } from "lucide-react"
+import { Banknote, CalendarClock, FilePlus2, HelpCircle, MessageSquareText, Share2, ShieldAlert, ShieldCheck } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
@@ -13,6 +13,7 @@ import { ScoreBreakdown } from "@/components/profile/score-breakdown"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
 import { getSiteUrl } from "@/lib/env"
@@ -50,6 +51,20 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
       description,
       url: `${siteUrl}/client/${profile.publicSlug}`,
       type: "profile",
+      images: [
+        {
+          url: `${siteUrl}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          alt: `Client Bureau profile summary for ${name} in ${location}`,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${siteUrl}/twitter-image`],
     },
     keywords: [
       name,
@@ -91,10 +106,8 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const concernReports = profile.reports.filter(
     (report) => !["Positive experience", "Would work with again"].includes(report.reportCategory),
   )
-  const openDisputes = profile.reports.filter((report) => report.status === "disputed").length
-  const resolvedReports = profile.reports.filter((report) =>
-    ["Paid", "resolved"].some((term) => report.paymentStatus.toLowerCase().includes(term.toLowerCase())),
-  ).length
+  const openDisputes = profile.balanceSummary.openDisputeCount
+  const resolvedReports = profile.balanceSummary.resolvedReportCount
   const evidenceSummary = summarizeEvidence(profile.evidence)
 
   return (
@@ -167,6 +180,10 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   <span className="font-semibold text-slate-950">{profile.reportCount}</span>
                 </div>
                 <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Reported unpaid</span>
+                  <span className="font-semibold text-slate-950">{formatCurrency(profile.balanceSummary.totalReportedUnpaid)}</span>
+                </div>
+                <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Open disputes</span>
                   <span className="font-semibold text-slate-950">{openDisputes}</span>
                 </div>
@@ -207,10 +224,46 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
           <div className="space-y-6">
             <div className="grid gap-3 md:grid-cols-4">
               <TrustMetric label="Approved reports" value={String(profile.reports.length)} />
-              <TrustMetric label="Open disputes" value={String(openDisputes)} />
-              <TrustMetric label="Resolved reports" value={String(resolvedReports)} />
+              <TrustMetric label="Reported unpaid" value={formatCurrency(profile.balanceSummary.totalReportedUnpaid)} />
+              <TrustMetric label="Resolved amount" value={formatCurrency(profile.balanceSummary.resolvedAmount)} />
               <TrustMetric label="Evidence" value={evidenceSummary.includes("Evidence on file") ? "On file" : "Private"} />
             </div>
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Banknote className="size-5 text-amber-700" aria-hidden="true" />
+                  Reported balance summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 md:grid-cols-4">
+                <BalanceFact label="Total reported unpaid" value={formatCurrency(profile.balanceSummary.totalReportedUnpaid)} />
+                <BalanceFact label="Currently unresolved" value={formatCurrency(profile.balanceSummary.unresolvedAmount)} />
+                <BalanceFact label="Resolved or paid context" value={formatCurrency(profile.balanceSummary.resolvedAmount)} />
+                <BalanceFact label="Resolution reports" value={String(resolvedReports)} />
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <HelpCircle className="size-5 text-amber-700" aria-hidden="true" />
+                  Why this score?
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 md:grid-cols-2">
+                {profile.scoreBreakdown.map((factor) => (
+                  <div key={factor.label} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <p className="font-semibold text-slate-950">{factor.label}</p>
+                      <span className="text-sm font-semibold text-slate-600">{factor.score}/100</span>
+                    </div>
+                    <Progress value={factor.score} className="mt-3" />
+                    <p className="mt-2 text-xs leading-5 text-slate-600">{factor.description}</p>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
 
             <div className="space-y-3">
               <h2 className="text-3xl font-semibold text-slate-950">Approved report summaries</h2>
@@ -311,6 +364,28 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
+                  <Share2 className="size-5 text-amber-700" aria-hidden="true" />
+                  Share-ready summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
+                <p className="font-semibold text-slate-950">
+                  {name} / {profile.city}, {profile.state}
+                </p>
+                <p>
+                  Risk level: <span className="font-semibold text-slate-950">{profile.riskLevel}</span>
+                </p>
+                <p>
+                  Reports: <span className="font-semibold text-slate-950">{profile.reports.length}</span>
+                </p>
+                <p>
+                  Profile language should stay limited to moderated Client Bureau context and reported experience summaries.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
                   <CalendarClock className="size-5 text-amber-700" aria-hidden="true" />
                   Evidence on file
                 </CardTitle>
@@ -358,6 +433,15 @@ function TrustMetric({ label, value }: { label: string; value: string }) {
   )
 }
 
+function BalanceFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-2 text-xl font-semibold text-slate-950">{value}</p>
+    </div>
+  )
+}
+
 function summarizeEvidence(evidence: { fileType: string; fileName: string }[]) {
   if (evidence.length === 0) return ["No public evidence files are displayed.", "Private uploads remain available only to moderators."]
 
@@ -372,4 +456,12 @@ function summarizeEvidence(evidence: { fileType: string; fileName: string }[]) {
 
   labels.add("Evidence on file")
   return Array.from(labels)
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value)
 }
