@@ -1,17 +1,18 @@
 import { NextResponse } from "next/server"
 
-import { getDataMode, getSiteUrl } from "@/lib/env"
+import { getDataMode } from "@/lib/env"
 import { createClient } from "@/lib/supabase/server"
+import { getInternalRedirectUrl } from "@/lib/urls"
 
-export async function GET() {
+export async function GET(request: Request) {
   if (getDataMode() === "supabase") {
     const supabase = await createClient()
     await supabase.auth.signOut()
   }
 
-  return NextResponse.redirect(`${getSiteUrl()}/login?loggedOut=true`)
+  return NextResponse.redirect(getInternalRedirectUrl("/login?loggedOut=true", request), { status: 303 })
 }
 
-export async function POST() {
-  return GET()
+export async function POST(request: Request) {
+  return GET(request)
 }

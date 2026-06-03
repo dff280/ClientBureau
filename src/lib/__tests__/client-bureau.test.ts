@@ -192,6 +192,14 @@ describe("deployment URL helpers", () => {
       "https://clientbureau.com/admin/reports",
     )
   })
+
+  it("preserves local request origins for same-browser logout redirects", () => {
+    const request = new Request("http://localhost:4000/api/auth/logout")
+
+    expect(getInternalRedirectUrl("/login?loggedOut=true", request).toString()).toBe(
+      "http://localhost:4000/login?loggedOut=true",
+    )
+  })
 })
 
 describe("search and public profiles", () => {
