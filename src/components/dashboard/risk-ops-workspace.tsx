@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   BellRing,
   ClipboardCheck,
+  FolderKanban,
   FileText,
   Gauge,
   Landmark,
@@ -17,6 +18,7 @@ import {
   Send,
   ShieldCheck,
   Signature,
+  Vault,
   XCircle,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -27,26 +29,42 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  createClientPipelineItemAction,
   createContractWorkspaceItemAction,
+  createContractPacketAction,
   createIntakeAssessmentAction,
   createLienNoticeDraftAction,
   createPaymentRecoveryCaseAction,
+  createPaymentPlanAction,
+  createRiskRoomAction,
   createWatchlistItemAction,
   deleteReportDraftAction,
+  logPaymentRecoveryAttemptAction,
   saveReportDraftAction,
+  updateClientPipelineStageAction,
+  updateContractPacketStatusAction,
+  updateEvidenceVaultStatusAction,
   updateWatchlistItemAction,
 } from "@/lib/actions/client-bureau"
 import {
+  buildTodaysWorkItems,
+  clientPipelineStages,
+  contractPacketCompletionPercentage,
   contractCompletionPercentage,
   countOpenRecoveryCases,
   countWatchlistAlerts,
   countUnreadMonitoringAlerts,
   lienNoticeReadinessLabel,
+  nextRecoveryAttemptAction,
+  paymentPlanCompletion,
+  pipelineStageCounts,
+  rankClientPipelineItems,
   rankWatchlistItems,
   rankMonitoringAlerts,
   reportDraftCompletionPercentage,
@@ -55,12 +73,18 @@ import type {
   ActionResult,
   AuditLogEntry,
   ClientIntakeAssessment,
+  ClientPipelineItem,
   ClientProfile,
+  ClientRiskRoom,
+  ContractPacket,
   ContractWorkspaceItem,
   ContractorRiskOpsData,
   ContractorWatchlistItem,
+  EvidenceVaultItem,
   LienNoticeDraft,
+  PaymentPlan,
   PaymentRecoveryCase,
+  PaymentRecoveryAttempt,
   ReportDraft,
   WatchlistAlert,
 } from "@/lib/types"
@@ -73,6 +97,12 @@ const intakeState: ActionResult<ClientIntakeAssessment> = { ok: false, message: 
 const recoveryState: ActionResult<PaymentRecoveryCase> = { ok: false, message: "" }
 const lienNoticeState: ActionResult<LienNoticeDraft> = { ok: false, message: "" }
 const contractState: ActionResult<ContractWorkspaceItem> = { ok: false, message: "" }
+const pipelineState: ActionResult<ClientPipelineItem> = { ok: false, message: "" }
+const riskRoomState: ActionResult<ClientRiskRoom> = { ok: false, message: "" }
+const recoveryAttemptState: ActionResult<PaymentRecoveryAttempt> = { ok: false, message: "" }
+const paymentPlanState: ActionResult<PaymentPlan> = { ok: false, message: "" }
+const contractPacketState: ActionResult<ContractPacket> = { ok: false, message: "" }
+const evidenceVaultState: ActionResult<EvidenceVaultItem> = { ok: false, message: "" }
 
 export function RiskOpsWorkspace({
   riskOps,
@@ -89,36 +119,146 @@ export function RiskOpsWorkspace({
   const activeAlertCount = countWatchlistAlerts(riskOps.watchlist)
   const unreadMonitoringAlerts = countUnreadMonitoringAlerts(riskOps.watchlistAlerts)
   const readyDrafts = riskOps.reportDrafts.filter((draft) => draft.status === "ready_to_submit").length
-  const evidenceNeedingReview = riskOps.evidenceSummaries.filter((item) =>
-    ["review_pending", "needs_more_info", "missing"].includes(item.status),
-  ).length
+  const evidenceNeedingReview =
+    riskOps.evidenceSummaries.filter((item) => ["review_pending", "needs_more_info", "missing"].includes(item.status))
+      .length +
+    riskOps.evidenceVault.filter((item) => ["review_pending", "needs_more_info", "uploaded"].includes(item.status))
+      .length
   const openRecoveryCases = countOpenRecoveryCases(riskOps.paymentRecoveryCases)
   const lienDraftsRequiringReview = riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length
+  const rankedPipeline = useMemo(() => rankClientPipelineItems(riskOps.clientPipeline), [riskOps.clientPipeline])
+  const stageCounts = useMemo(() => pipelineStageCounts(riskOps.clientPipeline), [riskOps.clientPipeline])
+  const todaysWork = useMemo(
+    () =>
+      buildTodaysWorkItems({
+        pipeline: riskOps.clientPipeline,
+        alerts: riskOps.watchlistAlerts,
+        drafts: riskOps.reportDrafts,
+        evidence: riskOps.evidenceVault,
+        recoveryCases: riskOps.paymentRecoveryCases,
+        contracts: riskOps.contractPackets,
+      }),
+    [riskOps],
+  )
+  const openPipelineItems = riskOps.clientPipeline.filter((item) => item.stage !== "closed").length
+  const openContractPackets = riskOps.contractPackets.filter((item) => !["signed", "archived"].includes(item.status)).length
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-8">
+        <RiskMetric label="Today" value={todaysWork.length} helper="Ranked work items" tone="slate" />
+        <RiskMetric label="Pipeline" value={openPipelineItems} helper="Open client records" tone="slate" />
         <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="High-priority client signals" tone="amber" />
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
-        <RiskMetric label="Intake reviews" value={riskOps.intakeAssessments.length} helper="Recent pre-contract checks" tone="slate" />
         <RiskMetric label="Recovery cases" value={openRecoveryCases} helper="Open payment follow-up" tone="amber" />
         <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="State-specific review" tone="rose" />
+        <RiskMetric label="Contracts" value={openContractPackets} helper="Packets before scheduling" tone="emerald" />
       </div>
 
-      <Tabs defaultValue="client-risk" className="space-y-5">
+      <Tabs defaultValue="overview" className="space-y-5">
         <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
-            <TabsTrigger value="client-risk" className="px-3 py-2">Client risk</TabsTrigger>
+            <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>
+            <TabsTrigger value="pipeline" className="px-3 py-2">Client Pipeline</TabsTrigger>
+            <TabsTrigger value="watchlist" className="px-3 py-2">Watchlist</TabsTrigger>
             <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
             <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
+            <TabsTrigger value="evidence" className="px-3 py-2">Evidence</TabsTrigger>
             <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
+            <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
             <TabsTrigger value="activity" className="px-3 py-2">Activity</TabsTrigger>
           </TabsList>
         </div>
 
-        <TabsContent value="client-risk" className="space-y-5">
+        <TabsContent value="overview" className="space-y-5">
+          <WorkspaceIntro
+            title="Today's risk operations"
+            text="A compressed work queue for urgent client signals, report drafts, recovery follow-up, evidence review, and contract packets."
+          />
+          <Accordion type="multiple" defaultValue={["today", "rooms"]} className="gap-4">
+            <AccordionItem value="today" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
+              <AccordionTrigger className="py-4 text-base font-semibold text-slate-950">
+                Today&apos;s Work
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="grid gap-3 md:grid-cols-2">
+                  {todaysWork.map((item) => (
+                    <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="rounded-md">{item.label}</Badge>
+                        <Badge className={cn("rounded-md text-white", priorityClass(item.tone))}>{item.tone}</Badge>
+                      </div>
+                      <p className="mt-3 font-semibold text-slate-950">{item.title}</p>
+                      <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+                    </div>
+                  ))}
+                  {todaysWork.length === 0 ? (
+                    <EmptyState
+                      title="No urgent work today"
+                      text="Client pipeline, reports, recovery, evidence, and contracts will appear here as records need attention."
+                    />
+                  ) : null}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+            <AccordionItem value="rooms" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
+              <AccordionTrigger className="py-4 text-base font-semibold text-slate-950">
+                Private Risk Rooms
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
+                  <RiskRoomForm clients={clients} />
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {riskOps.riskRooms.map((room) => (
+                      <RiskRoomCard key={room.id} room={room} />
+                    ))}
+                    {riskOps.riskRooms.length === 0 ? (
+                      <EmptyState
+                        title="No private risk rooms yet"
+                        text="Create one room per important client to group searches, reports, evidence, recovery notes, and contract packets."
+                      />
+                    ) : null}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </TabsContent>
+
+        <TabsContent value="pipeline" className="space-y-5">
+          <WorkspaceIntro
+            title="Client pipeline"
+            text="Track leads from first search through screening, contract, active work, payment follow-up, and closeout."
+          />
+          <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
+            <PipelineCreateForm clients={clients} />
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+                {clientPipelineStages.map((stage) => (
+                  <div key={stage} className="rounded-md border border-slate-200 bg-white p-3 shadow-sm">
+                    <p className="text-xs font-semibold uppercase text-slate-500">{stage.replaceAll("_", " ")}</p>
+                    <p className="mt-2 text-2xl font-semibold text-slate-950">{stageCounts[stage] ?? 0}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-3">
+                {rankedPipeline.map((item) => (
+                  <PipelineCard key={item.id} item={item} />
+                ))}
+                {rankedPipeline.length === 0 ? (
+                  <EmptyState
+                    title="No pipeline records yet"
+                    text="Create a client pipeline record from search, intake, report, recovery, or contract work."
+                  />
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="watchlist" className="space-y-5">
           <WorkspaceIntro
             title="Search, watch, and assess before scheduling"
             text="Use this workspace before accepting new work, approving change orders, or committing crew time."
@@ -183,6 +323,7 @@ export function RiskOpsWorkspace({
             </div>
           </CardContent>
         </Card>
+
           </div>
         </TabsContent>
 
@@ -262,6 +403,52 @@ export function RiskOpsWorkspace({
             </div>
           </CardContent>
         </Card>
+
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <PhoneCall className="size-5 text-amber-700" aria-hidden="true" />
+              Contact attempts
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
+            <RecoveryAttemptForm cases={riskOps.paymentRecoveryCases} />
+            <div className="space-y-3">
+              {riskOps.paymentRecoveryAttempts.map((item) => (
+                <RecoveryAttemptCard key={item.id} item={item} />
+              ))}
+              {riskOps.paymentRecoveryAttempts.length === 0 ? (
+                <EmptyState
+                  title="No contact attempts logged"
+                  text="Log factual emails, letters, calls, and client portal messages with outcome and follow-up dates."
+                />
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ClipboardCheck className="size-5 text-amber-700" aria-hidden="true" />
+              Payment plans
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
+            <PaymentPlanForm cases={riskOps.paymentRecoveryCases} />
+            <div className="space-y-3">
+              {riskOps.paymentPlans.map((item) => (
+                <PaymentPlanCard key={item.id} item={item} />
+              ))}
+              {riskOps.paymentPlans.length === 0 ? (
+                <EmptyState
+                  title="No payment plans tracked"
+                  text="Create proposed or accepted plans for private invoice recovery tracking."
+                />
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
           </div>
         </TabsContent>
 
@@ -292,6 +479,29 @@ export function RiskOpsWorkspace({
           </div>
         </CardContent>
       </Card>
+
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <FolderKanban className="size-5 text-amber-700" aria-hidden="true" />
+                Contract packets
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
+              <ContractPacketForm />
+              <div className="grid gap-3 md:grid-cols-2">
+                {riskOps.contractPackets.map((item) => (
+                  <ContractPacketCard key={item.id} item={item} />
+                ))}
+                {riskOps.contractPackets.length === 0 ? (
+                  <EmptyState
+                    title="No contract packets yet"
+                    text="Create contract packets for service agreements, change orders, payment plans, completion certificates, and notice packets."
+                  />
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
 
         </TabsContent>
 
@@ -372,6 +582,55 @@ export function RiskOpsWorkspace({
           </div>
         </TabsContent>
 
+        <TabsContent value="evidence" className="space-y-5">
+          <WorkspaceIntro
+            title="Private evidence vault"
+            text="Track invoices, screenshots, contracts, photos, and PDFs as private operational records. Public pages only show evidence summaries."
+          />
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Vault className="size-5 text-amber-700" aria-hidden="true" />
+                Evidence vault
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 p-5 md:grid-cols-2">
+              {riskOps.evidenceVault.map((item) => (
+                <EvidenceVaultCard key={item.id} item={item} />
+              ))}
+              {riskOps.evidenceVault.length === 0 ? (
+                <EmptyState
+                  title="No private evidence records yet"
+                  text="Uploaded invoices, screenshots, contracts, photos, and PDFs will appear here as private contractor/admin records."
+                />
+              ) : null}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="account" className="space-y-5">
+          <WorkspaceIntro
+            title="Account controls and safeguards"
+            text="Keep verification, security, privacy, and workflow readiness in one compact place."
+          />
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {[
+              ["Business verification", "Pending/verified profile status keeps report context accountable."],
+              ["Private matching", "Phone and email checks remain hashed and never appear on public pages."],
+              ["2FA-ready sign-in", "The account model is ready for stronger authentication prompts."],
+              ["Compliance gates", "Recovery, lien, and contract workflows stay private until reviewed."],
+            ].map(([title, text]) => (
+              <Card key={title} className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardContent className="space-y-3 p-5">
+                  <ShieldCheck className="size-6 text-amber-700" aria-hidden="true" />
+                  <h3 className="font-semibold text-slate-950">{title}</h3>
+                  <p className="text-sm leading-6 text-slate-600">{text}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
         <TabsContent value="activity" className="space-y-5">
           <WorkspaceIntro
             title="Recent operations activity"
@@ -412,6 +671,151 @@ function WorkspaceIntro({ title, text }: { title: string; text: string }) {
       <p className="text-xs font-semibold uppercase text-amber-700">Workspace</p>
       <h2 className="mt-1 text-xl font-semibold text-slate-950">{title}</h2>
       <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
+function PipelineCreateForm({ clients }: { clients: ClientProfile[] }) {
+  const [state, action] = useActionState(createClientPipelineItemAction, pipelineState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <select name="clientId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="">No matched profile yet</option>
+        {clients.map((client) => (
+          <option key={client.id} value={client.id}>
+            {client.firstName} {client.lastName} / {client.city}, {client.state}
+          </option>
+        ))}
+      </select>
+      <Input name="clientName" placeholder="Client name" />
+      <div className="grid gap-3 sm:grid-cols-[1fr_80px]">
+        <Input name="city" placeholder="City" />
+        <Input name="state" placeholder="FL" className="uppercase" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <select name="stage" defaultValue="screening" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          {clientPipelineStages.map((stage) => (
+            <option key={stage} value={stage}>{stage.replaceAll("_", " ")}</option>
+          ))}
+        </select>
+        <select name="priority" defaultValue="normal" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="low">Low</option>
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="urgent">Urgent</option>
+        </select>
+      </div>
+      <Input name="estimatedValue" type="number" placeholder="Estimated value" />
+      <Input name="dueAt" type="datetime-local" aria-label="Due date" />
+      <Textarea name="nextAction" placeholder="Next action before scheduling or collecting payment" className="min-h-20" />
+      <label className="flex items-center gap-2 text-sm text-slate-700">
+        <Checkbox name="privateMatch" />
+        Private match reviewed
+      </label>
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <FolderKanban aria-hidden="true" />
+        Create pipeline item
+      </PendingSubmitButton>
+      <FieldError name="clientName" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function PipelineCard({ item }: { item: ClientPipelineItem }) {
+  const [state, action] = useActionState(updateClientPipelineStageAction, pipelineState)
+
+  useToastState(state)
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="grid gap-4 lg:grid-cols-[1fr_260px] lg:items-start">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className={cn("rounded-md text-white", priorityClass(item.priority))}>{item.priority}</Badge>
+            <Badge variant="outline" className="rounded-md capitalize">{item.stage.replaceAll("_", " ")}</Badge>
+            {item.privateMatch ? <Badge variant="secondary" className="rounded-md">Private match</Badge> : null}
+          </div>
+          <h3 className="mt-3 text-lg font-semibold text-slate-950">{item.clientName}</h3>
+          <p className="mt-1 text-sm text-slate-500">
+            {item.city}, {item.state} / ${item.estimatedValue.toLocaleString()}
+          </p>
+          <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
+          <p className="mt-2 text-xs text-slate-500">
+            Due: {item.dueAt ? new Date(item.dueAt).toLocaleString() : "No due date set"}
+          </p>
+        </div>
+        <form action={action} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <input type="hidden" name="itemId" value={item.id} />
+          <p className="text-xs font-semibold uppercase text-slate-500">Move stage</p>
+          <select name="stage" defaultValue={item.stage} className="mt-2 h-10 w-full rounded-md border border-input bg-white px-3 text-sm">
+            {clientPipelineStages.map((stage) => (
+              <option key={stage} value={stage}>{stage.replaceAll("_", " ")}</option>
+            ))}
+          </select>
+          <PendingSubmitButton pendingText="Moving..." variant="outline" className="mt-2 w-full">
+            Update stage
+          </PendingSubmitButton>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+function RiskRoomForm({ clients }: { clients: ClientProfile[] }) {
+  const [state, action] = useActionState(createRiskRoomAction, riskRoomState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <select name="clientId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="">Private unmatched client</option>
+        {clients.map((client) => (
+          <option key={client.id} value={client.id}>
+            {client.firstName} {client.lastName}
+          </option>
+        ))}
+      </select>
+      <Input name="clientName" placeholder="Client name" />
+      <div className="grid gap-3 sm:grid-cols-[1fr_80px]">
+        <Input name="city" placeholder="City" />
+        <Input name="state" placeholder="FL" className="uppercase" />
+      </div>
+      <Input name="headline" placeholder="Private room headline" />
+      <Textarea name="summary" placeholder="Decision context, linked workflow notes, and next risk controls" className="min-h-24" />
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <PlusCircle aria-hidden="true" />
+        Create risk room
+      </PendingSubmitButton>
+      <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function RiskRoomCard({ room }: { room: ClientRiskRoom }) {
+  const linkedCount =
+    room.linkedSearchIds.length +
+    room.linkedWatchlistIds.length +
+    room.linkedAssessmentIds.length +
+    room.linkedContractIds.length +
+    room.linkedReportDraftIds.length +
+    room.linkedEvidenceIds.length +
+    room.linkedRecoveryIds.length +
+    room.linkedResolutionIds.length
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <Badge variant="outline" className="rounded-md">Private room</Badge>
+      <h3 className="mt-3 font-semibold text-slate-950">{room.clientName}</h3>
+      <p className="mt-1 text-xs text-slate-500">
+        {room.city}, {room.state} / {linkedCount} linked records
+      </p>
+      <p className="mt-3 text-sm font-semibold text-slate-950">{room.headline}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{room.summary}</p>
+      <p className="mt-3 text-xs text-slate-500">Updated {new Date(room.lastActivityAt).toLocaleDateString()}</p>
     </div>
   )
 }
@@ -694,6 +1098,124 @@ function PaymentRecoveryCard({ item }: { item: PaymentRecoveryCase }) {
   )
 }
 
+function RecoveryAttemptForm({ cases }: { cases: PaymentRecoveryCase[] }) {
+  const [state, action] = useActionState(logPaymentRecoveryAttemptAction, recoveryAttemptState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <select name="recoveryCaseId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        {cases.map((item) => (
+          <option key={item.id} value={item.id}>{item.clientName} / ${item.amountDue.toLocaleString()}</option>
+        ))}
+      </select>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <select name="channel" defaultValue="phone" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="email">Email</option>
+          <option value="phone">Phone call</option>
+          <option value="letter">Letter</option>
+          <option value="client_portal">Client portal</option>
+        </select>
+        <select name="outcome" defaultValue="needs_follow_up" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="no_response">No response</option>
+          <option value="client_responded">Client responded</option>
+          <option value="payment_promised">Payment promised</option>
+          <option value="payment_received">Payment received</option>
+          <option value="dispute_raised">Dispute raised</option>
+          <option value="needs_follow_up">Needs follow-up</option>
+        </select>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="attemptedAt" type="datetime-local" aria-label="Attempted at" />
+        <Input name="nextFollowUpAt" type="datetime-local" aria-label="Next follow-up" />
+      </div>
+      <Textarea name="note" placeholder="Factual call, email, letter, or portal-message note" className="min-h-20" />
+      <PendingSubmitButton pendingText="Logging..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <PhoneCall aria-hidden="true" />
+        Log attempt
+      </PendingSubmitButton>
+      <FieldError name="note" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function RecoveryAttemptCard({ item }: { item: PaymentRecoveryAttempt }) {
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md capitalize">{item.channel.replaceAll("_", " ")}</Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">{item.outcome.replaceAll("_", " ")}</Badge>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.note}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Attempted {new Date(item.attemptedAt).toLocaleString()}
+        {item.nextFollowUpAt ? ` / Follow up ${new Date(item.nextFollowUpAt).toLocaleString()}` : ""}
+      </p>
+      <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+        {nextRecoveryAttemptAction(item)}
+      </div>
+    </div>
+  )
+}
+
+function PaymentPlanForm({ cases }: { cases: PaymentRecoveryCase[] }) {
+  const [state, action] = useActionState(createPaymentPlanAction, paymentPlanState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <select name="recoveryCaseId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        {cases.map((item) => (
+          <option key={item.id} value={item.id}>{item.clientName} / ${item.amountDue.toLocaleString()}</option>
+        ))}
+      </select>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="totalAmount" type="number" placeholder="Total amount" />
+        <Input name="installmentAmount" type="number" placeholder="Installment amount" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="dueDay" type="number" placeholder="Due day" />
+        <Input name="nextDueDate" type="date" aria-label="Next due date" />
+      </div>
+      <select name="status" defaultValue="proposed" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="proposed">Proposed</option>
+        <option value="accepted">Accepted</option>
+        <option value="active">Active</option>
+        <option value="completed">Completed</option>
+        <option value="missed">Missed</option>
+        <option value="paused">Paused</option>
+      </select>
+      <Textarea name="notes" placeholder="Payment plan terms and response notes" className="min-h-20" />
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        Create plan
+      </PendingSubmitButton>
+      <FieldError name="installmentAmount" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function PaymentPlanCard({ item }: { item: PaymentPlan }) {
+  const completion = paymentPlanCompletion(item)
+
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md capitalize">{item.status}</Badge>
+        <Badge variant="secondary" className="rounded-md">${item.installmentAmount.toLocaleString()} installments</Badge>
+      </div>
+      <Progress value={completion} className="mt-4" />
+      <p className="mt-2 text-xs text-slate-500">{completion}% tracking readiness</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.notes}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Total ${item.totalAmount.toLocaleString()} / due day {item.dueDay}
+        {item.nextDueDate ? ` / next ${item.nextDueDate}` : ""}
+      </p>
+    </div>
+  )
+}
+
 function LienNoticeDraftForm() {
   const [state, action] = useActionState(createLienNoticeDraftAction, lienNoticeState)
 
@@ -814,6 +1336,114 @@ function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
   )
 }
 
+function ContractPacketForm() {
+  const [state, action] = useActionState(createContractPacketAction, contractPacketState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <Input name="clientName" placeholder="Client name" />
+      <Input name="projectType" placeholder="Project type" />
+      <select name="templateType" defaultValue="service_agreement" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="service_agreement">Service agreement</option>
+        <option value="change_order">Change order</option>
+        <option value="payment_plan">Payment plan</option>
+        <option value="completion_certificate">Completion certificate</option>
+        <option value="notice_of_nonpayment">Notice of non-payment</option>
+      </select>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="packetValue" type="number" placeholder="Packet value" />
+        <Input name="depositRequired" type="number" placeholder="Deposit required" />
+      </div>
+      <Input name="milestoneCount" type="number" placeholder="Milestone count" />
+      <Textarea name="nextAction" placeholder="Next contract action before scheduling" className="min-h-20" />
+      <label className="flex items-center gap-2 text-sm text-slate-700">
+        <Checkbox name="requiredBeforeScheduling" />
+        Required before scheduling
+      </label>
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Signature aria-hidden="true" />
+        Create packet
+      </PendingSubmitButton>
+      <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function ContractPacketCard({ item }: { item: ContractPacket }) {
+  const [state, action] = useActionState(updateContractPacketStatusAction, contractPacketState)
+  const completion = contractPacketCompletionPercentage(item)
+
+  useToastState(state)
+
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md capitalize">{item.status.replaceAll("_", " ")}</Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">{item.templateType.replaceAll("_", " ")}</Badge>
+        {item.requiredBeforeScheduling ? <Badge className="rounded-md bg-amber-700 text-white">Before scheduling</Badge> : null}
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {item.projectType} / ${item.packetValue.toLocaleString()} / deposit ${item.depositRequired.toLocaleString()}
+      </p>
+      <Progress value={completion} className="mt-4" />
+      <p className="mt-2 text-xs text-slate-500">{completion}% packet readiness / {item.milestoneCount} milestones</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
+      <form action={action} className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+        <input type="hidden" name="packetId" value={item.id} />
+        <select name="status" defaultValue={item.status} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="draft">Draft</option>
+          <option value="review_ready">Review ready</option>
+          <option value="sent">Sent</option>
+          <option value="signed">Signed</option>
+          <option value="expired">Expired</option>
+          <option value="archived">Archived</option>
+        </select>
+        <PendingSubmitButton pendingText="Saving..." variant="outline">
+          Update
+        </PendingSubmitButton>
+      </form>
+    </div>
+  )
+}
+
+function EvidenceVaultCard({ item }: { item: EvidenceVaultItem }) {
+  const [state, action] = useActionState(updateEvidenceVaultStatusAction, evidenceVaultState)
+
+  useToastState(state)
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md capitalize">{item.fileCategory}</Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">{item.status.replaceAll("_", " ")}</Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.label}</h3>
+      <p className="mt-1 text-sm text-slate-500">{item.clientName}</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.publicSummary}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Private storage path is hidden from public pages. Uploaded {new Date(item.uploadedAt).toLocaleDateString()}.
+      </p>
+      <form action={action} className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+        <input type="hidden" name="evidenceId" value={item.id} />
+        <select name="status" defaultValue={item.status} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="uploaded">Uploaded</option>
+          <option value="mapped">Mapped</option>
+          <option value="review_pending">Review pending</option>
+          <option value="reviewed">Reviewed</option>
+          <option value="needs_more_info">Needs more info</option>
+          <option value="archived">Archived</option>
+        </select>
+        <PendingSubmitButton pendingText="Saving..." variant="outline">
+          Update
+        </PendingSubmitButton>
+      </form>
+    </div>
+  )
+}
+
 function RiskMetric({
   label,
   value,
@@ -853,7 +1483,7 @@ function EmptyState({ title, text }: { title: string; text: string }) {
   )
 }
 
-function priorityClass(priority: PaymentRecoveryCase["priority"]) {
+function priorityClass(priority: string) {
   if (priority === "urgent") return "bg-rose-700"
   if (priority === "high") return "bg-amber-700"
   if (priority === "low") return "bg-slate-500"

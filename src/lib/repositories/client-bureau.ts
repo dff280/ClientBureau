@@ -30,29 +30,46 @@ import {
 } from "@/lib/scoring"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import type {
+  AdminSavedViewInput,
+  ClientPipelineItemInput,
+  ClientRiskRoomInput,
   ClientReportInput,
   ContractWorkspaceItemInput,
+  ContractPacketInput,
   LienNoticeDraftInput,
   PaymentRecoveryCaseInput,
+  PaymentRecoveryAttemptInput,
+  PaymentPlanInput,
+  RecoveryComplianceReviewInput,
+  UpdateContractPacketStatusInput,
+  UpdateEvidenceVaultStatusInput,
 } from "@/lib/schemas/client-bureau"
 import type {
+  AdminSavedView,
   AdminReview,
   AdminWorkspaceData,
   AuditLogEntry,
+  ClientPipelineItem,
   ClientProfile,
   ClientReport,
+  ClientRiskRoom,
   ClientSearchResult,
   CommunityDiscussion,
+  ContractPacket,
   ContractWorkspaceItem,
   ContractorRiskOpsData,
   DiscussionStatus,
+  EvidenceVaultItem,
   LienNoticeDraft,
   ModerationCase,
   ModerationDecisionReason,
   ModerationPriority,
   ModerationCaseStatus,
+  PaymentPlan,
   PaymentRecoveryCase,
+  PaymentRecoveryAttempt,
   PublicationAudit,
+  RecoveryComplianceReview,
   PublicClientProfile,
   ReportDraft,
   ReportDraftStatus,
@@ -318,14 +335,20 @@ export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData 
   if (!contractor) return undefined
 
   return {
+    clientPipeline: contractorRiskOps.clientPipeline.filter((item) => item.contractorId === contractor.id),
+    riskRooms: contractorRiskOps.riskRooms.filter((item) => item.contractorId === contractor.id),
     watchlist: contractorRiskOps.watchlist.filter((item) => item.contractorId === contractor.id),
     watchlistAlerts: watchlistAlerts.filter((item) => item.contractorId === contractor.id),
     reportDrafts: contractorRiskOps.reportDrafts.filter((item) => item.contractorId === contractor.id),
     intakeAssessments: contractorRiskOps.intakeAssessments.filter((item) => item.contractorId === contractor.id),
     evidenceSummaries: contractorRiskOps.evidenceSummaries.filter((item) => item.contractorId === contractor.id),
+    evidenceVault: contractorRiskOps.evidenceVault.filter((item) => item.contractorId === contractor.id),
     paymentRecoveryCases: contractorRiskOps.paymentRecoveryCases.filter((item) => item.contractorId === contractor.id),
+    paymentRecoveryAttempts: contractorRiskOps.paymentRecoveryAttempts.filter((item) => item.contractorId === contractor.id),
+    paymentPlans: contractorRiskOps.paymentPlans.filter((item) => item.contractorId === contractor.id),
     lienNoticeDrafts: contractorRiskOps.lienNoticeDrafts.filter((item) => item.contractorId === contractor.id),
     contractDocuments: contractorRiskOps.contractDocuments.filter((item) => item.contractorId === contractor.id),
+    contractPackets: contractorRiskOps.contractPackets.filter((item) => item.contractorId === contractor.id),
     activity: contractorRiskOps.activity.filter((item) => item.contractorId === contractor.id),
     recommendedActions: contractorRiskOps.recommendedActions,
   }
@@ -540,6 +563,186 @@ export function createContractWorkspaceItem(
     status: "draft",
     nextStep,
     summary: input.summary,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createClientPipelineItem(
+  contractorId: string,
+  input: ClientPipelineItemInput,
+): ClientPipelineItem {
+  const now = new Date().toISOString()
+
+  return {
+    id: `pipeline_${Date.now()}`,
+    contractorId,
+    clientId: input.clientId,
+    clientName: input.clientName,
+    city: input.city,
+    state: input.state.toUpperCase(),
+    stage: input.stage,
+    priority: input.priority,
+    estimatedValue: input.estimatedValue,
+    nextAction: input.nextAction,
+    dueAt: input.dueAt,
+    privateMatch: Boolean(input.privateMatch),
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function updateClientPipelineStage(itemId: string, stage: ClientPipelineItem["stage"]): ClientPipelineItem {
+  const existing = contractorRiskOps.clientPipeline.find((item) => item.id === itemId)
+  const now = new Date().toISOString()
+
+  return {
+    ...(existing ?? contractorRiskOps.clientPipeline[0]),
+    id: itemId,
+    stage,
+    updatedAt: now,
+    nextAction:
+      stage === "closed"
+        ? "Archive final project records and any resolution context."
+        : existing?.nextAction ?? "Review the next client intake step.",
+  }
+}
+
+export function createClientRiskRoom(contractorId: string, input: ClientRiskRoomInput): ClientRiskRoom {
+  const now = new Date().toISOString()
+
+  return {
+    id: `risk_room_${Date.now()}`,
+    contractorId,
+    clientId: input.clientId,
+    clientName: input.clientName,
+    city: input.city,
+    state: input.state.toUpperCase(),
+    headline: input.headline,
+    summary: input.summary,
+    linkedSearchIds: [],
+    linkedWatchlistIds: [],
+    linkedAssessmentIds: [],
+    linkedContractIds: [],
+    linkedReportDraftIds: [],
+    linkedEvidenceIds: [],
+    linkedRecoveryIds: [],
+    linkedResolutionIds: [],
+    lastActivityAt: now,
+    createdAt: now,
+  }
+}
+
+export function logPaymentRecoveryAttempt(
+  contractorId: string,
+  input: PaymentRecoveryAttemptInput,
+): PaymentRecoveryAttempt {
+  const now = new Date().toISOString()
+
+  return {
+    id: `recovery_attempt_${Date.now()}`,
+    recoveryCaseId: input.recoveryCaseId,
+    contractorId,
+    channel: input.channel,
+    attemptedAt: input.attemptedAt,
+    outcome: input.outcome,
+    note: input.note,
+    nextFollowUpAt: input.nextFollowUpAt,
+    createdAt: now,
+  }
+}
+
+export function createPaymentPlan(contractorId: string, input: PaymentPlanInput): PaymentPlan {
+  const now = new Date().toISOString()
+
+  return {
+    id: `payment_plan_${Date.now()}`,
+    recoveryCaseId: input.recoveryCaseId,
+    contractorId,
+    totalAmount: input.totalAmount,
+    installmentAmount: input.installmentAmount,
+    dueDay: input.dueDay,
+    status: input.status,
+    nextDueDate: input.nextDueDate,
+    notes: input.notes,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createContractPacket(contractorId: string, input: ContractPacketInput): ContractPacket {
+  const now = new Date().toISOString()
+
+  return {
+    id: `contract_packet_${Date.now()}`,
+    contractorId,
+    clientName: input.clientName,
+    projectType: input.projectType,
+    templateType: input.templateType,
+    status: input.requiredBeforeScheduling ? "review_ready" : "draft",
+    packetValue: input.packetValue,
+    depositRequired: input.depositRequired,
+    milestoneCount: input.milestoneCount,
+    requiredBeforeScheduling: Boolean(input.requiredBeforeScheduling),
+    nextAction: input.nextAction,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function updateContractPacketStatus(input: UpdateContractPacketStatusInput): ContractPacket {
+  const existing = contractorRiskOps.contractPackets.find((item) => item.id === input.packetId)
+
+  return {
+    ...(existing ?? contractorRiskOps.contractPackets[0]),
+    id: input.packetId,
+    status: input.status,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function updateEvidenceVaultStatus(input: UpdateEvidenceVaultStatusInput): EvidenceVaultItem {
+  const existing = contractorRiskOps.evidenceVault.find((item) => item.id === input.evidenceId)
+
+  return {
+    ...(existing ?? contractorRiskOps.evidenceVault[0]),
+    id: input.evidenceId,
+    status: input.status,
+    updatedAt: new Date().toISOString(),
+  }
+}
+
+export function saveAdminQueueView(adminId: string, input: AdminSavedViewInput): AdminSavedView {
+  return {
+    id: `saved_view_${Date.now()}`,
+    scope: input.scope,
+    name: input.name,
+    filters: { summary: input.filterSummary },
+    isDefault: Boolean(input.isDefault),
+    createdBy: adminId,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export function reviewRecoveryCompliance(
+  adminId: string,
+  input: RecoveryComplianceReviewInput,
+): RecoveryComplianceReview {
+  const now = new Date().toISOString()
+
+  return {
+    id: `compliance_${Date.now()}`,
+    recoveryCaseId: input.recoveryCaseId,
+    lienNoticeDraftId: input.lienNoticeDraftId,
+    contractPacketId: input.contractPacketId,
+    reviewerId: adminId,
+    status: input.status,
+    decisionReason: input.decisionReason,
+    requiredChanges: (input.requiredChanges ?? "")
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean),
+    publicVisibilityAllowed: Boolean(input.publicVisibilityAllowed),
     createdAt: now,
     updatedAt: now,
   }

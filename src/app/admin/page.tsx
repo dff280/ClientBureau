@@ -3,7 +3,9 @@ import type React from "react"
 import Link from "next/link"
 import {
   ClipboardCheck,
+  FileText,
   Landmark,
+  History,
   MessageSquareText,
   PhoneCall,
   Settings,
@@ -13,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
+import { AdminOpsExpansion } from "@/components/admin/admin-ops-expansion"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -88,9 +91,15 @@ export default async function AdminHomePage() {
           <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
             <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
               <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>
-              <TabsTrigger value="moderation" className="px-3 py-2">Moderation</TabsTrigger>
-              <TabsTrigger value="safeguards" className="px-3 py-2">Safeguards</TabsTrigger>
-              <TabsTrigger value="system" className="px-3 py-2">System</TabsTrigger>
+              <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
+              <TabsTrigger value="clients" className="px-3 py-2">Clients</TabsTrigger>
+              <TabsTrigger value="contractors" className="px-3 py-2">Contractors</TabsTrigger>
+              <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
+              <TabsTrigger value="uploads" className="px-3 py-2">Uploads</TabsTrigger>
+              <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
+              <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
+              <TabsTrigger value="audit" className="px-3 py-2">Audit</TabsTrigger>
+              <TabsTrigger value="settings" className="px-3 py-2">Settings</TabsTrigger>
             </TabsList>
           </div>
 
@@ -131,10 +140,10 @@ export default async function AdminHomePage() {
             </div>
           </TabsContent>
 
-          <TabsContent value="moderation" className="space-y-5">
+          <TabsContent value="reports" className="space-y-5">
             <AdminModuleIntro
-              title="Moderation CRM"
-              text="Reviewer assignment, queue state, decision reasons, public-summary preview, bulk upload, and discussion review live here."
+              title="Report moderation CRM"
+              text="Reviewer assignment, queue state, decision reasons, public-summary preview, and bulk report actions live here."
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink
@@ -162,10 +171,60 @@ export default async function AdminHomePage() {
             {moderationCrm ? <AdminModerationCrm data={moderationCrm} users={data.users} compact /> : null}
           </TabsContent>
 
-          <TabsContent value="safeguards" className="space-y-5">
+          <TabsContent value="clients" className="space-y-5">
+            <AdminModuleIntro
+              title="Client records"
+              text="Manage public visibility, duplicate identity signals, risk display, city/state SEO context, and profile health."
+            />
+            <div className="grid gap-4 lg:grid-cols-4">
+              <QuickLink href="/admin/clients" icon={<ClipboardCheck className="size-5" />} title="Client editor" text="Edit public profile fields, risk score, and visibility." badge={`${data.clients.length} records`} />
+              <QuickLink href="/search" icon={<FileText className="size-5" />} title="SEO preview" text="Review how public records appear in search and profile cards." badge={`${publicClients} public`} />
+              <QuickLink href="/admin/discussions" icon={<MessageSquareText className="size-5" />} title="Responses" text="Review responses, corrections, and dispute context." badge={`${pendingDiscussions} pending`} />
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Visibility audit" text="Track profile edits and publication decisions." badge="Audit" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="contractors" className="space-y-5">
+            <AdminModuleIntro
+              title="Contractor accounts"
+              text="Review verification, account health, report volume, plan status, evidence behavior, and platform readiness."
+            />
+            <div className="grid gap-4 lg:grid-cols-4">
+              <QuickLink href="/admin/contractors" icon={<ShieldCheck className="size-5" />} title="Contractor profiles" text="Modify contractor profile, trade, city/state, and verification status." badge={`${data.contractors.length} accounts`} />
+              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Ops preview" text="View the contractor operations workspace as product context." badge="Risk Ops" />
+              <QuickLink href="/pricing" icon={<Settings className="size-5" />} title="Plan controls" text="Review plan positioning and operational limits." badge="Plans" />
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Account audit" text="Track admin changes to contractor records." badge="Audit" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="discussions" className="space-y-5">
+            <AdminModuleIntro
+              title="Discussion and response moderation"
+              text="Moderate community entries, client responses, correction requests, verification context, and public-safe summaries."
+            />
+            <div className="grid gap-4 lg:grid-cols-3">
+              <QuickLink href="/admin/discussions" icon={<MessageSquareText className="size-5" />} title="Discussion queue" text="Approve, reject, verify, or delete public discussion records." badge={`${pendingDiscussions} pending`} />
+              <QuickLink href="/client-response" icon={<FileText className="size-5" />} title="Response workflow" text="Review the client-facing response, dispute, correction, and resolution path." badge="Public" />
+              <QuickLink href="/moderation-policy" icon={<ShieldCheck className="size-5" />} title="Policy alignment" text="Keep public discussion language neutral and moderated." badge="Policy" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="uploads" className="space-y-5">
+            <AdminModuleIntro
+              title="Bulk upload operations"
+              text="Preview CSV rows, flag duplicates, validate staged records, and import selected reports as pending records."
+            />
+            <div className="grid gap-4 lg:grid-cols-3">
+              <QuickLink href="/admin/uploads" icon={<UploadCloud className="size-5" />} title="Upload batches" text="Review staged imports, duplicate groups, selected rows, and import status." badge="CSV" />
+              <QuickLink href="/admin/reports" icon={<ClipboardCheck className="size-5" />} title="Imported reports" text="Moderate imported rows before anything can become public." badge={`${pendingReports} pending`} />
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Import audit" text="Track who imported, approved, rejected, or deleted records." badge="Audit" />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="recovery" className="space-y-5">
             <AdminModuleIntro
               title="Recovery, lien, and contract safeguards"
-              text="These workflows stay private and operational. Admin review keeps public profiles neutral, documented, and response-aware."
+              text="Payment recovery and lien-readiness workflows stay private and operational, with compliance review before any sensitive action."
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink
@@ -190,14 +249,29 @@ export default async function AdminHomePage() {
                 badge={`${contractPackets} active`}
               />
             </div>
+            {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}
           </TabsContent>
 
-          <TabsContent value="system" className="space-y-5">
+          <TabsContent value="contracts" className="space-y-5">
             <AdminModuleIntro
-              title="Records, users, and audit trail"
-              text="Use these internal views for profile management, account review, upload oversight, and action history."
+              title="Contract packet oversight"
+              text="Track agreement templates, change orders, payment plans, completion records, and packets required before scheduling."
+            />
+            <div className="grid gap-4 lg:grid-cols-3">
+              <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review contract packet defaults and safeguard language." badge={`${contractPackets} active`} />
+              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contract workspace" text="Preview contractor-side packet creation and status tracking." badge="Ops" />
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track packet status, reviewer actions, and settings changes." badge="Audit" />
+            </div>
+            {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}
+          </TabsContent>
+
+          <TabsContent value="audit" className="space-y-5">
+            <AdminModuleIntro
+              title="Audit trail"
+              text="Review status changes, publication decisions, imports, deletes, decision reasons, and private safeguard reviews."
             />
             <div className="grid gap-4 lg:grid-cols-4">
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Audit log" text="Filter admin action history by actor, entity, action, date, and severity." badge={`${data.auditLog.length} events`} />
               <QuickLink
                 href="/admin/clients"
                 icon={<ClipboardCheck className="size-5" />}
@@ -206,26 +280,38 @@ export default async function AdminHomePage() {
                 badge={`${data.clients.length} records`}
               />
               <QuickLink
-                href="/admin/contractors"
+                href="/admin/reports"
                 icon={<ShieldCheck className="size-5" />}
-                title="Contractors"
-                text="Review verification status, plan status, account health, and report volume."
-                badge={`${data.contractors.length} accounts`}
+                title="Moderation"
+                text="Review the report queue that generates most audit events."
+                badge={`${pendingReports} pending`}
               />
               <QuickLink
-                href="/admin/uploads"
-                icon={<UploadCloud className="size-5" />}
-                title="Uploads"
-                text="Review staged imports, duplicate groups, selected rows, and import status."
-                badge="Batches"
-              />
-              <QuickLink
-                href="/admin/audit-log"
+                href="/admin/settings"
                 icon={<Settings className="size-5" />}
-                title="Audit log"
-                text="Filter admin action history by actor, entity, action, date, and severity."
-                badge={`${data.auditLog.length} events`}
+                title="Safeguards"
+                text="Review audit defaults, evidence privacy controls, and publication rules."
+                badge="Rules"
               />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="settings" className="space-y-5">
+            <AdminModuleIntro
+              title="Settings and controls"
+              text="Moderation defaults, evidence privacy controls, publication rules, recovery safeguards, and contract workflow settings."
+            />
+            <div className="grid gap-4 lg:grid-cols-4">
+              <QuickLink
+                href="/admin/settings"
+                icon={<Settings className="size-5" />}
+                title="Admin settings"
+                text="Review moderation rules, publication defaults, evidence privacy, and recovery controls."
+                badge="Settings"
+              />
+              <QuickLink href="/report-policy" icon={<FileText className="size-5" />} title="Report policy" text="Review public policy language used by reports and moderation." badge="Policy" />
+              <QuickLink href="/dispute-policy" icon={<MessageSquareText className="size-5" />} title="Dispute policy" text="Review response, correction, and dispute standards." badge="Policy" />
+              <QuickLink href="/moderation-policy" icon={<ShieldCheck className="size-5" />} title="Moderation policy" text="Keep public outputs neutral, documented, and response-aware." badge="Policy" />
             </div>
           </TabsContent>
         </Tabs>

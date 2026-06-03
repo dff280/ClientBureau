@@ -293,6 +293,123 @@ export const contractWorkspaceItemSchema = z.object({
   message: "Deposit required cannot exceed the contract value.",
 })
 
+export const clientPipelineItemSchema = z.object({
+  clientId: optionalText,
+  clientName: requiredText("Client name"),
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  stage: z.enum(["new_lead", "screening", "contract_pending", "active_job", "payment_follow_up", "closed"]),
+  priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
+  estimatedValue: money("Estimated value"),
+  nextAction: requiredText("Next action", 8).max(240, "Keep the next action under 240 characters."),
+  dueAt: optionalText,
+  privateMatch: z.coerce.boolean().optional(),
+})
+
+export const updateClientPipelineStageSchema = z.object({
+  itemId: requiredText("Pipeline item ID"),
+  stage: z.enum(["new_lead", "screening", "contract_pending", "active_job", "payment_follow_up", "closed"]),
+})
+
+export const clientRiskRoomSchema = z.object({
+  clientId: optionalText,
+  clientName: requiredText("Client name"),
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  headline: requiredText("Risk room headline", 8).max(160, "Keep the headline under 160 characters."),
+  summary: requiredText("Risk room summary", 20).max(900, "Keep the summary under 900 characters."),
+})
+
+export const paymentRecoveryAttemptSchema = z.object({
+  recoveryCaseId: requiredText("Recovery case ID"),
+  channel: z.enum(["email", "phone", "letter", "client_portal"]),
+  attemptedAt: requiredText("Attempt date", 8),
+  outcome: z.enum([
+    "no_response",
+    "client_responded",
+    "payment_promised",
+    "payment_received",
+    "dispute_raised",
+    "needs_follow_up",
+  ]),
+  note: requiredText("Attempt note", 12).max(700, "Keep the attempt note under 700 characters."),
+  nextFollowUpAt: optionalText,
+})
+
+export const paymentPlanSchema = z.object({
+  recoveryCaseId: requiredText("Recovery case ID"),
+  totalAmount: money("Total amount"),
+  installmentAmount: money("Installment amount"),
+  dueDay: z.coerce
+    .number({ error: "Due day must be a number." })
+    .int("Due day must be a whole number.")
+    .min(1, "Due day must be between 1 and 31.")
+    .max(31, "Due day must be between 1 and 31."),
+  status: z.enum(["proposed", "accepted", "active", "completed", "missed", "paused"]).default("proposed"),
+  nextDueDate: optionalText,
+  notes: requiredText("Payment plan notes", 12).max(700, "Keep the notes under 700 characters."),
+}).refine((value) => value.installmentAmount <= value.totalAmount, {
+  path: ["installmentAmount"],
+  message: "Installment amount cannot exceed the total amount.",
+})
+
+export const contractPacketSchema = z.object({
+  clientName: requiredText("Client name"),
+  projectType: requiredText("Project type"),
+  templateType: z.enum([
+    "service_agreement",
+    "change_order",
+    "payment_plan",
+    "completion_certificate",
+    "notice_of_nonpayment",
+  ]),
+  packetValue: money("Packet value"),
+  depositRequired: money("Deposit required"),
+  milestoneCount: z.coerce
+    .number({ error: "Milestone count must be a number." })
+    .int("Milestone count must be a whole number.")
+    .min(0, "Milestone count cannot be negative.")
+    .max(24, "Milestone count is above the current workflow limit."),
+  requiredBeforeScheduling: z.coerce.boolean().optional(),
+  nextAction: requiredText("Next action", 8).max(240, "Keep the next action under 240 characters."),
+}).refine((value) => value.depositRequired <= value.packetValue, {
+  path: ["depositRequired"],
+  message: "Deposit required cannot exceed the packet value.",
+})
+
+export const updateContractPacketStatusSchema = z.object({
+  packetId: requiredText("Contract packet ID"),
+  status: z.enum(["draft", "review_ready", "sent", "signed", "expired", "archived"]),
+})
+
+export const updateEvidenceVaultStatusSchema = z.object({
+  evidenceId: requiredText("Evidence ID"),
+  status: z.enum(["uploaded", "mapped", "review_pending", "reviewed", "needs_more_info", "archived"]),
+})
+
+export const adminSavedViewSchema = z.object({
+  scope: z.enum(["reports", "clients", "contractors", "discussions", "uploads", "recovery", "contracts", "audit"]),
+  name: requiredText("Saved view name", 3).max(80, "Keep the view name under 80 characters."),
+  filterSummary: requiredText("Filter summary", 3).max(240, "Keep the filter summary under 240 characters."),
+  isDefault: z.coerce.boolean().optional(),
+})
+
+export const recoveryComplianceReviewSchema = z.object({
+  recoveryCaseId: optionalText,
+  lienNoticeDraftId: optionalText,
+  contractPacketId: optionalText,
+  status: z.enum(["pending", "approved", "needs_changes", "blocked"]),
+  decisionReason: requiredText("Decision reason", 8).max(240, "Keep the decision reason under 240 characters."),
+  requiredChanges: z.string().trim().max(700).optional(),
+  publicVisibilityAllowed: z.coerce.boolean().optional(),
+}).refine(
+  (value) => Boolean(value.recoveryCaseId || value.lienNoticeDraftId || value.contractPacketId),
+  {
+    path: ["recoveryCaseId"],
+    message: "Select a recovery, lien, or contract record.",
+  },
+)
+
 export const moderationCaseAssignmentSchema = z.object({
   caseId: requiredText("Case ID"),
   assignedTo: requiredText("Reviewer ID"),
@@ -330,3 +447,13 @@ export type IntakeAssessmentInput = z.infer<typeof intakeAssessmentSchema>
 export type PaymentRecoveryCaseInput = z.infer<typeof paymentRecoveryCaseSchema>
 export type LienNoticeDraftInput = z.infer<typeof lienNoticeDraftSchema>
 export type ContractWorkspaceItemInput = z.infer<typeof contractWorkspaceItemSchema>
+export type ClientPipelineItemInput = z.infer<typeof clientPipelineItemSchema>
+export type UpdateClientPipelineStageInput = z.infer<typeof updateClientPipelineStageSchema>
+export type ClientRiskRoomInput = z.infer<typeof clientRiskRoomSchema>
+export type PaymentRecoveryAttemptInput = z.infer<typeof paymentRecoveryAttemptSchema>
+export type PaymentPlanInput = z.infer<typeof paymentPlanSchema>
+export type ContractPacketInput = z.infer<typeof contractPacketSchema>
+export type UpdateContractPacketStatusInput = z.infer<typeof updateContractPacketStatusSchema>
+export type UpdateEvidenceVaultStatusInput = z.infer<typeof updateEvidenceVaultStatusSchema>
+export type AdminSavedViewInput = z.infer<typeof adminSavedViewSchema>
+export type RecoveryComplianceReviewInput = z.infer<typeof recoveryComplianceReviewSchema>

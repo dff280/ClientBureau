@@ -9,10 +9,14 @@ import {
   adminDeleteRecordSchema,
   adminDiscussionReviewSchema,
   adminReviewSchema,
+  adminSavedViewSchema,
   bulkAdminReviewSchema,
   bulkUploadImportSchema,
+  clientPipelineItemSchema,
   clientReportSchema,
   clientResponseSchema,
+  clientRiskRoomSchema,
+  contractPacketSchema,
   communityDiscussionSchema,
   contractWorkspaceItemSchema,
   deleteReportDraftSchema,
@@ -22,26 +26,40 @@ import {
   moderationCaseAssignmentSchema,
   moderationCaseUpdateSchema,
   moderationDecisionReasonSchema,
+  paymentPlanSchema,
+  paymentRecoveryAttemptSchema,
   paymentRecoveryCaseSchema,
   reportDraftSchema,
+  recoveryComplianceReviewSchema,
+  updateClientPipelineStageSchema,
+  updateContractPacketStatusSchema,
+  updateEvidenceVaultStatusSchema,
   updateWatchlistItemSchema,
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
 import type {
   ActionResult,
   AdminReview,
+  AdminSavedView,
   AuditLogEntry,
   ClientIntakeAssessment,
+  ClientPipelineItem,
   ClientProfile,
   ClientResponse,
   ClientReport,
+  ClientRiskRoom,
   CommunityDiscussion,
+  ContractPacket,
   ContractWorkspaceItem,
   ContractorProfile,
   ContractorWatchlistItem,
+  EvidenceVaultItem,
   LienNoticeDraft,
   ModerationCase,
+  PaymentPlan,
   PaymentRecoveryCase,
+  PaymentRecoveryAttempt,
+  RecoveryComplianceReview,
   ReportDraft,
   User,
 } from "@/lib/types"
@@ -57,14 +75,21 @@ import {
   deleteAdminRecordService,
   assignModerationCaseService,
   createContractWorkspaceItemService,
+  createClientPipelineItemService,
+  createClientRiskRoomService,
   createIntakeAssessmentService,
   createLienNoticeDraftService,
+  createContractPacketService,
+  createPaymentPlanService,
   createPaymentRecoveryCaseService,
   createWatchlistItemService,
   deleteReportDraftService,
+  logPaymentRecoveryAttemptService,
+  reviewRecoveryComplianceService,
   reviewCommunityDiscussionService,
   reviewReportService,
   reviewReportsBulkService,
+  saveAdminQueueViewService,
   saveReportDraftService,
   setModerationDecisionReasonService,
   submitCommunityDiscussionService,
@@ -72,6 +97,9 @@ import {
   submitClientResponseService,
   updateAdminClientRecordService,
   updateAdminContractorRecordService,
+  updateClientPipelineStageService,
+  updateContractPacketStatusService,
+  updateEvidenceVaultStatusService,
   updateModerationCaseService,
   updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
@@ -772,6 +800,196 @@ export async function createContractWorkspaceItemAction(
   }
 }
 
+export async function createClientPipelineItemAction(
+  _previousState: ActionResult<ClientPipelineItem>,
+  formData: FormData,
+): Promise<ActionResult<ClientPipelineItem>> {
+  const parsed = clientPipelineItemSchema.safeParse({
+    ...formDataToObject(formData),
+    privateMatch: formData.has("privateMatch"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the pipeline fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const item = await createClientPipelineItemService(user.id, parsed.data)
+    if (!item) return fail("Client pipeline feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(item, "Client pipeline item created.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Client pipeline item could not be created."))
+  }
+}
+
+export async function updateClientPipelineStageAction(
+  _previousState: ActionResult<ClientPipelineItem>,
+  formData: FormData,
+): Promise<ActionResult<ClientPipelineItem>> {
+  const parsed = updateClientPipelineStageSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a pipeline record and stage.", zodFieldErrors(parsed.error))
+  }
+
+  await requireContractorAccess()
+
+  try {
+    const item = await updateClientPipelineStageService(parsed.data)
+    if (!item) return fail("Client pipeline feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(item, `Pipeline stage updated to ${parsed.data.stage.replaceAll("_", " ")}.`)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Pipeline stage could not be updated."))
+  }
+}
+
+export async function createRiskRoomAction(
+  _previousState: ActionResult<ClientRiskRoom>,
+  formData: FormData,
+): Promise<ActionResult<ClientRiskRoom>> {
+  const parsed = clientRiskRoomSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the risk room fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const room = await createClientRiskRoomService(user.id, parsed.data)
+    if (!room) return fail("Risk room feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(room, "Private client risk room created.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Risk room could not be created."))
+  }
+}
+
+export async function logPaymentRecoveryAttemptAction(
+  _previousState: ActionResult<PaymentRecoveryAttempt>,
+  formData: FormData,
+): Promise<ActionResult<PaymentRecoveryAttempt>> {
+  const parsed = paymentRecoveryAttemptSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the recovery attempt fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const attempt = await logPaymentRecoveryAttemptService(user.id, parsed.data)
+    if (!attempt) return fail("Recovery attempt feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(attempt, "Payment recovery attempt logged.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Recovery attempt could not be logged."))
+  }
+}
+
+export async function createPaymentPlanAction(
+  _previousState: ActionResult<PaymentPlan>,
+  formData: FormData,
+): Promise<ActionResult<PaymentPlan>> {
+  const parsed = paymentPlanSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the payment plan fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const plan = await createPaymentPlanService(user.id, parsed.data)
+    if (!plan) return fail("Payment plan feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(plan, "Payment plan created for private recovery tracking.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Payment plan could not be created."))
+  }
+}
+
+export async function createContractPacketAction(
+  _previousState: ActionResult<ContractPacket>,
+  formData: FormData,
+): Promise<ActionResult<ContractPacket>> {
+  const parsed = contractPacketSchema.safeParse({
+    ...formDataToObject(formData),
+    requiredBeforeScheduling: formData.has("requiredBeforeScheduling"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the contract packet fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const packet = await createContractPacketService(user.id, parsed.data)
+    if (!packet) return fail("Contract packet feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(packet, "Contract packet created.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Contract packet could not be created."))
+  }
+}
+
+export async function updateContractPacketStatusAction(
+  _previousState: ActionResult<ContractPacket>,
+  formData: FormData,
+): Promise<ActionResult<ContractPacket>> {
+  const parsed = updateContractPacketStatusSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a contract packet and status.", zodFieldErrors(parsed.error))
+  }
+
+  await requireContractorAccess()
+
+  try {
+    const packet = await updateContractPacketStatusService(parsed.data)
+    if (!packet) return fail("Contract packet feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(packet, `Contract packet marked ${packet.status.replaceAll("_", " ")}.`)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Contract packet status could not be updated."))
+  }
+}
+
+export async function updateEvidenceVaultStatusAction(
+  _previousState: ActionResult<EvidenceVaultItem>,
+  formData: FormData,
+): Promise<ActionResult<EvidenceVaultItem>> {
+  const parsed = updateEvidenceVaultStatusSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select evidence and a status.", zodFieldErrors(parsed.error))
+  }
+
+  await requireContractorAccess()
+
+  try {
+    const evidence = await updateEvidenceVaultStatusService(parsed.data)
+    if (!evidence) return fail("Evidence vault feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(evidence, `Evidence marked ${evidence.status.replaceAll("_", " ")}.`)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Evidence status could not be updated."))
+  }
+}
+
 export async function assignModerationCaseAction(
   _previousState: ActionResult<ModerationCase>,
   formData: FormData,
@@ -853,5 +1071,62 @@ export async function setModerationDecisionReasonAction(
     return ok(caseItem, "Decision reason saved.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Decision reason could not be saved."))
+  }
+}
+
+export async function saveAdminQueueViewAction(
+  _previousState: ActionResult<AdminSavedView>,
+  formData: FormData,
+): Promise<ActionResult<AdminSavedView>> {
+  const parsed = adminSavedViewSchema.safeParse({
+    ...formDataToObject(formData),
+    isDefault: formData.has("isDefault"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the saved view fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("saved view", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const view = await saveAdminQueueViewService(adminResult.admin, parsed.data)
+    if (!view) return fail("Admin saved view feature data is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/reports")
+    return ok(view, "Admin queue view saved.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Admin queue view could not be saved."))
+  }
+}
+
+export async function reviewRecoveryComplianceAction(
+  _previousState: ActionResult<RecoveryComplianceReview>,
+  formData: FormData,
+): Promise<ActionResult<RecoveryComplianceReview>> {
+  const parsed = recoveryComplianceReviewSchema.safeParse({
+    ...formDataToObject(formData),
+    publicVisibilityAllowed: formData.has("publicVisibilityAllowed"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the compliance review fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("recovery compliance", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const review = await reviewRecoveryComplianceService(adminResult.admin, parsed.data)
+    if (!review) return fail("Recovery compliance feature data is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/admin/audit-log")
+    return ok(review, `Compliance review marked ${review.status.replaceAll("_", " ")}.`)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Recovery compliance review could not be saved."))
   }
 }

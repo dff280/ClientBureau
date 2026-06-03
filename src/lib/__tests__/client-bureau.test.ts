@@ -14,15 +14,23 @@ import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
   assignModerationCase,
+  buildTodaysWorkItems,
   contractCompletionPercentage,
+  contractPacketCompletionPercentage,
   countUnreadMonitoringAlerts,
   countOpenRecoveryCases,
   countWatchlistAlerts,
   filterModerationCases,
+  filterAdminSavedViews,
+  hasPrivatePublicLeak,
   intakeRiskRecommendation,
   isValidDecisionReason,
   lienNoticeReadinessLabel,
+  nextRecoveryAttemptAction,
+  paymentPlanCompletion,
   paymentRecoveryPriority,
+  pipelineStageCounts,
+  rankClientPipelineItems,
   rankMonitoringAlerts,
   rankWatchlistItems,
   reportDraftCompletionPercentage,
@@ -35,10 +43,16 @@ import {
 } from "@/lib/repositories/client-bureau"
 import {
   clientProfiles,
+  adminSavedViews,
+  clientPipelineItems,
+  contractPackets,
   contractorWatchlist,
   contractWorkspaceItems,
+  evidenceVaultItems,
   lienNoticeDrafts,
   moderationCases,
+  paymentPlans,
+  paymentRecoveryAttempts,
   paymentRecoveryCases,
   reportDrafts,
   watchlistAlerts,
@@ -47,11 +61,21 @@ import { allSeoLandingPages, getSeoLandingPage } from "@/lib/seo-landing-pages"
 import {
   intakeAssessmentSchema,
   contractWorkspaceItemSchema,
+  adminSavedViewSchema,
+  clientPipelineItemSchema,
+  clientRiskRoomSchema,
+  contractPacketSchema,
   lienNoticeDraftSchema,
+  paymentPlanSchema,
+  paymentRecoveryAttemptSchema,
   moderationCaseAssignmentSchema,
   moderationDecisionReasonSchema,
   paymentRecoveryCaseSchema,
+  recoveryComplianceReviewSchema,
   reportDraftSchema,
+  updateClientPipelineStageSchema,
+  updateContractPacketStatusSchema,
+  updateEvidenceVaultStatusSchema,
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
 import type { ClientReport } from "@/lib/types"
@@ -222,6 +246,8 @@ describe("schemas and mock actions", () => {
     const parsed = clientReportSchema.safeParse({
       firstName: "Alex",
       lastName: "Morris",
+      businessName: undefined,
+      phone: undefined,
       city: "Miami",
       state: "FL",
       projectType: "Tile repair",
@@ -268,6 +294,8 @@ describe("schemas and mock actions", () => {
     const report = simulateSubmittedClientReport({
       firstName: "Alex",
       lastName: "Morris",
+      businessName: undefined,
+      phone: undefined,
       city: "Miami",
       state: "FL",
       projectType: "Tile repair",
@@ -348,6 +376,42 @@ describe("platform expansion feature utilities", () => {
     expect(countOpenRecoveryCases(paymentRecoveryCases)).toBe(2)
     expect(lienNoticeReadinessLabel(lienNoticeDrafts[0])).toBe("Review required")
     expect(contractCompletionPercentage(contractWorkspaceItems[0])).toBe(100)
+  })
+
+  it("summarizes pipeline stages and ranks urgent work first", () => {
+    const counts = pipelineStageCounts(clientPipelineItems)
+    const ranked = rankClientPipelineItems(clientPipelineItems)
+
+    expect(counts.payment_follow_up).toBe(1)
+    expect(counts.closed).toBe(1)
+    expect(ranked[0]?.stage).toBe("payment_follow_up")
+  })
+
+  it("builds today's work from pipeline, alerts, drafts, evidence, recovery, and contracts", () => {
+    const work = buildTodaysWorkItems({
+      pipeline: clientPipelineItems,
+      alerts: watchlistAlerts,
+      drafts: reportDrafts,
+      evidence: evidenceVaultItems,
+      recoveryCases: paymentRecoveryCases,
+      contracts: contractPackets,
+    })
+
+    expect(work.length).toBeGreaterThan(4)
+    expect(work.map((item) => item.label)).toContain("Recovery")
+    expect(work.map((item) => item.label)).toContain("Evidence")
+  })
+
+  it("tracks recovery attempts, payment plans, contract packets, and saved views", () => {
+    expect(nextRecoveryAttemptAction(paymentRecoveryAttempts[1])).toContain("dispute")
+    expect(paymentPlanCompletion(paymentPlans[0])).toBe(5)
+    expect(contractPacketCompletionPercentage(contractPackets[1])).toBeGreaterThanOrEqual(80)
+    expect(filterAdminSavedViews(adminSavedViews, "recovery")).toHaveLength(1)
+  })
+
+  it("detects obvious private evidence leaks in public-facing payloads", () => {
+    expect(hasPrivatePublicLeak({ storagePath: "report-evidence/report_01/final-invoice.pdf" })).toBe(true)
+    expect(hasPrivatePublicLeak({ summary: "Evidence reviewed privately." })).toBe(false)
   })
 })
 
@@ -438,6 +502,84 @@ describe("platform expansion schemas", () => {
         summary: "Agreement includes scope, payment timing, and change-order controls.",
       }).success,
     ).toBe(false)
+  })
+
+  it("validates contractor ops workspace inputs", () => {
+    expect(
+      clientPipelineItemSchema.safeParse({
+        clientName: "John Smith",
+        city: "Orlando",
+        state: "FL",
+        stage: "screening",
+        priority: "high",
+        estimatedValue: 4200,
+        nextAction: "Review private match before scheduling crews.",
+        privateMatch: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      updateClientPipelineStageSchema.safeParse({
+        itemId: "pipeline_01",
+        stage: "payment_follow_up",
+      }).success,
+    ).toBe(true)
+
+    expect(
+      clientRiskRoomSchema.safeParse({
+        clientName: "John Smith",
+        city: "Orlando",
+        state: "FL",
+        headline: "Payment follow-up context",
+        summary: "Private room links search, evidence, recovery, and contract context.",
+      }).success,
+    ).toBe(true)
+  })
+
+  it("validates recovery attempts, payment plans, contract packets, and admin controls", () => {
+    expect(
+      paymentRecoveryAttemptSchema.safeParse({
+        recoveryCaseId: "recovery_01",
+        channel: "phone",
+        attemptedAt: "2026-06-03T14:00",
+        outcome: "needs_follow_up",
+        note: "Factual phone call note with response path and no unsupported claims.",
+      }).success,
+    ).toBe(true)
+
+    expect(
+      paymentPlanSchema.safeParse({
+        recoveryCaseId: "recovery_01",
+        totalAmount: 4200,
+        installmentAmount: 5000,
+        dueDay: 15,
+        notes: "Payment plan amount is intentionally invalid.",
+      }).success,
+    ).toBe(false)
+
+    expect(
+      contractPacketSchema.safeParse({
+        clientName: "Maria Alvarez",
+        projectType: "Deck maintenance",
+        templateType: "service_agreement",
+        packetValue: 3900,
+        depositRequired: 750,
+        milestoneCount: 2,
+        requiredBeforeScheduling: true,
+        nextAction: "Review packet before scheduling.",
+      }).success,
+    ).toBe(true)
+
+    expect(updateContractPacketStatusSchema.safeParse({ packetId: "contract_packet_01", status: "signed" }).success).toBe(true)
+    expect(updateEvidenceVaultStatusSchema.safeParse({ evidenceId: "vault_01", status: "reviewed" }).success).toBe(true)
+    expect(adminSavedViewSchema.safeParse({ scope: "reports", name: "High priority", filterSummary: "priority=high" }).success).toBe(true)
+    expect(
+      recoveryComplianceReviewSchema.safeParse({
+        recoveryCaseId: "recovery_01",
+        status: "needs_changes",
+        decisionReason: "Review factual language before outreach.",
+      }).success,
+    ).toBe(true)
   })
 
   it("keeps public profile output limited to public moderated data", () => {

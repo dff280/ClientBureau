@@ -1,13 +1,20 @@
 import type {
+  AdminSavedView,
+  AdminSavedViewScope,
+  ClientPipelineItem,
   ClientIntakeAssessment,
   ClientProfile,
+  ContractPacket,
   ContractWorkspaceItem,
   ContractorWatchlistItem,
+  EvidenceVaultItem,
   LienNoticeDraft,
   ModerationCase,
   ModerationCaseStatus,
   ModerationDecisionReason,
   PaymentRecoveryCase,
+  PaymentRecoveryAttempt,
+  PaymentPlan,
   ReportDraft,
   WatchlistAlert,
 } from "@/lib/types"
@@ -35,6 +42,24 @@ export const moderationDecisionReasons: ModerationDecisionReason[] = [
   "duplicate_report",
   "policy_rejection",
 ]
+
+export const clientPipelineStages: ClientPipelineItem["stage"][] = [
+  "new_lead",
+  "screening",
+  "contract_pending",
+  "active_job",
+  "payment_follow_up",
+  "closed",
+]
+
+const stageWeight: Record<ClientPipelineItem["stage"], number> = {
+  payment_follow_up: 6,
+  contract_pending: 5,
+  active_job: 4,
+  screening: 3,
+  new_lead: 2,
+  closed: 0,
+}
 
 export function reportDraftCompletionPercentage(draft: ReportDraft) {
   const completed = requiredDraftFields.filter((field) => {
@@ -100,6 +125,110 @@ export function filterModerationCases(cases: ModerationCase[], status: Moderatio
   return cases.filter((item) => item.status === status)
 }
 
+export function pipelineStageCounts(items: ClientPipelineItem[]) {
+  return clientPipelineStages.reduce(
+    (counts, stage) => ({
+      ...counts,
+      [stage]: items.filter((item) => item.stage === stage).length,
+    }),
+    {} as Record<ClientPipelineItem["stage"], number>,
+  )
+}
+
+export function rankClientPipelineItems(items: ClientPipelineItem[]) {
+  const now = Date.now()
+
+  return [...items].sort((a, b) => {
+    const aDue = a.dueAt ? new Date(a.dueAt).getTime() : Number.POSITIVE_INFINITY
+    const bDue = b.dueAt ? new Date(b.dueAt).getTime() : Number.POSITIVE_INFINITY
+    const aOverdue = aDue < now ? 200 : 0
+    const bOverdue = bDue < now ? 200 : 0
+    const aScore =
+      priorityWeight[a.priority] * 100 + stageWeight[a.stage] * 10 + aOverdue + (a.privateMatch ? 12 : 0)
+    const bScore =
+      priorityWeight[b.priority] * 100 + stageWeight[b.stage] * 10 + bOverdue + (b.privateMatch ? 12 : 0)
+
+    return bScore - aScore || aDue - bDue || b.updatedAt.localeCompare(a.updatedAt)
+  })
+}
+
+export function buildTodaysWorkItems(input: {
+  pipeline: ClientPipelineItem[]
+  alerts: WatchlistAlert[]
+  drafts: ReportDraft[]
+  evidence: EvidenceVaultItem[]
+  recoveryCases: PaymentRecoveryCase[]
+  contracts: ContractPacket[]
+}) {
+  const pipelineItems = rankClientPipelineItems(input.pipeline)
+    .filter((item) => item.stage !== "closed")
+    .slice(0, 3)
+    .map((item) => ({
+      id: `pipeline_${item.id}`,
+      label: "Pipeline",
+      title: item.clientName,
+      detail: item.nextAction,
+      tone: item.priority,
+    }))
+
+  const alerts = rankMonitoringAlerts(input.alerts)
+    .filter((item) => !item.readAt)
+    .slice(0, 2)
+    .map((item) => ({
+      id: `alert_${item.id}`,
+      label: "Alert",
+      title: item.title,
+      detail: item.description,
+      tone: item.severity,
+    }))
+
+  const drafts = input.drafts
+    .filter((item) => item.status !== "submitted")
+    .slice(0, 2)
+    .map((item) => ({
+      id: `draft_${item.id}`,
+      label: "Draft",
+      title: item.clientName,
+      detail: item.nextStep,
+      tone: item.status === "ready_to_submit" ? "high" : "normal",
+    }))
+
+  const recovery = input.recoveryCases
+    .filter((item) => !["resolved", "paused"].includes(item.status))
+    .slice(0, 2)
+    .map((item) => ({
+      id: `recovery_${item.id}`,
+      label: "Recovery",
+      title: item.clientName,
+      detail: item.nextAction,
+      tone: item.priority,
+    }))
+
+  const evidence = input.evidence
+    .filter((item) => ["review_pending", "needs_more_info", "uploaded"].includes(item.status))
+    .slice(0, 2)
+    .map((item) => ({
+      id: `evidence_${item.id}`,
+      label: "Evidence",
+      title: item.clientName,
+      detail: item.publicSummary,
+      tone: item.status === "needs_more_info" ? "high" : "normal",
+    }))
+
+  const contracts = input.contracts
+    .filter((item) => !["signed", "archived"].includes(item.status))
+    .slice(0, 2)
+    .map((item) => ({
+      id: `contract_${item.id}`,
+      label: "Contract",
+      title: item.clientName,
+      detail: item.nextAction,
+      tone: item.requiredBeforeScheduling ? "high" : "normal",
+    }))
+
+  return [...alerts, ...pipelineItems, ...drafts, ...recovery, ...evidence, ...contracts].slice(0, 10)
+}
+
 export function paymentRecoveryPriority(input: Pick<PaymentRecoveryCase, "amountDue" | "invoiceAgeDays">) {
   if (input.amountDue >= 10000 || input.invoiceAgeDays >= 90) return "urgent"
   if (input.amountDue >= 5000 || input.invoiceAgeDays >= 45) return "high"
@@ -110,6 +239,26 @@ export function paymentRecoveryPriority(input: Pick<PaymentRecoveryCase, "amount
 
 export function countOpenRecoveryCases(cases: PaymentRecoveryCase[]) {
   return cases.filter((item) => !["resolved", "paused"].includes(item.status)).length
+}
+
+export function nextRecoveryAttemptAction(attempt: Pick<PaymentRecoveryAttempt, "outcome" | "channel">) {
+  if (attempt.outcome === "payment_received") return "Update the report or recovery record with resolution context."
+  if (attempt.outcome === "payment_promised") return "Create or update a payment plan and track the next due date."
+  if (attempt.outcome === "dispute_raised") return "Pause public escalation and route dispute context to moderation."
+  if (attempt.channel === "phone") return "Log call details and schedule one documented follow-up if needed."
+
+  return "Wait for the response window, then log the next factual follow-up."
+}
+
+export function paymentPlanCompletion(plan: PaymentPlan) {
+  if (plan.status === "completed") return 100
+  if (plan.status === "accepted" || plan.status === "active") {
+    return Math.max(10, Math.min(90, Math.round((plan.installmentAmount / plan.totalAmount) * 100)))
+  }
+  if (plan.status === "missed") return 20
+  if (plan.status === "paused") return 10
+
+  return 5
 }
 
 export function lienNoticeReadinessLabel(draft: Pick<LienNoticeDraft, "status" | "requiredReview">) {
@@ -133,6 +282,38 @@ export function contractCompletionPercentage(item: ContractWorkspaceItem) {
   const complete = fields.filter(Boolean).length
 
   return Math.round((complete / fields.length) * 100)
+}
+
+export function contractPacketCompletionPercentage(item: ContractPacket) {
+  const base = contractCompletionPercentage({
+    id: item.id,
+    contractorId: item.contractorId,
+    clientName: item.clientName,
+    projectType: item.projectType,
+    templateType: item.templateType,
+    contractValue: item.packetValue,
+    depositRequired: item.depositRequired,
+    milestoneBilling: item.milestoneCount > 0,
+    status: item.status === "review_ready" ? "draft" : item.status,
+    nextStep: item.nextAction,
+    summary: item.nextAction,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  })
+
+  return item.requiredBeforeScheduling ? Math.max(base, 80) : base
+}
+
+export function filterAdminSavedViews(views: AdminSavedView[], scope: AdminSavedViewScope | "all") {
+  if (scope === "all") return views
+
+  return views.filter((view) => view.scope === scope)
+}
+
+export function hasPrivatePublicLeak(value: unknown) {
+  const serialized = JSON.stringify(value)
+
+  return /@|report-evidence\/|signed-completion-form|final-invoice|chargeback-notice|access-window-log/i.test(serialized)
 }
 
 export function assignModerationCase(caseItem: ModerationCase, reviewerId: string, reviewerName: string): ModerationCase {

@@ -215,11 +215,12 @@ export default async function Home() {
             </div>
             <div className="space-y-5">
               <h1 className="text-5xl font-semibold leading-tight tracking-normal sm:text-6xl lg:text-7xl">
-                Check a Client Before You Take the Job.
+                Search before you sign.
               </h1>
               <p className="max-w-3xl text-xl leading-8 text-slate-100">
-                Search reported payment issues, disputes, chargebacks, and documented client
-                experiences before you commit labor, materials, or scheduling.
+                Review moderated client reports, private matching signals, evidence-on-file
+                summaries, response context, and contractor Ops tools before you commit labor,
+                materials, contracts, or scheduling.
               </p>
             </div>
             <form action="/search" className="grid max-w-3xl gap-3 rounded-md border border-white/15 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_auto]">
@@ -266,8 +267,8 @@ export default async function Home() {
               </p>
               <p className="text-sm leading-6 text-slate-200">
                 Client Bureau is built for businesses that need better pre-client decisions, not
-                after-the-fact arguments. Use moderated client-risk intelligence before deposits,
-                crews, materials, and deadlines are already committed.
+                after-the-fact arguments. Search first, document the job, use contract controls,
+                and keep recovery or lien-readiness work private until it is reviewed.
               </p>
             </CardContent>
           </Card>

@@ -2,9 +2,13 @@ import { getDataMode, getPlatformFeatureDataMode } from "@/lib/env"
 import {
   assignMockModerationCase,
   createContractWorkspaceItem,
+  createClientPipelineItem,
+  createClientRiskRoom,
   createIntakeAssessment,
   createLienNoticeDraft,
   createPaymentRecoveryCase,
+  createContractPacket,
+  createPaymentPlan,
   createWatchlistItem,
   deleteReportDraft,
   getContractorDashboard,
@@ -15,9 +19,12 @@ import {
   getPublicClientProfile,
   getPublicClientProfiles,
   deleteAdminRecord,
+  logPaymentRecoveryAttempt,
+  reviewRecoveryCompliance,
   reviewReport,
   reviewReportsBulk,
   reviewCommunityDiscussion,
+  saveAdminQueueView,
   saveReportDraft,
   searchClients,
   setMockModerationDecisionReason,
@@ -26,6 +33,9 @@ import {
   submitClientResponse,
   updateAdminClientRecord,
   updateAdminContractorRecord,
+  updateClientPipelineStage,
+  updateContractPacketStatus,
+  updateEvidenceVaultStatus,
   updateMockModerationCase,
   updateWatchlistItem,
 } from "@/lib/repositories/client-bureau"
@@ -49,11 +59,21 @@ import {
 import type {
   ClientReportInput,
   ClientResponseInput,
+  AdminSavedViewInput,
+  ClientPipelineItemInput,
+  ClientRiskRoomInput,
+  ContractPacketInput,
   ContractWorkspaceItemInput,
   IntakeAssessmentInput,
   LienNoticeDraftInput,
   PaymentRecoveryCaseInput,
+  PaymentRecoveryAttemptInput,
+  PaymentPlanInput,
+  RecoveryComplianceReviewInput,
   ReportDraftInput,
+  UpdateClientPipelineStageInput,
+  UpdateContractPacketStatusInput,
+  UpdateEvidenceVaultStatusInput,
   WatchlistItemInput,
 } from "@/lib/schemas/client-bureau"
 import type {
@@ -345,6 +365,81 @@ export async function createContractWorkspaceItemService(userId: string, input: 
   return createContractWorkspaceItem(dashboard.contractor.id, input)
 }
 
+export async function createClientPipelineItemService(userId: string, input: ClientPipelineItemInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createClientPipelineItem(dashboard.contractor.id, input)
+}
+
+export async function updateClientPipelineStageService(input: UpdateClientPipelineStageInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return updateClientPipelineStage(input.itemId, input.stage)
+}
+
+export async function createClientRiskRoomService(userId: string, input: ClientRiskRoomInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createClientRiskRoom(dashboard.contractor.id, input)
+}
+
+export async function logPaymentRecoveryAttemptService(userId: string, input: PaymentRecoveryAttemptInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return logPaymentRecoveryAttempt(dashboard.contractor.id, input)
+}
+
+export async function createPaymentPlanService(userId: string, input: PaymentPlanInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createPaymentPlan(dashboard.contractor.id, input)
+}
+
+export async function createContractPacketService(userId: string, input: ContractPacketInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createContractPacket(dashboard.contractor.id, input)
+}
+
+export async function updateContractPacketStatusService(input: UpdateContractPacketStatusInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return updateContractPacketStatus(input)
+}
+
+export async function updateEvidenceVaultStatusService(input: UpdateEvidenceVaultStatusInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return updateEvidenceVaultStatus(input)
+}
+
+export async function saveAdminQueueViewService(admin: User, input: AdminSavedViewInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return saveAdminQueueView(admin.id, input)
+}
+
+export async function reviewRecoveryComplianceService(admin: User, input: RecoveryComplianceReviewInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  return reviewRecoveryCompliance(admin.id, input)
+}
+
 export async function assignModerationCaseService(caseId: string, admin: User, assignedTo: string) {
   if (shouldUsePlatformSupabase()) return undefined
 
@@ -376,14 +471,20 @@ function createDefaultRiskOpsData(contractorId: string): ContractorRiskOpsData {
   const now = new Date().toISOString()
 
   return {
+    clientPipeline: [],
+    riskRooms: [],
     watchlist: [],
     watchlistAlerts: [],
     reportDrafts: [],
     intakeAssessments: [],
     evidenceSummaries: [],
+    evidenceVault: [],
     paymentRecoveryCases: [],
+    paymentRecoveryAttempts: [],
+    paymentPlans: [],
     lienNoticeDrafts: [],
     contractDocuments: [],
+    contractPackets: [],
     activity: [
       {
         id: `activity_${contractorId}_workspace_created`,

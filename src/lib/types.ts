@@ -77,6 +77,33 @@ export type ContractTemplateType =
   | "completion_certificate"
   | "notice_of_nonpayment"
 export type ContractDocumentStatus = "draft" | "sent" | "signed" | "expired" | "archived"
+export type ClientPipelineStage =
+  | "new_lead"
+  | "screening"
+  | "contract_pending"
+  | "active_job"
+  | "payment_follow_up"
+  | "closed"
+export type PaymentRecoveryAttemptOutcome =
+  | "no_response"
+  | "client_responded"
+  | "payment_promised"
+  | "payment_received"
+  | "dispute_raised"
+  | "needs_follow_up"
+export type PaymentPlanStatus = "proposed" | "accepted" | "active" | "completed" | "missed" | "paused"
+export type ContractPacketStatus = "draft" | "review_ready" | "sent" | "signed" | "expired" | "archived"
+export type EvidenceVaultStatus = "uploaded" | "mapped" | "review_pending" | "reviewed" | "needs_more_info" | "archived"
+export type AdminSavedViewScope =
+  | "reports"
+  | "clients"
+  | "contractors"
+  | "discussions"
+  | "uploads"
+  | "recovery"
+  | "contracts"
+  | "audit"
+export type RecoveryComplianceStatus = "pending" | "approved" | "needs_changes" | "blocked"
 export type DiscussionCategory =
   | "Contractor Experience"
   | "Client Response"
@@ -93,6 +120,10 @@ export type AdminEntityType =
   | "discussion"
   | "evidence"
   | "bulk_upload"
+  | "recovery"
+  | "contract"
+  | "risk_room"
+  | "pipeline"
   | "setting"
 export type TimelineEventType =
   | "submitted"
@@ -264,6 +295,100 @@ export interface ContractWorkspaceItem {
   updatedAt: string
 }
 
+export interface ClientPipelineItem {
+  id: string
+  contractorId: string
+  clientId?: string
+  clientName: string
+  city: string
+  state: string
+  stage: ClientPipelineStage
+  priority: ModerationPriority
+  estimatedValue: number
+  nextAction: string
+  dueAt?: string
+  privateMatch: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ClientRiskRoom {
+  id: string
+  contractorId: string
+  clientId?: string
+  clientName: string
+  city: string
+  state: string
+  headline: string
+  summary: string
+  linkedSearchIds: string[]
+  linkedWatchlistIds: string[]
+  linkedAssessmentIds: string[]
+  linkedContractIds: string[]
+  linkedReportDraftIds: string[]
+  linkedEvidenceIds: string[]
+  linkedRecoveryIds: string[]
+  linkedResolutionIds: string[]
+  lastActivityAt: string
+  createdAt: string
+}
+
+export interface PaymentRecoveryAttempt {
+  id: string
+  recoveryCaseId: string
+  contractorId: string
+  channel: RecoveryChannel
+  attemptedAt: string
+  outcome: PaymentRecoveryAttemptOutcome
+  note: string
+  nextFollowUpAt?: string
+  createdAt: string
+}
+
+export interface PaymentPlan {
+  id: string
+  recoveryCaseId: string
+  contractorId: string
+  totalAmount: number
+  installmentAmount: number
+  dueDay: number
+  status: PaymentPlanStatus
+  nextDueDate?: string
+  notes: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ContractPacket {
+  id: string
+  contractorId: string
+  clientName: string
+  projectType: string
+  templateType: ContractTemplateType
+  status: ContractPacketStatus
+  packetValue: number
+  depositRequired: number
+  milestoneCount: number
+  requiredBeforeScheduling: boolean
+  nextAction: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface EvidenceVaultItem {
+  id: string
+  contractorId: string
+  reportId?: string
+  clientName: string
+  label: string
+  fileCategory: "invoice" | "screenshot" | "contract" | "photo" | "pdf" | "other"
+  status: EvidenceVaultStatus
+  privateStoragePath: string
+  publicSummary: string
+  uploadedAt: string
+  updatedAt: string
+}
+
 export interface ContractorActivityItem {
   id: string
   contractorId: string
@@ -274,14 +399,20 @@ export interface ContractorActivityItem {
 }
 
 export interface ContractorRiskOpsData {
+  clientPipeline: ClientPipelineItem[]
+  riskRooms: ClientRiskRoom[]
   watchlist: ContractorWatchlistItem[]
   watchlistAlerts: WatchlistAlert[]
   reportDrafts: ReportDraft[]
   intakeAssessments: ClientIntakeAssessment[]
   evidenceSummaries: EvidenceReviewSummary[]
+  evidenceVault: EvidenceVaultItem[]
   paymentRecoveryCases: PaymentRecoveryCase[]
+  paymentRecoveryAttempts: PaymentRecoveryAttempt[]
+  paymentPlans: PaymentPlan[]
   lienNoticeDrafts: LienNoticeDraft[]
   contractDocuments: ContractWorkspaceItem[]
+  contractPackets: ContractPacket[]
   activity: ContractorActivityItem[]
   recommendedActions: string[]
 }
@@ -462,6 +593,44 @@ export interface AdminModerationCrmData {
   cases: ModerationCase[]
   workload: AdminWorkloadMetric[]
   importBatches: BulkImportBatch[]
+  savedViews: AdminSavedView[]
+  queueAssignments: AdminQueueAssignment[]
+  recoveryComplianceReviews: RecoveryComplianceReview[]
+}
+
+export interface AdminSavedView {
+  id: string
+  scope: AdminSavedViewScope
+  name: string
+  filters: Record<string, string>
+  isDefault: boolean
+  createdBy: string
+  createdAt: string
+}
+
+export interface AdminQueueAssignment {
+  id: string
+  entityType: AdminSavedViewScope
+  entityId: string
+  assignedTo: string
+  assignedToName: string
+  priority: ModerationPriority
+  dueAt: string
+  status: "open" | "in_review" | "closed"
+}
+
+export interface RecoveryComplianceReview {
+  id: string
+  recoveryCaseId?: string
+  lienNoticeDraftId?: string
+  contractPacketId?: string
+  reviewerId?: string
+  status: RecoveryComplianceStatus
+  decisionReason: string
+  requiredChanges: string[]
+  publicVisibilityAllowed: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface AdminWorkspaceData {
