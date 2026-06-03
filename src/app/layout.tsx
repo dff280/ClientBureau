@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     template: "%s | Client Bureau",
   },
   description:
-    "Client Bureau helps business owners search clients, review moderated reports, and submit documented client experiences before accepting work.",
+    "Client Bureau helps business owners check clients, set terms, document jobs, track payment issues, and resolve disputes before risk grows.",
   keywords: [
     "Client Bureau",
     "contractor client reports",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Client Bureau",
     description:
-      "Moderated client-risk intelligence before the job starts.",
+      "Check the client before you take the job.",
     url: getSiteUrl(),
     siteName: "Client Bureau",
     locale: "en_US",
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Client Bureau",
     description:
-      "Moderated client-risk intelligence before the job starts.",
+      "Check the client before you take the job.",
   },
   robots: {
     index: true,

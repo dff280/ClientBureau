@@ -46,9 +46,11 @@ import {
 } from "@/lib/repositories/client-bureau"
 import {
   businessProtectionPromise,
+  corePositioning,
   protectionGuardrails,
   protectionWorkflowSteps,
 } from "@/lib/product-positioning"
+import { contractorPrimaryNav, publicPrimaryNav } from "@/lib/navigation"
 import {
   clientProfiles,
   adminSavedViews,
@@ -174,9 +176,31 @@ describe("product positioning", () => {
       "payment",
       "resolve",
     ])
+    expect(corePositioning).toBe("Check the client before you take the job.")
     expect(copy).toContain("Set the terms")
     expect(copy).toContain("Recovery is documentation-first")
     expect(copy.toLowerCase()).not.toMatch(/blacklist|shame|scammer|deadbeat|fraudster/)
+  })
+
+  it("exposes platform modules in public and contractor navigation", () => {
+    expect(publicPrimaryNav.map((item) => item.label)).toEqual([
+      "Search",
+      "Platform",
+      "Reports",
+      "Pricing",
+      "About",
+    ])
+    expect(contractorPrimaryNav.map((item) => item.label)).toEqual([
+      "Dashboard",
+      "Search",
+      "Contracts",
+      "Evidence",
+      "Payment",
+      "Reports",
+    ])
+    expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
+      "/dashboard?workspace=contracts",
+    )
   })
 })
 

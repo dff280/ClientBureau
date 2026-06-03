@@ -1,23 +1,9 @@
 import Link from "next/link"
 
 import { BrandMark } from "@/components/brand/brand-mark"
+import { footerNavigationGroups } from "@/lib/navigation"
 import { getPublicContactInfo, getPublicSocialLinks } from "@/lib/env"
-
-const footerLinks = [
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-  { href: "/enterprise", label: "Enterprise" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/search", label: "Search Clients" },
-  { href: "/submit-report", label: "Submit Report" },
-  { href: "/client-response", label: "Client Response" },
-  { href: "/score-methodology", label: "Score Methodology" },
-  { href: "/terms", label: "Terms" },
-  { href: "/privacy", label: "Privacy" },
-  { href: "/report-policy", label: "Report Policy" },
-  { href: "/dispute-policy", label: "Disputes" },
-  { href: "/moderation-policy", label: "Moderation" },
-]
+import { corePositioning } from "@/lib/product-positioning"
 
 export function SiteFooter() {
   const socialLinks = getPublicSocialLinks()
@@ -26,12 +12,12 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-slate-200 bg-white">
-      <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[1.2fr_0.8fr_0.8fr]">
+      <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[1.1fr_1.5fr_0.8fr]">
         <div className="space-y-4">
           <BrandMark />
           <p className="max-w-xl text-sm leading-6 text-slate-600">
-            Know who you&apos;re working with before the job starts. Client Bureau publishes
-            moderated, contractor-submitted reports with client right-of-response built in.
+            {corePositioning} Client Bureau combines client risk intelligence, moderated public
+            reports, contract workflows, evidence records, payment tracking, and response paths.
           </p>
           {socialLinks.length > 0 ? (
             <div className="flex flex-wrap gap-2 text-sm">
@@ -49,11 +35,18 @@ export function SiteFooter() {
             </div>
           ) : null}
         </div>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          {footerLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="text-slate-600 hover:text-slate-950">
-              {link.label}
-            </Link>
+        <div className="grid gap-6 text-sm sm:grid-cols-2 xl:grid-cols-4">
+          {footerNavigationGroups.map((group) => (
+            <div key={group.title} className="space-y-3">
+              <p className="text-xs font-semibold uppercase text-slate-500">{group.title}</p>
+              <div className="grid gap-2">
+                {group.links.map((link) => (
+                  <Link key={link.href} href={link.href} className="text-slate-600 hover:text-slate-950">
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
         <div className="space-y-3 text-sm leading-6 text-slate-600">

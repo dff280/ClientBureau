@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState, useEffect, useMemo, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useActionState, useEffect, useMemo } from "react"
 import {
   AlertTriangle,
   BellRing,
@@ -107,6 +108,22 @@ const paymentPlanState: ActionResult<PaymentPlan> = { ok: false, message: "" }
 const contractPacketState: ActionResult<ContractPacket> = { ok: false, message: "" }
 const contractShareState: ActionResult<ContractPacket> = { ok: false, message: "" }
 const evidenceVaultState: ActionResult<EvidenceVaultItem> = { ok: false, message: "" }
+const workspaceTabs = new Set([
+  "overview",
+  "pipeline",
+  "watchlist",
+  "alerts",
+  "reports",
+  "evidence",
+  "recovery",
+  "contracts",
+  "account",
+  "activity",
+])
+
+function normalizeWorkspaceTab(value: string | null) {
+  return value && workspaceTabs.has(value) ? value : "overview"
+}
 
 export function RiskOpsWorkspace({
   riskOps,
@@ -115,6 +132,22 @@ export function RiskOpsWorkspace({
   riskOps: ContractorRiskOpsData
   clients: ClientProfile[]
 }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const activeTab = normalizeWorkspaceTab(searchParams.get("workspace"))
+  const updateWorkspaceTab = (tab: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+
+    if (tab === "overview") {
+      params.delete("workspace")
+    } else {
+      params.set("workspace", tab)
+    }
+
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }
   const rankedWatchlist = useMemo(
     () => rankWatchlistItems(riskOps.watchlist, clients),
     [clients, riskOps.watchlist],
@@ -132,7 +165,6 @@ export function RiskOpsWorkspace({
   const lienDraftsRequiringReview = riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length
   const rankedPipeline = useMemo(() => rankClientPipelineItems(riskOps.clientPipeline), [riskOps.clientPipeline])
   const stageCounts = useMemo(() => pipelineStageCounts(riskOps.clientPipeline), [riskOps.clientPipeline])
-  const [activeTab, setActiveTab] = useState("overview")
   const todaysWork = useMemo(
     () =>
       buildTodaysWorkItems({
@@ -150,7 +182,7 @@ export function RiskOpsWorkspace({
 
   return (
     <div className="space-y-6">
-      <ContractorWorkspaceGuidance onOpenTab={setActiveTab} />
+      <ContractorWorkspaceGuidance onOpenTab={updateWorkspaceTab} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-8">
         <RiskMetric label="Today" value={todaysWork.length} helper="Next best actions" tone="slate" />
@@ -163,7 +195,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Contracts" value={openContractPackets} helper="Client signing links" tone="emerald" />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+      <Tabs value={activeTab} onValueChange={updateWorkspaceTab} className="space-y-5">
         <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
           <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
             <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>

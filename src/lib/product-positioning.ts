@@ -13,6 +13,8 @@ import type { LucideIcon } from "lucide-react"
 export const businessProtectionPromise =
   "Check the client. Set the terms. Document the job. Protect payment. Resolve issues."
 
+export const corePositioning = "Check the client before you take the job."
+
 export type ProtectionWorkflowStep = {
   id: "check" | "terms" | "document" | "payment" | "resolve"
   phase: string

@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   ClipboardCheck,
-  FileSpreadsheet,
   History,
   LogOut,
   MessageSquareText,
@@ -18,50 +17,21 @@ import {
 import { AdminActionTokenProvider } from "@/components/admin/admin-action-token-context"
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Button } from "@/components/ui/button"
+import { adminNavigationGroups } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
-const adminNav = [
-  {
-    href: "/admin",
-    label: "Command",
-    icon: ShieldCheck,
-  },
-  {
-    href: "/admin/reports",
-    label: "Reports",
-    icon: ClipboardCheck,
-  },
-  {
-    href: "/admin/clients",
-    label: "Clients",
-    icon: UserRound,
-  },
-  {
-    href: "/admin/contractors",
-    label: "Contractors",
-    icon: UsersRound,
-  },
-  {
-    href: "/admin/discussions",
-    label: "Discussions",
-    icon: MessageSquareText,
-  },
-  {
-    href: "/admin/uploads",
-    label: "Uploads",
-    icon: UploadCloud,
-  },
-  {
-    href: "/admin/audit-log",
-    label: "Audit Log",
-    icon: History,
-  },
-  {
-    href: "/admin/settings",
-    label: "Settings",
-    icon: Settings,
-  },
-]
+const adminIcons = {
+  "/admin": ShieldCheck,
+  "/admin/reports": ClipboardCheck,
+  "/admin/clients": UserRound,
+  "/admin/contractors": UsersRound,
+  "/admin/discussions": MessageSquareText,
+  "/admin/uploads": UploadCloud,
+  "/admin/audit-log": History,
+  "/admin/settings": Settings,
+}
+
+const adminNav = adminNavigationGroups.flatMap((group) => group.links)
 
 export function AdminAppShell({
   adminName,
@@ -89,26 +59,31 @@ export function AdminAppShell({
             </div>
           </div>
 
-          <nav className="flex-1 space-y-1 p-4">
-            {adminNav.map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href
+          <nav className="flex-1 space-y-5 p-4">
+            {adminNavigationGroups.map((group) => (
+              <div key={group.title} className="space-y-1">
+                <p className="px-3 text-xs font-semibold uppercase text-slate-500">{group.title}</p>
+                {group.links.map((item) => {
+                  const Icon = adminIcons[item.href as keyof typeof adminIcons] ?? ShieldCheck
+                  const isActive = pathname === item.href
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  prefetch={false}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white",
-                    isActive && "bg-white text-slate-950 hover:bg-white hover:text-slate-950",
-                  )}
-                >
-                  <Icon className="size-4" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              )
-            })}
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      prefetch={false}
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/10 hover:text-white",
+                        isActive && "bg-white text-slate-950 hover:bg-white hover:text-slate-950",
+                      )}
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                      {item.label}
+                    </Link>
+                  )
+                })}
+              </div>
+            ))}
           </nav>
 
           <div className="space-y-3 border-t border-white/10 p-4">
@@ -118,9 +93,9 @@ export function AdminAppShell({
             </div>
             <div className="grid gap-2">
               <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
-                <Link href="/submit-report">
-                  <FileSpreadsheet aria-hidden="true" />
-                  New report
+                <Link href="/admin/reports" prefetch={false}>
+                  <ClipboardCheck aria-hidden="true" />
+                  Review reports
                 </Link>
               </Button>
               <Button asChild variant="ghost" className="justify-start text-slate-300 hover:bg-white/10 hover:text-white">

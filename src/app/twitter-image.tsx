@@ -1,7 +1,7 @@
 import OpenGraphImage from "./opengraph-image"
 
 export const runtime = "edge"
-export const alt = "Client Bureau - Search client reports before you sign"
+export const alt = "Client Bureau - Check the client before you take the job"
 export const size = {
   width: 1200,
   height: 630,

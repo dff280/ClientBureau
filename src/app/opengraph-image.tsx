@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og"
 
 export const runtime = "edge"
-export const alt = "Client Bureau - Search client reports before you sign"
+export const alt = "Client Bureau - Check the client before you take the job"
 export const size = {
   width: 1200,
   height: 630,
@@ -44,23 +44,23 @@ export default function OpenGraphImage() {
           <div style={{ display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 30, fontWeight: 700 }}>Client Bureau</div>
             <div style={{ color: "#d6a13d", fontSize: 18, textTransform: "uppercase" }}>
-              Contractor Intelligence
+              Business Protection Platform
             </div>
           </div>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
           <div style={{ maxWidth: 880, fontSize: 72, lineHeight: 1.02, fontWeight: 700 }}>
-            Search client reports before you sign.
+            Check the client before you take the job.
           </div>
           <div style={{ maxWidth: 900, color: "#cbd5e1", fontSize: 28, lineHeight: 1.35 }}>
-            Moderated contractor-submitted reports, private matching, evidence-on-file summaries,
-            and response context.
+            Client risk intelligence, public reports, contracts, evidence records, payment tracking,
+            and response workflows.
           </div>
         </div>
         <div style={{ display: "flex", gap: 18, color: "#f8fafc", fontSize: 20 }}>
           <span>Private matching</span>
-          <span>Moderated summaries</span>
-          <span>Evidence on file</span>
+          <span>Contract workflows</span>
+          <span>Evidence vault</span>
         </div>
       </div>
     ),

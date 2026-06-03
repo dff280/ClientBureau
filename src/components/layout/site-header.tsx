@@ -2,11 +2,13 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { FilePlus2, LayoutDashboard, LogIn, LogOut, Menu, Search, UserCircle } from "lucide-react"
+import { FilePlus2, LogIn, LogOut, Menu, Search, UserCircle } from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { contractorPrimaryNav, publicPrimaryNav } from "@/lib/navigation"
+import { corePositioning } from "@/lib/product-positioning"
 import { publicSocialLinks } from "@/lib/public-site"
 import {
   DropdownMenu,
@@ -23,14 +25,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-
-const navItems = [
-  { href: "/search", label: "Search" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-]
 
 type SessionState = {
   authenticated: boolean
@@ -65,19 +59,18 @@ export function SiteHeader() {
     }
   }, [])
 
-  const authNav = session.authenticated
-    ? [
-        { href: "/dashboard", label: "Dashboard" },
-        { href: "/search", label: "Search" },
-        { href: "/submit-report", label: "Submit report" },
-      ]
-    : navItems
+  const authNav = session.authenticated ? contractorPrimaryNav : publicPrimaryNav
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="bureau-container flex min-h-16 items-center justify-between gap-4">
-        <BrandMark />
-        <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
+        <div className="flex min-w-0 items-center gap-4">
+          <BrandMark />
+          <span className="hidden max-w-52 text-xs font-semibold leading-5 text-slate-500 xl:inline">
+            {corePositioning}
+          </span>
+        </div>
+        <nav className="hidden items-center gap-4 text-sm font-medium text-slate-600 lg:flex">
           {authNav.map((item) => (
             <Link key={item.href} href={item.href} className="transition hover:text-slate-950">
               {item.label}
@@ -104,7 +97,12 @@ export function SiteHeader() {
                     href={item.href}
                     className="rounded-md border border-slate-200 px-3 py-3 text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
                   >
-                    {item.label}
+                    <span className="font-semibold">{item.label}</span>
+                    {item.description ? (
+                      <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">
+                        {item.description}
+                      </span>
+                    ) : null}
                   </Link>
                 ))}
                 {publicSocialLinks.length > 0 ? (
@@ -156,12 +154,6 @@ export function SiteHeader() {
               <Badge variant="outline" className="hidden rounded-md border-amber-200 bg-amber-50 text-amber-900 md:inline-flex">
                 Free plan
               </Badge>
-              <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
-                <Link href="/dashboard">
-                  <LayoutDashboard aria-hidden="true" />
-                  Dashboard
-                </Link>
-              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" className="bg-slate-950 text-white hover:bg-slate-800">
@@ -173,14 +165,13 @@ export function SiteHeader() {
                   <DropdownMenuLabel>{session.email ?? "Contractor account"}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard</Link>
+                    <Link href="/dashboard">Dashboard workspace</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/search">Search clients</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/submit-report">Submit report</Link>
-                  </DropdownMenuItem>
+                  {contractorPrimaryNav.slice(1).map((item) => (
+                    <DropdownMenuItem key={item.href} asChild>
+                      <Link href={item.href}>{item.label}</Link>
+                    </DropdownMenuItem>
+                  ))}
                   {session.role === "admin" ? (
                     <DropdownMenuItem asChild>
                       <Link href="/admin">Admin</Link>
@@ -207,7 +198,7 @@ export function SiteHeader() {
               <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
                 <Link href="/search">
                   <Search aria-hidden="true" />
-                  Search clients
+                  Check client
                 </Link>
               </Button>
               <Button size="sm" asChild className="bg-slate-950 text-white hover:bg-slate-800">

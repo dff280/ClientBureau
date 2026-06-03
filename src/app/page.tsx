@@ -40,11 +40,12 @@ import {
   getWebSiteSchema,
   JsonLd,
 } from "@/lib/seo"
+import { corePositioning } from "@/lib/product-positioning"
 
 export const metadata: Metadata = {
-  title: "Client Bureau | Search Client Reports Before You Sign",
+  title: "Client Bureau | Check Clients Before You Take the Job",
   description:
-    "Search Client Bureau before accepting work. Review moderated client reports, private matching, evidence-on-file summaries, and response context.",
+    "Check clients before you take the job. Review moderated reports, private matching, contracts, evidence workflows, and response context.",
   alternates: {
     canonical: "/",
   },
@@ -216,7 +217,7 @@ export default async function Home() {
             </div>
             <div className="space-y-5">
               <h1 className="text-5xl font-semibold leading-tight tracking-normal sm:text-6xl lg:text-7xl">
-                Search before you sign.
+                {corePositioning}
               </h1>
               <p className="max-w-3xl text-xl leading-8 text-slate-100">
                 Check client history, set clear terms, send agreement links, document the job,
