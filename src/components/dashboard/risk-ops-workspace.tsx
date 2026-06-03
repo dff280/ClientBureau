@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import {
   createContractWorkspaceItemAction,
@@ -105,7 +106,24 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="State-specific review" tone="rose" />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <Tabs defaultValue="client-risk" className="space-y-5">
+        <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
+          <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
+            <TabsTrigger value="client-risk" className="px-3 py-2">Client risk</TabsTrigger>
+            <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
+            <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
+            <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
+            <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
+            <TabsTrigger value="activity" className="px-3 py-2">Activity</TabsTrigger>
+          </TabsList>
+        </div>
+
+        <TabsContent value="client-risk" className="space-y-5">
+          <WorkspaceIntro
+            title="Search, watch, and assess before scheduling"
+            text="Use this workspace before accepting new work, approving change orders, or committing crew time."
+          />
+          <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -165,9 +183,15 @@ export function RiskOpsWorkspace({
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
 
-      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+        <TabsContent value="alerts" className="space-y-5">
+          <WorkspaceIntro
+            title="Monitoring alerts"
+            text="Review watched-client changes, dispute updates, resolved-case signals, and score movement without digging through every tool."
+          />
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
             <BellRing className="size-5 text-amber-700" aria-hidden="true" />
@@ -184,9 +208,15 @@ export function RiskOpsWorkspace({
             </div>
           ) : null}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+        <TabsContent value="recovery" className="space-y-5">
+          <WorkspaceIntro
+            title="Payment recovery and lien-readiness controls"
+            text="Create documented outreach, call logs, and private notice-readiness packets with review gates before anything is sent."
+          />
+          <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -232,9 +262,15 @@ export function RiskOpsWorkspace({
             </div>
           </CardContent>
         </Card>
-      </div>
+          </div>
+        </TabsContent>
 
-      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+        <TabsContent value="contracts" className="space-y-5">
+          <WorkspaceIntro
+            title="Contract and packet controls"
+            text="Build reusable scope, deposit, milestone billing, change-order, completion, and payment-plan packets."
+          />
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
             <Signature className="size-5 text-amber-700" aria-hidden="true" />
@@ -257,7 +293,14 @@ export function RiskOpsWorkspace({
         </CardContent>
       </Card>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-5">
+          <WorkspaceIntro
+            title="Reports, evidence, and submission readiness"
+            text="Continue report drafts, check evidence review, and follow the next recommended documentation step."
+          />
+          <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="flex items-center gap-2 text-xl">
@@ -326,9 +369,15 @@ export function RiskOpsWorkspace({
             </CardContent>
           </Card>
         </div>
-      </div>
+          </div>
+        </TabsContent>
 
-      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+        <TabsContent value="activity" className="space-y-5">
+          <WorkspaceIntro
+            title="Recent operations activity"
+            text="Use this timeline to confirm recent reports, saved searches, approvals, evidence changes, and resolution work."
+          />
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="text-xl">Recent risk operations activity</CardTitle>
         </CardHeader>
@@ -350,7 +399,19 @@ export function RiskOpsWorkspace({
             </div>
           ))}
         </CardContent>
-      </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+function WorkspaceIntro({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs font-semibold uppercase text-amber-700">Workspace</p>
+      <h2 className="mt-1 text-xl font-semibold text-slate-950">{title}</h2>
+      <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{text}</p>
     </div>
   )
 }
