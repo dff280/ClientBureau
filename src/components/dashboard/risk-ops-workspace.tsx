@@ -99,6 +99,12 @@ export function RiskOpsWorkspace({
               {rankedWatchlist.map((item) => (
                 <WatchlistCard key={item.id} item={item} client={clients.find((client) => client.id === item.clientId)} />
               ))}
+              {rankedWatchlist.length === 0 ? (
+                <EmptyState
+                  title="No watched clients yet"
+                  text="Watch a client profile to track new reports, response context, dispute changes, resolved cases, and score movement."
+                />
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -130,6 +136,12 @@ export function RiskOpsWorkspace({
                   <p className="mt-2 text-xs leading-5 text-slate-600">{assessment.notes}</p>
                 </div>
               ))}
+              {riskOps.intakeAssessments.length === 0 ? (
+                <EmptyState
+                  title="No intake assessments yet"
+                  text="Create an assessment before accepting work that requires deposits, materials, crew time, or scheduled access."
+                />
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -168,6 +180,12 @@ export function RiskOpsWorkspace({
               {riskOps.reportDrafts.map((draft) => (
                 <DraftCard key={draft.id} draft={draft} />
               ))}
+              {riskOps.reportDrafts.length === 0 ? (
+                <EmptyState
+                  title="No draft reports yet"
+                  text="Save a draft when you need time to collect invoice, access, communication, or completion details before submission."
+                />
+              ) : null}
             </div>
           </CardContent>
         </Card>
@@ -194,6 +212,12 @@ export function RiskOpsWorkspace({
                   </p>
                 </div>
               ))}
+              {riskOps.evidenceSummaries.length === 0 ? (
+                <EmptyState
+                  title="No evidence in review"
+                  text="Evidence summaries appear here after reports include invoices, screenshots, contracts, photos, or PDFs for private review."
+                />
+              ) : null}
             </CardContent>
           </Card>
 
@@ -471,6 +495,15 @@ function RiskMetric({
       </div>
       <p className="mt-2 text-3xl font-semibold">{value}</p>
       <p className="mt-1 text-xs opacity-70">{helper}</p>
+    </div>
+  )
+}
+
+function EmptyState({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-md border border-dashed border-slate-300 bg-white p-4 text-sm">
+      <p className="font-semibold text-slate-950">{title}</p>
+      <p className="mt-1 leading-6 text-slate-600">{text}</p>
     </div>
   )
 }

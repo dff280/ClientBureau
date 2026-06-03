@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import {
+  AlertCircle,
   CheckCircle2,
   CreditCard,
   FilePlus2,
@@ -43,7 +44,23 @@ export default async function DashboardPage() {
     getContractorRiskOpsDataService(user.id),
   ])
 
-  if (!dashboard || !riskOps) return null
+  if (!dashboard) {
+    return (
+      <DashboardSetupState
+        title="Your dashboard workspace is being prepared."
+        message="Your account is signed in, but Client Bureau could not load a contractor workspace yet. Start with a client search or refresh the dashboard after profile setup completes."
+      />
+    )
+  }
+
+  if (!riskOps) {
+    return (
+      <DashboardSetupState
+        title="Risk Ops is being prepared."
+        message="Your contractor profile is active, but the operations workspace did not load. You can still search clients and submit documented reports while this feature workspace initializes."
+      />
+    )
+  }
 
   const subscriptionTier = dashboard.subscription?.tier ?? "free"
   const subscriptionStatus =
@@ -271,5 +288,44 @@ function Metric({ label, value }: { label: string; value: number }) {
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
       <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
     </div>
+  )
+}
+
+function DashboardSetupState({ title, message }: { title: string; message: string }) {
+  return (
+    <section className="bg-slate-100">
+      <div className="bureau-container py-12">
+        <Card className="mx-auto max-w-3xl rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="space-y-6 p-8">
+            <div className="flex size-12 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+              <AlertCircle className="size-6" aria-hidden="true" />
+            </div>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-semibold tracking-normal text-slate-950">
+                {title}
+              </h1>
+              <p className="text-sm leading-6 text-slate-600">{message}</p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                <Link href="/search">
+                  <Search aria-hidden="true" />
+                  Search a client
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/submit-report">
+                  <FilePlus2 aria-hidden="true" />
+                  Submit report
+                </Link>
+              </Button>
+              <Button asChild variant="ghost">
+                <Link href="/dashboard">Refresh dashboard</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
   )
 }

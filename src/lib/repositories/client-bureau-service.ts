@@ -53,6 +53,7 @@ import type {
 import type {
   ClientProfile,
   CommunityDiscussion,
+  ContractorRiskOpsData,
   ContractorProfile,
   ModerationCaseStatus,
   ModerationDecisionReason,
@@ -122,7 +123,15 @@ export async function getAdminWorkspaceDataService() {
 export async function getContractorRiskOpsDataService(userId: string) {
   if (shouldUsePlatformSupabase()) return undefined
 
-  return getContractorRiskOpsData(userId)
+  const seededRiskOps = getContractorRiskOpsData(userId)
+
+  if (seededRiskOps) return seededRiskOps
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+
+  if (!dashboard) return undefined
+
+  return createDefaultRiskOpsData(dashboard.contractor.id)
 }
 
 export async function getAdminModerationCrmDataService() {
@@ -241,7 +250,7 @@ export async function deleteAdminRecordService(
 export async function createWatchlistItemService(userId: string, input: WatchlistItemInput) {
   if (shouldUsePlatformSupabase()) return undefined
 
-  const dashboard = getContractorDashboard(userId)
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
   if (!dashboard) throw new Error("Contractor workspace was not found.")
 
   return createWatchlistItem({
@@ -261,7 +270,7 @@ export async function updateWatchlistItemService(itemId: string, status: Watchli
 export async function saveReportDraftService(userId: string, input: ReportDraftInput) {
   if (shouldUsePlatformSupabase()) return undefined
 
-  const dashboard = getContractorDashboard(userId)
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
   if (!dashboard) throw new Error("Contractor workspace was not found.")
 
   return saveReportDraft({
@@ -287,7 +296,7 @@ export async function deleteReportDraftService(draftId: string) {
 export async function createIntakeAssessmentService(userId: string, input: IntakeAssessmentInput) {
   if (shouldUsePlatformSupabase()) return undefined
 
-  const dashboard = getContractorDashboard(userId)
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
   if (!dashboard) throw new Error("Contractor workspace was not found.")
 
   return createIntakeAssessment({
@@ -328,4 +337,37 @@ export async function setModerationDecisionReasonService(
   if (shouldUsePlatformSupabase()) return undefined
 
   return setMockModerationDecisionReason(caseId, decisionReason, moderatorNote)
+}
+
+function createDefaultRiskOpsData(contractorId: string): ContractorRiskOpsData {
+  const now = new Date().toISOString()
+
+  return {
+    watchlist: [],
+    watchlistAlerts: [],
+    reportDrafts: [],
+    intakeAssessments: [],
+    evidenceSummaries: [],
+    activity: [
+      {
+        id: `activity_${contractorId}_workspace_created`,
+        contractorId,
+        title: "Workspace ready",
+        description: "Start by searching a client, saving an intake assessment, or submitting a documented report.",
+        createdAt: now,
+        tone: "neutral",
+      },
+    ],
+    recommendedActions: [
+      "Search a client before accepting the next job.",
+      "Create an intake assessment for any client that requires materials, deposits, or scheduling.",
+      "Submit documented reports with evidence so moderation has the right context.",
+    ],
+  }
+}
+
+async function getContractorDashboardForPlatformFeatures(userId: string) {
+  return shouldUseSupabase()
+    ? getContractorDashboardSupabase(userId)
+    : getContractorDashboard(userId)
 }
