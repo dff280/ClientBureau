@@ -219,6 +219,14 @@ describe("search and public profiles", () => {
     expect(JSON.stringify(profile)).not.toContain("@")
   })
 
+  it("publishes approved positive reports separately from concern summaries", () => {
+    const profile = getPublicClientProfile("maria-alvarez-tampa-fl")
+
+    expect(profile?.positiveReports).toHaveLength(2)
+    expect(profile?.positiveReports.every((report) => report.amountUnpaid === 0)).toBe(true)
+    expect(profile?.balanceSummary.totalReportedUnpaid).toBe(0)
+  })
+
   it("adds score breakdown and balance summaries to public profiles", () => {
     const profile = getPublicClientProfile("john-smith-orlando-fl")
 
@@ -276,6 +284,55 @@ describe("schemas and mock actions", () => {
     })
 
     expect(parsed.success).toBe(false)
+  })
+
+  it("validates positive report submissions with no unpaid amount", () => {
+    const validPositive = clientReportSchema.safeParse({
+      firstName: "Maria",
+      lastName: "Alvarez",
+      businessName: "Alvarez Beach Rentals",
+      phone: undefined,
+      email: "",
+      city: "Tampa",
+      state: "FL",
+      projectType: "Rental unit paint refresh",
+      projectCity: "Tampa",
+      projectState: "FL",
+      contractAmount: 5100,
+      amountUnpaid: 0,
+      reportCategory: "Would work with again",
+      paymentStatus: "Paid on schedule with clear communication",
+      reportSummary:
+        "A contractor-submitted positive report states the client paid according to the agreement and communicated clearly.",
+      detailedExperience:
+        "The contractor reported clear scheduling, timely access, prompt approvals, and payment within the agreed invoice window after completion.",
+      truthfulCertification: true,
+      documentationCertification: true,
+      publicSummaryCertification: true,
+    })
+    const invalidPositive = clientReportSchema.safeParse({
+      firstName: "Maria",
+      lastName: "Alvarez",
+      city: "Tampa",
+      state: "FL",
+      projectType: "Rental unit paint refresh",
+      projectCity: "Tampa",
+      projectState: "FL",
+      contractAmount: 5100,
+      amountUnpaid: 100,
+      reportCategory: "Positive experience",
+      paymentStatus: "Paid on schedule with clear communication",
+      reportSummary:
+        "A contractor-submitted positive report states the client paid according to the agreement and communicated clearly.",
+      detailedExperience:
+        "The contractor reported clear scheduling, timely access, prompt approvals, and payment within the agreed invoice window after completion.",
+      truthfulCertification: true,
+      documentationCertification: true,
+      publicSummaryCertification: true,
+    })
+
+    expect(validPositive.success).toBe(true)
+    expect(invalidPositive.success).toBe(false)
   })
 
   it("accepts client response requests with factual context", () => {

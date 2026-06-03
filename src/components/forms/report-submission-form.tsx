@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect, useState } from "react"
-import { CheckCircle2, FileText, ShieldCheck, UploadCloud } from "lucide-react"
+import { AlertTriangle, CheckCircle2, FileText, ShieldCheck, ThumbsUp, UploadCloud } from "lucide-react"
 import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
@@ -11,8 +11,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { submitClientReportAction } from "@/lib/actions/client-bureau"
-import type { ActionResult, ClientReport } from "@/lib/types"
-import { reportCategories } from "@/lib/types"
+import type { ActionResult, ClientReport, ReportCategory } from "@/lib/types"
+import { isPositiveReportCategory, positiveReportCategories, reportCategories } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const initialState: ActionResult<ClientReport> = {
   ok: false,
@@ -26,6 +27,10 @@ interface ReportSubmissionFormProps {
 export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProps) {
   const [state, action] = useActionState(submitClientReportAction, initialState)
   const [files, setFiles] = useState<File[]>([])
+  const initialCategory = defaults.intent === "positive" ? positiveReportCategories[0] : reportCategories[0]
+  const [reportCategory, setReportCategory] = useState<ReportCategory>(initialCategory)
+  const [amountUnpaid, setAmountUnpaid] = useState(defaults.amountUnpaid ?? "")
+  const isPositiveReport = isPositiveReportCategory(reportCategory)
 
   useEffect(() => {
     if (state.message) {
@@ -35,6 +40,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
 
   return (
     <form action={action} className="grid gap-6">
+      <input type="hidden" name="reportIntent" value={isPositiveReport ? "positive" : "concern"} />
       {state.ok ? (
         <Alert className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-950">
           <CheckCircle2 className="size-4" aria-hidden="true" />
@@ -119,20 +125,59 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <FieldError name="contractAmount" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="amountUnpaid">Amount unpaid</Label>
-            <Input id="amountUnpaid" name="amountUnpaid" type="number" placeholder="4200" />
+            <Label htmlFor="amountUnpaid">
+              {isPositiveReport ? "Amount unpaid" : "Amount unpaid"}
+            </Label>
+            <Input
+              id="amountUnpaid"
+              name="amountUnpaid"
+              type="number"
+              min="0"
+              value={isPositiveReport ? "0" : amountUnpaid}
+              readOnly={isPositiveReport}
+              placeholder={isPositiveReport ? "0" : "4200"}
+              onChange={(event) => setAmountUnpaid(event.target.value)}
+            />
+            <p className="text-xs leading-5 text-slate-500">
+              {isPositiveReport
+                ? "Positive reports must show no unpaid amount. Use payment status to describe paid, resolved, or would-work-again context."
+                : "Enter the amount currently represented as unpaid or unresolved. Use 0 if the issue is resolved."}
+            </p>
             <FieldError name="amountUnpaid" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
         </div>
       </WorkflowStep>
 
-      <WorkflowStep step="3" title="Payment timeline" text="Select the report category and state the current payment status using neutral, documentable language.">
-        <div className="grid gap-4 md:grid-cols-2">
+      <WorkflowStep
+        step="3"
+        title="Experience type and payment timeline"
+        text="Choose whether this is a concern report or a positive client recommendation. Both paths require moderation and documentation."
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          <ReportIntentCard
+            active={!isPositiveReport}
+            icon={<AlertTriangle className="size-5" aria-hidden="true" />}
+            title="Document a concern"
+            text="Use for payment issues, scope changes, cancellations, chargebacks, or other project concerns."
+            onClick={() => setReportCategory("Non-payment")}
+          />
+          <ReportIntentCard
+            active={isPositiveReport}
+            icon={<ThumbsUp className="size-5" aria-hidden="true" />}
+            title="Recommend a client"
+            text="Use for paid-on-time, cooperative, professional, or would-work-with-again experiences."
+            onClick={() => setReportCategory("Positive experience")}
+          />
+        </div>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="reportCategory">Report category</Label>
             <select
               id="reportCategory"
               name="reportCategory"
+              value={reportCategory}
+              onChange={(event) => setReportCategory(event.target.value as ReportCategory)}
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {reportCategories.map((category) => (
@@ -145,7 +190,15 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           </div>
           <div className="space-y-2">
             <Label htmlFor="paymentStatus">Payment status</Label>
-            <Input id="paymentStatus" name="paymentStatus" placeholder="Final invoice partially unpaid as of May 30" />
+            <Input
+              id="paymentStatus"
+              name="paymentStatus"
+              placeholder={
+                isPositiveReport
+                  ? "Paid on schedule; no open payment issue"
+                  : "Final invoice partially unpaid as of May 30"
+              }
+            />
             <FieldError name="paymentStatus" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
         </div>
@@ -157,7 +210,11 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           <Textarea
             id="detailedExperience"
             name="detailedExperience"
-            placeholder="Example: Contract signed March 2; substantial completion April 18; invoice sent April 19; two documented follow-ups; client requested additional documentation May 1."
+            placeholder={
+              isPositiveReport
+                ? "Example: Contract signed March 2; milestones were approved promptly; payment was received according to the agreement; communication was professional through completion."
+                : "Example: Contract signed March 2; substantial completion April 18; invoice sent April 19; two documented follow-ups; client requested additional documentation May 1."
+            }
             className="min-h-36"
           />
           <FieldError name="detailedExperience" errors={state.ok ? undefined : state.fieldErrors} />
@@ -170,7 +227,11 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           <Textarea
             id="reportSummary"
             name="reportSummary"
-            placeholder="A contractor-submitted report states that a final invoice remained partially unpaid after documented completion and follow-up communication."
+            placeholder={
+              isPositiveReport
+                ? "A contractor-submitted positive report states that the client paid according to the agreement and maintained clear project communication."
+                : "A contractor-submitted report states that a final invoice remained partially unpaid after documented completion and follow-up communication."
+            }
             className="min-h-28"
           />
           <FieldError name="reportSummary" errors={state.ok ? undefined : state.fieldErrors} />
@@ -214,7 +275,15 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         <div className="grid gap-3">
           <Attestation name="truthfulCertification" label="I certify this report is truthful to the best of my knowledge." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation name="documentationCertification" label="I can provide documentation or have accurately described the documentation available." errors={state.ok ? undefined : state.fieldErrors} />
-          <Attestation name="publicSummaryCertification" label="The public summary avoids private information, personal attacks, and claims about motive." errors={state.ok ? undefined : state.fieldErrors} />
+          <Attestation
+            name="publicSummaryCertification"
+            label={
+              isPositiveReport
+                ? "The public summary describes a positive reported experience without private details or exaggerated claims."
+                : "The public summary avoids private information, personal attacks, and claims about motive."
+            }
+            errors={state.ok ? undefined : state.fieldErrors}
+          />
         </div>
       </WorkflowStep>
 
@@ -226,6 +295,46 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         Submit report for review
       </PendingSubmitButton>
     </form>
+  )
+}
+
+function ReportIntentCard({
+  active,
+  icon,
+  title,
+  text,
+  onClick,
+}: {
+  active: boolean
+  icon: React.ReactNode
+  title: string
+  text: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-md border p-4 text-left transition hover:border-slate-400",
+        active
+          ? "border-slate-950 bg-slate-950 text-white shadow-sm"
+          : "border-slate-200 bg-slate-50 text-slate-700",
+      )}
+    >
+      <span
+        className={cn(
+          "mb-3 flex size-10 items-center justify-center rounded-md",
+          active ? "bg-white/10 text-amber-200" : "bg-white text-amber-700",
+        )}
+      >
+        {icon}
+      </span>
+      <span className="block font-semibold">{title}</span>
+      <span className={cn("mt-2 block text-sm leading-6", active ? "text-slate-200" : "text-slate-600")}>
+        {text}
+      </span>
+    </button>
   )
 }
 

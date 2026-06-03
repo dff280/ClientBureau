@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { ClientProfile, ClientReport, ReportEvidence } from "@/lib/types"
+import { isPositiveReportCategory, type ClientProfile, type ClientReport, type ReportEvidence } from "@/lib/types"
 
 const statuses = [
   "All",
@@ -18,6 +18,7 @@ const statuses = [
   "In Review",
   "Needs More Info",
   "Approved",
+  "Positive",
   "Rejected",
   "Published",
   "Disputed",
@@ -56,6 +57,7 @@ export function DashboardReports({
         if (status === "Submitted" || status === "In Review") return report.status === "pending"
         if (status === "Needs More Info") return report.moderationNote?.toLowerCase().includes("more info")
         if (status === "Approved") return report.status === "approved"
+        if (status === "Positive") return isPositiveReportCategory(report.reportCategory)
         if (status === "Rejected") return report.status === "rejected"
         if (status === "Published") return report.status === "approved" && Boolean(client?.isPublic)
         if (status === "Disputed") return report.status === "disputed"
@@ -99,6 +101,7 @@ export function DashboardReports({
               const client = clients.find((profile) => profile.id === report.clientId)
               const evidenceCount = evidence.filter((item) => item.reportId === report.id).length
               const publicStatus = getWorkflowLabel(report, Boolean(client?.isPublic))
+              const isPositive = isPositiveReportCategory(report.reportCategory)
 
               return (
                 <TableRow key={report.id}>
@@ -112,7 +115,12 @@ export function DashboardReports({
                       </div>
                     ) : null}
                   </TableCell>
-                  <TableCell>{report.reportCategory}</TableCell>
+                  <TableCell>
+                    {report.reportCategory}
+                    {isPositive ? (
+                      <div className="mt-1 text-xs font-medium text-emerald-700">Positive report</div>
+                    ) : null}
+                  </TableCell>
                   <TableCell>
                     <span className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold uppercase text-slate-600">
                       {publicStatus}
@@ -168,8 +176,14 @@ export function DashboardReports({
                   <p className="font-semibold text-slate-950">${selectedReport.contractAmount.toLocaleString()}</p>
                 </div>
                 <div className="rounded-md border border-slate-200 p-3">
-                  <p className="text-xs font-semibold uppercase text-slate-500">Unpaid</p>
-                  <p className="font-semibold text-slate-950">${selectedReport.amountUnpaid.toLocaleString()}</p>
+                  <p className="text-xs font-semibold uppercase text-slate-500">
+                    {isPositiveReportCategory(selectedReport.reportCategory) ? "Positive payment context" : "Unpaid"}
+                  </p>
+                  <p className="font-semibold text-slate-950">
+                    {isPositiveReportCategory(selectedReport.reportCategory)
+                      ? "No unpaid amount reported"
+                      : `$${selectedReport.amountUnpaid.toLocaleString()}`}
+                  </p>
                 </div>
               </div>
               <div className="space-y-2">

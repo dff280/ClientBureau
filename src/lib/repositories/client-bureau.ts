@@ -14,6 +14,7 @@ import {
   users,
   watchlistAlerts,
 } from "@/lib/mock-data"
+import { isPositiveReportCategory } from "@/lib/types"
 import {
   assignModerationCase,
   intakeAssessmentScore,
@@ -148,9 +149,7 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
 
   const reviewableReports = reviewableReportsForClient(client.id)
   const reports = reviewableReports
-  const positiveReports = reports.filter((report) =>
-    ["Positive experience", "Would work with again"].includes(report.reportCategory),
-  )
+  const positiveReports = reports.filter((report) => isPositiveReportCategory(report.reportCategory))
   const evidence = reportEvidence.filter((item) =>
     reviewableReports.some((report) => report.id === item.reportId),
   ).map((item) => ({

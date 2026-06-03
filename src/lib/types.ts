@@ -11,6 +11,15 @@ export const reportCategories = [
   "Other",
 ] as const
 
+export const positiveReportCategories = [
+  "Positive experience",
+  "Would work with again",
+] as const
+
+export const concernReportCategories = reportCategories.filter(
+  (category) => !positiveReportCategories.includes(category as (typeof positiveReportCategories)[number]),
+)
+
 export const riskLevels = ["Low", "Moderate", "Elevated", "High"] as const
 
 export type ReportCategory = (typeof reportCategories)[number]
@@ -152,6 +161,10 @@ export type TimelineEventType =
   | "disputed"
   | "response_received"
 export type ReviewChecklistStatus = "pass" | "warning" | "fail" | "pending"
+
+export function isPositiveReportCategory(category: ReportCategory) {
+  return positiveReportCategories.includes(category as (typeof positiveReportCategories)[number])
+}
 
 export interface User {
   id: string

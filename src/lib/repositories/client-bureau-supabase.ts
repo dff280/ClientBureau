@@ -12,6 +12,7 @@ import {
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
 import type { ClientReportInput, ClientResponseInput } from "@/lib/schemas/client-bureau"
+import { isPositiveReportCategory } from "@/lib/types"
 import type {
   AdminReview,
   AdminWorkspaceData,
@@ -506,9 +507,7 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
     throw new Error(discussionResult.error.message)
   }
 
-  const positiveReports = reports.filter((report) =>
-    ["Positive experience", "Would work with again"].includes(report.reportCategory),
-  )
+  const positiveReports = reports.filter((report) => isPositiveReportCategory(report.reportCategory))
 
   return {
     ...profile,

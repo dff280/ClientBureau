@@ -65,7 +65,7 @@ import type {
   ReportDraft,
   User,
 } from "@/lib/types"
-import { reportCategories } from "@/lib/types"
+import { isPositiveReportCategory, reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
 import {
   getAuthCookieDiagnostics,
@@ -168,7 +168,12 @@ export async function submitClientReportAction(
   revalidatePath("/admin/reviews")
   revalidatePath("/admin/reports")
 
-  return ok(report, "Report received. It is now queued for moderation review.")
+  return ok(
+    report,
+    isPositiveReportCategory(parsed.data.reportCategory)
+      ? "Positive client report received. It is now queued for moderation review."
+      : "Report received. It is now queued for moderation review.",
+  )
 }
 
 export async function submitClientResponseAction(

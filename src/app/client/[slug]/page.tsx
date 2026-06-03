@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
 import { getSiteUrl } from "@/lib/env"
+import { isPositiveReportCategory } from "@/lib/types"
 
 type ClientProfilePageProps = {
   params: Promise<{ slug: string }>
@@ -103,9 +104,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
     },
   }
 
-  const concernReports = profile.reports.filter(
-    (report) => !["Positive experience", "Would work with again"].includes(report.reportCategory),
-  )
+  const concernReports = profile.reports.filter((report) => !isPositiveReportCategory(report.reportCategory))
   const openDisputes = profile.balanceSummary.openDisputeCount
   const resolvedReports = profile.balanceSummary.resolvedReportCount
   const evidenceSummary = summarizeEvidence(profile.evidence)
@@ -145,6 +144,19 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
                   Add a report
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/submit-report?${new URLSearchParams({
+                  firstName: profile.firstName,
+                  lastName: profile.lastName,
+                  city: profile.city,
+                  state: profile.state,
+                  businessName: profile.businessName ?? "",
+                  intent: "positive",
+                }).toString()}`}>
+                  <ShieldCheck aria-hidden="true" />
+                  Recommend this client
                 </Link>
               </Button>
               <Button asChild variant="outline">
@@ -224,9 +236,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
           <div className="space-y-6">
             <div className="grid gap-3 md:grid-cols-4">
               <TrustMetric label="Approved reports" value={String(profile.reports.length)} />
+              <TrustMetric label="Positive reports" value={String(profile.positiveReports.length)} />
               <TrustMetric label="Reported unpaid" value={formatCurrency(profile.balanceSummary.totalReportedUnpaid)} />
               <TrustMetric label="Resolved amount" value={formatCurrency(profile.balanceSummary.resolvedAmount)} />
-              <TrustMetric label="Evidence" value={evidenceSummary.includes("Evidence on file") ? "On file" : "Private"} />
             </div>
 
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -287,7 +299,12 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             )}
 
             <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-slate-950">Positive reports</h2>
+              <div>
+                <h2 className="text-2xl font-semibold text-slate-950">Positive client reports</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                  Approved positive reports help show paid, cooperative, or would-work-with-again contractor experiences.
+                </p>
+              </div>
               {profile.positiveReports.length > 0 ? (
                 <div className="grid gap-4">
                   {profile.positiveReports.map((report) => (

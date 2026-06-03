@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-import { reportCategories, riskLevels } from "@/lib/types"
+import { isPositiveReportCategory, reportCategories, riskLevels } from "@/lib/types"
 
 export const discussionCategories = [
   "Contractor Experience",
@@ -65,6 +65,10 @@ export const clientReportSchema = z
   .refine((value) => value.amountUnpaid <= value.contractAmount, {
     path: ["amountUnpaid"],
     message: "Amount unpaid cannot exceed the contract amount.",
+  })
+  .refine((value) => !isPositiveReportCategory(value.reportCategory) || value.amountUnpaid === 0, {
+    path: ["amountUnpaid"],
+    message: "Positive reports must use 0 for amount unpaid.",
   })
   .refine((value) => value.truthfulCertification === true, {
     path: ["truthfulCertification"],

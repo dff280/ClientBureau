@@ -5,6 +5,7 @@ import type {
   ScoreCategoryBreakdown,
   ScoreFactor,
 } from "@/lib/types"
+import { isPositiveReportCategory } from "@/lib/types"
 
 const categoryWeights: Record<ClientReport["reportCategory"], number> = {
   "Non-payment": -24,
@@ -57,9 +58,7 @@ export function getScoreFactors(reports: ClientReport[]): ScoreFactor[] {
     ["approved", "disputed"].includes(report.status),
   )
   const unpaidTotal = approvedReports.reduce((total, report) => total + report.amountUnpaid, 0)
-  const positiveCount = approvedReports.filter((report) =>
-    ["Positive experience", "Would work with again"].includes(report.reportCategory),
-  ).length
+  const positiveCount = approvedReports.filter((report) => isPositiveReportCategory(report.reportCategory)).length
   const disputeCount = approvedReports.filter((report) => report.status === "disputed").length
   const concernCount = approvedReports.length - positiveCount
 
@@ -133,15 +132,13 @@ export function getScoreCategoryBreakdown(reports: ClientReport[]): ScoreCategor
     ["approved", "disputed"].includes(report.status),
   )
   const balance = getReportedBalanceSummary(reviewableReports)
-  const positiveReports = reviewableReports.filter((report) =>
-    ["Positive experience", "Would work with again"].includes(report.reportCategory),
-  )
+  const positiveReports = reviewableReports.filter((report) => isPositiveReportCategory(report.reportCategory))
   const evidenceCount = reviewableReports.filter((report) => report.evidenceAttached).length
   const recentConcernCount = reviewableReports.filter((report) => {
     const createdAt = new Date(report.approvedAt ?? report.createdAt).getTime()
     const daysOld = (Date.now() - createdAt) / (1000 * 60 * 60 * 24)
 
-    return daysOld <= 180 && !["Positive experience", "Would work with again"].includes(report.reportCategory)
+    return daysOld <= 180 && !isPositiveReportCategory(report.reportCategory)
   }).length
   const reportVolumeScore = Math.max(30, Math.min(96, 92 - reviewableReports.length * 8 + positiveReports.length * 7))
   const paymentScore = Math.max(24, Math.min(96, 92 - Math.round(balance.unresolvedAmount / 350)))
