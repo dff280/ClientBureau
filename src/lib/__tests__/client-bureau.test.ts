@@ -45,6 +45,11 @@ import {
   simulateSubmittedClientReport,
 } from "@/lib/repositories/client-bureau"
 import {
+  businessProtectionPromise,
+  protectionGuardrails,
+  protectionWorkflowSteps,
+} from "@/lib/product-positioning"
+import {
   clientProfiles,
   adminSavedViews,
   clientPipelineItems,
@@ -151,6 +156,27 @@ describe("Client Bureau scoring", () => {
     expect(balance.unresolvedAmount).toBe(3000)
     expect(categories.map((category) => category.label)).toContain("Payment reliability")
     expect(categories).toHaveLength(7)
+  })
+})
+
+describe("product positioning", () => {
+  it("defines the broader business protection workflow without inflammatory language", () => {
+    const copy = [
+      businessProtectionPromise,
+      ...protectionWorkflowSteps.flatMap((step) => [step.title, step.text, ...step.tools]),
+      ...protectionGuardrails.flatMap((item) => [item.title, item.text]),
+    ].join(" ")
+
+    expect(protectionWorkflowSteps.map((step) => step.id)).toEqual([
+      "check",
+      "terms",
+      "document",
+      "payment",
+      "resolve",
+    ])
+    expect(copy).toContain("Set the terms")
+    expect(copy).toContain("Recovery is documentation-first")
+    expect(copy.toLowerCase()).not.toMatch(/blacklist|shame|scammer|deadbeat|fraudster/)
   })
 })
 

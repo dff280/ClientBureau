@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { CheckCircle2, HelpCircle, Radar } from "lucide-react"
 
+import { BusinessProtectionWorkflow } from "@/components/marketing/business-protection-workflow"
 import { PricingCard } from "@/components/pricing/pricing-card"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 export default function PricingPage() {
   const comparisonRows = [
     ["Client profile search", "Limited", "Unlimited", "Team shared", "Custom"],
+    ["Positive client reports", "Included", "Included", "Included", "Included"],
     ["Documented report submission", "Included", "Included", "Included", "Included"],
     ["Evidence uploads", "Basic", "Expanded", "Team library", "Custom retention"],
     ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
@@ -49,6 +51,8 @@ export default function PricingPage() {
             <span className="px-4 py-2">Annual options available for teams</span>
           </div>
         </div>
+
+        <BusinessProtectionWorkflow compact showGuardrails={false} />
 
         <div className="grid gap-5 lg:grid-cols-4">
           {pricingTiers.map((tier) => (

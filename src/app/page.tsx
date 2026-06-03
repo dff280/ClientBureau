@@ -22,6 +22,7 @@ import {
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { RiskBadge } from "@/components/client/risk-badge"
+import { BusinessProtectionWorkflow } from "@/components/marketing/business-protection-workflow"
 import { PricingCard } from "@/components/pricing/pricing-card"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -218,8 +219,8 @@ export default async function Home() {
                 Search before you sign.
               </h1>
               <p className="max-w-3xl text-xl leading-8 text-slate-100">
-                Review moderated client reports, private matching signals, evidence-on-file
-                summaries, response context, and contractor Ops tools before you commit labor,
+                Check client history, set clear terms, send agreement links, document the job,
+                track payment issues, and review moderated client context before you commit labor,
                 materials, contracts, or scheduling.
               </p>
             </div>
@@ -306,6 +307,12 @@ export default async function Home() {
         <div className="bureau-container grid gap-6 lg:grid-cols-2">
           <WorkflowPanel title="Before Client Bureau" tone="light" steps={beforeSteps} />
           <WorkflowPanel title="After Client Bureau" tone="dark" steps={afterSteps} />
+        </div>
+      </section>
+
+      <section className="bureau-section bg-white">
+        <div className="bureau-container">
+          <BusinessProtectionWorkflow />
         </div>
       </section>
 

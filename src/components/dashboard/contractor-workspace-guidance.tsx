@@ -7,6 +7,7 @@ import { ClipboardCheck, Search, ShieldCheck, Signature } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { businessProtectionPromise } from "@/lib/product-positioning"
 
 type WorkflowMode = {
   title: string
@@ -23,7 +24,7 @@ const workflowModes: WorkflowMode[] = [
   {
     title: "Screen & decide",
     eyebrow: "Before you accept work",
-    text: "Search the client, review private-match signals, run an intake assessment, and decide what contract or deposit controls are needed.",
+    text: "Search the client, review positive and concern reports, check private-match signals, and decide what contract or deposit controls are needed.",
     cta: "Search a client",
     href: "/search",
     icon: Search,
@@ -32,7 +33,7 @@ const workflowModes: WorkflowMode[] = [
   {
     title: "Agree & sign",
     eyebrow: "Before you schedule",
-    text: "Prepare a private agreement link the client can review and sign, then track invite, signature, deposit, and milestone status.",
+    text: "Prepare a private agreement link the client can review and sign, then track invite, signature, deposit, milestone, and change-order status.",
     cta: "Open contracts",
     tab: "contracts",
     icon: Signature,
@@ -41,7 +42,7 @@ const workflowModes: WorkflowMode[] = [
   {
     title: "Document & resolve",
     eyebrow: "When a job needs records",
-    text: "Keep evidence private, continue report drafts, log respectful payment follow-up, and maintain readiness checklists for review.",
+    text: "Keep evidence private, submit concern or positive reports, log respectful payment follow-up, and maintain readiness checklists for review.",
     cta: "Submit a report",
     href: "/submit-report",
     icon: ClipboardCheck,
@@ -56,7 +57,7 @@ const workspaceGuide = [
   },
   {
     title: "Watchlist",
-    text: "Search profiles, check private matches, save watchlist alerts, and decide what controls are needed before accepting work.",
+    text: "Search profiles, check private matches, monitor alerts, and save both positive and concern context before accepting work.",
   },
   {
     title: "Client Work Files",
@@ -67,7 +68,7 @@ const workspaceGuide = [
     text: "Private links clients can review and sign. This is the start of the client invite and agreement management path.",
   },
   {
-    title: "Payment follow-up",
+    title: "Payment protection",
     text: "A private record of invoice timelines, contact attempts, payment plans, and resolution status. It is not automated payment enforcement.",
   },
   {
@@ -93,6 +94,9 @@ export function ContractorWorkspaceGuidance({
             Client Bureau is organized around the contractor decision cycle: screen before you
             accept work, get the agreement signed before scheduling, and keep private records if
             a job needs documentation or resolution.
+          </p>
+          <p className="mt-3 inline-flex rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-slate-900">
+            {businessProtectionPromise}
           </p>
         </div>
         <Button asChild variant="outline">
