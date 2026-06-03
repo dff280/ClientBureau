@@ -55,6 +55,28 @@ export type ModerationDecisionReason =
   | "neutrality_issue"
   | "duplicate_report"
   | "policy_rejection"
+export type PaymentRecoveryStatus =
+  | "draft"
+  | "ready_to_contact"
+  | "contacted"
+  | "payment_plan"
+  | "resolved"
+  | "paused"
+export type RecoveryChannel = "email" | "phone" | "letter" | "client_portal"
+export type LienNoticeStatus =
+  | "deadline_review"
+  | "draft"
+  | "ready_for_review"
+  | "sent"
+  | "released"
+  | "not_eligible"
+export type ContractTemplateType =
+  | "service_agreement"
+  | "change_order"
+  | "payment_plan"
+  | "completion_certificate"
+  | "notice_of_nonpayment"
+export type ContractDocumentStatus = "draft" | "sent" | "signed" | "expired" | "archived"
 export type DiscussionCategory =
   | "Contractor Experience"
   | "Client Response"
@@ -189,6 +211,59 @@ export interface EvidenceReviewSummary {
   lastUpdatedAt: string
 }
 
+export interface PaymentRecoveryCase {
+  id: string
+  contractorId: string
+  clientName: string
+  city: string
+  state: string
+  amountDue: number
+  invoiceAgeDays: number
+  preferredChannel: RecoveryChannel
+  status: PaymentRecoveryStatus
+  priority: ModerationPriority
+  lastContactAt?: string
+  nextAction: string
+  summary: string
+  complianceFlags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LienNoticeDraft {
+  id: string
+  contractorId: string
+  clientName: string
+  projectType: string
+  propertyCity: string
+  state: string
+  amountDue: number
+  lastWorkDate: string
+  targetSendDate?: string
+  status: LienNoticeStatus
+  requiredReview: boolean
+  nextStep: string
+  jurisdictionNote: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ContractWorkspaceItem {
+  id: string
+  contractorId: string
+  clientName: string
+  projectType: string
+  templateType: ContractTemplateType
+  contractValue: number
+  depositRequired: number
+  milestoneBilling: boolean
+  status: ContractDocumentStatus
+  nextStep: string
+  summary: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface ContractorActivityItem {
   id: string
   contractorId: string
@@ -204,6 +279,9 @@ export interface ContractorRiskOpsData {
   reportDrafts: ReportDraft[]
   intakeAssessments: ClientIntakeAssessment[]
   evidenceSummaries: EvidenceReviewSummary[]
+  paymentRecoveryCases: PaymentRecoveryCase[]
+  lienNoticeDrafts: LienNoticeDraft[]
+  contractDocuments: ContractWorkspaceItem[]
   activity: ContractorActivityItem[]
   recommendedActions: string[]
 }

@@ -1,7 +1,16 @@
 import type { Metadata } from "next"
 import type React from "react"
 import Link from "next/link"
-import { ClipboardCheck, MessageSquareText, ShieldCheck, UploadCloud } from "lucide-react"
+import {
+  ClipboardCheck,
+  Landmark,
+  MessageSquareText,
+  PhoneCall,
+  Settings,
+  ShieldCheck,
+  Signature,
+  UploadCloud,
+} from "lucide-react"
 
 import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
 import { Badge } from "@/components/ui/badge"
@@ -9,7 +18,9 @@ import { Button } from "@/components/ui/button"
 import {
   getAdminModerationCrmDataService,
   getAdminWorkspaceDataService,
+  getContractorRiskOpsDataService,
 } from "@/lib/repositories/client-bureau-service"
+import { countOpenRecoveryCases } from "@/lib/platform-features"
 
 export const metadata: Metadata = {
   title: "Admin Command",
@@ -26,12 +37,19 @@ export default async function AdminHomePage() {
     getAdminWorkspaceDataService(),
     getAdminModerationCrmDataService(),
   ])
+  const firstContractorUserId = data.contractors[0]?.userId ?? data.users.find((item) => item.role === "contractor")?.id
+  const riskOps = firstContractorUserId
+    ? await getContractorRiskOpsDataService(firstContractorUserId)
+    : undefined
   const pendingReports = data.reviews.filter((item) =>
     ["queued", "needs_dispute_review"].includes(item.review.status),
   ).length
   const pendingDiscussions = data.discussions.filter((item) => item.status === "pending").length
   const publicClients = data.clients.filter((item) => item.isPublic).length
   const escalatedCases = moderationCrm?.cases.filter((item) => item.status === "escalated").length ?? 0
+  const recoveryCases = riskOps ? countOpenRecoveryCases(riskOps.paymentRecoveryCases) : 0
+  const lienPackets = riskOps?.lienNoticeDrafts.filter((item) => item.requiredReview).length ?? 0
+  const contractPackets = riskOps?.contractDocuments.filter((item) => item.status !== "archived").length ?? 0
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -55,14 +73,17 @@ export default async function AdminHomePage() {
           </Button>
         </header>
 
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-7">
           <Metric label="Pending reports" value={pendingReports} />
           <Metric label="Pending discussions" value={pendingDiscussions} />
           <Metric label="Public clients" value={publicClients} />
           <Metric label="Escalations" value={escalatedCases} />
+          <Metric label="Recovery cases" value={recoveryCases} />
+          <Metric label="Notice review" value={lienPackets} />
+          <Metric label="Contracts" value={contractPackets} />
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-4">
           <QuickLink
             href="/admin/reports"
             icon={<ShieldCheck className="size-5" />}
@@ -83,6 +104,37 @@ export default async function AdminHomePage() {
             title="Bulk intake"
             text="Preview CSV rows, flag duplicates, validate required fields, and import selected records."
             badge="CSV"
+          />
+          <QuickLink
+            href="/admin/settings"
+            icon={<Settings className="size-5" />}
+            title="Safeguard settings"
+            text="Review payment recovery, lien-readiness, contract packet, evidence, and audit defaults."
+            badge="Rules"
+          />
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <QuickLink
+            href="/admin/settings"
+            icon={<PhoneCall className="size-5" />}
+            title="Payment recovery oversight"
+            text="Monitor documented outreach, call logging, response windows, and resolution status."
+            badge={`${recoveryCases} open`}
+          />
+          <QuickLink
+            href="/admin/settings"
+            icon={<Landmark className="size-5" />}
+            title="Lien-readiness review"
+            text="Keep notice packets private until state-specific deadlines, recipients, and documents are reviewed."
+            badge={`${lienPackets} review`}
+          />
+          <QuickLink
+            href="/admin/settings"
+            icon={<Signature className="size-5" />}
+            title="Contract controls"
+            text="Track agreement templates, change orders, payment plans, completion records, and packet status."
+            badge={`${contractPackets} active`}
           />
         </div>
 

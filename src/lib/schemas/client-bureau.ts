@@ -242,6 +242,57 @@ export const intakeAssessmentSchema = z.object({
   notes: z.string().trim().max(700).optional(),
 })
 
+export const paymentRecoveryCaseSchema = z.object({
+  clientName: requiredText("Client name"),
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  amountDue: money("Amount due"),
+  invoiceAgeDays: z.coerce
+    .number({ error: "Invoice age must be a number." })
+    .int("Invoice age must be a whole number.")
+    .min(0, "Invoice age cannot be negative.")
+    .max(3650, "Invoice age is above the current workflow limit."),
+  preferredChannel: z.enum(["email", "phone", "letter", "client_portal"]),
+  summary: requiredText("Recovery summary", 20).max(900, "Keep the recovery summary under 900 characters."),
+  factualCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.factualCertification === true, {
+  path: ["factualCertification"],
+  message: "Confirm that the recovery record is based on accurate invoice and project documentation.",
+})
+
+export const lienNoticeDraftSchema = z.object({
+  clientName: requiredText("Client name"),
+  projectType: requiredText("Project type"),
+  propertyCity: requiredText("Property city"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  amountDue: money("Amount due"),
+  lastWorkDate: requiredText("Last work date", 8),
+  targetSendDate: optionalText,
+  reviewCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.reviewCertification === true, {
+  path: ["reviewCertification"],
+  message: "Confirm that state-specific lien and notice requirements will be reviewed before sending.",
+})
+
+export const contractWorkspaceItemSchema = z.object({
+  clientName: requiredText("Client name"),
+  projectType: requiredText("Project type"),
+  templateType: z.enum([
+    "service_agreement",
+    "change_order",
+    "payment_plan",
+    "completion_certificate",
+    "notice_of_nonpayment",
+  ]),
+  contractValue: money("Contract value"),
+  depositRequired: money("Deposit required"),
+  milestoneBilling: z.coerce.boolean().optional(),
+  summary: requiredText("Contract summary", 20).max(900, "Keep the contract summary under 900 characters."),
+}).refine((value) => value.depositRequired <= value.contractValue, {
+  path: ["depositRequired"],
+  message: "Deposit required cannot exceed the contract value.",
+})
+
 export const moderationCaseAssignmentSchema = z.object({
   caseId: requiredText("Case ID"),
   assignedTo: requiredText("Reviewer ID"),
@@ -276,3 +327,6 @@ export type CommunityDiscussionInput = z.infer<typeof communityDiscussionSchema>
 export type WatchlistItemInput = z.infer<typeof watchlistItemSchema>
 export type ReportDraftInput = z.infer<typeof reportDraftSchema>
 export type IntakeAssessmentInput = z.infer<typeof intakeAssessmentSchema>
+export type PaymentRecoveryCaseInput = z.infer<typeof paymentRecoveryCaseSchema>
+export type LienNoticeDraftInput = z.infer<typeof lienNoticeDraftSchema>
+export type ContractWorkspaceItemInput = z.infer<typeof contractWorkspaceItemSchema>

@@ -18,6 +18,7 @@ import {
   assignModerationCase,
   intakeAssessmentScore,
   intakeRiskRecommendation,
+  paymentRecoveryPriority,
 } from "@/lib/platform-features"
 import {
   calculateClientBureauScore,
@@ -28,7 +29,12 @@ import {
   paymentReliabilityLabel,
 } from "@/lib/scoring"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
-import type { ClientReportInput } from "@/lib/schemas/client-bureau"
+import type {
+  ClientReportInput,
+  ContractWorkspaceItemInput,
+  LienNoticeDraftInput,
+  PaymentRecoveryCaseInput,
+} from "@/lib/schemas/client-bureau"
 import type {
   AdminReview,
   AdminWorkspaceData,
@@ -37,12 +43,15 @@ import type {
   ClientReport,
   ClientSearchResult,
   CommunityDiscussion,
+  ContractWorkspaceItem,
   ContractorRiskOpsData,
   DiscussionStatus,
+  LienNoticeDraft,
   ModerationCase,
   ModerationDecisionReason,
   ModerationPriority,
   ModerationCaseStatus,
+  PaymentRecoveryCase,
   PublicationAudit,
   PublicClientProfile,
   ReportDraft,
@@ -314,6 +323,9 @@ export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData 
     reportDrafts: contractorRiskOps.reportDrafts.filter((item) => item.contractorId === contractor.id),
     intakeAssessments: contractorRiskOps.intakeAssessments.filter((item) => item.contractorId === contractor.id),
     evidenceSummaries: contractorRiskOps.evidenceSummaries.filter((item) => item.contractorId === contractor.id),
+    paymentRecoveryCases: contractorRiskOps.paymentRecoveryCases.filter((item) => item.contractorId === contractor.id),
+    lienNoticeDrafts: contractorRiskOps.lienNoticeDrafts.filter((item) => item.contractorId === contractor.id),
+    contractDocuments: contractorRiskOps.contractDocuments.filter((item) => item.contractorId === contractor.id),
     activity: contractorRiskOps.activity.filter((item) => item.contractorId === contractor.id),
     recommendedActions: contractorRiskOps.recommendedActions,
   }
@@ -429,6 +441,107 @@ export function createIntakeAssessment(input: {
     score,
     notes: input.notes || "Assessment created from contractor intake workflow.",
     createdAt: new Date().toISOString(),
+  }
+}
+
+function nextRecoveryAction(channel: PaymentRecoveryCaseInput["preferredChannel"]) {
+  if (channel === "phone") {
+    return "Prepare a documented call plan, call during normal business hours, and log the response."
+  }
+
+  if (channel === "letter") {
+    return "Prepare a factual payment reminder letter with invoice, project, and response-window details."
+  }
+
+  if (channel === "client_portal") {
+    return "Send a portal message with invoice context and a clear documented response path."
+  }
+
+  return "Send a factual payment reminder with invoice context, evidence-on-file reference, and response window."
+}
+
+export function createPaymentRecoveryCase(
+  contractorId: string,
+  input: PaymentRecoveryCaseInput,
+): PaymentRecoveryCase {
+  const now = new Date().toISOString()
+  const priority = paymentRecoveryPriority({
+    amountDue: input.amountDue,
+    invoiceAgeDays: input.invoiceAgeDays,
+  })
+
+  return {
+    id: `recovery_${Date.now()}`,
+    contractorId,
+    clientName: input.clientName,
+    city: input.city,
+    state: input.state.toUpperCase(),
+    amountDue: input.amountDue,
+    invoiceAgeDays: input.invoiceAgeDays,
+    preferredChannel: input.preferredChannel,
+    status: input.invoiceAgeDays >= 21 ? "ready_to_contact" : "draft",
+    priority,
+    nextAction: nextRecoveryAction(input.preferredChannel),
+    summary: input.summary,
+    complianceFlags: [
+      "Keep outreach factual and tied to invoice/project records.",
+      "Avoid threats, public pressure language, or unsupported claims.",
+      "Log each contact attempt, response, and resolution update.",
+    ],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createLienNoticeDraft(
+  contractorId: string,
+  input: LienNoticeDraftInput,
+): LienNoticeDraft {
+  const now = new Date().toISOString()
+
+  return {
+    id: `lien_notice_${Date.now()}`,
+    contractorId,
+    clientName: input.clientName,
+    projectType: input.projectType,
+    propertyCity: input.propertyCity,
+    state: input.state.toUpperCase(),
+    amountDue: input.amountDue,
+    lastWorkDate: input.lastWorkDate,
+    targetSendDate: input.targetSendDate,
+    status: "deadline_review",
+    requiredReview: true,
+    nextStep: "Review state-specific deadline, notice recipient, delivery method, and contract terms before sending.",
+    jurisdictionNote:
+      "Mechanics lien and notice requirements vary by state, role, project type, and deadline. This creates a readiness packet only.",
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createContractWorkspaceItem(
+  contractorId: string,
+  input: ContractWorkspaceItemInput,
+): ContractWorkspaceItem {
+  const now = new Date().toISOString()
+  const nextStep = input.milestoneBilling
+    ? "Review scope, deposit, milestone billing, and change-order language before sending."
+    : "Review scope, payment timing, completion, and change-order language before sending."
+
+  return {
+    id: `contract_${Date.now()}`,
+    contractorId,
+    clientName: input.clientName,
+    projectType: input.projectType,
+    templateType: input.templateType,
+    contractValue: input.contractValue,
+    depositRequired: input.depositRequired,
+    milestoneBilling: Boolean(input.milestoneBilling),
+    status: "draft",
+    nextStep,
+    summary: input.summary,
+    createdAt: now,
+    updatedAt: now,
   }
 }
 

@@ -14,12 +14,15 @@ import {
   clientReportSchema,
   clientResponseSchema,
   communityDiscussionSchema,
+  contractWorkspaceItemSchema,
   deleteReportDraftSchema,
   intakeAssessmentSchema,
+  lienNoticeDraftSchema,
   signupSchema,
   moderationCaseAssignmentSchema,
   moderationCaseUpdateSchema,
   moderationDecisionReasonSchema,
+  paymentRecoveryCaseSchema,
   reportDraftSchema,
   updateWatchlistItemSchema,
   watchlistItemSchema,
@@ -33,9 +36,12 @@ import type {
   ClientResponse,
   ClientReport,
   CommunityDiscussion,
+  ContractWorkspaceItem,
   ContractorProfile,
   ContractorWatchlistItem,
+  LienNoticeDraft,
   ModerationCase,
+  PaymentRecoveryCase,
   ReportDraft,
   User,
 } from "@/lib/types"
@@ -50,7 +56,10 @@ import { getDataMode, getSiteUrl } from "@/lib/env"
 import {
   deleteAdminRecordService,
   assignModerationCaseService,
+  createContractWorkspaceItemService,
   createIntakeAssessmentService,
+  createLienNoticeDraftService,
+  createPaymentRecoveryCaseService,
   createWatchlistItemService,
   deleteReportDraftService,
   reviewCommunityDiscussionService,
@@ -682,6 +691,84 @@ export async function createIntakeAssessmentAction(
     return ok(assessment, `Intake assessment created. Recommendation: ${assessment.recommendation}.`)
   } catch (error) {
     return fail(actionErrorMessage(error, "Intake assessment could not be created."))
+  }
+}
+
+export async function createPaymentRecoveryCaseAction(
+  _previousState: ActionResult<PaymentRecoveryCase>,
+  formData: FormData,
+): Promise<ActionResult<PaymentRecoveryCase>> {
+  const parsed = paymentRecoveryCaseSchema.safeParse({
+    ...formDataToObject(formData),
+    factualCertification: formData.has("factualCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the payment recovery fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const recoveryCase = await createPaymentRecoveryCaseService(user.id, parsed.data)
+    if (!recoveryCase) return fail("Payment recovery feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(recoveryCase, "Payment recovery case created with compliance safeguards.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Payment recovery case could not be created."))
+  }
+}
+
+export async function createLienNoticeDraftAction(
+  _previousState: ActionResult<LienNoticeDraft>,
+  formData: FormData,
+): Promise<ActionResult<LienNoticeDraft>> {
+  const parsed = lienNoticeDraftSchema.safeParse({
+    ...formDataToObject(formData),
+    reviewCertification: formData.has("reviewCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the lien notice readiness fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const noticeDraft = await createLienNoticeDraftService(user.id, parsed.data)
+    if (!noticeDraft) return fail("Lien notice feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(noticeDraft, "Lien notice readiness packet created for state-specific review.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Lien notice readiness packet could not be created."))
+  }
+}
+
+export async function createContractWorkspaceItemAction(
+  _previousState: ActionResult<ContractWorkspaceItem>,
+  formData: FormData,
+): Promise<ActionResult<ContractWorkspaceItem>> {
+  const parsed = contractWorkspaceItemSchema.safeParse({
+    ...formDataToObject(formData),
+    milestoneBilling: formData.has("milestoneBilling"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the contract workspace fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const contractItem = await createContractWorkspaceItemService(user.id, parsed.data)
+    if (!contractItem) return fail("Contract workspace feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    return ok(contractItem, "Contract packet created.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Contract packet could not be created."))
   }
 }
 

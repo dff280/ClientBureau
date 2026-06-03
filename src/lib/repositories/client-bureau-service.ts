@@ -1,7 +1,10 @@
 import { getDataMode, getPlatformFeatureDataMode } from "@/lib/env"
 import {
   assignMockModerationCase,
+  createContractWorkspaceItem,
   createIntakeAssessment,
+  createLienNoticeDraft,
+  createPaymentRecoveryCase,
   createWatchlistItem,
   deleteReportDraft,
   getContractorDashboard,
@@ -46,7 +49,10 @@ import {
 import type {
   ClientReportInput,
   ClientResponseInput,
+  ContractWorkspaceItemInput,
   IntakeAssessmentInput,
+  LienNoticeDraftInput,
+  PaymentRecoveryCaseInput,
   ReportDraftInput,
   WatchlistItemInput,
 } from "@/lib/schemas/client-bureau"
@@ -312,6 +318,33 @@ export async function createIntakeAssessmentService(userId: string, input: Intak
   })
 }
 
+export async function createPaymentRecoveryCaseService(userId: string, input: PaymentRecoveryCaseInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createPaymentRecoveryCase(dashboard.contractor.id, input)
+}
+
+export async function createLienNoticeDraftService(userId: string, input: LienNoticeDraftInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createLienNoticeDraft(dashboard.contractor.id, input)
+}
+
+export async function createContractWorkspaceItemService(userId: string, input: ContractWorkspaceItemInput) {
+  if (shouldUsePlatformSupabase()) return undefined
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createContractWorkspaceItem(dashboard.contractor.id, input)
+}
+
 export async function assignModerationCaseService(caseId: string, admin: User, assignedTo: string) {
   if (shouldUsePlatformSupabase()) return undefined
 
@@ -348,6 +381,9 @@ function createDefaultRiskOpsData(contractorId: string): ContractorRiskOpsData {
     reportDrafts: [],
     intakeAssessments: [],
     evidenceSummaries: [],
+    paymentRecoveryCases: [],
+    lienNoticeDrafts: [],
+    contractDocuments: [],
     activity: [
       {
         id: `activity_${contractorId}_workspace_created`,

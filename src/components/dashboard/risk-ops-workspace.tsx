@@ -8,11 +8,15 @@ import {
   ClipboardCheck,
   FileText,
   Gauge,
+  Landmark,
   ListChecks,
+  PhoneCall,
   PlusCircle,
   Radar,
   Search,
+  Send,
   ShieldCheck,
+  Signature,
   XCircle,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -27,15 +31,21 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Textarea } from "@/components/ui/textarea"
 import {
+  createContractWorkspaceItemAction,
   createIntakeAssessmentAction,
+  createLienNoticeDraftAction,
+  createPaymentRecoveryCaseAction,
   createWatchlistItemAction,
   deleteReportDraftAction,
   saveReportDraftAction,
   updateWatchlistItemAction,
 } from "@/lib/actions/client-bureau"
 import {
+  contractCompletionPercentage,
+  countOpenRecoveryCases,
   countWatchlistAlerts,
   countUnreadMonitoringAlerts,
+  lienNoticeReadinessLabel,
   rankWatchlistItems,
   rankMonitoringAlerts,
   reportDraftCompletionPercentage,
@@ -45,8 +55,11 @@ import type {
   AuditLogEntry,
   ClientIntakeAssessment,
   ClientProfile,
+  ContractWorkspaceItem,
   ContractorRiskOpsData,
   ContractorWatchlistItem,
+  LienNoticeDraft,
+  PaymentRecoveryCase,
   ReportDraft,
   WatchlistAlert,
 } from "@/lib/types"
@@ -56,6 +69,9 @@ const watchState: ActionResult<ContractorWatchlistItem> = { ok: false, message: 
 const draftState: ActionResult<ReportDraft> = { ok: false, message: "" }
 const deleteDraftState: ActionResult<AuditLogEntry | boolean> = { ok: false, message: "" }
 const intakeState: ActionResult<ClientIntakeAssessment> = { ok: false, message: "" }
+const recoveryState: ActionResult<PaymentRecoveryCase> = { ok: false, message: "" }
+const lienNoticeState: ActionResult<LienNoticeDraft> = { ok: false, message: "" }
+const contractState: ActionResult<ContractWorkspaceItem> = { ok: false, message: "" }
 
 export function RiskOpsWorkspace({
   riskOps,
@@ -75,14 +91,18 @@ export function RiskOpsWorkspace({
   const evidenceNeedingReview = riskOps.evidenceSummaries.filter((item) =>
     ["review_pending", "needs_more_info", "missing"].includes(item.status),
   ).length
+  const openRecoveryCases = countOpenRecoveryCases(riskOps.paymentRecoveryCases)
+  const lienDraftsRequiringReview = riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
         <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="High-priority client signals" tone="amber" />
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Intake reviews" value={riskOps.intakeAssessments.length} helper="Recent pre-contract checks" tone="slate" />
+        <RiskMetric label="Recovery cases" value={openRecoveryCases} helper="Open payment follow-up" tone="amber" />
+        <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="State-specific review" tone="rose" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
@@ -163,6 +183,77 @@ export function RiskOpsWorkspace({
               No monitoring alerts yet. Watch a client to track new reports, responses, disputes, score changes, and resolved-case updates.
             </div>
           ) : null}
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <PhoneCall className="size-5 text-amber-700" aria-hidden="true" />
+              Payment recovery center
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
+            <PaymentRecoveryForm />
+            <div className="space-y-3">
+              {riskOps.paymentRecoveryCases.map((item) => (
+                <PaymentRecoveryCard key={item.id} item={item} />
+              ))}
+              {riskOps.paymentRecoveryCases.length === 0 ? (
+                <EmptyState
+                  title="No recovery cases yet"
+                  text="Create a factual payment follow-up case when an invoice needs documented outreach, call logging, or resolution tracking."
+                />
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Landmark className="size-5 text-amber-700" aria-hidden="true" />
+              Lien notice readiness
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
+            <LienNoticeDraftForm />
+            <div className="space-y-3">
+              {riskOps.lienNoticeDrafts.map((item) => (
+                <LienNoticeCard key={item.id} item={item} />
+              ))}
+              {riskOps.lienNoticeDrafts.length === 0 ? (
+                <EmptyState
+                  title="No notice packets yet"
+                  text="Create a private readiness packet to track deadline review, contract context, evidence, and state-specific notice checks."
+                />
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-slate-100">
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Signature className="size-5 text-amber-700" aria-hidden="true" />
+            Contract workspace
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
+          <ContractWorkspaceForm />
+          <div className="grid gap-3 md:grid-cols-2">
+            {riskOps.contractDocuments.map((item) => (
+              <ContractDocumentCard key={item.id} item={item} />
+            ))}
+            {riskOps.contractDocuments.length === 0 ? (
+              <EmptyState
+                title="No contract packets yet"
+                text="Create reusable contract packets for scope, deposits, milestones, payment plans, completion records, and change orders."
+              />
+            ) : null}
+          </div>
         </CardContent>
       </Card>
 
@@ -469,6 +560,199 @@ function DraftCard({ draft }: { draft: ReportDraft }) {
   )
 }
 
+function PaymentRecoveryForm() {
+  const [state, action] = useActionState(createPaymentRecoveryCaseAction, recoveryState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="grid gap-3 sm:grid-cols-[1fr_100px_80px]">
+        <Input name="clientName" placeholder="Client name" />
+        <Input name="city" placeholder="City" />
+        <Input name="state" placeholder="FL" className="uppercase" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="amountDue" type="number" placeholder="Amount due" />
+        <Input name="invoiceAgeDays" type="number" placeholder="Invoice age in days" />
+      </div>
+      <select name="preferredChannel" defaultValue="email" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="email">Email reminder</option>
+        <option value="phone">Documented phone call</option>
+        <option value="letter">Letter packet</option>
+        <option value="client_portal">Client portal message</option>
+      </select>
+      <Textarea
+        name="summary"
+        placeholder="Factual invoice, project, and payment timeline summary"
+        className="min-h-20"
+      />
+      <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
+        <Checkbox name="factualCertification" className="mt-1" />
+        This recovery record is based on accurate invoice and project documentation.
+      </label>
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Send aria-hidden="true" />
+        Create recovery case
+      </PendingSubmitButton>
+      <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="factualCertification" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function PaymentRecoveryCard({ item }: { item: PaymentRecoveryCase }) {
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className={cn("rounded-md text-white", priorityClass(item.priority))}>
+          {item.priority}
+        </Badge>
+        <Badge variant="outline" className="rounded-md capitalize">
+          {item.status.replaceAll("_", " ")}
+        </Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">
+          {item.preferredChannel.replaceAll("_", " ")}
+        </Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {item.city}, {item.state} / ${item.amountDue.toLocaleString()} / {item.invoiceAgeDays} days
+      </p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.summary}</p>
+      <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+        <p className="text-xs font-semibold uppercase text-amber-900">Next action</p>
+        <p className="mt-1 text-sm leading-6 text-amber-950">{item.nextAction}</p>
+      </div>
+      <ul className="mt-3 grid gap-1 text-xs leading-5 text-slate-500">
+        {item.complianceFlags.map((flag) => (
+          <li key={flag}>- {flag}</li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function LienNoticeDraftForm() {
+  const [state, action] = useActionState(createLienNoticeDraftAction, lienNoticeState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <Input name="clientName" placeholder="Client name" />
+      <Input name="projectType" placeholder="Project type" />
+      <div className="grid gap-3 sm:grid-cols-[1fr_80px]">
+        <Input name="propertyCity" placeholder="Property city" />
+        <Input name="state" placeholder="FL" className="uppercase" />
+      </div>
+      <Input name="amountDue" type="number" placeholder="Amount due" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="lastWorkDate" type="date" aria-label="Last work date" />
+        <Input name="targetSendDate" type="date" aria-label="Target send date" />
+      </div>
+      <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
+        <Checkbox name="reviewCertification" className="mt-1" />
+        State-specific notice requirements will be reviewed before any notice is sent.
+      </label>
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Landmark aria-hidden="true" />
+        Create packet
+      </PendingSubmitButton>
+      <FieldError name="reviewCertification" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function LienNoticeCard({ item }: { item: LienNoticeDraft }) {
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md">
+          {lienNoticeReadinessLabel(item)}
+        </Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">
+          {item.status.replaceAll("_", " ")}
+        </Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {item.projectType} / {item.propertyCity}, {item.state} / ${item.amountDue.toLocaleString()}
+      </p>
+      <div className="mt-3 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
+        <span>Last work: {item.lastWorkDate}</span>
+        <span>Target send: {item.targetSendDate ?? "Review pending"}</span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextStep}</p>
+      <p className="mt-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+        {item.jurisdictionNote}
+      </p>
+    </div>
+  )
+}
+
+function ContractWorkspaceForm() {
+  const [state, action] = useActionState(createContractWorkspaceItemAction, contractState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <Input name="clientName" placeholder="Client name" />
+      <Input name="projectType" placeholder="Project type" />
+      <select name="templateType" defaultValue="service_agreement" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="service_agreement">Service agreement</option>
+        <option value="change_order">Change order</option>
+        <option value="payment_plan">Payment plan</option>
+        <option value="completion_certificate">Completion certificate</option>
+        <option value="notice_of_nonpayment">Notice of non-payment</option>
+      </select>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="contractValue" type="number" placeholder="Contract value" />
+        <Input name="depositRequired" type="number" placeholder="Deposit required" />
+      </div>
+      <label className="flex items-center gap-2 text-sm text-slate-700">
+        <Checkbox name="milestoneBilling" />
+        Include milestone billing controls
+      </label>
+      <Textarea name="summary" placeholder="Scope, payment, and documentation controls" className="min-h-20" />
+      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Signature aria-hidden="true" />
+        Create contract packet
+      </PendingSubmitButton>
+      <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
+  const completion = contractCompletionPercentage(item)
+
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md capitalize">
+          {item.status}
+        </Badge>
+        <Badge variant="secondary" className="rounded-md capitalize">
+          {item.templateType.replaceAll("_", " ")}
+        </Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {item.projectType} / ${item.contractValue.toLocaleString()} / deposit ${item.depositRequired.toLocaleString()}
+      </p>
+      <Progress value={completion} className="mt-4" />
+      <p className="mt-2 text-xs text-slate-500">{completion}% packet readiness</p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.summary}</p>
+      <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+        {item.nextStep}
+      </div>
+    </div>
+  )
+}
+
 function RiskMetric({
   label,
   value,
@@ -506,6 +790,14 @@ function EmptyState({ title, text }: { title: string; text: string }) {
       <p className="mt-1 leading-6 text-slate-600">{text}</p>
     </div>
   )
+}
+
+function priorityClass(priority: PaymentRecoveryCase["priority"]) {
+  if (priority === "urgent") return "bg-rose-700"
+  if (priority === "high") return "bg-amber-700"
+  if (priority === "low") return "bg-slate-500"
+
+  return "bg-slate-950"
 }
 
 function useToastState<T>(state: ActionResult<T>) {

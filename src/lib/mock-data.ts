@@ -7,13 +7,16 @@ import type {
   ClientProfile,
   ClientReport,
   ClientResponse,
+  ContractWorkspaceItem,
   ContractorActivityItem,
   CommunityDiscussion,
   ContractorRiskOpsData,
   ContractorWatchlistItem,
   ContractorProfile,
   EvidenceReviewSummary,
+  LienNoticeDraft,
   ModerationCase,
+  PaymentRecoveryCase,
   ReportDraft,
   ReportEvidence,
   SavedSearch,
@@ -590,6 +593,128 @@ export const evidenceReviewSummaries: EvidenceReviewSummary[] = [
   },
 ]
 
+export const paymentRecoveryCases: PaymentRecoveryCase[] = [
+  {
+    id: "recovery_01",
+    contractorId: "contractor_01",
+    clientName: "John Smith",
+    city: "Orlando",
+    state: "FL",
+    amountDue: 4200,
+    invoiceAgeDays: 38,
+    preferredChannel: "email",
+    status: "ready_to_contact",
+    priority: "normal",
+    lastContactAt: "2026-05-24T13:20:00.000Z",
+    nextAction: "Send documented payment reminder with invoice, completion date, and response window.",
+    summary:
+      "Final invoice balance is documented in an approved report. Outreach should stay factual and reference the private evidence file.",
+    complianceFlags: [
+      "Use factual invoice language only.",
+      "Avoid threats or public pressure language.",
+      "Log every contact attempt and response.",
+    ],
+    createdAt: "2026-05-24T13:20:00.000Z",
+    updatedAt: "2026-05-31T11:45:00.000Z",
+  },
+  {
+    id: "recovery_02",
+    contractorId: "contractor_01",
+    clientName: "Daniel Reed",
+    city: "Austin",
+    state: "TX",
+    amountDue: 2100,
+    invoiceAgeDays: 64,
+    preferredChannel: "phone",
+    status: "contacted",
+    priority: "high",
+    lastContactAt: "2026-05-29T16:10:00.000Z",
+    nextAction: "Call once during business hours, confirm documentation review status, and update the dispute timeline.",
+    summary:
+      "Payment was reported after multiple notices, with active dispute context. Recovery activity should prioritize resolution notes.",
+    complianceFlags: [
+      "Use a respectful call script.",
+      "Do not contact at unusual or inconvenient times.",
+      "Route any dispute response back to moderation.",
+    ],
+    createdAt: "2026-05-26T15:00:00.000Z",
+    updatedAt: "2026-05-29T16:10:00.000Z",
+  },
+]
+
+export const lienNoticeDrafts: LienNoticeDraft[] = [
+  {
+    id: "lien_notice_01",
+    contractorId: "contractor_01",
+    clientName: "John Smith",
+    projectType: "Kitchen remodel",
+    propertyCity: "Orlando",
+    state: "FL",
+    amountDue: 4200,
+    lastWorkDate: "2026-04-06",
+    targetSendDate: "2026-06-05",
+    status: "deadline_review",
+    requiredReview: true,
+    nextStep: "Confirm Florida notice and lien timing before any notice is sent.",
+    jurisdictionNote:
+      "Lien and notice requirements vary by state, project type, and role. This packet is a readiness checklist, not a filing.",
+    createdAt: "2026-05-31T12:00:00.000Z",
+    updatedAt: "2026-05-31T12:00:00.000Z",
+  },
+  {
+    id: "lien_notice_02",
+    contractorId: "contractor_01",
+    clientName: "Elaine Parker",
+    projectType: "Exterior repair",
+    propertyCity: "Nashville",
+    state: "TN",
+    amountDue: 3200,
+    lastWorkDate: "2026-05-21",
+    status: "draft",
+    requiredReview: true,
+    nextStep: "Wait for moderation decision and review notice eligibility before sending.",
+    jurisdictionNote:
+      "Draft notices are kept private and should be reviewed against the signed agreement and local requirements.",
+    createdAt: "2026-05-30T10:25:00.000Z",
+    updatedAt: "2026-05-30T10:25:00.000Z",
+  },
+]
+
+export const contractWorkspaceItems: ContractWorkspaceItem[] = [
+  {
+    id: "contract_01",
+    contractorId: "contractor_01",
+    clientName: "Maria Alvarez",
+    projectType: "Deck maintenance",
+    templateType: "service_agreement",
+    contractValue: 3900,
+    depositRequired: 750,
+    milestoneBilling: true,
+    status: "signed",
+    nextStep: "Store final signed copy with invoice records.",
+    summary:
+      "Service agreement includes project scope, payment timing, change-order handling, and completion confirmation.",
+    createdAt: "2026-05-07T10:00:00.000Z",
+    updatedAt: "2026-05-08T09:30:00.000Z",
+  },
+  {
+    id: "contract_02",
+    contractorId: "contractor_01",
+    clientName: "New intake client",
+    projectType: "Roof repair",
+    templateType: "change_order",
+    contractValue: 16400,
+    depositRequired: 2500,
+    milestoneBilling: true,
+    status: "draft",
+    nextStep: "Add material allowance and approval deadline before sending.",
+    summary:
+      "Draft packet is prepared for a higher-value project with milestone billing and change-order controls.",
+    createdAt: "2026-05-30T11:30:00.000Z",
+    updatedAt: "2026-05-30T11:30:00.000Z",
+  },
+]
+
 export const contractorActivity: ContractorActivityItem[] = [
   {
     id: "activity_01",
@@ -732,11 +857,15 @@ export const contractorRiskOps: ContractorRiskOpsData = {
   reportDrafts,
   intakeAssessments,
   evidenceSummaries: evidenceReviewSummaries,
+  paymentRecoveryCases,
+  lienNoticeDrafts,
+  contractDocuments: contractWorkspaceItems,
   activity: contractorActivity,
   recommendedActions: [
     "Review high-priority watchlist entries before scheduling new work.",
     "Attach evidence to ready report drafts before submitting.",
     "Use milestone billing when private match context indicates reported payment risk.",
+    "Keep recovery, notice, and contract activity documented before escalating any unpaid invoice.",
   ],
 }
 

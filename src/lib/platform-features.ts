@@ -1,10 +1,13 @@
 import type {
   ClientIntakeAssessment,
   ClientProfile,
+  ContractWorkspaceItem,
   ContractorWatchlistItem,
+  LienNoticeDraft,
   ModerationCase,
   ModerationCaseStatus,
   ModerationDecisionReason,
+  PaymentRecoveryCase,
   ReportDraft,
   WatchlistAlert,
 } from "@/lib/types"
@@ -95,6 +98,41 @@ export function filterModerationCases(cases: ModerationCase[], status: Moderatio
   if (status === "all") return cases
 
   return cases.filter((item) => item.status === status)
+}
+
+export function paymentRecoveryPriority(input: Pick<PaymentRecoveryCase, "amountDue" | "invoiceAgeDays">) {
+  if (input.amountDue >= 10000 || input.invoiceAgeDays >= 90) return "urgent"
+  if (input.amountDue >= 5000 || input.invoiceAgeDays >= 45) return "high"
+  if (input.amountDue >= 1000 || input.invoiceAgeDays >= 21) return "normal"
+
+  return "low"
+}
+
+export function countOpenRecoveryCases(cases: PaymentRecoveryCase[]) {
+  return cases.filter((item) => !["resolved", "paused"].includes(item.status)).length
+}
+
+export function lienNoticeReadinessLabel(draft: Pick<LienNoticeDraft, "status" | "requiredReview">) {
+  if (draft.status === "not_eligible") return "Not eligible"
+  if (draft.status === "sent") return "Notice sent"
+  if (draft.status === "released") return "Released"
+  if (draft.requiredReview) return "Review required"
+
+  return "Ready for review"
+}
+
+export function contractCompletionPercentage(item: ContractWorkspaceItem) {
+  const fields = [
+    item.clientName,
+    item.projectType,
+    item.templateType,
+    item.contractValue > 0,
+    item.summary,
+    item.nextStep,
+  ]
+  const complete = fields.filter(Boolean).length
+
+  return Math.round((complete / fields.length) * 100)
 }
 
 export function assignModerationCase(caseItem: ModerationCase, reviewerId: string, reviewerName: string): ModerationCase {

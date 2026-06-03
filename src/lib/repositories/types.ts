@@ -5,12 +5,15 @@ import type {
   ClientIntakeAssessment,
   ClientReport,
   ClientSearchResult,
+  ContractWorkspaceItem,
   ContractorRiskOpsData,
   ContractorWatchlistItem,
+  LienNoticeDraft,
   ModerationCase,
   ModerationCaseStatus,
   ModerationDecisionReason,
   ModerationPriority,
+  PaymentRecoveryCase,
   PublicClientProfile,
   ReportDraft,
   SearchFilters,
@@ -18,7 +21,10 @@ import type {
 } from "@/lib/types"
 import type {
   ClientReportInput,
+  ContractWorkspaceItemInput,
   IntakeAssessmentInput,
+  LienNoticeDraftInput,
+  PaymentRecoveryCaseInput,
   ReportDraftInput,
   WatchlistItemInput,
 } from "@/lib/schemas/client-bureau"
@@ -39,6 +45,9 @@ export interface ClientBureauRepository {
   saveReportDraft(userId: string, input: ReportDraftInput): ReportDraft
   deleteReportDraft(draftId: string): AuditLogEntry
   createIntakeAssessment(userId: string, input: IntakeAssessmentInput): ClientIntakeAssessment
+  createPaymentRecoveryCase(userId: string, input: PaymentRecoveryCaseInput): PaymentRecoveryCase
+  createLienNoticeDraft(userId: string, input: LienNoticeDraftInput): LienNoticeDraft
+  createContractWorkspaceItem(userId: string, input: ContractWorkspaceItemInput): ContractWorkspaceItem
   assignModerationCase(caseId: string, reviewerId: string, reviewerName: string): ModerationCase
   updateModerationCase(
     caseId: string,

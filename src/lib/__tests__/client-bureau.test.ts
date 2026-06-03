@@ -14,11 +14,15 @@ import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
   assignModerationCase,
+  contractCompletionPercentage,
   countUnreadMonitoringAlerts,
+  countOpenRecoveryCases,
   countWatchlistAlerts,
   filterModerationCases,
   intakeRiskRecommendation,
   isValidDecisionReason,
+  lienNoticeReadinessLabel,
+  paymentRecoveryPriority,
   rankMonitoringAlerts,
   rankWatchlistItems,
   reportDraftCompletionPercentage,
@@ -32,15 +36,21 @@ import {
 import {
   clientProfiles,
   contractorWatchlist,
+  contractWorkspaceItems,
+  lienNoticeDrafts,
   moderationCases,
+  paymentRecoveryCases,
   reportDrafts,
   watchlistAlerts,
 } from "@/lib/mock-data"
 import { allSeoLandingPages, getSeoLandingPage } from "@/lib/seo-landing-pages"
 import {
   intakeAssessmentSchema,
+  contractWorkspaceItemSchema,
+  lienNoticeDraftSchema,
   moderationCaseAssignmentSchema,
   moderationDecisionReasonSchema,
+  paymentRecoveryCaseSchema,
   reportDraftSchema,
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
@@ -331,6 +341,14 @@ describe("platform expansion feature utilities", () => {
     expect(isValidDecisionReason("private_information")).toBe(true)
     expect(isValidDecisionReason("unsafe_reason")).toBe(false)
   })
+
+  it("scores recovery, lien readiness, and contract packets", () => {
+    expect(paymentRecoveryPriority({ amountDue: 12000, invoiceAgeDays: 20 })).toBe("urgent")
+    expect(paymentRecoveryPriority({ amountDue: 800, invoiceAgeDays: 10 })).toBe("low")
+    expect(countOpenRecoveryCases(paymentRecoveryCases)).toBe(2)
+    expect(lienNoticeReadinessLabel(lienNoticeDrafts[0])).toBe("Review required")
+    expect(contractCompletionPercentage(contractWorkspaceItems[0])).toBe(100)
+  })
 })
 
 describe("platform expansion schemas", () => {
@@ -382,6 +400,44 @@ describe("platform expansion schemas", () => {
         decisionReason: "private_information",
       }).success,
     ).toBe(true)
+  })
+
+  it("validates recovery, lien notice, and contract workflow inputs", () => {
+    expect(
+      paymentRecoveryCaseSchema.safeParse({
+        clientName: "John Smith",
+        city: "Orlando",
+        state: "FL",
+        amountDue: 4200,
+        invoiceAgeDays: 38,
+        preferredChannel: "email",
+        summary: "Invoice follow-up is tied to documented completion records and payment timeline.",
+        factualCertification: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      lienNoticeDraftSchema.safeParse({
+        clientName: "John Smith",
+        projectType: "Kitchen remodel",
+        propertyCity: "Orlando",
+        state: "FL",
+        amountDue: 4200,
+        lastWorkDate: "2026-04-06",
+        reviewCertification: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      contractWorkspaceItemSchema.safeParse({
+        clientName: "Maria Alvarez",
+        projectType: "Deck maintenance",
+        templateType: "service_agreement",
+        contractValue: 3900,
+        depositRequired: 5000,
+        summary: "Agreement includes scope, payment timing, and change-order controls.",
+      }).success,
+    ).toBe(false)
   })
 
   it("keeps public profile output limited to public moderated data", () => {
