@@ -132,7 +132,7 @@ function SavedViewForm() {
       <select name="scope" defaultValue="reports" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
         <option value="reports">Reports</option>
         <option value="clients">Clients</option>
-        <option value="contractors">Contractors</option>
+        <option value="contractors">Businesses / Users</option>
         <option value="discussions">Discussions</option>
         <option value="uploads">Uploads</option>
         <option value="recovery">Recovery</option>

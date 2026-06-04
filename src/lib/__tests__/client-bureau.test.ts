@@ -241,7 +241,7 @@ describe("product positioning", () => {
       "Discussions",
       "Uploads",
       "Client Profiles",
-      "Contractors",
+      "Businesses / Users",
       "Recovery",
       "Contracts",
       "Audit Log",

@@ -118,7 +118,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <TabsTrigger value="overview" className="px-3 py-2">Command Center</TabsTrigger>
               <TabsTrigger value="reports" className="px-3 py-2">Report Queue</TabsTrigger>
               <TabsTrigger value="clients" className="px-3 py-2">Client Profiles</TabsTrigger>
-              <TabsTrigger value="contractors" className="px-3 py-2">Contractors</TabsTrigger>
+              <TabsTrigger value="contractors" className="px-3 py-2">Businesses / Users</TabsTrigger>
               <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
               <TabsTrigger value="uploads" className="px-3 py-2">Uploads</TabsTrigger>
               <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
@@ -137,7 +137,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               {[
                 ["Report Queue", "Approve only moderated, documented public summaries."],
                 ["Client Profiles", "Control public visibility, profile health, and SEO-safe identity fields."],
-                ["Contractors", "Review accounts, verification, plan readiness, and report behavior."],
+                ["Businesses / Users", "Review accounts, verification, plan readiness, and report behavior."],
                 ["Contracts", "Oversee private signing links, client invites, and payment coordination status."],
                 ["Recovery", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
               ].map(([title, text]) => (
@@ -225,12 +225,12 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="contractors" className="space-y-5">
             <AdminModuleIntro
-              title="Contractor accounts"
-              text="Review verification, account health, report volume, plan status, evidence behavior, and platform readiness."
+              title="Businesses / Users"
+              text="Review business profiles, user accounts, verification, plan status, evidence behavior, and platform readiness."
             />
             <div className="grid gap-4 lg:grid-cols-4">
-              <QuickLink href="/admin/contractors" icon={<ShieldCheck className="size-5" />} title="Contractor profiles" text="Modify contractor profile, trade, city/state, and verification status." badge={`${data.contractors.length} accounts`} />
-              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contractor workspace" text="View the contractor command center as product context." badge="Workspace" />
+              <QuickLink href="/admin/contractors" icon={<ShieldCheck className="size-5" />} title="Business profiles" text="Modify business profile, trade, city/state, and verification status." badge={`${data.contractors.length} accounts`} />
+              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Business workspace" text="View the contractor command center as product context." badge="Workspace" />
               <QuickLink href="/pricing" icon={<Settings className="size-5" />} title="Plan controls" text="Review plan positioning and operational limits." badge="Plans" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Account audit" text="Track admin changes to contractor records." badge="Audit" />
             </div>

@@ -158,7 +158,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
     title: "Records",
     links: [
       { href: "/admin/clients", label: "Client Profiles", description: "Manage client profiles, public visibility, and SEO-safe fields." },
-      { href: "/admin/contractors", label: "Contractors", description: "Review contractor profiles, verification, and account health." },
+      { href: "/admin/contractors", label: "Businesses / Users", description: "Review business profiles, user accounts, verification, and account health." },
     ],
   },
   {
