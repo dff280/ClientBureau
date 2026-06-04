@@ -44,7 +44,6 @@ import {
   getWebSiteSchema,
   JsonLd,
 } from "@/lib/seo"
-import { corePositioning } from "@/lib/product-positioning"
 
 export const metadata: Metadata = {
   title: "Client Bureau | Check Clients Before You Take the Job",
@@ -58,6 +57,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
+
+const heroHeadline = "Check a Client Before You Take the Job."
 
 const heroTrustSignals = [
   "Search before buying materials",
@@ -257,7 +258,7 @@ export default async function Home() {
 
             <div className="space-y-5">
               <h1 className="max-w-4xl text-4xl font-semibold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
-                {corePositioning}
+                {heroHeadline}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
                 Before you buy materials, block off a crew, or wait weeks on a final invoice,
