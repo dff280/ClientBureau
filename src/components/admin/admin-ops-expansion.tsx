@@ -137,7 +137,7 @@ function SavedViewForm() {
         <option value="uploads">Uploads / CSV Intake</option>
         <option value="recovery">Recovery Cases</option>
         <option value="contracts">Contracts / Templates</option>
-        <option value="audit">Audit</option>
+        <option value="audit">Audit Log</option>
       </select>
       <Textarea name="filterSummary" placeholder="Example: priority=high, status=queued" className="min-h-20" />
       <label className="flex items-center gap-2 text-sm text-slate-700">

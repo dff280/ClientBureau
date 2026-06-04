@@ -40,9 +40,9 @@ export default async function AdminAuditLogPage({ searchParams }: { searchParams
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="border-b border-slate-200 pb-6">
-          <p className="text-sm font-semibold uppercase text-amber-700">Audit history</p>
+          <p className="text-sm font-semibold uppercase text-amber-700">Audit Log</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-            Admin action log
+            Audit Log
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
             Tracks approvals, rejections, edits, deletes, bulk imports, status changes, and public visibility changes.

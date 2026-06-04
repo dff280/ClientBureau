@@ -123,7 +123,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <TabsTrigger value="uploads" className="px-3 py-2">Uploads / CSV Intake</TabsTrigger>
               <TabsTrigger value="recovery" className="px-3 py-2">Recovery Cases</TabsTrigger>
               <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
-              <TabsTrigger value="audit" className="px-3 py-2">Audit</TabsTrigger>
+              <TabsTrigger value="audit" className="px-3 py-2">Audit Log</TabsTrigger>
               <TabsTrigger value="settings" className="px-3 py-2">Settings</TabsTrigger>
             </TabsList>
           </div>
@@ -306,11 +306,11 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="audit" className="space-y-5">
             <AdminModuleIntro
-              title="Audit trail"
+              title="Audit Log"
               text="Review status changes, publication decisions, imports, deletes, decision reasons, and private safeguard reviews."
             />
             <div className="grid gap-4 lg:grid-cols-4">
-              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Audit log" text="Filter admin action history by actor, entity, action, date, and severity." badge={`${data.auditLog.length} events`} />
+              <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Audit Log" text="Filter admin action history by actor, entity, action, date, and severity." badge={`${data.auditLog.length} events`} />
               <QuickLink
                 href="/admin/clients"
                 icon={<ClipboardCheck className="size-5" />}
