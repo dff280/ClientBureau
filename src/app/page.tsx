@@ -49,7 +49,7 @@ import { corePositioning } from "@/lib/product-positioning"
 export const metadata: Metadata = {
   title: "Client Bureau | Check Clients Before You Take the Job",
   description:
-    "Check clients before you take the job. Review moderated reports, private matching, contracts, evidence workflows, and response context.",
+    "Check clients before you take the job. Review moderated reports, private matching, unpaid invoice context, evidence summaries, and responses.",
   alternates: {
     canonical: "/",
   },
@@ -60,83 +60,83 @@ export const dynamic = "force-dynamic"
 type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
 
 const heroTrustSignals = [
-  "Private matching for phone and email signals",
-  "Admin-approved public summaries only",
-  "Evidence reviewed privately",
-  "Client response and correction path",
+  "Search before buying materials",
+  "Protect crew time before scheduling",
+  "Document changes before scope grows",
+  "Keep evidence private if payment stalls",
 ]
 
 const decisionStats = [
-  { label: "Use before", value: "Estimate, deposit, contract, scheduling" },
-  { label: "Protects", value: "Labor, materials, invoices, reputation" },
-  { label: "Public content", value: "Moderated summaries and responses" },
+  { label: "Before materials", value: "Check client history and set deposit terms" },
+  { label: "Before scheduling", value: "Confirm contract, access, scope, and change orders" },
+  { label: "Before final invoice", value: "Keep approvals, photos, messages, and payment notes together" },
 ]
 
-const platformModules = [
+const painWorkflows = [
   {
     icon: Search,
-    title: "Client Risk Intelligence",
-    text: "Search by name, business, city, state, phone, or email and review public context plus private-match signals before accepting work.",
+    title: "A new lead wants a fast start, but you do not know their payment history.",
+    text: "Search by name, business, city, state, phone, or email before you quote, hold dates, or agree to rush scheduling.",
     href: "/search",
-    cta: "Search clients",
+    cta: "Search first",
   },
   {
     icon: Signature,
-    title: "Contracts and Signing Links",
-    text: "Create agreement packets, send a client signing link, track signatures, deposits, change orders, and client invite status.",
+    title: "The client says yes verbally, but the scope and payment terms are still loose.",
+    text: "Send a contract link, capture signatures, clarify deposits, milestones, and change-order rules before the job starts.",
     href: "/dashboard?workspace=contracts",
-    cta: "Open contracts",
+    cta: "Send terms",
   },
   {
     icon: FolderKanban,
-    title: "Evidence Vault",
-    text: "Keep invoices, screenshots, contracts, photos, PDFs, approvals, and completion notes private and organized by client.",
+    title: "Materials, approvals, photos, and messages are scattered across your phone.",
+    text: "Keep invoices, screenshots, contracts, photos, PDFs, approvals, and completion notes in one private client record.",
     href: "/dashboard?workspace=evidence",
-    cta: "Review evidence",
+    cta: "Organize proof",
   },
   {
     icon: ReceiptText,
-    title: "Payment Recovery Tracking",
-    text: "Document invoice timelines, call notes, payment promises, payment-plan status, and next follow-up dates without public exposure.",
+    title: "The final invoice is late and every follow-up becomes another promise.",
+    text: "Track invoice dates, payment promises, call notes, payment-plan status, and next follow-up steps without making the issue public.",
     href: "/dashboard?workspace=recovery",
-    cta: "Track recovery",
+    cta: "Track payment",
   },
   {
     icon: Landmark,
-    title: "Lien Readiness",
-    text: "Prepare private notice packets, deadline reminders, jurisdiction notes, and supporting-document checklists for required review.",
+    title: "Lien and notice deadlines are easy to miss while you are still working jobs.",
+    text: "Prepare private readiness packets with deadline reminders, jurisdiction notes, and supporting-document checklists for required review.",
     href: "/dashboard?workspace=lien-readiness",
-    cta: "Open lien packets",
+    cta: "Check deadlines",
   },
   {
     icon: MessageSquareText,
-    title: "Responses and Resolutions",
-    text: "Clients can submit responses, disputes, corrections, and resolution updates that are moderated before public display.",
+    title: "A disagreement needs context, not a one-sided public argument.",
+    text: "Give clients a moderated path for responses, disputes, corrections, and resolution updates before public display.",
     href: "/client-response",
-    cta: "View response path",
+    cta: "Review response path",
   },
 ]
 
 const intakeMoments = [
   {
     icon: BriefcaseBusiness,
-    title: "Before you accept the job",
-    text: "Search the client, review payment context, look for positive reports, and set intake terms before committing resources.",
+    title: "You are about to give up a calendar slot.",
+    text: "Search the client before blocking crew time, delaying another job, or committing to a narrow start window.",
   },
   {
     icon: Handshake,
-    title: "Before you send the crew",
-    text: "Send a clear agreement link, collect signatures, define deposits, and keep change orders tied to the project record.",
+    title: "You need the job, but not unclear terms.",
+    text: "Send a clear agreement link, collect signatures, define deposits, and keep change orders tied to the client record.",
   },
   {
     icon: ClipboardCheck,
-    title: "Before final payment is due",
-    text: "Upload evidence, document approvals, track invoice timing, and keep a clean record if payment follow-up becomes necessary.",
+    title: "The work is finished, but the record is thin.",
+    text: "Upload approvals, photos, invoices, messages, and completion notes before payment follow-up becomes harder to prove.",
   },
   {
     icon: Scale,
-    title: "If there is a dispute",
-    text: "Keep public summaries neutral, include response context, and document corrections or resolutions through moderation.",
+    title: "The dispute is real, but the public record must be careful.",
+    text: "Keep summaries neutral, include response context, and document corrections or resolutions through moderation.",
   },
 ]
 
@@ -177,7 +177,7 @@ const faqs = [
   {
     question: "What is Client Bureau?",
     answer:
-      "Client Bureau is a business-owner protection platform for checking client history, setting terms, documenting work, tracking payment issues, and resolving disputes with moderated public context.",
+      "Client Bureau helps business owners check client history before accepting work, set clear terms, document the job, track payment issues, and resolve disputes with moderated public context.",
   },
   {
     question: "What is Client Bureau not?",
@@ -248,20 +248,20 @@ export default async function Home() {
         <div className="absolute inset-0 z-10 bg-gradient-to-r from-slate-950 via-slate-950/82 to-slate-950/20" />
         <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-950 via-slate-950/10 to-slate-950/25" />
 
-        <div className="bureau-container relative z-20 grid min-h-[680px] items-center gap-10 py-14 lg:grid-cols-[1.08fr_0.92fr]">
+        <div className="bureau-container relative z-20 grid min-h-[620px] items-center gap-10 py-10 lg:grid-cols-[1.08fr_0.92fr]">
           <div className="max-w-4xl space-y-7">
             <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
               <ShieldCheck className="size-4" aria-hidden="true" />
-              Moderated client intelligence for contractors and service businesses
+              For jobs where one client decision can tie up cash, crew, and calendar
             </div>
 
             <div className="space-y-5">
-              <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-normal sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-4xl text-4xl font-semibold leading-tight tracking-normal sm:text-5xl lg:text-6xl">
                 {corePositioning}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                Search client reports, send agreement links, document the job, track payment issues,
-                and keep disputes organized before risk turns into lost time, materials, or unpaid invoices.
+                Before you buy materials, block off a crew, or wait weeks on a final invoice,
+                search client history, set written terms, and keep the job record organized.
               </p>
             </div>
 
@@ -310,13 +310,13 @@ export default async function Home() {
 
           <div className="hidden border-l border-white/15 pl-8 lg:block">
             <div className="space-y-5">
-              <p className="text-sm font-semibold uppercase text-amber-200">The operating rule</p>
+              <p className="text-sm font-semibold uppercase text-amber-200">The business-owner rule</p>
               <p className="text-4xl font-semibold leading-tight">
-                Search first. Set terms clearly. Keep the record clean.
+                Do not let a handshake become your only protection.
               </p>
               <p className="text-sm leading-6 text-slate-300">
-                Client Bureau is built for decisions before the job starts and documentation after
-                the job begins. It is serious, moderated, and private where it needs to be.
+                The hardest client problems usually start as small gaps: no written scope, no deposit
+                clarity, missing photos, verbal changes, or late-payment promises with no timeline.
               </p>
             </div>
           </div>
@@ -337,9 +337,9 @@ export default async function Home() {
       <section className="bureau-section bg-white">
         <div className="bureau-container grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <SectionIntro
-            eyebrow="Why it exists"
-            title="Business owners are expected to trust first and recover later."
-            text="Client Bureau flips that workflow into a professional intake process: check available client context, set terms, document the work, and keep recovery or dispute records organized if payment becomes an issue."
+            eyebrow="Real business-owner pain"
+            title="A job can look profitable on paper and still damage your cash flow."
+            text="One risky client relationship can mean non-returnable materials, a lost week on the schedule, unpaid final invoices, disputed change orders, or hours spent chasing records instead of running the business."
           />
           <div className="grid gap-4 md:grid-cols-2">
             {intakeMoments.map((item) => (
@@ -352,13 +352,13 @@ export default async function Home() {
       <section className="bureau-section bg-slate-100">
         <div className="bureau-container space-y-8">
           <SectionIntro
-            eyebrow="Product modules"
-            title="One workspace before, during, and after the job."
-            text="The platform is expanding beyond public reports into a daily operating system for client risk, contracts, evidence, recovery tracking, and moderated resolution."
+            eyebrow="Where the money leaks"
+            title="Turn painful client moments into checkpoints before they become losses."
+            text="Client Bureau connects the painful parts of the job lifecycle to practical actions: search first, get terms signed, save proof, track payment, watch deadlines, and keep disputes fair."
           />
           <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
-            {platformModules.map((module, index) => (
-              <ModuleRow key={module.title} module={module} index={index} />
+            {painWorkflows.map((workflow, index) => (
+              <PainWorkflowRow key={workflow.title} workflow={workflow} index={index} />
             ))}
           </div>
         </div>
@@ -379,7 +379,7 @@ export default async function Home() {
           <div className="space-y-5">
             <SectionIntro
               eyebrow="Moderated public intelligence"
-              title="Public profiles should help contractors decide, not inflame disputes."
+              title="When a report becomes public, it should help the next business make a better decision."
               text="Profile pages show approved summaries, report counts, score context, evidence-on-file summaries, positive reports, disputes, and client responses after moderation."
               dark
             />
@@ -416,8 +416,8 @@ export default async function Home() {
           <div className="space-y-6">
             <SectionIntro
               eyebrow="Trust signals"
-              title="A serious platform needs fairness built into the workflow."
-              text="Client Bureau separates public summaries from private evidence, supports client responses, and gives contractors a place to document positive experiences, resolved matters, and disputed context."
+              title="The goal is not to punish clients. The goal is better business decisions."
+              text="Client Bureau separates public summaries from private evidence, supports client responses, and gives businesses a place to document positive experiences, resolved matters, and disputed context."
             />
             <LegalNotice />
           </div>
@@ -485,7 +485,7 @@ export default async function Home() {
         <div className="bureau-container grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
           <SectionIntro
             eyebrow="Plans"
-            title="Start with client checks. Upgrade when protection becomes part of operations."
+            title="Start with one client check. Upgrade when the process saves real time and money."
             text="Free supports searching and report submission. Pro and Team plans support watchlists, saved searches, evidence workflows, contract packets, recovery tracking, and shared business operations."
           />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -583,11 +583,11 @@ function ProcessTile({
   )
 }
 
-function ModuleRow({
-  module,
+function PainWorkflowRow({
+  workflow,
   index,
 }: {
-  module: {
+  workflow: {
     icon: LucideIcon
     title: string
     text: string
@@ -596,7 +596,7 @@ function ModuleRow({
   }
   index: number
 }) {
-  const Icon = module.icon
+  const Icon = workflow.icon
 
   return (
     <div className="grid gap-4 border-b border-slate-200 p-5 last:border-b-0 md:grid-cols-[64px_1fr_auto] md:items-center">
@@ -605,14 +605,14 @@ function ModuleRow({
       </div>
       <div>
         <p className="text-xs font-semibold uppercase text-slate-500">
-          {String(index + 1).padStart(2, "0")} / Client Bureau module
+          {String(index + 1).padStart(2, "0")} / Real job pressure
         </p>
-        <h3 className="mt-1 text-xl font-semibold text-slate-950">{module.title}</h3>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{module.text}</p>
+        <h3 className="mt-1 text-xl font-semibold text-slate-950">{workflow.title}</h3>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{workflow.text}</p>
       </div>
       <Button asChild variant="outline" className="md:justify-self-end">
-        <Link href={module.href}>
-          {module.cta}
+        <Link href={workflow.href}>
+          {workflow.cta}
           <ArrowRight aria-hidden="true" />
         </Link>
       </Button>

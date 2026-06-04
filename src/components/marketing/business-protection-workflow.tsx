@@ -46,8 +46,8 @@ export function BusinessProtectionWorkflow({
             {businessProtectionPromise}
           </h2>
           <p className={cn("mt-3 text-sm leading-6", dark ? "text-slate-300" : "text-slate-600")}>
-            Client Bureau gives contractors and service businesses one operating path for client
-            screening, contracts, project records, payment follow-up, and moderated resolution.
+            Use the same checklist before every risky job: check the client, get terms signed,
+            save proof as the work happens, track payment clearly, and resolve disputes with context.
           </p>
         </div>
         {showCta ? (
