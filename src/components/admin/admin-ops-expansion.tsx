@@ -134,7 +134,7 @@ function SavedViewForm() {
         <option value="clients">Clients</option>
         <option value="contractors">Businesses / Users</option>
         <option value="discussions">Discussions</option>
-        <option value="uploads">Uploads</option>
+        <option value="uploads">Uploads / CSV Intake</option>
         <option value="recovery">Recovery</option>
         <option value="contracts">Contracts</option>
         <option value="audit">Audit</option>

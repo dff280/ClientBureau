@@ -27,7 +27,7 @@ export default async function AdminSettingsPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {[
             ["Public visibility", "Client profiles stay private until an admin approves a report or explicitly marks the profile public."],
-            ["Evidence privacy", "Uploads are private by default. Public profiles show only evidence summaries such as invoices reviewed or photos reviewed."],
+            ["Evidence privacy", "Uploaded evidence is private by default. Public profiles show only evidence summaries such as invoices reviewed or photos reviewed."],
             ["Discussions", "Discussion entries default to pending and require approval before public display."],
             ["Route protection", "Admin routes require the admin role. Normal users cannot access internal sections."],
             ["Feature data mode", `Platform expansion workflows currently read from ${platformFeatureMode} feature data.`],

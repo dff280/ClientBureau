@@ -4,7 +4,7 @@ import { BulkUploadPanel } from "@/components/admin/bulk-upload-panel"
 import { getAdminModerationCrmDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
-  title: "Admin Uploads",
+  title: "Admin Uploads / CSV Intake",
   robots: { index: false, follow: false },
 }
 
@@ -17,12 +17,12 @@ export default async function AdminUploadsPage() {
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="border-b border-slate-200 pb-6">
-          <p className="text-sm font-semibold uppercase text-amber-700">Bulk upload</p>
+          <p className="text-sm font-semibold uppercase text-amber-700">Uploads / CSV intake</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-            CSV report intake
+            Uploads / CSV Intake
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Preview rows before import, flag duplicates, show validation errors, and create pending records by default.
+            Preview report rows before import, flag duplicates, show validation errors, and create pending records by default.
           </p>
         </header>
         {moderationCrm ? (

@@ -239,7 +239,7 @@ describe("product positioning", () => {
       "Command Center",
       "Report Queue",
       "Discussions",
-      "Uploads",
+      "Uploads / CSV Intake",
       "Client Profiles",
       "Businesses / Users",
       "Recovery",

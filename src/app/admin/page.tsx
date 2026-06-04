@@ -120,7 +120,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <TabsTrigger value="clients" className="px-3 py-2">Client Profiles</TabsTrigger>
               <TabsTrigger value="contractors" className="px-3 py-2">Businesses / Users</TabsTrigger>
               <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
-              <TabsTrigger value="uploads" className="px-3 py-2">Uploads</TabsTrigger>
+              <TabsTrigger value="uploads" className="px-3 py-2">Uploads / CSV Intake</TabsTrigger>
               <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
               <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
               <TabsTrigger value="audit" className="px-3 py-2">Audit</TabsTrigger>
@@ -202,7 +202,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/uploads"
                 icon={<UploadCloud className="size-5" />}
-                title="Bulk intake"
+                title="Uploads / CSV Intake"
                 text="Preview CSV rows, flag duplicates, validate fields, and import selected records."
                 badge="CSV"
               />
@@ -250,11 +250,11 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="uploads" className="space-y-5">
             <AdminModuleIntro
-              title="Bulk upload operations"
+              title="Uploads / CSV Intake"
               text="Preview CSV rows, flag duplicates, validate staged records, and import selected reports as pending records."
             />
             <div className="grid gap-4 lg:grid-cols-3">
-              <QuickLink href="/admin/uploads" icon={<UploadCloud className="size-5" />} title="Upload batches" text="Review staged imports, duplicate groups, selected rows, and import status." badge="CSV" />
+              <QuickLink href="/admin/uploads" icon={<UploadCloud className="size-5" />} title="CSV intake batches" text="Review staged imports, duplicate groups, selected rows, and import status." badge="CSV" />
               <QuickLink href="/admin/reports" icon={<ClipboardCheck className="size-5" />} title="Imported reports" text="Moderate imported rows before anything can become public." badge={`${pendingReports} pending`} />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Import audit" text="Track who imported, approved, rejected, or deleted records." badge="Audit" />
             </div>
