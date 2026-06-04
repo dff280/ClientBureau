@@ -240,7 +240,7 @@ describe("product positioning", () => {
       "Report Queue",
       "Discussions",
       "Uploads",
-      "Clients",
+      "Client Profiles",
       "Contractors",
       "Recovery",
       "Contracts",

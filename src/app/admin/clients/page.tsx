@@ -5,7 +5,7 @@ import { AdminClientEditor } from "@/components/admin/admin-record-forms"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
-  title: "Admin Clients",
+  title: "Admin Client Profiles",
   robots: { index: false, follow: false },
 }
 
@@ -20,7 +20,7 @@ export default async function AdminClientsPage() {
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <Header title="Client profiles" text="Edit identity fields, score, risk, and public visibility. Private email and phone hashes stay hidden." />
+        <Header title="Client Profiles" text="Edit identity fields, score, risk, and public visibility. Private email and phone hashes stay hidden." />
         <div className="grid gap-3 md:grid-cols-4">
           <Metric label="Total profiles" value={data.clients.length} />
           <Metric label="Public" value={publicCount} />

@@ -117,7 +117,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
               <TabsTrigger value="overview" className="px-3 py-2">Command Center</TabsTrigger>
               <TabsTrigger value="reports" className="px-3 py-2">Report Queue</TabsTrigger>
-              <TabsTrigger value="clients" className="px-3 py-2">Clients</TabsTrigger>
+              <TabsTrigger value="clients" className="px-3 py-2">Client Profiles</TabsTrigger>
               <TabsTrigger value="contractors" className="px-3 py-2">Contractors</TabsTrigger>
               <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
               <TabsTrigger value="uploads" className="px-3 py-2">Uploads</TabsTrigger>
@@ -136,7 +136,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             <div className="grid gap-4 lg:grid-cols-5">
               {[
                 ["Report Queue", "Approve only moderated, documented public summaries."],
-                ["Clients", "Control public visibility, profile health, and SEO-safe identity fields."],
+                ["Client Profiles", "Control public visibility, profile health, and SEO-safe identity fields."],
                 ["Contractors", "Review accounts, verification, plan readiness, and report behavior."],
                 ["Contracts", "Oversee private signing links, client invites, and payment coordination status."],
                 ["Recovery", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
@@ -165,7 +165,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/clients"
                 icon={<ClipboardCheck className="size-5" />}
-                title="Client records"
+                title="Client Profiles"
                 text="Review public visibility, duplicate signals, profile health, and SEO summaries."
                 badge={`${publicClients} public`}
               />
@@ -212,7 +212,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="clients" className="space-y-5">
             <AdminModuleIntro
-              title="Client records"
+              title="Client Profiles"
               text="Manage public visibility, duplicate identity signals, risk display, city/state SEO context, and profile health."
             />
             <div className="grid gap-4 lg:grid-cols-4">
@@ -314,7 +314,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/clients"
                 icon={<ClipboardCheck className="size-5" />}
-                title="Clients"
+                title="Client Profiles"
                 text="Edit client profiles, risk display, visibility, and public-summary context."
                 badge={`${data.clients.length} records`}
               />
