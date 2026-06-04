@@ -28,6 +28,7 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard?workspace=lien-readiness", label: "Lien Readiness", description: "Private deadline and document readiness checklists." },
   { href: "/dashboard?workspace=evidence", label: "Evidence Vault", description: "Private invoices, screenshots, contracts, photos, and PDFs." },
   { href: "/dashboard?workspace=alerts", label: "Alerts", description: "Watchlist changes, dispute updates, and score movement." },
+  { href: "/dashboard?workspace=billing", label: "Billing", description: "Plan, usage, invoices, and payment settings." },
 ]
 
 export const contractorDashboardGroups: NavigationGroup[] = [
@@ -48,6 +49,10 @@ export const contractorDashboardGroups: NavigationGroup[] = [
     links: contractorDashboardNav.filter((item) =>
       ["Payment Recovery", "Lien Readiness"].includes(item.label),
     ),
+  },
+  {
+    title: "Account",
+    links: contractorDashboardNav.filter((item) => ["Billing"].includes(item.label)),
   },
 ]
 
@@ -103,6 +108,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/dashboard?workspace=recovery", label: "Payment Recovery" },
       { href: "/dashboard?workspace=lien-readiness", label: "Lien Readiness" },
       { href: "/dashboard?workspace=evidence", label: "Evidence Vault" },
+      { href: "/dashboard?workspace=billing", label: "Billing" },
     ],
   },
   {

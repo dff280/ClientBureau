@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   BellRing,
   ClipboardCheck,
+  CreditCard,
   FilePlus2,
   Landmark,
   LayoutDashboard,
@@ -26,6 +27,7 @@ const sectionIcons = {
   "Lien Readiness": Landmark,
   "Evidence Vault": Vault,
   Alerts: BellRing,
+  Billing: CreditCard,
 }
 
 export function DashboardNavigationMap() {
@@ -59,7 +61,7 @@ export function DashboardNavigationMap() {
         </div>
       </div>
 
-      <div className="mt-5 grid gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid gap-4 lg:grid-cols-4">
         {contractorDashboardGroups.map((group) => (
           <div key={group.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <Badge variant="outline" className="rounded-md border-amber-200 bg-amber-50 text-amber-900">

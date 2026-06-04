@@ -207,6 +207,7 @@ describe("product positioning", () => {
       "Lien Readiness",
       "Evidence Vault",
       "Alerts",
+      "Billing",
     ])
     expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
       "/dashboard?workspace=contracts",
@@ -214,10 +215,14 @@ describe("product positioning", () => {
     expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
       "/dashboard?workspace=lien-readiness",
     )
+    expect(contractorDashboardNav.find((item) => item.label === "Billing")?.href).toBe(
+      "/dashboard?workspace=billing",
+    )
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
       "Before the Job",
       "Agreement and Records",
       "After the Invoice",
+      "Account",
     ])
     expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/score-methodology",

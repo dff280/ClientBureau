@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   BellRing,
   ClipboardCheck,
+  CreditCard,
   FolderKanban,
   FileText,
   Gauge,
@@ -90,8 +91,10 @@ import type {
   PaymentRecoveryCase,
   PaymentRecoveryAttempt,
   ReportDraft,
+  Subscription,
   WatchlistAlert,
 } from "@/lib/types"
+import { pricingTiers } from "@/lib/stripe/pricing"
 import { cn } from "@/lib/utils"
 
 const watchState: ActionResult<ContractorWatchlistItem> = { ok: false, message: "" }
@@ -118,6 +121,7 @@ const workspaceTabs = new Set([
   "recovery",
   "lien-readiness",
   "contracts",
+  "billing",
   "account",
   "activity",
 ])
@@ -137,9 +141,11 @@ function normalizeWorkspaceTab(value: string | null) {
 export function RiskOpsWorkspace({
   riskOps,
   clients,
+  subscription,
 }: {
   riskOps: ContractorRiskOpsData
   clients: ClientProfile[]
+  subscription?: Subscription
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -188,6 +194,30 @@ export function RiskOpsWorkspace({
   )
   const openPipelineItems = riskOps.clientPipeline.filter((item) => item.stage !== "closed").length
   const openContractPackets = riskOps.contractPackets.filter((item) => !["signed", "archived"].includes(item.status)).length
+  const billingPlan = pricingTiers.find((tier) => tier.id === (subscription?.tier ?? "free")) ?? pricingTiers[0]
+  const billingStatus = !subscription || subscription.status === "mock" ? "active" : subscription.status.replaceAll("_", " ")
+  const billingPeriodEnd = subscription?.currentPeriodEnd
+    ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
+        new Date(subscription.currentPeriodEnd),
+      )
+    : "No renewal date"
+  const planUsage = [
+    {
+      label: "Saved searches",
+      value: clients.length,
+      limit: subscription?.tier === "free" || !subscription ? 5 : 100,
+    },
+    {
+      label: "Watchlist records",
+      value: riskOps.watchlist.length,
+      limit: subscription?.tier === "bureau_team" ? 250 : subscription?.tier === "pro" ? 75 : 10,
+    },
+    {
+      label: "Contract packets",
+      value: riskOps.contractPackets.length,
+      limit: subscription?.tier === "free" || !subscription ? 3 : 100,
+    },
+  ]
 
   return (
     <div className="space-y-6">
@@ -216,6 +246,7 @@ export function RiskOpsWorkspace({
             <TabsTrigger value="recovery" className="px-3 py-2">Payment Recovery</TabsTrigger>
             <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Readiness</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
+            <TabsTrigger value="billing" className="px-3 py-2">Billing</TabsTrigger>
             <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
             <TabsTrigger value="activity" className="px-3 py-2">Timeline</TabsTrigger>
           </TabsList>
@@ -717,6 +748,102 @@ export function RiskOpsWorkspace({
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="billing" className="space-y-5">
+          <WorkspaceIntro
+            title="Billing"
+            text="Review your plan, usage, invoices, and payment settings for Client Bureau contractor tools."
+          />
+          <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader className="border-b border-slate-100">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <CreditCard className="size-5 text-amber-700" aria-hidden="true" />
+                  Current plan
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5 p-5">
+                <div className="flex flex-col justify-between gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-start">
+                  <div>
+                    <p className="text-sm font-semibold uppercase text-amber-700">Plan</p>
+                    <h3 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950">
+                      {billingPlan.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-600">
+                      {billingPlan.price} {billingPlan.cadence}
+                    </p>
+                  </div>
+                  <Badge className="rounded-md bg-emerald-700 text-white capitalize">{billingStatus}</Badge>
+                </div>
+                <p className="text-sm leading-6 text-slate-600">{billingPlan.description}</p>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <BillingMetric label="Status" value={billingStatus} />
+                  <BillingMetric label="Renewal" value={billingPeriodEnd} />
+                  <BillingMetric label="Billing contact" value="Account email" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">Included with this plan</p>
+                  <div className="mt-3 grid gap-2 md:grid-cols-2">
+                    {billingPlan.features.slice(0, 6).map((feature) => (
+                      <div key={feature} className="flex gap-2 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                        {feature}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                    <Link href="/pricing">Compare plans</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link href="/contact">Contact billing</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-5">
+              <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardHeader className="border-b border-slate-100">
+                  <CardTitle className="text-lg">Workspace usage</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 p-5">
+                  {planUsage.map((item) => {
+                    const usage = Math.min(100, Math.round((item.value / item.limit) * 100))
+
+                    return (
+                      <div key={item.label} className="space-y-2">
+                        <div className="flex items-center justify-between gap-3 text-sm">
+                          <span className="font-semibold text-slate-950">{item.label}</span>
+                          <span className="text-slate-500">
+                            {item.value} / {item.limit}
+                          </span>
+                        </div>
+                        <Progress value={usage} />
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardHeader className="border-b border-slate-100">
+                  <CardTitle className="text-lg">Invoices and payment method</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 p-5 text-sm text-slate-600">
+                  <BillingRow label="Latest invoice" value={billingPlan.id === "free" ? "No paid invoice issued" : "Sent to billing contact"} />
+                  <BillingRow label="Payment method" value={billingPlan.id === "free" ? "No card required" : "Secure card billing"} />
+                  <BillingRow label="Receipts" value="Delivered to the account email when payment is processed" />
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+                    Plan changes and payment updates should be reviewed from this billing workspace
+                    before expanding search, contract, recovery, and team usage.
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </TabsContent>
 
@@ -1628,6 +1755,24 @@ function RiskMetric({
       </div>
       <p className="mt-2 text-3xl font-semibold">{value}</p>
       <p className="mt-1 text-xs opacity-70">{helper}</p>
+    </div>
+  )
+}
+
+function BillingMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-3">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-2 text-sm font-semibold capitalize text-slate-950">{value}</p>
+    </div>
+  )
+}
+
+function BillingRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-md border border-slate-200 bg-slate-50 p-3">
+      <span className="font-semibold text-slate-950">{label}</span>
+      <span className="max-w-56 text-right text-slate-600">{value}</span>
     </div>
   )
 }

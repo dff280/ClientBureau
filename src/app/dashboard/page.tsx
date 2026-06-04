@@ -204,7 +204,7 @@ export default async function DashboardPage() {
 
         <DashboardNavigationMap />
 
-        <RiskOpsWorkspace riskOps={riskOps} clients={clientProfiles} />
+        <RiskOpsWorkspace riskOps={riskOps} clients={clientProfiles} subscription={dashboard.subscription} />
 
         <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
           <div className="space-y-5">
