@@ -2,6 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
 import { getSafeInternalPath } from "@/lib/auth"
+import { withNoStore } from "@/lib/http"
 import { createClient } from "@/lib/supabase/server"
 import { getInternalRedirectUrl } from "@/lib/urls"
 
@@ -11,7 +12,7 @@ function loginRedirect(request: Request, message: string) {
   const url = getInternalRedirectUrl("/login", request)
   url.searchParams.set("error", message)
 
-  return NextResponse.redirect(url, { status: 303 })
+  return withNoStore(NextResponse.redirect(url, { status: 303 }))
 }
 
 export async function GET(request: Request) {
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error) return NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 })
+    if (!error) return withNoStore(NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 }))
 
     return loginRedirect(request, error.message)
   }
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
 
-    if (!error) return NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 })
+    if (!error) return withNoStore(NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 }))
 
     return loginRedirect(request, error.message)
   }

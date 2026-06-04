@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { getAuthCookieDiagnostics, getCurrentUser } from "@/lib/auth"
 import { getAdminEmails, getDataMode } from "@/lib/env"
+import { noStoreHeaders } from "@/lib/http"
 import { hasSupabaseServiceConfig } from "@/lib/supabase/config"
 
 export const dynamic = "force-dynamic"
@@ -15,30 +16,33 @@ export async function GET() {
   const adminEmailAllowlistConfigured = getAdminEmails().length > 0
   const serviceRoleConfigured = hasSupabaseServiceConfig()
 
-  return NextResponse.json({
-    authenticated: Boolean(user),
-    role: user?.role ?? null,
-    email: user?.email ?? null,
-    dataMode: getDataMode(),
-    isAdmin,
-    status,
-    authCookiePresent: authCookieCount > 0,
-    ...cookieDiagnostics,
-    adminEmailAllowlistConfigured,
-    serviceRoleConfigured,
-    loginUrl: "/login?next=/admin",
-    nextStep: !user
-      ? authCookieCount === 0
-        ? adminEmailAllowlistConfigured
-          ? "No Supabase auth cookie reached the server. Log in at /login?next=/admin in this same browser."
-          : "Set ADMIN_EMAILS on the VPS, rebuild, then log in at /login?next=/admin in this same browser."
-        : "An auth cookie reached the server, but Supabase did not accept it. Log in again to refresh the session."
-      : isAdmin
-        ? adminEmailAllowlistConfigured
-          ? "Admin session is valid."
-          : "Admin session is valid. Add ADMIN_EMAILS on the VPS so this account can self-repair if the role row drifts."
-        : adminEmailAllowlistConfigured
-          ? "This user is signed in but not admin. Confirm the email is in ADMIN_EMAILS and public.users has role=admin."
-          : "This user is signed in but not admin. Set ADMIN_EMAILS or promote this email in public.users.",
-  })
+  return NextResponse.json(
+    {
+      authenticated: Boolean(user),
+      role: user?.role ?? null,
+      email: user?.email ?? null,
+      dataMode: getDataMode(),
+      isAdmin,
+      status,
+      authCookiePresent: authCookieCount > 0,
+      ...cookieDiagnostics,
+      adminEmailAllowlistConfigured,
+      serviceRoleConfigured,
+      loginUrl: "/login?next=/admin",
+      nextStep: !user
+        ? authCookieCount === 0
+          ? adminEmailAllowlistConfigured
+            ? "No Supabase auth cookie reached the server. Log in at /login?next=/admin in this same browser."
+            : "Set ADMIN_EMAILS on the VPS, rebuild, then log in at /login?next=/admin in this same browser."
+          : "An auth cookie reached the server, but Supabase did not accept it. Log in again to refresh the session."
+        : isAdmin
+          ? adminEmailAllowlistConfigured
+            ? "Admin session is valid."
+            : "Admin session is valid. Add ADMIN_EMAILS on the VPS so this account can self-repair if the role row drifts."
+          : adminEmailAllowlistConfigured
+            ? "This user is signed in but not admin. Confirm the email is in ADMIN_EMAILS and public.users has role=admin."
+            : "This user is signed in but not admin. Set ADMIN_EMAILS or promote this email in public.users.",
+    },
+    { headers: noStoreHeaders },
+  )
 }

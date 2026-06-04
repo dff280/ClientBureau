@@ -288,7 +288,9 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
                 badge={`${contractLinks} active`}
               />
             </div>
-            {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}
+            {moderationCrm ? (
+              <AdminPrivateOpsDetails moderationCrm={moderationCrm} riskOps={riskOps} />
+            ) : null}
           </TabsContent>
 
           <TabsContent value="contracts" className="space-y-5">
@@ -301,7 +303,9 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink href="/dashboard?workspace=contracts" icon={<ClipboardCheck className="size-5" />} title="Contracts / Templates" text="Preview contractor-side templates, signing links, and status tracking." badge="Ops" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track agreement status, reviewer actions, and settings changes." badge="Audit" />
             </div>
-            {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}
+            {moderationCrm ? (
+              <AdminPrivateOpsDetails moderationCrm={moderationCrm} riskOps={riskOps} />
+            ) : null}
           </TabsContent>
 
           <TabsContent value="audit" className="space-y-5">
@@ -375,6 +379,35 @@ function AdminModuleIntro({ title, text }: { title: string; text: string }) {
       <h2 className="mt-1 text-xl font-semibold text-slate-950">{title}</h2>
       <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{text}</p>
     </div>
+  )
+}
+
+function AdminPrivateOpsDetails({
+  moderationCrm,
+  riskOps,
+}: {
+  moderationCrm: NonNullable<Awaited<ReturnType<typeof getAdminModerationCrmDataService>>>
+  riskOps: Awaited<ReturnType<typeof getContractorRiskOpsDataService>>
+}) {
+  return (
+    <details className="rounded-md border border-slate-200 bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-5 lg:flex-row lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Private operations oversight</p>
+          <p className="mt-1 text-lg font-semibold text-slate-950">Recovery, lien, and contract safeguard controls</p>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+            Expand only when reviewing documentation-first recovery activity, private lien
+            readiness, contract packets, decision reasons, or compliance notes.
+          </p>
+        </div>
+        <span className="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">
+          Show / hide
+        </span>
+      </summary>
+      <div className="border-t border-slate-200 p-4">
+        <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} />
+      </div>
+    </details>
   )
 }
 

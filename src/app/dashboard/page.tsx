@@ -18,6 +18,7 @@ import { RiskOpsWorkspace } from "@/components/dashboard/risk-ops-workspace"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { requireContractorAccess } from "@/lib/auth"
 import {
   getContractorDashboardService,
@@ -202,85 +203,116 @@ export default async function DashboardPage() {
           <Metric label="Disputed" value={reportCounts.disputed} />
         </div>
 
-        <DashboardNavigationMap />
-
-        <RiskOpsWorkspace riskOps={riskOps} clients={clientProfiles} subscription={dashboard.subscription} />
-
-        <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
-          <div className="space-y-5">
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
-                  Profile status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600">
-                <p>
-                  Verification:{" "}
-                  <span className="font-semibold capitalize text-slate-950">
-                    {dashboard.contractor.verificationStatus}
-                  </span>
-                </p>
-                <p>
-                  License:{" "}
-                  <span className="font-semibold text-slate-950">
-                    {dashboard.contractor.licenseNumber ?? "Not provided"}
-                  </span>
-                </p>
-                <div>
-                  <p className="font-semibold text-slate-950">Verification badges</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(dashboard.contractor.verificationBadges?.length
-                      ? dashboard.contractor.verificationBadges
-                      : ["Verified email"]
-                    ).map((badge) => (
-                      <span key={badge} className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                  <p className="font-semibold text-slate-950">Security controls</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-500">
-                    Email verification, stronger sign-in controls, rate-limit hooks, duplicate
-                    checks, and appeal paths are tracked in the account workflow.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle>Saved searches</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {dashboard.savedSearches.map((search) => (
-                  <Link
-                    key={search.id}
-                    href={`/search?q=${encodeURIComponent(search.query)}${search.state ? `&state=${search.state}` : ""}`}
-                    className="block rounded-md border border-slate-200 p-3 text-sm transition hover:border-amber-300"
-                  >
-                    <p className="font-semibold text-slate-950">{search.query}</p>
-                    <p className="text-slate-500">
-                      {search.city}, {search.state}
-                    </p>
-                  </Link>
-                ))}
-              </CardContent>
-            </Card>
+        <Tabs defaultValue="operations" className="space-y-5">
+          <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
+            <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
+              <TabsTrigger value="operations" className="px-3 py-2">Operations</TabsTrigger>
+              <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
+              <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
+            </TabsList>
           </div>
 
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle>My reports</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DashboardReports reports={dashboard.reports} clients={clientProfiles} evidence={dashboard.evidence} />
-            </CardContent>
-          </Card>
-        </div>
+          <TabsContent value="operations" className="space-y-5">
+            <details className="rounded-md border border-slate-200 bg-white shadow-sm">
+              <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-5 lg:flex-row lg:items-center">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-amber-700">Workspace map</p>
+                  <p className="mt-1 text-lg font-semibold text-slate-950">Show the full contractor tool map</p>
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                    Open this when you want a quick guide to search, reports, watchlists, contracts,
+                    recovery, lien readiness, evidence, alerts, and billing.
+                  </p>
+                </div>
+                <span className="rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700">
+                  Show / hide
+                </span>
+              </summary>
+              <div className="border-t border-slate-200 p-4">
+                <DashboardNavigationMap />
+              </div>
+            </details>
+
+            <RiskOpsWorkspace riskOps={riskOps} clients={clientProfiles} subscription={dashboard.subscription} />
+          </TabsContent>
+
+          <TabsContent value="reports">
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle>My reports</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DashboardReports reports={dashboard.reports} clients={clientProfiles} evidence={dashboard.evidence} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="account">
+            <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
+              <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
+                    Profile status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm text-slate-600">
+                  <p>
+                    Verification:{" "}
+                    <span className="font-semibold capitalize text-slate-950">
+                      {dashboard.contractor.verificationStatus}
+                    </span>
+                  </p>
+                  <p>
+                    License:{" "}
+                    <span className="font-semibold text-slate-950">
+                      {dashboard.contractor.licenseNumber ?? "Not provided"}
+                    </span>
+                  </p>
+                  <div>
+                    <p className="font-semibold text-slate-950">Verification badges</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {(dashboard.contractor.verificationBadges?.length
+                        ? dashboard.contractor.verificationBadges
+                        : ["Verified email"]
+                      ).map((badge) => (
+                        <span key={badge} className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <p className="font-semibold text-slate-950">Security controls</p>
+                    <p className="mt-1 text-xs leading-5 text-slate-500">
+                      Email verification, stronger sign-in controls, rate-limit hooks, duplicate
+                      checks, and appeal paths are tracked in the account workflow.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardHeader>
+                  <CardTitle>Saved searches</CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  {dashboard.savedSearches.map((search) => (
+                    <Link
+                      key={search.id}
+                      href={`/search?q=${encodeURIComponent(search.query)}${search.state ? `&state=${search.state}` : ""}`}
+                      className="block rounded-md border border-slate-200 p-3 text-sm transition hover:border-amber-300"
+                    >
+                      <p className="font-semibold text-slate-950">{search.query}</p>
+                      <p className="text-slate-500">
+                        {search.city}, {search.state}
+                      </p>
+                    </Link>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </section>
   )

@@ -23,10 +23,10 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/search", label: "Search Clients", description: "Check a client before taking the job." },
   { href: "/dashboard?workspace=reports", label: "Reports", description: "Draft, submit, and track client reports." },
   { href: "/dashboard?workspace=watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
-  { href: "/dashboard?workspace=contracts", label: "Contracts / Templates", description: "Templates, signing links, agreement packets, and change orders." },
-  { href: "/dashboard?workspace=recovery", label: "Recovery Cases", description: "Invoice timelines, call logs, payment plans, and resolution tracking." },
-  { href: "/dashboard?workspace=lien-readiness", label: "Lien Packets", description: "Private notice packets, deadline trackers, and document checklists." },
-  { href: "/dashboard?workspace=evidence", label: "Evidence Review", description: "Private review for invoices, screenshots, contracts, photos, and PDFs." },
+  { href: "/dashboard?workspace=contracts", label: "Contracts", description: "Signing links, agreement packets, change orders, and client invites." },
+  { href: "/dashboard?workspace=recovery", label: "Payment Recovery", description: "Invoice timelines, call logs, payment plans, and resolution tracking." },
+  { href: "/dashboard?workspace=lien-readiness", label: "Lien Readiness", description: "Private notice packets, deadline trackers, and document checklists." },
+  { href: "/dashboard?workspace=evidence", label: "Evidence Vault", description: "Private invoices, screenshots, contracts, photos, PDFs, and review status." },
   { href: "/dashboard?workspace=alerts", label: "Alerts", description: "Watchlist changes, dispute updates, and score movement." },
   { href: "/dashboard?workspace=billing", label: "Billing", description: "Plan, usage, invoices, and payment settings." },
 ]
@@ -41,13 +41,13 @@ export const contractorDashboardGroups: NavigationGroup[] = [
   {
     title: "Agreement and Records",
     links: contractorDashboardNav.filter((item) =>
-      ["Contracts / Templates", "Evidence Review", "Reports"].includes(item.label),
+      ["Contracts", "Evidence Vault", "Reports"].includes(item.label),
     ),
   },
   {
     title: "After the Invoice",
     links: contractorDashboardNav.filter((item) =>
-      ["Recovery Cases", "Lien Packets"].includes(item.label),
+      ["Payment Recovery", "Lien Readiness"].includes(item.label),
     ),
   },
   {
@@ -104,10 +104,10 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Contractor Tools",
     links: [
       { href: "/submit-report", label: "Submit Report" },
-      { href: "/dashboard?workspace=contracts", label: "Contracts / Templates" },
-      { href: "/dashboard?workspace=recovery", label: "Recovery Cases" },
-      { href: "/dashboard?workspace=lien-readiness", label: "Lien Packets" },
-      { href: "/dashboard?workspace=evidence", label: "Evidence Review" },
+      { href: "/dashboard?workspace=contracts", label: "Contracts" },
+      { href: "/dashboard?workspace=recovery", label: "Payment Recovery" },
+      { href: "/dashboard?workspace=lien-readiness", label: "Lien Readiness" },
+      { href: "/dashboard?workspace=evidence", label: "Evidence Vault" },
       { href: "/dashboard?workspace=billing", label: "Billing" },
     ],
   },

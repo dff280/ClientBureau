@@ -60,7 +60,7 @@ export default function OpenGraphImage() {
         <div style={{ display: "flex", gap: 18, color: "#f8fafc", fontSize: 20 }}>
           <span>Private matching</span>
           <span>Contract workflows</span>
-          <span>Evidence Review</span>
+          <span>Evidence Vault</span>
         </div>
       </div>
     ),

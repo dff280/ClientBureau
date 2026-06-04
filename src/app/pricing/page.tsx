@@ -22,7 +22,7 @@ export default function PricingPage() {
     ["Client profile search", "Limited", "Unlimited", "Team shared", "Custom"],
     ["Positive client reports", "Included", "Included", "Included", "Included"],
     ["Documented report submission", "Included", "Included", "Included", "Included"],
-    ["Evidence Review", "Basic", "Expanded", "Team library", "Custom retention"],
+    ["Evidence Vault", "Basic", "Expanded", "Team library", "Custom retention"],
     ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
     ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
     ["Recovery case workflow", "-", "Private tracking", "Team workflow", "Partner handoff"],

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { getSafeInternalPath, resolveAuthenticatedUserProfile } from "@/lib/auth"
 import { formDataToObject } from "@/lib/actions/result"
 import { getDataMode } from "@/lib/env"
+import { withNoStore } from "@/lib/http"
 import { loginSchema } from "@/lib/schemas/client-bureau"
 import { createClient } from "@/lib/supabase/server"
 import { getInternalRedirectUrl } from "@/lib/urls"
@@ -14,11 +15,11 @@ function redirectToLogin(request: Request, params: Record<string, string>) {
     if (value) url.searchParams.set(key, value)
   }
 
-  return NextResponse.redirect(url, { status: 303 })
+  return withNoStore(NextResponse.redirect(url, { status: 303 }))
 }
 
 function redirectToPath(request: Request, path: string) {
-  return NextResponse.redirect(getInternalRedirectUrl(path, request), { status: 303 })
+  return withNoStore(NextResponse.redirect(getInternalRedirectUrl(path, request), { status: 303 }))
 }
 
 export async function POST(request: Request) {

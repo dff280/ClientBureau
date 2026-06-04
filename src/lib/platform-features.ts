@@ -198,7 +198,7 @@ export function buildTodaysWorkItems(input: {
     .slice(0, 2)
     .map((item) => ({
       id: `recovery_${item.id}`,
-      label: "Recovery Cases",
+      label: "Payment Recovery",
       title: item.clientName,
       detail: item.nextAction,
       tone: item.priority,
@@ -209,7 +209,7 @@ export function buildTodaysWorkItems(input: {
     .slice(0, 2)
     .map((item) => ({
       id: `evidence_${item.id}`,
-      label: "Evidence Review",
+      label: "Evidence Vault",
       title: item.clientName,
       detail: item.publicSummary,
       tone: item.status === "needs_more_info" ? "high" : "normal",

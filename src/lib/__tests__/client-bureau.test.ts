@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest"
 import { formDataToObject } from "@/lib/actions/result"
 import sitemap from "@/app/sitemap"
 import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
+import { getSafeInternalPath } from "@/lib/auth"
+import { noStoreHeaders } from "@/lib/http"
 import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
 import {
   calculateClientBureauScore,
@@ -203,17 +205,17 @@ describe("product positioning", () => {
       "Search Clients",
       "Reports",
       "Watchlist",
-      "Contracts / Templates",
-      "Recovery Cases",
-      "Lien Packets",
-      "Evidence Review",
+      "Contracts",
+      "Payment Recovery",
+      "Lien Readiness",
+      "Evidence Vault",
       "Alerts",
       "Billing",
     ])
-    expect(contractorPrimaryNav.find((item) => item.label === "Contracts / Templates")?.href).toBe(
+    expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
       "/dashboard?workspace=contracts",
     )
-    expect(contractorDashboardNav.find((item) => item.label === "Lien Packets")?.href).toBe(
+    expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
       "/dashboard?workspace=lien-readiness",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Billing")?.href).toBe(
@@ -298,6 +300,13 @@ describe("deployment URL helpers", () => {
     expect(getInternalRedirectUrl("/login?loggedOut=true", request).toString()).toBe(
       "http://localhost:4000/login?loggedOut=true",
     )
+  })
+
+  it("rejects unsafe external next redirects and defines no-store session headers", () => {
+    expect(getSafeInternalPath("/admin/reports")).toBe("/admin/reports")
+    expect(getSafeInternalPath("//evil.example/admin")).toBeUndefined()
+    expect(getSafeInternalPath("https://evil.example/admin")).toBeUndefined()
+    expect(noStoreHeaders["Cache-Control"]).toContain("no-store")
   })
 })
 
@@ -568,8 +577,8 @@ describe("platform expansion feature utilities", () => {
     })
 
     expect(work.length).toBeGreaterThan(4)
-    expect(work.map((item) => item.label)).toContain("Recovery Cases")
-    expect(work.map((item) => item.label)).toContain("Evidence Review")
+    expect(work.map((item) => item.label)).toContain("Payment Recovery")
+    expect(work.map((item) => item.label)).toContain("Evidence Vault")
   })
 
   it("tracks recovery attempts, payment plans, contract packets, and saved views", () => {

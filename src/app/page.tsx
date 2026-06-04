@@ -280,7 +280,7 @@ export default async function Home() {
                 />
               </div>
               <Button className="h-12 bg-amber-500 px-6 font-semibold text-slate-950 hover:bg-amber-400">
-                Search
+                Search a Client
               </Button>
             </form>
 
@@ -294,7 +294,13 @@ export default async function Home() {
               <Button asChild variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Submit a Documented Report
+                  Submit a Client Report
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="text-slate-100 hover:bg-white/10 hover:text-white">
+                <Link href="/how-it-works">
+                  How Client Bureau Works
+                  <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
             </div>
