@@ -24,6 +24,22 @@ function extract(html, pattern) {
   return match?.[1]?.trim() ?? ""
 }
 
+function visibleText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#x27;|&#39;|&amp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function wordCount(html) {
+  const text = visibleText(html)
+
+  return text ? text.split(/\s+/).length : 0
+}
+
 const home = await read("/")
 if (home.response.ok) pass("Homepage returns 200")
 else fail("Homepage returns 200", String(home.response.status))
@@ -58,6 +74,57 @@ for (const path of ["/llms.txt", "/robots.txt", "/sitemap.xml"]) {
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
   else fail(`${path} returns 200`, String(result.response.status))
+}
+
+const publicContentPages = [
+  "/terms",
+  "/privacy",
+  "/report-policy",
+  "/dispute-policy",
+  "/moderation-policy",
+  "/clients/orlando-fl",
+  "/reports/non-payment",
+  "/industries/contractors",
+]
+
+for (const path of publicContentPages) {
+  const page = await read(path)
+
+  if (!page.response.ok) {
+    fail(`${path} returns 200`, String(page.response.status))
+    continue
+  }
+
+  pass(`${path} returns 200`)
+
+  const pageTitle = extract(page.text, /<title>(.*?)<\/title>/is)
+  const pageDescription = extract(
+    page.text,
+    /<meta\s+name=["']description["']\s+content=["']([^"']+)["'][^>]*>/is,
+  )
+  const pageCanonical = extract(page.text, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
+  const count = wordCount(page.text)
+
+  if (pageTitle.length > 0) pass(`${path} title present`, pageTitle)
+  else fail(`${path} title present`)
+
+  if (pageDescription.length >= 90 && pageDescription.length <= 170) {
+    pass(`${path} meta description length`, `${pageDescription.length} characters`)
+  } else {
+    fail(`${path} meta description length`, `${pageDescription.length}: ${pageDescription}`)
+  }
+
+  if (pageCanonical === `${expectedSiteUrl}${path}`) pass(`${path} canonical`, pageCanonical)
+  else fail(`${path} canonical`, pageCanonical)
+
+  if (count >= 450) pass(`${path} substantial content`, `${count} words`)
+  else fail(`${path} substantial content`, `${count} words`)
+
+  if (page.text.includes(`"@type":"FAQPage"`) || page.text.includes(`"@type": "FAQPage"`)) {
+    pass(`${path} FAQ schema present`)
+  } else {
+    fail(`${path} FAQ schema present`)
+  }
 }
 
 const publicProfile = await read("/client/john-smith-orlando-fl")

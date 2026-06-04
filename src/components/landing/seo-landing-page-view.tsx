@@ -4,6 +4,7 @@ import { ArrowRight, FilePlus2, LockKeyhole, Search, ShieldCheck } from "lucide-
 import { RiskBadge } from "@/components/client/risk-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { JsonLd, getFaqSchema } from "@/lib/seo"
 import type { SeoLandingPage } from "@/lib/seo-landing-pages"
 import type { PublicClientProfile } from "@/lib/types"
 
@@ -22,9 +23,12 @@ export function SeoLandingPageView({
     )
   const totalUnpaid = profiles.reduce((total, profile) => total + profile.balanceSummary.totalReportedUnpaid, 0)
   const openDisputes = profiles.reduce((total, profile) => total + profile.balanceSummary.openDisputeCount, 0)
+  const landingSections = getLandingSections(page)
+  const faqs = getLandingFaqs(page)
 
   return (
     <section className="bg-slate-100">
+      <JsonLd data={getFaqSchema(faqs)} />
       <div className="border-b border-slate-200 bg-slate-950 text-white">
         <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
           <div className="space-y-5">
@@ -93,6 +97,26 @@ export function SeoLandingPageView({
           </Card>
         </div>
 
+        <div className="grid gap-5 lg:grid-cols-3">
+          {landingSections.map((section) => (
+            <Card key={section.title} className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-5">
+                <p className="text-xs font-semibold uppercase text-amber-700">{section.eyebrow}</p>
+                <h2 className="text-xl font-semibold text-slate-950">{section.title}</h2>
+                <p className="text-sm leading-6 text-slate-600">{section.body}</p>
+                <ul className="grid gap-2">
+                  {section.points.map((point) => (
+                    <li key={point} className="flex gap-2 text-sm leading-6 text-slate-600">
+                      <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
         <div className="space-y-4">
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
             <div>
@@ -159,23 +183,60 @@ export function SeoLandingPageView({
 
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase text-amber-700">Report context</p>
-          <div className="grid gap-4 lg:grid-cols-3">
-            {reports.slice(0, 6).map(({ profile, report }) => (
-              <Card key={report.id} className="rounded-md border-slate-200 bg-white shadow-sm">
-                <CardContent className="space-y-3 p-5">
-                  <p className="text-xs font-semibold uppercase text-slate-500">{report.reportCategory}</p>
-                  <h3 className="font-semibold text-slate-950">
-                    {profile.firstName} {profile.lastName} / {profile.city}, {profile.state}
-                  </h3>
-                  <p className="text-sm leading-6 text-slate-600">{report.publicSummary}</p>
-                  <p className="text-sm font-semibold text-slate-950">
-                    Reported unpaid: {formatCurrency(report.amountUnpaid)}
+          {reports.length > 0 ? (
+            <div className="grid gap-4 lg:grid-cols-3">
+              {reports.slice(0, 6).map(({ profile, report }) => (
+                <Card key={report.id} className="rounded-md border-slate-200 bg-white shadow-sm">
+                  <CardContent className="space-y-3 p-5">
+                    <p className="text-xs font-semibold uppercase text-slate-500">{report.reportCategory}</p>
+                    <h3 className="font-semibold text-slate-950">
+                      {profile.firstName} {profile.lastName} / {profile.city}, {profile.state}
+                    </h3>
+                    <p className="text-sm leading-6 text-slate-600">{report.publicSummary}</p>
+                    <p className="text-sm font-semibold text-slate-950">
+                      Reported unpaid: {formatCurrency(report.amountUnpaid)}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="grid gap-4 p-6 lg:grid-cols-[1fr_260px] lg:items-center">
+                <div>
+                  <h3 className="text-2xl font-semibold text-slate-950">No approved report summaries are listed yet.</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Client Bureau keeps this page available for public research while moderation builds the approved record set.
+                    Contractors can still search privately, create a watchlist item, or submit a documented report for review.
                   </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                </div>
+                <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                  <Link href="/submit-report">
+                    Submit report context
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
+
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="space-y-5 p-6">
+            <div>
+              <p className="text-sm font-semibold uppercase text-amber-700">Frequently asked questions</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-950">Using this Client Bureau page responsibly</h2>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+              {faqs.map((faq) => (
+                <div key={faq.question} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <h3 className="font-semibold text-slate-950">{faq.question}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{faq.answer}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </section>
   )
@@ -205,4 +266,98 @@ function formatCurrency(value: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function getLandingContext(page: SeoLandingPage) {
+  if (page.kind === "clients") {
+    const place = page.city && page.state ? `${page.city}, ${page.state}` : page.state ? page.state : "this market"
+
+    return {
+      place,
+      noun: `${place} client reports`,
+      audience: page.audience,
+      profileFocus:
+        "Public market pages help contractors research approved profile context by city or state while keeping private identifiers and unapproved submissions out of search results.",
+    }
+  }
+
+  if (page.kind === "reports") {
+    return {
+      place: "this report category",
+      noun: page.reportCategory ? `${page.reportCategory.toLowerCase()} client reports` : "client report context",
+      audience: page.audience,
+      profileFocus:
+        "Report-category pages organize approved summaries by the type of documented contractor experience, including payment issues, dispute context, positive reports, and resolution updates.",
+    }
+  }
+
+  return {
+    place: page.industry ?? "this industry",
+    noun: `${page.industry ?? "industry"} client reports`,
+    audience: page.audience,
+    profileFocus:
+      "Industry pages explain how Client Bureau supports business owners who commit time, labor, materials, deliverables, appointments, or invoice risk before final payment is complete.",
+  }
+}
+
+function getLandingSections(page: SeoLandingPage) {
+  const context = getLandingContext(page)
+
+  return [
+    {
+      eyebrow: "Search intent",
+      title: `What ${context.noun} help you evaluate`,
+      body:
+        "Client Bureau pages are designed for practical pre-job review. They help a business owner decide whether to proceed normally, ask for clearer terms, request a deposit, prepare a contract packet, or document the job more carefully.",
+      points: [
+        "Reported payment status, unpaid balance context, and approved summary language.",
+        "Client response, dispute, correction, and resolution information when approved.",
+        "Positive client reports and would-work-with-again context when available.",
+      ],
+    },
+    {
+      eyebrow: "Moderation",
+      title: "How public profile context is controlled",
+      body:
+        "Client Bureau public pages are intentionally limited. They are built from moderated profile fields and approved summaries, not raw complaint files or private workspace notes.",
+      points: [
+        "Pending and rejected reports do not appear on public profiles.",
+        "Evidence is reviewed privately and summarized as evidence-on-file context.",
+        "Public wording should remain factual, neutral, and tied to documented contractor experiences.",
+      ],
+    },
+    {
+      eyebrow: "Responsible use",
+      title: `How contractors should use ${context.place} context`,
+      body:
+        "A Client Bureau page is one intake signal. Contractors should combine it with contracts, deposits, change-order controls, communication records, and their own judgment before accepting work.",
+      points: [
+        "Search before scheduling labor, buying materials, extending terms, or starting custom work.",
+        "Document your own project timeline and submit updates if a payment or dispute is resolved.",
+        "Use private workflow tools for recovery, lien readiness, and contract tracking without exposing private files publicly.",
+      ],
+    },
+  ]
+}
+
+function getLandingFaqs(page: SeoLandingPage) {
+  const context = getLandingContext(page)
+
+  return [
+    {
+      question: `What are ${context.noun}?`,
+      answer:
+        "They are Client Bureau public research pages built from approved client profile context, moderated contractor-submitted summaries, response information, and non-sensitive score factors.",
+    },
+    {
+      question: "Does Client Bureau show private phone numbers, emails, or evidence files?",
+      answer:
+        "No. Public pages should not show raw phone numbers, email addresses, private addresses, raw evidence files, internal notes, pending reports, or rejected reports.",
+    },
+    {
+      question: "What should I do if no public profile appears?",
+      answer:
+        "Search privately using available client details, add the client to a watchlist, create an intake assessment, or submit a documented report for moderation if you have a real contractor-client experience to report.",
+    },
+  ]
 }
