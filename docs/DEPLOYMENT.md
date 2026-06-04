@@ -27,6 +27,9 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0001_client_bureau_schema.sql`
    - `supabase/migrations/0002_admin_discussions_audit.sql`
    - `supabase/migrations/0003_platform_expansion.sql`
+   - `supabase/migrations/0004_recovery_contracts.sql`
+   - `supabase/migrations/0005_ops_workspace.sql`
+   - `supabase/migrations/0006_launch_ops_hardening.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -56,6 +59,14 @@ https://clientbureau.com/api/admin/session
 ```
 
 Expected healthy values are `authenticated: true`, `isAdmin: true`, `adminEmailAllowlistConfigured: true`, and `serviceRoleConfigured: true`.
+
+Launch health is available at:
+
+```text
+https://clientbureau.com/api/health
+```
+
+It returns non-secret readiness information for data mode, platform feature mode, Supabase connectivity, service-role availability, Stripe configuration, webhook configuration, and required table presence.
 
 ## 3. Stripe Billing
 
@@ -169,7 +180,27 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until the platform expansion Supabase adapter is intentionally enabled. The tables are documented in migration `0003`, while the live app continues to use safe typed feature data by default.
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, and `0006` are applied and `/api/health` confirms all required tables. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+
+After the required tables are verified, enable live-backed platform operations:
+
+```text
+PLATFORM_FEATURE_DATA_MODE=supabase
+```
+
+Then rebuild:
+
+```bash
+docker compose up -d --build
+```
+
+Rollback is immediate if an ops table, RLS policy, or workflow needs more review:
+
+```text
+PLATFORM_FEATURE_DATA_MODE=mock
+```
+
+Rebuild again. Core Supabase flows for auth, report submission, admin approval, public profiles, responses, discussions, and billing remain unaffected.
 
 ## 6. Start The App
 
@@ -208,6 +239,7 @@ Verify on the VPS:
 ```bash
 docker compose ps
 curl -I https://clientbureau.com
+curl https://clientbureau.com/api/health
 curl https://clientbureau.com/robots.txt
 curl https://clientbureau.com/sitemap.xml
 ```
@@ -246,6 +278,16 @@ https://clientbureau.com/api/admin/session
 ```
 
 If it returns `authenticated:false` and `authCookiePresent:false`, that browser is not logged in on `clientbureau.com`; use `https://clientbureau.com/login?next=/admin`. If it returns `adminEmailAllowlistConfigured:false`, update `.env.production`, rebuild, and log in again.
+
+Before switching `PLATFORM_FEATURE_DATA_MODE=supabase`, verify ops table readiness from Supabase SQL Editor:
+
+```sql
+select table_name, exists
+from public.client_bureau_required_tables
+order by table_name;
+```
+
+Expected result: every row has `exists = true`.
 
 Before allowing Google to index real client reports, confirm:
 

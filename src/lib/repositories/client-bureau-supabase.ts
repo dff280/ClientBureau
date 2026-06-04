@@ -9,22 +9,71 @@ import {
   getScoreFactors,
   paymentReliabilityLabel,
 } from "@/lib/scoring"
+import {
+  intakeAssessmentScore,
+  intakeRiskRecommendation,
+  paymentRecoveryPriority,
+} from "@/lib/platform-features"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
-import type { ClientReportInput, ClientResponseInput } from "@/lib/schemas/client-bureau"
+import type {
+  AdminSavedViewInput,
+  ClientPipelineItemInput,
+  ClientReportInput,
+  ClientResponseInput,
+  ClientRiskRoomInput,
+  ContractPacketInput,
+  ContractShareLinkInput,
+  ContractSignatureInput,
+  ContractWorkspaceItemInput,
+  IntakeAssessmentInput,
+  LienNoticeDraftInput,
+  PaymentPlanInput,
+  PaymentRecoveryAttemptInput,
+  PaymentRecoveryCaseInput,
+  RecoveryComplianceReviewInput,
+  ReportDraftInput,
+  UpdateClientPipelineStageInput,
+  UpdateContractPacketStatusInput,
+  UpdateEvidenceVaultStatusInput,
+  WatchlistItemInput,
+} from "@/lib/schemas/client-bureau"
 import { isPositiveReportCategory } from "@/lib/types"
 import type {
+  AdminModerationCrmData,
   AdminReview,
+  AdminSavedView,
+  BulkImportBatch,
   AdminWorkspaceData,
+  ClientIntakeAssessment,
+  ClientPipelineItem,
   AuditLogEntry,
+  AdminQueueAssignment,
   ClientProfile,
   ClientReport,
   ClientResponse,
   ClientSearchResult,
+  ClientRiskRoom,
   CommunityDiscussion,
+  ContractPacket,
+  ContractWorkspaceItem,
+  ContractorRiskOpsData,
+  ContractorWatchlistItem,
+  EvidenceReviewSummary,
+  EvidenceVaultItem,
+  LienNoticeDraft,
+  ModerationCase,
+  ModerationCaseStatus,
+  ModerationDecisionReason,
+  ModerationPriority,
+  PaymentPlan,
+  PaymentRecoveryAttempt,
+  PaymentRecoveryCase,
+  RecoveryComplianceReview,
   ContractorProfile,
   PublicClientProfile,
   ReportEvidence,
+  ReportDraft,
   ReportTimelineEvent,
   ReviewChecklistItem,
   ReviewChecklistStatus,
@@ -32,6 +81,8 @@ import type {
   SearchFilters,
   Subscription,
   User,
+  WatchlistAlert,
+  WatchlistStatus,
 } from "@/lib/types"
 
 type Tables = Database["public"]["Tables"]
@@ -45,6 +96,25 @@ type SubscriptionRow = Tables["subscriptions"]["Row"]
 type AdminReviewRow = Tables["admin_reviews"]["Row"]
 type CommunityDiscussionRow = Tables["community_discussions"]["Row"]
 type AuditLogRow = Tables["audit_logs"]["Row"]
+type ContractorWatchlistRow = Tables["contractor_watchlist_items"]["Row"]
+type WatchlistAlertRow = Tables["watchlist_alerts"]["Row"]
+type ReportDraftRow = Tables["report_drafts"]["Row"]
+type ClientIntakeAssessmentRow = Tables["client_intake_assessments"]["Row"]
+type EvidenceReviewSummaryRow = Tables["evidence_review_summaries"]["Row"]
+type ModerationCaseRow = Tables["moderation_cases"]["Row"]
+type BulkImportBatchRow = Tables["bulk_import_batches"]["Row"]
+type PaymentRecoveryCaseRow = Tables["payment_recovery_cases"]["Row"]
+type LienNoticeDraftRow = Tables["lien_notice_drafts"]["Row"]
+type ContractWorkspaceItemRow = Tables["contract_workspace_items"]["Row"]
+type ClientPipelineItemRow = Tables["client_pipeline_items"]["Row"]
+type ClientRiskRoomRow = Tables["client_risk_rooms"]["Row"]
+type PaymentRecoveryAttemptRow = Tables["payment_recovery_attempts"]["Row"]
+type PaymentPlanRow = Tables["payment_plans"]["Row"]
+type ContractPacketRow = Tables["contract_packets"]["Row"]
+type EvidenceVaultItemRow = Tables["evidence_vault_items"]["Row"]
+type AdminSavedViewRow = Tables["admin_saved_views"]["Row"]
+type AdminQueueAssignmentRow = Tables["admin_queue_assignments"]["Row"]
+type RecoveryComplianceReviewRow = Tables["recovery_compliance_reviews"]["Row"]
 
 const emptyHash = "sha256:empty-private"
 
@@ -120,7 +190,7 @@ function mapClientReport(row: ClientReportRow): ClientReport {
     publicSummary: row.public_summary,
     evidenceAttached: row.evidence_attached,
     status: row.status,
-    resolutionStatus: inferResolutionStatus(row.payment_status, row.status, row.amount_unpaid),
+    resolutionStatus: row.resolution_status ?? inferResolutionStatus(row.payment_status, row.status, row.amount_unpaid),
     moderationNote: row.moderation_note ?? undefined,
     createdAt: row.created_at,
     approvedAt: row.approved_at ?? undefined,
@@ -223,6 +293,342 @@ function mapAuditLog(row: AuditLogRow): AuditLogEntry {
   }
 }
 
+function mapWatchlistItem(row: ContractorWatchlistRow): ContractorWatchlistItem {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientId: row.client_id,
+    status: row.status,
+    watchReason: row.watch_reason,
+    alertLevel: row.alert_level,
+    lastSignal: row.last_signal,
+    privateMatch: row.private_match,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapWatchlistAlert(row: WatchlistAlertRow): WatchlistAlert {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientId: row.client_id ?? undefined,
+    profileSlug: row.profile_slug ?? undefined,
+    eventType: row.event_type,
+    title: row.title,
+    description: row.description,
+    severity: row.severity,
+    createdAt: row.created_at,
+    readAt: row.read_at ?? undefined,
+  }
+}
+
+function mapReportDraft(row: ReportDraftRow): ReportDraft {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientId: row.client_id ?? undefined,
+    clientName: row.client_name,
+    projectType: row.project_type,
+    estimatedValue: row.estimated_value,
+    amountAtRisk: row.amount_at_risk,
+    summary: row.summary,
+    nextStep: row.next_step,
+    status: row.status,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapIntakeAssessment(row: ClientIntakeAssessmentRow): ClientIntakeAssessment {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientName: row.client_name,
+    city: row.city,
+    state: row.state,
+    projectValue: row.project_value,
+    depositReceived: row.deposit_received,
+    contractSigned: row.contract_signed,
+    privateMatchConfirmed: row.private_match_confirmed,
+    recommendation: row.recommendation as ClientIntakeAssessment["recommendation"],
+    score: row.score,
+    notes: row.notes ?? "",
+    createdAt: row.created_at,
+  }
+}
+
+function mapEvidenceReviewSummary(row: EvidenceReviewSummaryRow): EvidenceReviewSummary {
+  return {
+    id: row.id,
+    reportId: row.report_id,
+    contractorId: row.contractor_id,
+    status: row.status,
+    label: row.label,
+    fileCount: row.file_count,
+    reviewedCount: row.reviewed_count,
+    lastUpdatedAt: row.last_updated_at,
+  }
+}
+
+function mapModerationCase(row: ModerationCaseRow, assignedToName?: string): ModerationCase {
+  return {
+    id: row.id,
+    reportId: row.report_id ?? undefined,
+    discussionId: row.discussion_id ?? undefined,
+    clientId: row.client_id ?? undefined,
+    title: row.title,
+    summary: row.summary,
+    priority: row.priority,
+    status: row.status,
+    queueStage: row.queue_stage as ModerationCase["queueStage"],
+    assignedTo: row.assigned_to ?? undefined,
+    assignedToName,
+    dueAt: row.due_at,
+    decisionReason: row.decision_reason ?? undefined,
+    escalationNote: row.escalation_note ?? undefined,
+    publicSummaryPreview: row.public_summary_preview ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapBulkImportBatch(row: BulkImportBatchRow): BulkImportBatch {
+  return {
+    id: row.id,
+    fileName: row.file_name,
+    createdBy: row.created_by ?? "system",
+    totalRows: row.total_rows,
+    readyRows: row.ready_rows,
+    duplicateRows: row.duplicate_rows,
+    importedRows: row.imported_rows,
+    status: row.status as BulkImportBatch["status"],
+    createdAt: row.created_at,
+  }
+}
+
+function mapPaymentRecoveryCase(row: PaymentRecoveryCaseRow): PaymentRecoveryCase {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientName: row.client_name,
+    city: row.city,
+    state: row.state,
+    amountDue: row.amount_due,
+    invoiceAgeDays: row.invoice_age_days,
+    preferredChannel: row.preferred_channel,
+    status: row.status,
+    priority: row.priority,
+    lastContactAt: row.last_contact_at ?? undefined,
+    nextAction: row.next_action,
+    summary: row.summary,
+    complianceFlags: row.compliance_flags,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapLienNoticeDraft(row: LienNoticeDraftRow): LienNoticeDraft {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientName: row.client_name,
+    projectType: row.project_type,
+    propertyCity: row.property_city,
+    state: row.state,
+    amountDue: row.amount_due,
+    lastWorkDate: row.last_work_date,
+    targetSendDate: row.target_send_date ?? undefined,
+    status: row.status,
+    requiredReview: row.required_review,
+    nextStep: row.next_step,
+    jurisdictionNote: row.jurisdiction_note,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapContractWorkspaceItem(row: ContractWorkspaceItemRow): ContractWorkspaceItem {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientName: row.client_name,
+    projectType: row.project_type,
+    templateType: row.template_type,
+    contractValue: row.contract_value,
+    depositRequired: row.deposit_required,
+    milestoneBilling: row.milestone_billing,
+    status: row.status,
+    nextStep: row.next_step,
+    summary: row.summary,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapClientPipelineItem(row: ClientPipelineItemRow): ClientPipelineItem {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientId: row.client_profile_id ?? undefined,
+    clientName: row.client_name,
+    city: row.city,
+    state: row.state,
+    stage: row.stage,
+    priority: row.priority,
+    estimatedValue: row.estimated_value,
+    nextAction: row.next_action,
+    dueAt: row.due_at ?? undefined,
+    privateMatch: row.private_match,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapClientRiskRoom(row: ClientRiskRoomRow): ClientRiskRoom {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientId: row.client_profile_id ?? undefined,
+    clientName: row.client_name,
+    city: row.city,
+    state: row.state,
+    headline: row.headline,
+    summary: row.summary,
+    linkedSearchIds: row.linked_search_ids,
+    linkedWatchlistIds: row.linked_watchlist_ids,
+    linkedAssessmentIds: row.linked_assessment_ids,
+    linkedContractIds: row.linked_contract_ids,
+    linkedReportDraftIds: row.linked_report_draft_ids,
+    linkedEvidenceIds: row.linked_evidence_ids,
+    linkedRecoveryIds: row.linked_recovery_ids,
+    linkedResolutionIds: row.linked_resolution_ids,
+    lastActivityAt: row.last_activity_at,
+    createdAt: row.created_at,
+  }
+}
+
+function mapPaymentRecoveryAttempt(row: PaymentRecoveryAttemptRow): PaymentRecoveryAttempt {
+  return {
+    id: row.id,
+    recoveryCaseId: row.recovery_case_id,
+    contractorId: row.contractor_id,
+    channel: row.channel,
+    attemptedAt: row.attempted_at,
+    outcome: row.outcome,
+    note: row.note,
+    nextFollowUpAt: row.next_follow_up_at ?? undefined,
+    createdAt: row.created_at,
+  }
+}
+
+function mapPaymentPlan(row: PaymentPlanRow): PaymentPlan {
+  return {
+    id: row.id,
+    recoveryCaseId: row.recovery_case_id,
+    contractorId: row.contractor_id,
+    totalAmount: row.total_amount,
+    installmentAmount: row.installment_amount,
+    dueDay: row.due_day,
+    status: row.status,
+    nextDueDate: row.next_due_date ?? undefined,
+    notes: row.notes,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapContractPacket(row: ContractPacketRow): ContractPacket {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    clientName: row.client_name,
+    projectType: row.project_type,
+    templateType: row.template_type,
+    status: row.status,
+    packetValue: row.packet_value,
+    depositRequired: row.deposit_required,
+    milestoneCount: row.milestone_count,
+    requiredBeforeScheduling: row.required_before_scheduling,
+    nextAction: row.next_action,
+    shareToken: row.share_token ?? undefined,
+    shareUrl: row.share_url ?? undefined,
+    clientEmailMasked: row.client_email_masked ?? undefined,
+    clientInviteStatus: row.client_invite_status,
+    signatureStatus: row.signature_status,
+    shareStatus: row.share_status,
+    paymentMode: row.payment_mode,
+    paymentSummary: row.payment_summary ?? undefined,
+    clientSignedAt: row.client_signed_at ?? undefined,
+    contractorSignedAt: row.contractor_signed_at ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapEvidenceVaultItem(row: EvidenceVaultItemRow): EvidenceVaultItem {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    reportId: row.report_id ?? undefined,
+    clientName: row.client_name,
+    label: row.label,
+    fileCategory: row.file_category as EvidenceVaultItem["fileCategory"],
+    status: row.status,
+    privateStoragePath: row.private_storage_path,
+    publicSummary: row.public_summary,
+    uploadedAt: row.uploaded_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapAdminSavedView(row: AdminSavedViewRow): AdminSavedView {
+  const filters =
+    row.filters && typeof row.filters === "object" && !Array.isArray(row.filters)
+      ? Object.fromEntries(
+          Object.entries(row.filters).map(([key, value]) => [key, String(value ?? "")]),
+        )
+      : {}
+
+  return {
+    id: row.id,
+    scope: row.scope,
+    name: row.name,
+    filters,
+    isDefault: row.is_default,
+    createdBy: row.created_by ?? "system",
+    createdAt: row.created_at,
+  }
+}
+
+function mapAdminQueueAssignment(row: AdminQueueAssignmentRow): AdminQueueAssignment {
+  return {
+    id: row.id,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    assignedTo: row.assigned_to ?? "",
+    assignedToName: row.assigned_to_name,
+    priority: row.priority,
+    dueAt: row.due_at,
+    status: row.status,
+  }
+}
+
+function mapRecoveryComplianceReview(row: RecoveryComplianceReviewRow): RecoveryComplianceReview {
+  return {
+    id: row.id,
+    recoveryCaseId: row.recovery_case_id ?? undefined,
+    lienNoticeDraftId: row.lien_notice_draft_id ?? undefined,
+    contractPacketId: row.contract_packet_id ?? undefined,
+    reviewerId: row.reviewer_id ?? undefined,
+    status: row.status,
+    decisionReason: row.decision_reason,
+    requiredChanges: row.required_changes,
+    publicVisibilityAllowed: row.public_visibility_allowed,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
 function mapSubscriptionStatus(status: string): Subscription["status"] {
   if (["trialing", "active", "past_due", "canceled", "mock"].includes(status)) {
     return status as Subscription["status"]
@@ -268,6 +674,70 @@ function hashIdentifier(value?: string, type: "email" | "phone" = "email") {
   if (!normalized) return emptyHash
 
   return `sha256:${createHash("sha256").update(normalized).digest("hex")}`
+}
+
+function contractShareToken(item: Pick<ContractPacket, "id" | "clientName" | "projectType">) {
+  const slug = [item.clientName, item.projectType, item.id]
+    .join(" ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 72)
+
+  return slug || item.id
+}
+
+function contractSharePath(token: string) {
+  return `/contract/${token}`
+}
+
+function maskEmail(email: string) {
+  const [name = "", domain = ""] = email.toLowerCase().split("@")
+  const visible = name.length <= 2 ? name[0] ?? "*" : `${name.slice(0, 2)}***`
+  const domainParts = domain.split(".")
+  const domainName = domainParts[0] ?? ""
+  const suffix = domainParts.slice(1).join(".")
+
+  return `${visible}@${domainName.slice(0, 1)}***${suffix ? `.${suffix}` : ""}`
+}
+
+function nextRecoveryAction(channel: PaymentRecoveryCaseInput["preferredChannel"]) {
+  if (channel === "phone") {
+    return "Prepare a documented call plan, call during normal business hours, and log the response."
+  }
+
+  if (channel === "letter") {
+    return "Prepare a factual payment reminder letter with invoice, project, and response-window details."
+  }
+
+  if (channel === "client_portal") {
+    return "Send a portal message with invoice context and a clear documented response path."
+  }
+
+  return "Send a factual payment reminder with invoice context, evidence-on-file reference, and response window."
+}
+
+function contractWorkspaceNextStep(input: Pick<ContractWorkspaceItemInput, "milestoneBilling">) {
+  return input.milestoneBilling
+    ? "Review scope, deposit, milestone billing, and change-order language before sending."
+    : "Review scope, payment timing, completion, and change-order language before sending."
+}
+
+function contractPaymentSummary(packet: ContractPacket, input: ContractShareLinkInput) {
+  const paymentMode = input.paymentMode ?? "none"
+
+  if (input.paymentSummary) return input.paymentSummary
+  if (paymentMode === "deposit_request") {
+    return `Deposit request tracked for $${packet.depositRequired.toLocaleString()} before scheduling.`
+  }
+  if (paymentMode === "milestone_schedule") {
+    return `${packet.milestoneCount || 1} milestone payment schedule attached to the agreement workflow.`
+  }
+  if (paymentMode === "platform_review") {
+    return "Payment coordination is marked for platform review before any payment workflow is activated."
+  }
+
+  return "No payment request is active on this contract link."
 }
 
 async function logAdminAction(input: Omit<AuditLogEntry, "id" | "createdAt">) {
@@ -1243,4 +1713,797 @@ export async function deleteAdminRecordSupabase(
   })
 
   return true
+}
+
+function platformTableError(table: string, error: { message?: string; code?: string } | null) {
+  if (!error) return
+
+  if (isMissingRelationError(error)) {
+    throw new Error(`Missing platform table ${table}. Apply Supabase migrations 0003, 0004, 0005, and 0006 before enabling PLATFORM_FEATURE_DATA_MODE=supabase.`)
+  }
+
+  throw new Error(error.message ?? `Platform table ${table} could not be read.`)
+}
+
+function requirePlatformRow<T>(table: string, data: T | null): T {
+  if (!data) {
+    throw new Error(`Platform table ${table} did not return an updated record.`)
+  }
+
+  return data
+}
+
+async function requireContractorIdForUser(userId: string) {
+  return (await getOrCreateContractorProfileForUser(userId)).id
+}
+
+export async function getContractorRiskOpsDataSupabase(userId: string): Promise<ContractorRiskOpsData> {
+  const supabase = createServiceClient()
+  const contractorId = await requireContractorIdForUser(userId)
+  const [
+    pipeline,
+    rooms,
+    watchlist,
+    alerts,
+    drafts,
+    assessments,
+    evidenceSummaries,
+    evidenceVault,
+    recoveryCases,
+    recoveryAttempts,
+    paymentPlans,
+    lienDrafts,
+    contractDocuments,
+    contractPackets,
+  ] = await Promise.all([
+    supabase.from("client_pipeline_items").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("client_risk_rooms").select("*").eq("contractor_id", contractorId).order("last_activity_at", { ascending: false }),
+    supabase.from("contractor_watchlist_items").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("watchlist_alerts").select("*").eq("contractor_id", contractorId).order("created_at", { ascending: false }),
+    supabase.from("report_drafts").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("client_intake_assessments").select("*").eq("contractor_id", contractorId).order("created_at", { ascending: false }),
+    supabase.from("evidence_review_summaries").select("*").eq("contractor_id", contractorId).order("last_updated_at", { ascending: false }),
+    supabase.from("evidence_vault_items").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("payment_recovery_cases").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("payment_recovery_attempts").select("*").eq("contractor_id", contractorId).order("attempted_at", { ascending: false }),
+    supabase.from("payment_plans").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("lien_notice_drafts").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("contract_workspace_items").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("contract_packets").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+  ])
+
+  platformTableError("client_pipeline_items", pipeline.error)
+  platformTableError("client_risk_rooms", rooms.error)
+  platformTableError("contractor_watchlist_items", watchlist.error)
+  platformTableError("watchlist_alerts", alerts.error)
+  platformTableError("report_drafts", drafts.error)
+  platformTableError("client_intake_assessments", assessments.error)
+  platformTableError("evidence_review_summaries", evidenceSummaries.error)
+  platformTableError("evidence_vault_items", evidenceVault.error)
+  platformTableError("payment_recovery_cases", recoveryCases.error)
+  platformTableError("payment_recovery_attempts", recoveryAttempts.error)
+  platformTableError("payment_plans", paymentPlans.error)
+  platformTableError("lien_notice_drafts", lienDrafts.error)
+  platformTableError("contract_workspace_items", contractDocuments.error)
+  platformTableError("contract_packets", contractPackets.error)
+
+  return {
+    clientPipeline: (pipeline.data ?? []).map(mapClientPipelineItem),
+    riskRooms: (rooms.data ?? []).map(mapClientRiskRoom),
+    watchlist: (watchlist.data ?? []).map(mapWatchlistItem),
+    watchlistAlerts: (alerts.data ?? []).map(mapWatchlistAlert),
+    reportDrafts: (drafts.data ?? []).map(mapReportDraft),
+    intakeAssessments: (assessments.data ?? []).map(mapIntakeAssessment),
+    evidenceSummaries: (evidenceSummaries.data ?? []).map(mapEvidenceReviewSummary),
+    evidenceVault: (evidenceVault.data ?? []).map(mapEvidenceVaultItem),
+    paymentRecoveryCases: (recoveryCases.data ?? []).map(mapPaymentRecoveryCase),
+    paymentRecoveryAttempts: (recoveryAttempts.data ?? []).map(mapPaymentRecoveryAttempt),
+    paymentPlans: (paymentPlans.data ?? []).map(mapPaymentPlan),
+    lienNoticeDrafts: (lienDrafts.data ?? []).map(mapLienNoticeDraft),
+    contractDocuments: (contractDocuments.data ?? []).map(mapContractWorkspaceItem),
+    contractPackets: (contractPackets.data ?? []).map(mapContractPacket),
+    activity: [],
+    recommendedActions: [
+      "Search a client before scheduling new work.",
+      "Use contracts before committing materials or crew time.",
+      "Keep recovery, lien readiness, and evidence records private unless reviewed.",
+    ],
+  }
+}
+
+export async function getAdminModerationCrmDataSupabase(): Promise<AdminModerationCrmData> {
+  const supabase = createServiceClient()
+  const [cases, usersResult, batches, views, assignments, compliance] = await Promise.all([
+    supabase.from("moderation_cases").select("*").order("due_at", { ascending: true }),
+    supabase.from("users").select("*"),
+    supabase.from("bulk_import_batches").select("*").order("created_at", { ascending: false }),
+    supabase.from("admin_saved_views").select("*").order("created_at", { ascending: false }),
+    supabase.from("admin_queue_assignments").select("*").order("due_at", { ascending: true }),
+    supabase.from("recovery_compliance_reviews").select("*").order("created_at", { ascending: false }),
+  ])
+
+  platformTableError("moderation_cases", cases.error)
+  if (usersResult.error) throw new Error(usersResult.error.message)
+  platformTableError("bulk_import_batches", batches.error)
+  platformTableError("admin_saved_views", views.error)
+  platformTableError("admin_queue_assignments", assignments.error)
+  platformTableError("recovery_compliance_reviews", compliance.error)
+
+  const usersById = new Map((usersResult.data ?? []).map((user) => [user.id, mapUser(user)]))
+  const mappedCases = (cases.data ?? []).map((caseItem) =>
+    mapModerationCase(caseItem, caseItem.assigned_to ? usersById.get(caseItem.assigned_to)?.fullName : undefined),
+  )
+
+  return {
+    cases: mappedCases,
+    importBatches: (batches.data ?? []).map(mapBulkImportBatch),
+    savedViews: (views.data ?? []).map(mapAdminSavedView),
+    queueAssignments: (assignments.data ?? []).map(mapAdminQueueAssignment),
+    recoveryComplianceReviews: (compliance.data ?? []).map(mapRecoveryComplianceReview),
+    workload: [
+      {
+        id: "unassigned",
+        label: "Unassigned",
+        value: mappedCases.filter((item) => item.status === "unassigned").length,
+        helper: "Cases needing owner",
+        tone: "amber",
+      },
+      {
+        id: "escalated",
+        label: "Escalated",
+        value: mappedCases.filter((item) => item.status === "escalated").length,
+        helper: "Needs senior review",
+        tone: "rose",
+      },
+      {
+        id: "assigned",
+        label: "Assigned",
+        value: mappedCases.filter((item) => item.status === "assigned").length,
+        helper: "In reviewer queue",
+        tone: "slate",
+      },
+      {
+        id: "closed",
+        label: "Closed",
+        value: mappedCases.filter((item) => item.status === "closed").length,
+        helper: "Completed cases",
+        tone: "emerald",
+      },
+    ],
+  }
+}
+
+export async function createWatchlistItemSupabase(userId: string, input: WatchlistItemInput) {
+  const supabase = createServiceClient()
+  const contractorId = await requireContractorIdForUser(userId)
+  const { data: client } = await supabase.from("client_profiles").select("*").eq("id", input.clientId).maybeSingle()
+  const { data, error } = await supabase
+    .from("contractor_watchlist_items")
+    .insert({
+      contractor_id: contractorId,
+      client_id: input.clientId,
+      watch_reason: input.watchReason,
+      alert_level: input.alertLevel,
+      private_match: true,
+      last_signal: client
+        ? `${client.risk_level} reported risk profile with ${client.report_count} approved public reports.`
+        : "Client added for private intake review.",
+    })
+    .select("*")
+    .single()
+
+  platformTableError("contractor_watchlist_items", error)
+  return mapWatchlistItem(requirePlatformRow("contractor_watchlist_items", data))
+}
+
+export async function updateWatchlistItemSupabase(userId: string, itemId: string, status: WatchlistStatus) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("contractor_watchlist_items")
+    .update({ status })
+    .eq("id", itemId)
+    .eq("contractor_id", contractorId)
+    .select("*")
+    .single()
+
+  platformTableError("contractor_watchlist_items", error)
+  return mapWatchlistItem(requirePlatformRow("contractor_watchlist_items", data))
+}
+
+export async function saveReportDraftSupabase(userId: string, input: ReportDraftInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const payload = {
+    contractor_id: contractorId,
+    client_id: input.clientId || null,
+    client_name: input.clientName,
+    project_type: input.projectType,
+    estimated_value: input.estimatedValue,
+    amount_at_risk: input.amountAtRisk,
+    summary: input.summary,
+    next_step: input.nextStep,
+    status: input.status,
+  }
+  const query = input.draftId
+    ? supabase.from("report_drafts").update(payload).eq("id", input.draftId).eq("contractor_id", contractorId)
+    : supabase.from("report_drafts").insert(payload)
+  const { data, error } = await query.select("*").single()
+
+  platformTableError("report_drafts", error)
+  return mapReportDraft(requirePlatformRow("report_drafts", data))
+}
+
+export async function deleteReportDraftSupabase(userId: string, draftId: string) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { error } = await supabase.from("report_drafts").delete().eq("id", draftId).eq("contractor_id", contractorId)
+
+  platformTableError("report_drafts", error)
+
+  const audit: Omit<AuditLogEntry, "id" | "createdAt"> = {
+    actorId: userId,
+    actorName: "Contractor workspace",
+    action: "deleted_report_draft",
+    entityType: "report",
+    entityId: draftId,
+    summary: "Report draft removed from contractor workspace.",
+  }
+  await logAdminAction(audit)
+
+  return {
+    ...audit,
+    id: `audit_delete_draft_${draftId}`,
+    createdAt: new Date().toISOString(),
+  }
+}
+
+export async function createIntakeAssessmentSupabase(userId: string, input: IntakeAssessmentInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const scoreInput = {
+    projectValue: input.projectValue,
+    depositReceived: Boolean(input.depositReceived),
+    contractSigned: Boolean(input.contractSigned),
+    privateMatchConfirmed: Boolean(input.privateMatchConfirmed),
+  }
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("client_intake_assessments")
+    .insert({
+      contractor_id: contractorId,
+      client_name: input.clientName,
+      city: input.city,
+      state: input.state.toUpperCase(),
+      project_value: input.projectValue,
+      deposit_received: Boolean(input.depositReceived),
+      contract_signed: Boolean(input.contractSigned),
+      private_match_confirmed: Boolean(input.privateMatchConfirmed),
+      recommendation: intakeRiskRecommendation(scoreInput),
+      score: intakeAssessmentScore(scoreInput),
+      notes: input.notes ?? "Assessment created from contractor intake workflow.",
+    })
+    .select("*")
+    .single()
+
+  platformTableError("client_intake_assessments", error)
+  return mapIntakeAssessment(requirePlatformRow("client_intake_assessments", data))
+}
+
+export async function createPaymentRecoveryCaseSupabase(userId: string, input: PaymentRecoveryCaseInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const priority = paymentRecoveryPriority({ amountDue: input.amountDue, invoiceAgeDays: input.invoiceAgeDays })
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("payment_recovery_cases")
+    .insert({
+      contractor_id: contractorId,
+      client_name: input.clientName,
+      city: input.city,
+      state: input.state.toUpperCase(),
+      amount_due: input.amountDue,
+      invoice_age_days: input.invoiceAgeDays,
+      preferred_channel: input.preferredChannel,
+      status: input.invoiceAgeDays >= 21 ? "ready_to_contact" : "draft",
+      priority,
+      next_action: nextRecoveryAction(input.preferredChannel),
+      summary: input.summary,
+      compliance_flags: [
+        "Keep outreach factual and tied to invoice/project records.",
+        "Avoid threats, public pressure language, or unsupported claims.",
+        "Log each contact attempt, response, and resolution update.",
+      ],
+    })
+    .select("*")
+    .single()
+
+  platformTableError("payment_recovery_cases", error)
+  return mapPaymentRecoveryCase(requirePlatformRow("payment_recovery_cases", data))
+}
+
+export async function createLienNoticeDraftSupabase(userId: string, input: LienNoticeDraftInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("lien_notice_drafts")
+    .insert({
+      contractor_id: contractorId,
+      client_name: input.clientName,
+      project_type: input.projectType,
+      property_city: input.propertyCity,
+      state: input.state.toUpperCase(),
+      amount_due: input.amountDue,
+      last_work_date: input.lastWorkDate,
+      target_send_date: input.targetSendDate || null,
+      status: "deadline_review",
+      required_review: true,
+      next_step: "Review state-specific deadline, notice recipient, delivery method, and contract terms before sending.",
+      jurisdiction_note:
+        "Mechanics lien and notice requirements vary by state, role, project type, and deadline. This creates a readiness checklist only.",
+    })
+    .select("*")
+    .single()
+
+  platformTableError("lien_notice_drafts", error)
+  return mapLienNoticeDraft(requirePlatformRow("lien_notice_drafts", data))
+}
+
+export async function createContractWorkspaceItemSupabase(userId: string, input: ContractWorkspaceItemInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("contract_workspace_items")
+    .insert({
+      contractor_id: contractorId,
+      client_name: input.clientName,
+      project_type: input.projectType,
+      template_type: input.templateType,
+      contract_value: input.contractValue,
+      deposit_required: input.depositRequired,
+      milestone_billing: Boolean(input.milestoneBilling),
+      status: "draft",
+      next_step: contractWorkspaceNextStep(input),
+      summary: input.summary,
+    })
+    .select("*")
+    .single()
+
+  platformTableError("contract_workspace_items", error)
+  return mapContractWorkspaceItem(requirePlatformRow("contract_workspace_items", data))
+}
+
+export async function createClientPipelineItemSupabase(userId: string, input: ClientPipelineItemInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("client_pipeline_items")
+    .insert({
+      contractor_id: contractorId,
+      client_profile_id: input.clientId || null,
+      client_name: input.clientName,
+      city: input.city,
+      state: input.state.toUpperCase(),
+      stage: input.stage,
+      priority: input.priority,
+      estimated_value: input.estimatedValue,
+      next_action: input.nextAction,
+      due_at: input.dueAt || null,
+      private_match: Boolean(input.privateMatch),
+    })
+    .select("*")
+    .single()
+
+  platformTableError("client_pipeline_items", error)
+  return mapClientPipelineItem(requirePlatformRow("client_pipeline_items", data))
+}
+
+export async function updateClientPipelineStageSupabase(userId: string, input: UpdateClientPipelineStageInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("client_pipeline_items")
+    .update({
+      stage: input.stage,
+      next_action:
+        input.stage === "closed"
+          ? "Archive final project records and any resolution context."
+          : "Review the next client intake step.",
+    })
+    .eq("id", input.itemId)
+    .eq("contractor_id", contractorId)
+    .select("*")
+    .single()
+
+  platformTableError("client_pipeline_items", error)
+  return mapClientPipelineItem(requirePlatformRow("client_pipeline_items", data))
+}
+
+export async function createClientRiskRoomSupabase(userId: string, input: ClientRiskRoomInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("client_risk_rooms")
+    .insert({
+      contractor_id: contractorId,
+      client_profile_id: input.clientId || null,
+      client_name: input.clientName,
+      city: input.city,
+      state: input.state.toUpperCase(),
+      headline: input.headline,
+      summary: input.summary,
+    })
+    .select("*")
+    .single()
+
+  platformTableError("client_risk_rooms", error)
+  return mapClientRiskRoom(requirePlatformRow("client_risk_rooms", data))
+}
+
+export async function logPaymentRecoveryAttemptSupabase(userId: string, input: PaymentRecoveryAttemptInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("payment_recovery_attempts")
+    .insert({
+      contractor_id: contractorId,
+      recovery_case_id: input.recoveryCaseId,
+      channel: input.channel,
+      attempted_at: input.attemptedAt,
+      outcome: input.outcome,
+      note: input.note,
+      next_follow_up_at: input.nextFollowUpAt || null,
+    })
+    .select("*")
+    .single()
+
+  platformTableError("payment_recovery_attempts", error)
+  return mapPaymentRecoveryAttempt(requirePlatformRow("payment_recovery_attempts", data))
+}
+
+export async function createPaymentPlanSupabase(userId: string, input: PaymentPlanInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("payment_plans")
+    .insert({
+      contractor_id: contractorId,
+      recovery_case_id: input.recoveryCaseId,
+      total_amount: input.totalAmount,
+      installment_amount: input.installmentAmount,
+      due_day: input.dueDay,
+      status: input.status,
+      next_due_date: input.nextDueDate || null,
+      notes: input.notes,
+    })
+    .select("*")
+    .single()
+
+  platformTableError("payment_plans", error)
+  return mapPaymentPlan(requirePlatformRow("payment_plans", data))
+}
+
+export async function createContractPacketSupabase(userId: string, input: ContractPacketInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("contract_packets")
+    .insert({
+      contractor_id: contractorId,
+      client_name: input.clientName,
+      project_type: input.projectType,
+      template_type: input.templateType,
+      status: input.requiredBeforeScheduling ? "review_ready" : "draft",
+      packet_value: input.packetValue,
+      deposit_required: input.depositRequired,
+      milestone_count: input.milestoneCount,
+      required_before_scheduling: Boolean(input.requiredBeforeScheduling),
+      next_action: input.nextAction,
+    })
+    .select("*")
+    .single()
+
+  platformTableError("contract_packets", error)
+  return mapContractPacket(requirePlatformRow("contract_packets", data))
+}
+
+export async function updateContractPacketStatusSupabase(userId: string, input: UpdateContractPacketStatusInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("contract_packets")
+    .update({ status: input.status })
+    .eq("id", input.packetId)
+    .eq("contractor_id", contractorId)
+    .select("*")
+    .single()
+
+  platformTableError("contract_packets", error)
+  return mapContractPacket(requirePlatformRow("contract_packets", data))
+}
+
+export async function createContractShareLinkSupabase(userId: string, input: ContractShareLinkInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data: existing, error: existingError } = await supabase
+    .from("contract_packets")
+    .select("*")
+    .eq("id", input.packetId)
+    .eq("contractor_id", contractorId)
+    .single()
+
+  platformTableError("contract_packets", existingError)
+
+  const existingRow = requirePlatformRow("contract_packets", existing)
+  const base = mapContractPacket(existingRow)
+  const token = base.shareToken ?? contractShareToken(base)
+  const paymentMode = input.paymentMode ?? "none"
+  const { data, error } = await supabase
+    .from("contract_packets")
+    .update({
+      status: "sent",
+      share_token: token,
+      share_url: contractSharePath(token),
+      client_email_hash: hashIdentifier(input.clientEmail),
+      client_email_masked: maskEmail(input.clientEmail),
+      client_invite_status: input.inviteClient ? "invited" : "not_invited",
+      signature_status: "awaiting_client",
+      share_status: "sent",
+      payment_mode: paymentMode,
+      payment_summary: contractPaymentSummary(base, input),
+      next_action:
+        "Private signing link prepared. Send it to the client, then track view, signature, and payment coordination status.",
+    })
+    .eq("id", input.packetId)
+    .eq("contractor_id", contractorId)
+    .select("*")
+    .single()
+
+  platformTableError("contract_packets", error)
+  const row = requirePlatformRow("contract_packets", data)
+
+  await logAdminAction({
+    actorId: userId,
+    actorName: "Contractor workspace",
+    action: "created_contract_share_link",
+    entityType: "contract_packet",
+    entityId: row.id,
+    summary: "Private contract signing link prepared for client review.",
+  })
+
+  return mapContractPacket(row)
+}
+
+export async function getContractPacketByShareTokenSupabase(token: string) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase.from("contract_packets").select("*").eq("share_token", token).maybeSingle()
+
+  platformTableError("contract_packets", error)
+  if (!data) return undefined
+
+  if (data.share_status === "sent") {
+    await supabase.from("contract_packets").update({ share_status: "viewed" }).eq("id", data.id)
+    return mapContractPacket({ ...data, share_status: "viewed" })
+  }
+
+  return mapContractPacket(data)
+}
+
+export async function signContractShareSupabase(input: ContractSignatureInput) {
+  const supabase = createServiceClient()
+  const existing = await getContractPacketByShareTokenSupabase(input.shareToken)
+
+  if (!existing) {
+    throw new Error("Contract signing link was not found.")
+  }
+
+  const now = new Date().toISOString()
+  const shareStatus = existing.paymentMode && existing.paymentMode !== "none" ? "payment_pending" : "signed"
+  const { data, error } = await supabase
+    .from("contract_packets")
+    .update({
+      status: "signed",
+      client_email_hash: hashIdentifier(input.signerEmail),
+      client_email_masked: existing.clientEmailMasked ?? maskEmail(input.signerEmail),
+      client_invite_status: "joined",
+      signature_status: "client_signed",
+      share_status: shareStatus,
+      client_signed_at: now,
+      next_action:
+        "Client signature recorded. Contractor should countersign, store the final agreement, and confirm payment timing before work starts.",
+    })
+    .eq("id", existing.id)
+    .select("*")
+    .single()
+
+  platformTableError("contract_packets", error)
+  const row = requirePlatformRow("contract_packets", data)
+
+  await logAdminAction({
+    actorName: input.signerName,
+    action: "client_signed_contract",
+    entityType: "contract_packet",
+    entityId: existing.id,
+    summary: "Client signature recorded on private contract signing link.",
+    metadata: {
+      signer_email_hash: hashIdentifier(input.signerEmail),
+      share_token: input.shareToken,
+    },
+  })
+
+  return mapContractPacket(row)
+}
+
+export async function updateEvidenceVaultStatusSupabase(userId: string, input: UpdateEvidenceVaultStatusInput) {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("evidence_vault_items")
+    .update({ status: input.status })
+    .eq("id", input.evidenceId)
+    .eq("contractor_id", contractorId)
+    .select("*")
+    .single()
+
+  platformTableError("evidence_vault_items", error)
+  return mapEvidenceVaultItem(requirePlatformRow("evidence_vault_items", data))
+}
+
+export async function saveAdminQueueViewSupabase(admin: User, input: AdminSavedViewInput) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("admin_saved_views")
+    .insert({
+      scope: input.scope,
+      name: input.name,
+      filters: { summary: input.filterSummary },
+      is_default: Boolean(input.isDefault),
+      created_by: admin.id,
+    })
+    .select("*")
+    .single()
+
+  platformTableError("admin_saved_views", error)
+  const row = requirePlatformRow("admin_saved_views", data)
+
+  await logAdminAction({
+    actorId: admin.id,
+    actorName: admin.fullName,
+    action: "saved_admin_queue_view",
+    entityType: "saved_view",
+    entityId: row.id,
+    summary: `Saved admin queue view ${input.name}.`,
+  })
+
+  return mapAdminSavedView(row)
+}
+
+export async function reviewRecoveryComplianceSupabase(admin: User, input: RecoveryComplianceReviewInput) {
+  const supabase = createServiceClient()
+  const requiredChanges = (input.requiredChanges ?? "")
+    .split(/\n|,/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+  const { data, error } = await supabase
+    .from("recovery_compliance_reviews")
+    .insert({
+      recovery_case_id: input.recoveryCaseId || null,
+      lien_notice_draft_id: input.lienNoticeDraftId || null,
+      contract_packet_id: input.contractPacketId || null,
+      reviewer_id: admin.id,
+      status: input.status,
+      decision_reason: input.decisionReason,
+      required_changes: requiredChanges,
+      public_visibility_allowed: Boolean(input.publicVisibilityAllowed),
+    })
+    .select("*")
+    .single()
+
+  platformTableError("recovery_compliance_reviews", error)
+  const row = requirePlatformRow("recovery_compliance_reviews", data)
+
+  await logAdminAction({
+    actorId: admin.id,
+    actorName: admin.fullName,
+    action: "reviewed_recovery_compliance",
+    entityType: "compliance_review",
+    entityId: row.id,
+    summary: `Compliance review marked ${input.status.replaceAll("_", " ")}.`,
+  })
+
+  return mapRecoveryComplianceReview(row)
+}
+
+export async function assignModerationCaseSupabase(caseId: string, admin: User, assignedTo: string) {
+  const supabase = createServiceClient()
+  const { data: assignedUser } = await supabase.from("users").select("*").eq("id", assignedTo).maybeSingle()
+  const assignedToName = assignedUser?.full_name ?? "Review Team"
+  const dueAt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+  const { data, error } = await supabase
+    .from("moderation_cases")
+    .update({ assigned_to: assignedTo, status: "assigned" })
+    .eq("id", caseId)
+    .select("*")
+    .single()
+
+  platformTableError("moderation_cases", error)
+  const row = requirePlatformRow("moderation_cases", data)
+
+  await supabase.from("admin_queue_assignments").insert({
+    entity_type: "reports",
+    entity_id: caseId,
+    assigned_to: assignedTo,
+    assigned_to_name: assignedToName,
+    priority: row.priority,
+    due_at: dueAt,
+    status: "open",
+  })
+
+  await logAdminAction({
+    actorId: admin.id,
+    actorName: admin.fullName,
+    action: "assigned_moderation_case",
+    entityType: "assignment",
+    entityId: caseId,
+    summary: `Moderation case assigned to ${assignedToName}.`,
+  })
+
+  return mapModerationCase(row, assignedToName)
+}
+
+export async function updateModerationCaseSupabase(
+  caseId: string,
+  admin: User,
+  priority: ModerationPriority,
+  status: ModerationCaseStatus,
+  escalationNote?: string,
+) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("moderation_cases")
+    .update({ priority, status, escalation_note: escalationNote ?? null })
+    .eq("id", caseId)
+    .select("*")
+    .single()
+
+  platformTableError("moderation_cases", error)
+  const row = requirePlatformRow("moderation_cases", data)
+
+  await logAdminAction({
+    actorId: admin.id,
+    actorName: admin.fullName,
+    action: "updated_moderation_case",
+    entityType: "report",
+    entityId: caseId,
+    summary: `Moderation case updated to ${status}.`,
+  })
+
+  return mapModerationCase(row)
+}
+
+export async function setModerationDecisionReasonSupabase(
+  caseId: string,
+  admin: User,
+  decisionReason: ModerationDecisionReason,
+  moderatorNote?: string,
+) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("moderation_cases")
+    .update({ decision_reason: decisionReason, escalation_note: moderatorNote ?? null })
+    .eq("id", caseId)
+    .select("*")
+    .single()
+
+  platformTableError("moderation_cases", error)
+  const row = requirePlatformRow("moderation_cases", data)
+
+  await logAdminAction({
+    actorId: admin.id,
+    actorName: admin.fullName,
+    action: "set_moderation_decision_reason",
+    entityType: "report",
+    entityId: caseId,
+    summary: `Decision reason set to ${decisionReason.replaceAll("_", " ")}.`,
+  })
+
+  return mapModerationCase(row)
 }

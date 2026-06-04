@@ -644,10 +644,10 @@ export async function updateWatchlistItemAction(
     return fail("Select a watchlist item before updating it.", zodFieldErrors(parsed.error))
   }
 
-  await requireContractorAccess()
+  const user = await requireContractorAccess()
 
   try {
-    const item = await updateWatchlistItemService(parsed.data.itemId, parsed.data.status)
+    const item = await updateWatchlistItemService(user.id, parsed.data.itemId, parsed.data.status)
     if (!item) return fail("Watchlist feature data is not available yet.")
 
     revalidatePath("/dashboard")
@@ -690,10 +690,10 @@ export async function deleteReportDraftAction(
     return fail("Select a draft before deleting.", zodFieldErrors(parsed.error))
   }
 
-  await requireContractorAccess()
+  const user = await requireContractorAccess()
 
   try {
-    const result = await deleteReportDraftService(parsed.data.draftId)
+    const result = await deleteReportDraftService(user.id, parsed.data.draftId)
     if (!result) return fail("Report draft feature data is not available yet.")
 
     revalidatePath("/dashboard")
@@ -845,10 +845,10 @@ export async function updateClientPipelineStageAction(
     return fail("Select a pipeline record and stage.", zodFieldErrors(parsed.error))
   }
 
-  await requireContractorAccess()
+  const user = await requireContractorAccess()
 
   try {
-    const item = await updateClientPipelineStageService(parsed.data)
+    const item = await updateClientPipelineStageService(user.id, parsed.data)
     if (!item) return fail("Client pipeline feature data is not available yet.")
 
     revalidatePath("/dashboard")
@@ -963,10 +963,10 @@ export async function updateContractPacketStatusAction(
     return fail("Select a contract link and status.", zodFieldErrors(parsed.error))
   }
 
-  await requireContractorAccess()
+  const user = await requireContractorAccess()
 
   try {
-    const packet = await updateContractPacketStatusService(parsed.data)
+    const packet = await updateContractPacketStatusService(user.id, parsed.data)
     if (!packet) return fail("Contract link feature data is not available yet.")
 
     revalidatePath("/dashboard")
@@ -1042,10 +1042,10 @@ export async function updateEvidenceVaultStatusAction(
     return fail("Select evidence and a status.", zodFieldErrors(parsed.error))
   }
 
-  await requireContractorAccess()
+  const user = await requireContractorAccess()
 
   try {
-    const evidence = await updateEvidenceVaultStatusService(parsed.data)
+    const evidence = await updateEvidenceVaultStatusService(user.id, parsed.data)
     if (!evidence) return fail("Evidence Vault feature data is not available yet.")
 
     revalidatePath("/dashboard")
@@ -1096,6 +1096,7 @@ export async function updateModerationCaseAction(
   try {
     const caseItem = await updateModerationCaseService(
       parsed.data.caseId,
+      adminResult.admin,
       parsed.data.priority,
       parsed.data.status,
       parsed.data.escalationNote,
@@ -1126,6 +1127,7 @@ export async function setModerationDecisionReasonAction(
   try {
     const caseItem = await setModerationDecisionReasonService(
       parsed.data.caseId,
+      adminResult.admin,
       parsed.data.decisionReason,
       parsed.data.moderatorNote,
     )
