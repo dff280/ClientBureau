@@ -36,7 +36,32 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-export default async function AdminHomePage() {
+type AdminHomeSearchParams = Promise<{
+  workspace?: string | string[]
+}>
+
+const adminWorkspaces = new Set([
+  "overview",
+  "reports",
+  "clients",
+  "contractors",
+  "discussions",
+  "uploads",
+  "recovery",
+  "contracts",
+  "audit",
+  "settings",
+])
+
+function normalizeAdminWorkspace(value: string | string[] | undefined) {
+  const workspace = Array.isArray(value) ? value[0] : value
+
+  return workspace && adminWorkspaces.has(workspace) ? workspace : "overview"
+}
+
+export default async function AdminHomePage({ searchParams }: { searchParams: AdminHomeSearchParams }) {
+  const params = await searchParams
+  const activeWorkspace = normalizeAdminWorkspace(params.workspace)
   const [data, moderationCrm] = await Promise.all([
     getAdminWorkspaceDataService(),
     getAdminModerationCrmDataService(),
@@ -87,7 +112,7 @@ export default async function AdminHomePage() {
           <Metric label="Contract links" value={contractLinks} />
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-5">
+        <Tabs defaultValue={activeWorkspace} className="space-y-5">
           <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
             <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
               <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>

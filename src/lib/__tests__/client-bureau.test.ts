@@ -51,6 +51,7 @@ import {
   protectionWorkflowSteps,
 } from "@/lib/product-positioning"
 import {
+  adminNavigationGroups,
   contractorDashboardGroups,
   contractorDashboardNav,
   contractorPrimaryNav,
@@ -226,6 +227,28 @@ describe("product positioning", () => {
     ])
     expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/score-methodology",
+    )
+    expect(adminNavigationGroups.map((group) => group.title)).toEqual([
+      "Command",
+      "Moderation",
+      "Records",
+      "Operations",
+      "System",
+    ])
+    expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.label)).toEqual([
+      "Overview",
+      "Reports",
+      "Discussions",
+      "Uploads",
+      "Clients",
+      "Contractors",
+      "Recovery",
+      "Contracts",
+      "Audit Log",
+      "Settings",
+    ])
+    expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
+      "/admin?workspace=recovery",
     )
   })
 })

@@ -141,21 +141,38 @@ export const footerNavigationGroups: NavigationGroup[] = [
 
 export const adminNavigationGroups: NavigationGroup[] = [
   {
+    title: "Command",
+    links: [
+      { href: "/admin", label: "Overview", description: "Queue metrics, workload, and daily operating view." },
+    ],
+  },
+  {
     title: "Moderation",
     links: [
-      { href: "/admin", label: "Command Center" },
-      { href: "/admin/reports", label: "Report Queue" },
-      { href: "/admin/discussions", label: "Responses" },
-      { href: "/admin/uploads", label: "Bulk Uploads" },
+      { href: "/admin/reports", label: "Reports", description: "Approve, reject, edit summaries, and bulk moderate reports." },
+      { href: "/admin/discussions", label: "Discussions", description: "Moderate responses, corrections, and public discussion entries." },
+      { href: "/admin/uploads", label: "Uploads", description: "Review CSV batches, duplicates, and staged imports." },
     ],
   },
   {
     title: "Records",
     links: [
-      { href: "/admin/clients", label: "Client Profiles" },
-      { href: "/admin/contractors", label: "Contractors" },
-      { href: "/admin/audit-log", label: "Audit Log" },
-      { href: "/admin/settings", label: "Rules" },
+      { href: "/admin/clients", label: "Clients", description: "Manage client profiles, public visibility, and SEO-safe fields." },
+      { href: "/admin/contractors", label: "Contractors", description: "Review contractor profiles, verification, and account health." },
+    ],
+  },
+  {
+    title: "Operations",
+    links: [
+      { href: "/admin?workspace=recovery", label: "Recovery", description: "Review payment follow-up, call logs, and lien readiness." },
+      { href: "/admin?workspace=contracts", label: "Contracts", description: "Oversee signing links, client invites, and contract safeguards." },
+    ],
+  },
+  {
+    title: "System",
+    links: [
+      { href: "/admin/audit-log", label: "Audit Log", description: "Track admin actions, status changes, and publication decisions." },
+      { href: "/admin/settings", label: "Settings", description: "Configure moderation, evidence privacy, and safeguard defaults." },
     ],
   },
 ]

@@ -1,14 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   ClipboardCheck,
   History,
   LogOut,
   MessageSquareText,
+  PhoneCall,
   Settings,
   ShieldCheck,
+  Signature,
   UploadCloud,
   UserRound,
   UsersRound,
@@ -27,6 +29,8 @@ const adminIcons = {
   "/admin/contractors": UsersRound,
   "/admin/discussions": MessageSquareText,
   "/admin/uploads": UploadCloud,
+  "/admin?workspace=recovery": PhoneCall,
+  "/admin?workspace=contracts": Signature,
   "/admin/audit-log": History,
   "/admin/settings": Settings,
 }
@@ -43,6 +47,18 @@ export function AdminAppShell({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const isActiveAdminLink = (href: string) => {
+    const [hrefPath, hrefQuery] = href.split("?")
+
+    if (hrefPath !== pathname) return false
+    if (!hrefQuery) return pathname !== "/admin" || !searchParams.get("workspace")
+
+    const params = new URLSearchParams(hrefQuery)
+    const workspace = params.get("workspace")
+
+    return workspace ? searchParams.get("workspace") === workspace : true
+  }
 
   return (
     <AdminActionTokenProvider token={adminActionToken}>
@@ -65,7 +81,7 @@ export function AdminAppShell({
                 <p className="px-3 text-xs font-semibold uppercase text-slate-500">{group.title}</p>
                 {group.links.map((item) => {
                   const Icon = adminIcons[item.href as keyof typeof adminIcons] ?? ShieldCheck
-                  const isActive = pathname === item.href
+                  const isActive = isActiveAdminLink(item.href)
 
                   return (
                     <Link
@@ -78,7 +94,14 @@ export function AdminAppShell({
                       )}
                     >
                       <Icon className="size-4" aria-hidden="true" />
-                      {item.label}
+                      <span className="grid gap-0.5">
+                        <span>{item.label}</span>
+                        {item.description ? (
+                          <span className={cn("text-xs font-normal leading-4", isActive ? "text-slate-600" : "text-slate-500")}>
+                            {item.description}
+                          </span>
+                        ) : null}
+                      </span>
                     </Link>
                   )
                 })}
@@ -130,7 +153,7 @@ export function AdminAppShell({
                 prefetch={false}
                 className={cn(
                   "rounded-md border border-white/10 px-3 py-2 text-sm font-medium text-slate-300",
-                  pathname === item.href && "bg-white text-slate-950",
+                  isActiveAdminLink(item.href) && "bg-white text-slate-950",
                 )}
               >
                 {item.label}
