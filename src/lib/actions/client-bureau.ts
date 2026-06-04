@@ -118,6 +118,10 @@ function evidenceFilesFromForm(formData: FormData) {
 
 function actionErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
+    if (error.message.includes("Missing platform table")) {
+      return `${fallback} Live Ops is not ready for Supabase persistence yet. Apply migrations 0003, 0004, 0005, and 0006, or roll PLATFORM_FEATURE_DATA_MODE back to mock, then try again.`
+    }
+
     return `${fallback} ${error.message}`
   }
 

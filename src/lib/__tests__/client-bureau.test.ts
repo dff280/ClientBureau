@@ -11,6 +11,12 @@ import {
   calculateBusinessRating,
 } from "@/lib/business-rating"
 import { noStoreHeaders } from "@/lib/http"
+import {
+  coreLaunchTables,
+  platformLaunchTables,
+  requiredLaunchTables,
+  summarizeLaunchHealth,
+} from "@/lib/launch-health"
 import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
 import {
   calculateClientBureauScore,
@@ -336,6 +342,72 @@ describe("deployment URL helpers", () => {
     expect(getSafeInternalPath("//evil.example/admin")).toBeUndefined()
     expect(getSafeInternalPath("https://evil.example/admin")).toBeUndefined()
     expect(noStoreHeaders["Cache-Control"]).toContain("no-store")
+  })
+})
+
+describe("launch health gates", () => {
+  function tableStatuses(missing: string[] = []) {
+    return requiredLaunchTables.map((name) => ({
+      name,
+      exists: !missing.includes(name),
+    }))
+  }
+
+  it("keeps core and platform launch table groups distinct", () => {
+    expect(new Set(requiredLaunchTables).size).toBe(requiredLaunchTables.length)
+    expect(coreLaunchTables).toContain("client_reports")
+    expect(platformLaunchTables).toContain("contract_packets")
+    expect(platformLaunchTables).not.toContain("client_reports")
+  })
+
+  it("recommends Supabase feature mode only when core and platform tables are ready", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+    })
+
+    expect(summary.coreLiveReady).toBe(true)
+    expect(summary.platformCanUseSupabase).toBe(true)
+    expect(summary.recommendedPlatformFeatureDataMode).toBe("supabase")
+    expect(summary.readinessLabel).toBe("Ready to flip")
+  })
+
+  it("keeps advanced ops mocked when platform tables are missing", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(["contract_packets"]),
+    })
+
+    expect(summary.coreLiveReady).toBe(true)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.recommendedPlatformFeatureDataMode).toBe("mock")
+    expect(summary.missingPlatformTables).toContain("contract_packets")
+  })
+
+  it("blocks live ops activation when Supabase service config is missing", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "supabase",
+      supabaseConfigured: true,
+      serviceRoleConfigured: false,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+    })
+
+    expect(summary.coreLiveReady).toBe(false)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.readinessLabel).toBe("Configuration missing")
   })
 })
 

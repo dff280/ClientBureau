@@ -3,7 +3,9 @@ import type { LucideIcon } from "lucide-react"
 import type React from "react"
 import Link from "next/link"
 import {
+  Activity,
   ClipboardCheck,
+  Database,
   FileText,
   Landmark,
   History,
@@ -33,6 +35,7 @@ import {
   getAdminWorkspaceDataService,
   getContractorRiskOpsDataService,
 } from "@/lib/repositories/client-bureau-service"
+import { getLaunchHealth } from "@/lib/launch-health"
 import { countOpenRecoveryCases } from "@/lib/platform-features"
 
 export const metadata: Metadata = {
@@ -116,9 +119,10 @@ function normalizeAdminWorkspace(value: string | string[] | undefined) {
 export default async function AdminHomePage({ searchParams }: { searchParams: AdminHomeSearchParams }) {
   const params = await searchParams
   const activeWorkspace = normalizeAdminWorkspace(params.workspace)
-  const [data, moderationCrm] = await Promise.all([
+  const [data, moderationCrm, health] = await Promise.all([
     getAdminWorkspaceDataService(),
     getAdminModerationCrmDataService(),
+    getLaunchHealth(),
   ])
   const firstContractorUserId = data.contractors[0]?.userId ?? data.users.find((item) => item.role === "contractor")?.id
   const riskOps = firstContractorUserId
@@ -152,6 +156,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
     { label: "Public profiles", value: publicClients, helper: "Approved SEO-visible client records", icon: UserRound, tone: "emerald" as const, href: "/admin/clients" },
     { label: "Audit events", value: data.auditLog.length, helper: "Admin actions and system changes", icon: History, tone: "slate" as const, href: "/admin/audit-log" },
     { label: "Recent users", value: recentUsers, helper: "Latest account records loaded", icon: UsersRound, tone: "blue" as const, href: "/admin/contractors" },
+    { label: "Live ops", value: health.readiness.platformCanUseSupabase ? "Ready" : "Gated", helper: health.readiness.readinessLabel, icon: Database, tone: health.readiness.platformCanUseSupabase ? "emerald" as const : "amber" as const, href: "/admin/settings" },
   ]
 
   return (
@@ -178,6 +183,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <Badge variant="outline" className="rounded-md bg-slate-50">Admin only</Badge>
               <Badge variant="outline" className="rounded-md bg-slate-50">{escalatedCases} escalations</Badge>
               <Badge variant="outline" className="rounded-md bg-slate-50">{contractLinks} active contract links</Badge>
+              <Badge variant="outline" className="rounded-md bg-slate-50">Live ops: {health.readiness.readinessLabel}</Badge>
             </div>
           }
         />
@@ -187,6 +193,8 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             <StatCard key={stat.label} {...stat} />
           ))}
         </div>
+
+        <LiveOpsReadinessPanel health={health} />
 
         <Tabs defaultValue={activeWorkspace} className="space-y-5">
           <AdminWorkspaceNavigation />
@@ -412,6 +420,105 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
         </Tabs>
       </div>
     </section>
+  )
+}
+
+function LiveOpsReadinessPanel({ health }: { health: Awaited<ReturnType<typeof getLaunchHealth>> }) {
+  const readiness = health.readiness
+  const missingPlatformPreview = readiness.missingPlatformTables.slice(0, 6)
+
+  return (
+    <DashboardSection
+      eyebrow="Live Ops Readiness"
+      title={readiness.platformCanUseSupabase ? "Advanced tools are ready for Supabase persistence." : "Advanced tools are staged behind a safety gate."}
+      description={readiness.readinessMessage}
+      actions={
+        <Badge className={readiness.platformCanUseSupabase ? "rounded-md bg-emerald-700 text-white" : "rounded-md bg-amber-600 text-white"}>
+          {readiness.readinessLabel}
+        </Badge>
+      }
+    >
+      <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <ReadinessFact
+            icon={Database}
+            label="Core Supabase"
+            value={`${readiness.coreTableCount.ready}/${readiness.coreTableCount.total} tables`}
+            ok={readiness.coreLiveReady}
+          />
+          <ReadinessFact
+            icon={Activity}
+            label="Platform ops"
+            value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total} tables`}
+            ok={readiness.platformTablesReady}
+          />
+          <ReadinessFact
+            icon={Settings}
+            label="Current feature mode"
+            value={health.platformFeatureDataMode}
+            ok={health.platformFeatureDataMode === "supabase" ? readiness.platformCanUseSupabase : true}
+          />
+          <ReadinessFact
+            icon={ShieldCheck}
+            label="Recommended mode"
+            value={readiness.recommendedPlatformFeatureDataMode}
+            ok={readiness.platformCanUseSupabase}
+          />
+        </div>
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <p className="text-sm font-semibold text-slate-950">Staged activation path</p>
+          <ol className="mt-3 grid gap-2 text-sm leading-6 text-slate-600">
+            <li>1. Apply Supabase migrations 0003 through 0006.</li>
+            <li>2. Confirm this panel shows platform ops {readiness.platformTableCount.total}/{readiness.platformTableCount.total}.</li>
+            <li>3. Set <code className="rounded bg-white px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=supabase</code> and redeploy.</li>
+            <li>4. Roll back with <code className="rounded bg-white px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=mock</code> if any advanced tool needs review.</li>
+          </ol>
+          {missingPlatformPreview.length > 0 ? (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase text-slate-500">Missing platform tables</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {missingPlatformPreview.map((table) => (
+                  <Badge key={table} variant="outline" className="rounded-md bg-white">
+                    {table}
+                  </Badge>
+                ))}
+                {readiness.missingPlatformTables.length > missingPlatformPreview.length ? (
+                  <Badge variant="outline" className="rounded-md bg-white">
+                    +{readiness.missingPlatformTables.length - missingPlatformPreview.length} more
+                  </Badge>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </DashboardSection>
+  )
+}
+
+function ReadinessFact({
+  icon: Icon,
+  label,
+  value,
+  ok,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string
+  ok: boolean
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+          <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
+        </div>
+        <span className={ok ? "flex size-9 items-center justify-center rounded-md bg-emerald-700 text-white" : "flex size-9 items-center justify-center rounded-md bg-amber-500 text-slate-950"}>
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
+      </div>
+    </div>
   )
 }
 

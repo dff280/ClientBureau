@@ -180,7 +180,9 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, and `0006` are applied and `/api/health` confirms all required tables. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, and `0006` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+
+You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
 
 After the required tables are verified, enable live-backed platform operations:
 
@@ -288,6 +290,18 @@ order by table_name;
 ```
 
 Expected result: every row has `exists = true`.
+
+Expected `/api/health` signal before the flip:
+
+```json
+{
+  "readiness": {
+    "platformCanUseSupabase": true,
+    "recommendedPlatformFeatureDataMode": "supabase",
+    "readinessLabel": "Ready to flip"
+  }
+}
+```
 
 Before allowing Google to index real client reports, confirm:
 

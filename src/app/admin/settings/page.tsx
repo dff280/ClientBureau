@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Database, LockKeyhole, Settings, ShieldCheck } from "lucide-react"
+import { Activity, Database, Settings, ShieldCheck } from "lucide-react"
 
 import { AdminPageHeader, DashboardSection, StatCard } from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,7 @@ export const dynamic = "force-dynamic"
 export default async function AdminSettingsPage() {
   const platformFeatureMode = getPlatformFeatureDataMode()
   const health = await getLaunchHealth()
+  const readiness = health.readiness
   const missingTables = health.requiredTables.filter((table) => !table.exists)
   const settingsGroups = [
     {
@@ -57,10 +58,10 @@ export default async function AdminSettingsPage() {
         />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <StatCard label="Launch status" value={health.status} helper="Non-secret health check" icon={ShieldCheck} tone={health.status === "ok" ? "emerald" : "amber"} />
+          <StatCard label="Launch status" value={health.status} helper={readiness.readinessLabel} icon={ShieldCheck} tone={health.status === "ok" ? "emerald" : "amber"} />
           <StatCard label="Data mode" value={health.dataMode} helper="Core records source" icon={Database} tone={health.dataMode === "supabase" ? "emerald" : "amber"} />
           <StatCard label="Feature mode" value={health.platformFeatureDataMode} helper="Advanced ops data source" icon={Settings} tone={health.platformFeatureDataMode === "supabase" ? "emerald" : "amber"} />
-          <StatCard label="Missing tables" value={missingTables.length} helper="Required tables not confirmed" icon={LockKeyhole} tone={missingTables.length === 0 ? "emerald" : "rose"} />
+          <StatCard label="Platform tables" value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`} helper="Advanced ops readiness" icon={Activity} tone={readiness.platformTablesReady ? "emerald" : "amber"} />
         </div>
 
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -68,10 +69,10 @@ export default async function AdminSettingsPage() {
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
               <div>
                 <p className="text-xs font-semibold uppercase text-amber-700">Launch health</p>
-                <CardTitle className="mt-1">Live readiness</CardTitle>
+                <CardTitle className="mt-1">Staged live ops activation</CardTitle>
               </div>
-              <Badge className={health.status === "ok" ? "rounded-md bg-emerald-700 text-white" : "rounded-md bg-amber-600 text-white"}>
-                {health.status}
+              <Badge className={readiness.platformCanUseSupabase ? "rounded-md bg-emerald-700 text-white" : "rounded-md bg-amber-600 text-white"}>
+                {readiness.readinessLabel}
               </Badge>
             </div>
           </CardHeader>
@@ -81,18 +82,23 @@ export default async function AdminSettingsPage() {
               <HealthFact label="Feature data" value={health.platformFeatureDataMode} ok={health.platformFeatureDataMode === "supabase"} />
               <HealthFact label="Supabase" value={health.supabaseConfigured ? "Configured" : "Missing"} ok={health.supabaseConfigured} />
               <HealthFact label="Service role" value={health.serviceRoleConfigured ? "Configured" : "Missing"} ok={health.serviceRoleConfigured} />
+              <HealthFact label="Core tables" value={`${readiness.coreTableCount.ready}/${readiness.coreTableCount.total}`} ok={readiness.coreTablesReady} />
+              <HealthFact label="Platform tables" value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`} ok={readiness.platformTablesReady} />
               <HealthFact label="Stripe" value={health.stripeConfigured ? "Configured" : "Missing"} ok={health.stripeConfigured} />
               <HealthFact label="Webhook" value={health.stripeWebhookConfigured ? "Configured" : "Missing"} ok={health.stripeWebhookConfigured} />
+              <HealthFact label="Recommended mode" value={readiness.recommendedPlatformFeatureDataMode} ok={readiness.platformCanUseSupabase} />
+              <HealthFact label="Rollback mode" value="mock" ok />
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-              <p className="font-semibold text-slate-950">
-                Required tables: {health.requiredTables.length - missingTables.length}/{health.requiredTables.length}
-              </p>
+              <p className="font-semibold text-slate-950">{readiness.readinessLabel}</p>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                {missingTables.length === 0
-                  ? "All launch and ops tables responded to the service-role health check."
-                  : "Apply migrations 0003, 0004, 0005, and 0006 before enabling Supabase-backed platform features."}
+                {readiness.readinessMessage}
               </p>
+              <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-600">
+                Flip only after platform tables are complete. Roll back by setting{" "}
+                <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=mock</code>,
+                rebuilding, and leaving core Supabase records untouched.
+              </div>
               {missingTables.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {missingTables.slice(0, 8).map((table) => (
