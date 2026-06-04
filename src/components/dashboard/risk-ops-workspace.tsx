@@ -231,7 +231,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Payment follow-up" value={openRecoveryCases} helper="Open private records" tone="amber" />
         <RiskMetric label="Lien readiness" value={lienDraftsRequiringReview} helper="Review-gated checklists" tone="rose" />
-        <RiskMetric label="Contracts" value={openContractPackets} helper="Client signing links" tone="emerald" />
+        <RiskMetric label="Contracts / Templates" value={openContractPackets} helper="Client signing links" tone="emerald" />
       </div>
 
       <Tabs value={activeTab} onValueChange={updateWorkspaceTab} className="space-y-5">
@@ -245,7 +245,7 @@ export function RiskOpsWorkspace({
             <TabsTrigger value="evidence" className="px-3 py-2">Evidence Vault</TabsTrigger>
             <TabsTrigger value="recovery" className="px-3 py-2">Payment Recovery</TabsTrigger>
             <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Readiness</TabsTrigger>
-            <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
+            <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
             <TabsTrigger value="billing" className="px-3 py-2">Billing</TabsTrigger>
             <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
             <TabsTrigger value="activity" className="px-3 py-2">Timeline</TabsTrigger>
@@ -554,7 +554,7 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="contracts" className="space-y-5">
           <WorkspaceIntro
-            title="Contracts and client signing links"
+            title="Contracts / Templates"
             text="Create private agreement links clients can review and sign, invite the client into the workflow, and track signature plus payment timing before work starts."
           />
           <div className="grid gap-3 md:grid-cols-3">

@@ -34,10 +34,10 @@ const workflowModes: WorkflowMode[] = [
     title: "Agree & sign",
     eyebrow: "Before you schedule",
     text: "Prepare a private agreement link the client can review and sign, then track invite, signature, deposit, milestone, and change-order status.",
-    cta: "Open contracts",
+    cta: "Open contracts / templates",
     tab: "contracts",
     icon: Signature,
-    tools: ["Agreement drafts", "Signing links", "Client invite"],
+    tools: ["Agreement templates", "Signing links", "Client invite"],
   },
   {
     title: "Document & resolve",
@@ -64,8 +64,8 @@ const workspaceGuide = [
     text: "One private file per important client tying together searches, reports, evidence, payment follow-up, and agreement links.",
   },
   {
-    title: "Contract signing links",
-    text: "Private links clients can review and sign. This is the start of the client invite and agreement management path.",
+    title: "Contracts / Templates",
+    text: "Agreement templates, change orders, and private signing links clients can review and sign before the job moves forward.",
   },
   {
     title: "Payment Recovery",

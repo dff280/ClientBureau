@@ -42,9 +42,9 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
     phase: "Before scheduling",
     title: "Set the terms",
     text: "Create a clear agreement path with contract packets, signing links, deposits, milestones, and change-order controls.",
-    tools: ["Contracts", "Signing links", "Client invite"],
+    tools: ["Contracts / Templates", "Signing links", "Client invite"],
     href: "/dashboard",
-    cta: "Open contracts",
+    cta: "Open contracts / templates",
     icon: Signature,
   },
   {
@@ -86,7 +86,7 @@ export const protectionGuardrails = [
     icon: ShieldCheck,
   },
   {
-    title: "Contracts stay controlled",
+    title: "Contracts and templates stay controlled",
     text: "Agreement links help contractors and clients review terms, signatures, deposits, milestones, and change orders in one record.",
     icon: Handshake,
   },

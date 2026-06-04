@@ -122,7 +122,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
               <TabsTrigger value="uploads" className="px-3 py-2">Uploads / CSV Intake</TabsTrigger>
               <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
-              <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
+              <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
               <TabsTrigger value="audit" className="px-3 py-2">Audit</TabsTrigger>
               <TabsTrigger value="settings" className="px-3 py-2">Settings</TabsTrigger>
             </TabsList>
@@ -138,7 +138,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
                 ["Report Queue", "Approve only moderated, documented public summaries."],
                 ["Client Profiles", "Control public visibility, profile health, and SEO-safe identity fields."],
                 ["Businesses / Users", "Review accounts, verification, plan readiness, and report behavior."],
-                ["Contracts", "Oversee private signing links, client invites, and payment coordination status."],
+                ["Contracts / Templates", "Oversee templates, private signing links, client invites, and payment coordination status."],
                 ["Recovery", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
               ].map(([title, text]) => (
                 <div key={title} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
@@ -293,12 +293,12 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="contracts" className="space-y-5">
             <AdminModuleIntro
-              title="Contract signing link oversight"
+              title="Contracts / Templates"
               text="Track agreement templates, private signing links, client invites, payment coordination, and contracts required before scheduling."
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults and safeguard language." badge={`${contractLinks} active`} />
-              <QuickLink href="/dashboard" icon={<ClipboardCheck className="size-5" />} title="Contract workspace" text="Preview contractor-side signing link creation and status tracking." badge="Ops" />
+              <QuickLink href="/dashboard?workspace=contracts" icon={<ClipboardCheck className="size-5" />} title="Contracts / Templates" text="Preview contractor-side templates, signing links, and status tracking." badge="Ops" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track agreement status, reviewer actions, and settings changes." badge="Audit" />
             </div>
             {moderationCrm ? <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} /> : null}

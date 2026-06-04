@@ -22,7 +22,7 @@ const sectionIcons = {
   "Search Clients": Search,
   Reports: ClipboardCheck,
   Watchlist: AlertTriangle,
-  Contracts: Signature,
+  "Contracts / Templates": Signature,
   "Payment Recovery": PhoneCall,
   "Lien Readiness": Landmark,
   "Evidence Vault": Vault,

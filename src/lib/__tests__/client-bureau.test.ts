@@ -203,14 +203,14 @@ describe("product positioning", () => {
       "Search Clients",
       "Reports",
       "Watchlist",
-      "Contracts",
+      "Contracts / Templates",
       "Payment Recovery",
       "Lien Readiness",
       "Evidence Vault",
       "Alerts",
       "Billing",
     ])
-    expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
+    expect(contractorPrimaryNav.find((item) => item.label === "Contracts / Templates")?.href).toBe(
       "/dashboard?workspace=contracts",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
@@ -243,7 +243,7 @@ describe("product positioning", () => {
       "Client Profiles",
       "Businesses / Users",
       "Recovery",
-      "Contracts",
+      "Contracts / Templates",
       "Audit Log",
       "Settings",
     ])

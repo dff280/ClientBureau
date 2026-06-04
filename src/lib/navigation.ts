@@ -23,7 +23,7 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/search", label: "Search Clients", description: "Check a client before taking the job." },
   { href: "/dashboard?workspace=reports", label: "Reports", description: "Draft, submit, and track client reports." },
   { href: "/dashboard?workspace=watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
-  { href: "/dashboard?workspace=contracts", label: "Contracts", description: "Signing links, agreement packets, and change orders." },
+  { href: "/dashboard?workspace=contracts", label: "Contracts / Templates", description: "Templates, signing links, agreement packets, and change orders." },
   { href: "/dashboard?workspace=recovery", label: "Payment Recovery", description: "Invoice timelines, call logs, and resolution tracking." },
   { href: "/dashboard?workspace=lien-readiness", label: "Lien Readiness", description: "Private deadline and document readiness checklists." },
   { href: "/dashboard?workspace=evidence", label: "Evidence Vault", description: "Private invoices, screenshots, contracts, photos, and PDFs." },
@@ -41,7 +41,7 @@ export const contractorDashboardGroups: NavigationGroup[] = [
   {
     title: "Agreement and Records",
     links: contractorDashboardNav.filter((item) =>
-      ["Contracts", "Evidence Vault", "Reports"].includes(item.label),
+      ["Contracts / Templates", "Evidence Vault", "Reports"].includes(item.label),
     ),
   },
   {
@@ -104,7 +104,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Contractor Tools",
     links: [
       { href: "/submit-report", label: "Submit Report" },
-      { href: "/dashboard?workspace=contracts", label: "Contracts" },
+      { href: "/dashboard?workspace=contracts", label: "Contracts / Templates" },
       { href: "/dashboard?workspace=recovery", label: "Payment Recovery" },
       { href: "/dashboard?workspace=lien-readiness", label: "Lien Readiness" },
       { href: "/dashboard?workspace=evidence", label: "Evidence Vault" },
@@ -165,7 +165,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
     title: "Operations",
     links: [
       { href: "/admin?workspace=recovery", label: "Recovery", description: "Review payment follow-up, call logs, and lien readiness." },
-      { href: "/admin?workspace=contracts", label: "Contracts", description: "Oversee signing links, client invites, and contract safeguards." },
+      { href: "/admin?workspace=contracts", label: "Contracts / Templates", description: "Oversee templates, signing links, client invites, and contract safeguards." },
     ],
   },
   {
