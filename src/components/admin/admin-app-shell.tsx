@@ -94,14 +94,7 @@ export function AdminAppShell({
                       )}
                     >
                       <Icon className="size-4" aria-hidden="true" />
-                      <span className="grid gap-0.5">
-                        <span>{item.label}</span>
-                        {item.description ? (
-                          <span className={cn("text-xs font-normal leading-4", isActive ? "text-slate-600" : "text-slate-500")}>
-                            {item.description}
-                          </span>
-                        ) : null}
-                      </span>
+                      <span>{item.label}</span>
                     </Link>
                   )
                 })}

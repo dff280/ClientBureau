@@ -223,8 +223,8 @@ describe("product positioning", () => {
     )
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
       "Before the Job",
-      "Agreement and Records",
-      "After the Invoice",
+      "Documents",
+      "Payments",
       "Account",
     ])
     expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(

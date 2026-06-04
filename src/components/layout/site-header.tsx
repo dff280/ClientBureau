@@ -32,6 +32,13 @@ type SessionState = {
   email: string | null
 }
 
+const contractorHeaderNav = [
+  { href: "/dashboard", label: "Dashboard", description: "Daily work queue and business tools." },
+  { href: "/search", label: "Search", description: "Check a client before accepting work." },
+  { href: "/submit-report", label: "Submit Report", description: "Document a client experience for review." },
+  { href: "/dashboard?workspace=contracts", label: "Contracts", description: "Agreement packets and signing links." },
+]
+
 export function SiteHeader() {
   const [session, setSession] = useState<SessionState>({
     authenticated: false,
@@ -59,9 +66,11 @@ export function SiteHeader() {
     }
   }, [])
 
-  const authNav = session.authenticated ? contractorPrimaryNav : publicPrimaryNav
-  const desktopNav = session.authenticated ? contractorPrimaryNav.slice(0, 5) : publicPrimaryNav
-  const moreNav = session.authenticated ? contractorPrimaryNav.slice(5) : []
+  const authNav = session.authenticated
+    ? [...contractorHeaderNav, ...contractorPrimaryNav.slice(2).filter((item) => item.label !== "Contracts")]
+    : publicPrimaryNav
+  const desktopNav = session.authenticated ? contractorHeaderNav : publicPrimaryNav
+  const moreNav = session.authenticated ? contractorPrimaryNav.slice(3).filter((item) => item.label !== "Contracts") : []
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -81,10 +90,12 @@ export function SiteHeader() {
           {moreNav.length > 0 ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="inline-flex items-center gap-1 transition hover:text-slate-950">
-                More
+                Tools
                 <ChevronDown className="size-4" aria-hidden="true" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Contractor tools</DropdownMenuLabel>
+                <DropdownMenuSeparator />
                 {moreNav.map((item) => (
                   <DropdownMenuItem key={item.href} asChild>
                     <Link href={item.href}>
@@ -194,7 +205,7 @@ export function SiteHeader() {
                   <DropdownMenuItem asChild>
                     <Link href="/submit-report">Submit new report</Link>
                   </DropdownMenuItem>
-                  {contractorPrimaryNav.slice(1).map((item) => (
+                  {contractorPrimaryNav.slice(1).filter((item) => item.label !== "Reports").map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
                       <Link href={item.href}>{item.label}</Link>
                     </DropdownMenuItem>

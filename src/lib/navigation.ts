@@ -39,13 +39,13 @@ export const contractorDashboardGroups: NavigationGroup[] = [
     ),
   },
   {
-    title: "Agreement and Records",
+    title: "Documents",
     links: contractorDashboardNav.filter((item) =>
       ["Contracts", "Evidence Vault", "Reports"].includes(item.label),
     ),
   },
   {
-    title: "After the Invoice",
+    title: "Payments",
     links: contractorDashboardNav.filter((item) =>
       ["Payment Recovery", "Lien Readiness"].includes(item.label),
     ),

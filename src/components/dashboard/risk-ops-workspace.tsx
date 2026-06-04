@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useActionState, useEffect, useMemo } from "react"
+import type { LucideIcon } from "lucide-react"
 import {
   AlertTriangle,
   BellRing,
@@ -126,6 +127,59 @@ const workspaceTabs = new Set([
   "activity",
 ])
 
+const workspaceNavigationGroups: {
+  title: string
+  text: string
+  items: {
+    value: string
+    label: string
+    icon: LucideIcon
+  }[]
+}[] = [
+  {
+    title: "Start here",
+    text: "Your daily work queue.",
+    items: [
+      { value: "overview", label: "Today", icon: Gauge },
+      { value: "pipeline", label: "Client Pipeline", icon: FolderKanban },
+    ],
+  },
+  {
+    title: "Find clients",
+    text: "Screen and monitor before the job.",
+    items: [
+      { value: "watchlist", label: "Watchlist", icon: Radar },
+      { value: "alerts", label: "Alerts", icon: BellRing },
+    ],
+  },
+  {
+    title: "Documents",
+    text: "Reports, evidence, and agreements.",
+    items: [
+      { value: "reports", label: "Reports", icon: ClipboardCheck },
+      { value: "evidence", label: "Evidence", icon: Vault },
+      { value: "contracts", label: "Contracts", icon: Signature },
+    ],
+  },
+  {
+    title: "Payments",
+    text: "Follow-up and readiness tracking.",
+    items: [
+      { value: "recovery", label: "Recovery", icon: PhoneCall },
+      { value: "lien-readiness", label: "Lien Packets", icon: Landmark },
+    ],
+  },
+  {
+    title: "Account",
+    text: "Plan, settings, and history.",
+    items: [
+      { value: "billing", label: "Billing", icon: CreditCard },
+      { value: "account", label: "Profile", icon: ShieldCheck },
+      { value: "activity", label: "Timeline", icon: FileText },
+    ],
+  },
+]
+
 function normalizeWorkspaceTab(value: string | null) {
   const aliases: Record<string, string> = {
     payment: "recovery",
@@ -218,39 +272,45 @@ export function RiskOpsWorkspace({
       limit: subscription?.tier === "free" || !subscription ? 3 : 100,
     },
   ]
+  const summaryMetrics = [
+    {
+      label: "Today",
+      value: todaysWork.length,
+      helper: "What needs your attention now",
+      tone: "slate" as const,
+    },
+    {
+      label: "Client activity",
+      value: openPipelineItems + activeAlertCount + unreadMonitoringAlerts,
+      helper: "Pipeline records and watchlist signals",
+      tone: "amber" as const,
+    },
+    {
+      label: "Documents",
+      value: readyDrafts + evidenceNeedingReview + openContractPackets,
+      helper: "Reports, evidence, and signing links",
+      tone: "emerald" as const,
+    },
+    {
+      label: "Payments",
+      value: openRecoveryCases + lienDraftsRequiringReview,
+      helper: "Recovery records and review-gated packets",
+      tone: "rose" as const,
+    },
+  ]
 
   return (
     <div className="space-y-6">
       <ContractorWorkspaceGuidance onOpenTab={updateWorkspaceTab} />
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-8">
-        <RiskMetric label="Today" value={todaysWork.length} helper="Next best actions" tone="slate" />
-        <RiskMetric label="Pipeline" value={openPipelineItems} helper="Open client records" tone="slate" />
-        <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="Monitoring changes" tone="amber" />
-        <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
-        <RiskMetric label="Evidence Vault" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
-        <RiskMetric label="Payment Recovery" value={openRecoveryCases} helper="Open private records" tone="amber" />
-        <RiskMetric label="Lien Readiness" value={lienDraftsRequiringReview} helper="Review-gated packets" tone="rose" />
-        <RiskMetric label="Contracts" value={openContractPackets} helper="Client signing links" tone="emerald" />
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {summaryMetrics.map((metric) => (
+          <RiskMetric key={metric.label} {...metric} />
+        ))}
       </div>
 
       <Tabs value={activeTab} onValueChange={updateWorkspaceTab} className="space-y-5">
-        <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
-          <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
-            <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>
-            <TabsTrigger value="pipeline" className="px-3 py-2">Pipeline</TabsTrigger>
-            <TabsTrigger value="watchlist" className="px-3 py-2">Watchlist</TabsTrigger>
-            <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
-            <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
-            <TabsTrigger value="evidence" className="px-3 py-2">Evidence Vault</TabsTrigger>
-            <TabsTrigger value="recovery" className="px-3 py-2">Payment Recovery</TabsTrigger>
-            <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Readiness</TabsTrigger>
-            <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
-            <TabsTrigger value="billing" className="px-3 py-2">Billing</TabsTrigger>
-            <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
-            <TabsTrigger value="activity" className="px-3 py-2">Timeline</TabsTrigger>
-          </TabsList>
-        </div>
+        <WorkspaceTabNavigation />
 
         <TabsContent value="overview" className="space-y-5">
           <WorkspaceIntro
@@ -877,6 +937,47 @@ export function RiskOpsWorkspace({
           </Card>
         </TabsContent>
       </Tabs>
+    </div>
+  )
+}
+
+function WorkspaceTabNavigation() {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex flex-col justify-between gap-2 border-b border-slate-100 pb-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Dashboard tools</p>
+          <h2 className="text-lg font-semibold text-slate-950">Choose what you need to do.</h2>
+        </div>
+        <p className="max-w-xl text-xs leading-5 text-slate-500">
+          The dashboard is grouped by plain business jobs: find clients, organize documents,
+          manage payments, and keep account records current.
+        </p>
+      </div>
+      <TabsList className="grid h-auto w-full gap-3 bg-transparent p-0 md:grid-cols-2 xl:grid-cols-5">
+        {workspaceNavigationGroups.map((group) => (
+          <div key={group.title} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase text-slate-500">{group.title}</p>
+            <p className="mt-1 min-h-8 text-xs leading-4 text-slate-500">{group.text}</p>
+            <div className="mt-3 grid gap-2">
+              {group.items.map((item) => {
+                const Icon = item.icon
+
+                return (
+                  <TabsTrigger
+                    key={item.value}
+                    value={item.value}
+                    className="h-auto justify-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-700 shadow-none data-[state=active]:border-slate-950 data-[state=active]:bg-slate-950 data-[state=active]:text-white"
+                  >
+                    <Icon className="size-4" aria-hidden="true" />
+                    {item.label}
+                  </TabsTrigger>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </TabsList>
     </div>
   )
 }

@@ -88,12 +88,12 @@ export function ContractorWorkspaceGuidance({
         <div>
           <p className="text-xs font-semibold uppercase text-amber-700">Start here</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-normal text-slate-950">
-            Choose the job workflow you need right now.
+            What do you need to do next?
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Client Bureau is organized around the contractor decision cycle: screen before you
-            accept work, get the agreement signed before scheduling, and keep private records if
-            a job needs documentation or resolution.
+            Client Bureau is organized around real contractor decisions: check a client before you
+            accept the job, get terms signed before you schedule, and keep records ready if payment
+            or scope needs follow-up.
           </p>
           <p className="mt-3 inline-flex rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-slate-900">
             {businessProtectionPromise}

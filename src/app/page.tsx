@@ -228,6 +228,7 @@ export default async function Home() {
     { label: "Positive reports", value: positiveReports.toLocaleString(), text: "Good client history belongs in the record too." },
     { label: "Evidence files", value: reviewedEvidence.toLocaleString(), text: "Evidence reviewed privately, summarized publicly." },
   ]
+  const heroPreview = recentReports[0]
 
   return (
     <>
@@ -285,27 +286,21 @@ export default async function Home() {
             </form>
 
             <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href="/search">
-                  <Search aria-hidden="true" />
-                  Search a Client
-                </Link>
-              </Button>
               <Button asChild variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
                   Submit a Client Report
                 </Link>
               </Button>
-              <Button asChild variant="ghost" className="text-slate-100 hover:bg-white/10 hover:text-white">
-                <Link href="/how-it-works">
-                  How Client Bureau Works
-                  <ArrowRight aria-hidden="true" />
+              <Button asChild className="bg-white text-slate-950 hover:bg-slate-100">
+                <Link href="/signup">
+                  <LockKeyhole aria-hidden="true" />
+                  Create Free Account
                 </Link>
               </Button>
             </div>
 
-            <div className="grid max-w-4xl gap-3 sm:grid-cols-2">
+            <div className="grid max-w-4xl gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {heroTrustSignals.map((signal) => (
                 <div key={signal} className="flex items-center gap-3 border-l border-amber-300/50 bg-slate-950/55 px-4 py-3 text-sm text-slate-100 backdrop-blur">
                   <CheckCircle2 className="size-4 text-amber-300" aria-hidden="true" />
@@ -315,17 +310,8 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="hidden border-l border-white/15 pl-8 lg:block">
-            <div className="space-y-5">
-              <p className="text-sm font-semibold uppercase text-amber-200">The business-owner rule</p>
-              <p className="text-4xl font-semibold leading-tight">
-                Do not let a handshake become your only protection.
-              </p>
-              <p className="text-sm leading-6 text-slate-300">
-                The hardest client problems usually start as small gaps: no written scope, no deposit
-                clarity, missing photos, verbal changes, or late-payment promises with no timeline.
-              </p>
-            </div>
+          <div className="lg:justify-self-end">
+            <HeroProfilePreview item={heroPreview} />
           </div>
         </div>
       </section>
@@ -624,6 +610,97 @@ function PainWorkflowRow({
         </Link>
       </Button>
     </div>
+  )
+}
+
+function HeroProfilePreview({
+  item,
+}: {
+  item?: {
+    profile: HomepageProfile
+    report: HomepageProfile["reports"][number]
+  }
+}) {
+  if (!item) {
+    return (
+      <Card className="rounded-md border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur">
+        <CardContent className="space-y-5 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase text-amber-200">Public profile preview</p>
+              <h2 className="mt-2 text-2xl font-semibold text-white">What a search result shows</h2>
+            </div>
+            <ShieldCheck className="size-7 text-amber-200" aria-hidden="true" />
+          </div>
+          <p className="text-sm leading-6 text-slate-200">
+            Approved profile pages show moderated summaries, score context, evidence-on-file
+            labels, positive reports, and a client response path. Raw phone numbers, emails,
+            private addresses, and evidence files stay private.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <DarkFact label="Score" value="0-100" />
+            <DarkFact label="Evidence" value="Private" />
+            <DarkFact label="Response" value="Available" />
+          </div>
+          <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
+            <Link href="/how-it-works">
+              See how reports work
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const { profile, report } = item
+
+  return (
+    <Card className="rounded-md border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur">
+      <CardContent className="space-y-5 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase text-amber-200">Live public profile preview</p>
+            <h2 className="mt-2 text-2xl font-semibold text-white">
+              {profile.firstName} {profile.lastName}
+            </h2>
+            <p className="mt-1 text-sm text-slate-300">
+              {profile.city}, {profile.state}
+            </p>
+          </div>
+          <RiskBadge riskLevel={profile.riskLevel} />
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <DarkFact label="Score" value={`${profile.clientBureauScore}/100`} />
+          <DarkFact label="Reports" value={profile.reports.length.toLocaleString()} />
+          <DarkFact label="Reported unpaid" value={formatCurrency(report.amountUnpaid)} />
+        </div>
+
+        <div className="rounded-md border border-white/10 bg-slate-950/35 p-4">
+          <p className="text-xs font-semibold uppercase text-slate-400">{report.reportCategory}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-200">{report.publicSummary}</p>
+        </div>
+
+        <div className="grid gap-2 text-xs font-semibold text-slate-200 sm:grid-cols-2">
+          <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
+            <FileCheck2 className="size-4 text-amber-200" aria-hidden="true" />
+            {profile.evidence.length > 0 ? "Evidence on file" : "Evidence reviewed privately"}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
+            <MessageSquareText className="size-4 text-amber-200" aria-hidden="true" />
+            Client response path
+          </span>
+        </div>
+
+        <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
+          <Link href={`/client/${profile.publicSlug}`}>
+            View public profile
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }
 
