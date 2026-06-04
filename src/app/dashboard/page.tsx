@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
+import { DashboardNavigationMap } from "@/components/dashboard/dashboard-navigation-map"
 import { DashboardReports } from "@/components/dashboard/dashboard-reports"
 import { RiskOpsWorkspace } from "@/components/dashboard/risk-ops-workspace"
 import { Button } from "@/components/ui/button"
@@ -200,6 +201,8 @@ export default async function DashboardPage() {
           <Metric label="Published" value={reportCounts.published} />
           <Metric label="Disputed" value={reportCounts.disputed} />
         </div>
+
+        <DashboardNavigationMap />
 
         <RiskOpsWorkspace riskOps={riskOps} clients={clientProfiles} />
 

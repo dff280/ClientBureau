@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { FilePlus2, LogIn, LogOut, Menu, Search, UserCircle } from "lucide-react"
+import { ChevronDown, FilePlus2, LogIn, LogOut, Menu, UserCircle } from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
@@ -60,6 +60,8 @@ export function SiteHeader() {
   }, [])
 
   const authNav = session.authenticated ? contractorPrimaryNav : publicPrimaryNav
+  const desktopNav = session.authenticated ? contractorPrimaryNav.slice(0, 5) : publicPrimaryNav
+  const moreNav = session.authenticated ? contractorPrimaryNav.slice(5) : []
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -71,11 +73,33 @@ export function SiteHeader() {
           </span>
         </div>
         <nav className="hidden items-center gap-4 text-sm font-medium text-slate-600 lg:flex">
-          {authNav.map((item) => (
+          {desktopNav.map((item) => (
             <Link key={item.href} href={item.href} className="transition hover:text-slate-950">
               {item.label}
             </Link>
           ))}
+          {moreNav.length > 0 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex items-center gap-1 transition hover:text-slate-950">
+                More
+                <ChevronDown className="size-4" aria-hidden="true" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                {moreNav.map((item) => (
+                  <DropdownMenuItem key={item.href} asChild>
+                    <Link href={item.href}>
+                      <span className="grid gap-0.5">
+                        <span>{item.label}</span>
+                        {item.description ? (
+                          <span className="text-xs font-normal text-slate-500">{item.description}</span>
+                        ) : null}
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </nav>
         <div className="flex items-center gap-2">
           <Sheet>
@@ -142,7 +166,7 @@ export function SiteHeader() {
                       href="/signup"
                       className="rounded-md border border-slate-950 bg-slate-950 px-3 py-3 text-white transition hover:bg-slate-800"
                     >
-                      Create account
+                      Create Account
                     </Link>
                   </>
                 )}
@@ -165,7 +189,10 @@ export function SiteHeader() {
                   <DropdownMenuLabel>{session.email ?? "Contractor account"}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/dashboard">Dashboard workspace</Link>
+                    <Link href="/dashboard">Overview</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/submit-report">Submit new report</Link>
                   </DropdownMenuItem>
                   {contractorPrimaryNav.slice(1).map((item) => (
                     <DropdownMenuItem key={item.href} asChild>
@@ -195,16 +222,10 @@ export function SiteHeader() {
                   Login
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild className="hidden md:inline-flex">
-                <Link href="/search">
-                  <Search aria-hidden="true" />
-                  Check client
-                </Link>
-              </Button>
               <Button size="sm" asChild className="bg-slate-950 text-white hover:bg-slate-800">
                 <Link href="/signup">
                   <FilePlus2 aria-hidden="true" />
-                  Create account
+                  Create Account
                 </Link>
               </Button>
               {publicSocialLinks.length > 0 ? (

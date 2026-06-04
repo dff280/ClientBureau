@@ -116,13 +116,22 @@ const workspaceTabs = new Set([
   "reports",
   "evidence",
   "recovery",
+  "lien-readiness",
   "contracts",
   "account",
   "activity",
 ])
 
 function normalizeWorkspaceTab(value: string | null) {
-  return value && workspaceTabs.has(value) ? value : "overview"
+  const aliases: Record<string, string> = {
+    payment: "recovery",
+    "payment-recovery": "recovery",
+    lien: "lien-readiness",
+    "notice-readiness": "lien-readiness",
+  }
+  const normalized = value ? aliases[value] ?? value : null
+
+  return normalized && workspaceTabs.has(normalized) ? normalized : "overview"
 }
 
 export function RiskOpsWorkspace({
@@ -191,7 +200,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Payment follow-up" value={openRecoveryCases} helper="Open private records" tone="amber" />
-        <RiskMetric label="Notice review" value={lienDraftsRequiringReview} helper="Readiness checklists" tone="rose" />
+        <RiskMetric label="Lien readiness" value={lienDraftsRequiringReview} helper="Review-gated checklists" tone="rose" />
         <RiskMetric label="Contracts" value={openContractPackets} helper="Client signing links" tone="emerald" />
       </div>
 
@@ -200,11 +209,12 @@ export function RiskOpsWorkspace({
           <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
             <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>
             <TabsTrigger value="pipeline" className="px-3 py-2">Pipeline</TabsTrigger>
-            <TabsTrigger value="watchlist" className="px-3 py-2">Screening</TabsTrigger>
+            <TabsTrigger value="watchlist" className="px-3 py-2">Watchlist</TabsTrigger>
             <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
             <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
-            <TabsTrigger value="evidence" className="px-3 py-2">Evidence</TabsTrigger>
-            <TabsTrigger value="recovery" className="px-3 py-2">Payment</TabsTrigger>
+            <TabsTrigger value="evidence" className="px-3 py-2">Evidence Vault</TabsTrigger>
+            <TabsTrigger value="recovery" className="px-3 py-2">Payment Recovery</TabsTrigger>
+            <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Readiness</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts</TabsTrigger>
             <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
             <TabsTrigger value="activity" className="px-3 py-2">Timeline</TabsTrigger>
@@ -393,8 +403,8 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="recovery" className="space-y-5">
           <WorkspaceIntro
-            title="Payment follow-up and notice readiness"
-            text="Create documented outreach, call logs, and private notice-readiness checklists with review gates before any sensitive communication is considered."
+            title="Payment recovery"
+            text="Create documented outreach, call logs, payment-plan records, and resolution tracking. This is a private workflow for factual follow-up, not automated collection."
           />
           <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -414,29 +424,6 @@ export function RiskOpsWorkspace({
                 <EmptyState
                   title="No recovery cases yet"
                   text="Create a factual payment follow-up case when an invoice needs documented outreach, call logging, or resolution tracking."
-                />
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Landmark className="size-5 text-amber-700" aria-hidden="true" />
-              Lien notice readiness
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <LienNoticeDraftForm />
-            <div className="space-y-3">
-              {riskOps.lienNoticeDrafts.map((item) => (
-                <LienNoticeCard key={item.id} item={item} />
-              ))}
-              {riskOps.lienNoticeDrafts.length === 0 ? (
-                <EmptyState
-                  title="No readiness checklists yet"
-                  text="Create a private checklist to track deadline review, contract context, evidence, and state-specific notice checks."
                 />
               ) : null}
             </div>
@@ -489,6 +476,49 @@ export function RiskOpsWorkspace({
           </CardContent>
         </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="lien-readiness" className="space-y-5">
+          <WorkspaceIntro
+            title="Lien readiness"
+            text="Track deadlines, contract context, invoice history, and supporting documents in a private review-gated checklist before any sensitive notice is considered."
+          />
+          <div className="grid gap-3 md:grid-cols-3">
+            <ToolExplainer
+              title="What this does"
+              text="Organizes the facts a contractor may need to review deadlines, required documents, and project context."
+            />
+            <ToolExplainer
+              title="Review required"
+              text="Readiness records are private and should be reviewed for state, project, and contract requirements before action."
+            />
+            <ToolExplainer
+              title="What stays private"
+              text="Client contact details, property addresses, uploaded files, and internal notes are not shown on public profiles."
+            />
+          </div>
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Landmark className="size-5 text-amber-700" aria-hidden="true" />
+                Lien readiness checklists
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
+              <LienNoticeDraftForm />
+              <div className="space-y-3">
+                {riskOps.lienNoticeDrafts.map((item) => (
+                  <LienNoticeCard key={item.id} item={item} />
+                ))}
+                {riskOps.lienNoticeDrafts.length === 0 ? (
+                  <EmptyState
+                    title="No readiness checklists yet"
+                    text="Create a private checklist to track deadline review, contract context, evidence, and state-specific notice checks."
+                  />
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="contracts" className="space-y-5">

@@ -46,7 +46,7 @@ const workflowModes: WorkflowMode[] = [
     cta: "Submit a report",
     href: "/submit-report",
     icon: ClipboardCheck,
-    tools: ["Evidence", "Reports", "Payment follow-up"],
+    tools: ["Evidence Vault", "Reports", "Payment Recovery", "Lien Readiness"],
   },
 ]
 
@@ -68,11 +68,11 @@ const workspaceGuide = [
     text: "Private links clients can review and sign. This is the start of the client invite and agreement management path.",
   },
   {
-    title: "Payment protection",
+    title: "Payment Recovery",
     text: "A private record of invoice timelines, contact attempts, payment plans, and resolution status. It is not automated payment enforcement.",
   },
   {
-    title: "Notice readiness",
+    title: "Lien Readiness",
     text: "Private checklists for state-specific review of deadlines, documents, and contract context before any sensitive notice is considered.",
   },
 ]

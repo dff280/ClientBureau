@@ -50,7 +50,13 @@ import {
   protectionGuardrails,
   protectionWorkflowSteps,
 } from "@/lib/product-positioning"
-import { contractorPrimaryNav, publicPrimaryNav } from "@/lib/navigation"
+import {
+  contractorDashboardGroups,
+  contractorDashboardNav,
+  contractorPrimaryNav,
+  publicPrimaryNav,
+  resourceNavigationGroups,
+} from "@/lib/navigation"
 import {
   clientProfiles,
   adminSavedViews,
@@ -185,21 +191,36 @@ describe("product positioning", () => {
   it("exposes platform modules in public and contractor navigation", () => {
     expect(publicPrimaryNav.map((item) => item.label)).toEqual([
       "Search",
-      "Platform",
-      "Reports",
+      "How It Works",
       "Pricing",
+      "Resources",
       "About",
+      "Contact",
     ])
-    expect(contractorPrimaryNav.map((item) => item.label)).toEqual([
-      "Dashboard",
-      "Search",
-      "Contracts",
-      "Evidence",
-      "Payment",
+    expect(contractorDashboardNav.map((item) => item.label)).toEqual([
+      "Overview",
+      "Search Clients",
       "Reports",
+      "Watchlist",
+      "Contracts",
+      "Payment Recovery",
+      "Lien Readiness",
+      "Evidence Vault",
+      "Alerts",
     ])
     expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
       "/dashboard?workspace=contracts",
+    )
+    expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
+      "/dashboard?workspace=lien-readiness",
+    )
+    expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
+      "Before the Job",
+      "Agreement and Records",
+      "After the Invoice",
+    ])
+    expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
+      "/score-methodology",
     )
   })
 })
@@ -297,6 +318,7 @@ describe("public SEO landing pages", () => {
   it("includes SEO landing pages in the sitemap", async () => {
     const urls = (await sitemap()).map((entry) => entry.url)
 
+    expect(urls).toContain("https://clientbureau.com/resources")
     expect(urls).toContain("https://clientbureau.com/clients/florida")
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
     expect(urls).toContain("https://clientbureau.com/industries/contractors")

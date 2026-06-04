@@ -12,7 +12,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-slate-200 bg-white">
-      <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[1.1fr_1.5fr_0.8fr]">
+      <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[1.1fr_1.8fr_0.8fr]">
         <div className="space-y-4">
           <BrandMark />
           <p className="max-w-xl text-sm leading-6 text-slate-600">
@@ -35,7 +35,7 @@ export function SiteFooter() {
             </div>
           ) : null}
         </div>
-        <div className="grid gap-6 text-sm sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 text-sm sm:grid-cols-2 xl:grid-cols-5">
           {footerNavigationGroups.map((group) => (
             <div key={group.title} className="space-y-3">
               <p className="text-xs font-semibold uppercase text-slate-500">{group.title}</p>

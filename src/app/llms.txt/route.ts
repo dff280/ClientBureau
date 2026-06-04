@@ -23,6 +23,7 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 - [Home](${siteUrl}/)
 - [Pricing](${siteUrl}/pricing)
 - [How It Works](${siteUrl}/how-it-works)
+- [Resources](${siteUrl}/resources)
 - [About Client Bureau](${siteUrl}/about)
 - [Contact Client Bureau](${siteUrl}/contact)
 - [Enterprise](${siteUrl}/enterprise)
