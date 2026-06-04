@@ -66,7 +66,7 @@ export function AdminOpsExpansion({
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
             <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
-            Recovery and contract compliance
+            Recovery case and contract compliance
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-5 p-5 lg:grid-cols-[320px_1fr]">
@@ -135,7 +135,7 @@ function SavedViewForm() {
         <option value="contractors">Businesses / Users</option>
         <option value="discussions">Discussions</option>
         <option value="uploads">Uploads / CSV Intake</option>
-        <option value="recovery">Recovery</option>
+        <option value="recovery">Recovery Cases</option>
         <option value="contracts">Contracts / Templates</option>
         <option value="audit">Audit</option>
       </select>

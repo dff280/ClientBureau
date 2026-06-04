@@ -198,7 +198,7 @@ export function buildTodaysWorkItems(input: {
     .slice(0, 2)
     .map((item) => ({
       id: `recovery_${item.id}`,
-      label: "Recovery",
+      label: "Recovery Cases",
       title: item.clientName,
       detail: item.nextAction,
       tone: item.priority,

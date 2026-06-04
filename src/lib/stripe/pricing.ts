@@ -60,7 +60,7 @@ export const pricingTiers: PricingTier[] = [
       "Team reporting exports",
       "Team evidence library",
       "Shared contract packets",
-      "Payment recovery workspace",
+      "Recovery case workspace",
       "Manager review controls",
     ],
   },

@@ -46,7 +46,7 @@ const workflowModes: WorkflowMode[] = [
     cta: "Submit a report",
     href: "/submit-report",
     icon: ClipboardCheck,
-    tools: ["Evidence Vault", "Reports", "Payment Recovery", "Lien Readiness"],
+    tools: ["Evidence Vault", "Reports", "Recovery Cases", "Lien Readiness"],
   },
 ]
 
@@ -68,7 +68,7 @@ const workspaceGuide = [
     text: "Agreement templates, change orders, and private signing links clients can review and sign before the job moves forward.",
   },
   {
-    title: "Payment Recovery",
+    title: "Recovery Cases",
     text: "A private record of invoice timelines, contact attempts, payment plans, and resolution status. It is not automated payment enforcement.",
   },
   {

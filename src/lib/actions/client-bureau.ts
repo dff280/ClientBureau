@@ -741,19 +741,19 @@ export async function createPaymentRecoveryCaseAction(
   })
 
   if (!parsed.success) {
-    return fail("Please correct the payment recovery fields.", zodFieldErrors(parsed.error))
+    return fail("Please correct the recovery case fields.", zodFieldErrors(parsed.error))
   }
 
   const user = await requireContractorAccess()
 
   try {
     const recoveryCase = await createPaymentRecoveryCaseService(user.id, parsed.data)
-    if (!recoveryCase) return fail("Payment recovery feature data is not available yet.")
+    if (!recoveryCase) return fail("Recovery case feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(recoveryCase, "Payment recovery case created with compliance safeguards.")
+    return ok(recoveryCase, "Recovery case created with compliance safeguards.")
   } catch (error) {
-    return fail(actionErrorMessage(error, "Payment recovery case could not be created."))
+    return fail(actionErrorMessage(error, "Recovery case could not be created."))
   }
 }
 
@@ -898,7 +898,7 @@ export async function logPaymentRecoveryAttemptAction(
     if (!attempt) return fail("Recovery attempt feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(attempt, "Payment recovery attempt logged.")
+    return ok(attempt, "Recovery case attempt logged.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Recovery attempt could not be logged."))
   }

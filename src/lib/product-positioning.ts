@@ -64,7 +64,7 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
     text: "Track invoice timing, payment promises, follow-up attempts, payment plans, and notice-readiness checkpoints.",
     tools: ["Payment follow-up", "Plans", "Notice readiness"],
     href: "/dashboard",
-    cta: "Open payment tools",
+    cta: "Open recovery cases",
     icon: ReceiptText,
   },
   {
@@ -91,7 +91,7 @@ export const protectionGuardrails = [
     icon: Handshake,
   },
   {
-    title: "Recovery is documentation-first",
+    title: "Recovery cases are documentation-first",
     text: "Payment follow-up, call logs, payment plans, and notice-readiness tools are private workflow records, not automated enforcement.",
     icon: FileCheck2,
   },

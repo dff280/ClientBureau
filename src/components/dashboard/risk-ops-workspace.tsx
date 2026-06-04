@@ -229,7 +229,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="Monitoring changes" tone="amber" />
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
-        <RiskMetric label="Payment follow-up" value={openRecoveryCases} helper="Open private records" tone="amber" />
+        <RiskMetric label="Recovery Cases" value={openRecoveryCases} helper="Open private records" tone="amber" />
         <RiskMetric label="Lien readiness" value={lienDraftsRequiringReview} helper="Review-gated checklists" tone="rose" />
         <RiskMetric label="Contracts / Templates" value={openContractPackets} helper="Client signing links" tone="emerald" />
       </div>
@@ -243,7 +243,7 @@ export function RiskOpsWorkspace({
             <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
             <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
             <TabsTrigger value="evidence" className="px-3 py-2">Evidence Vault</TabsTrigger>
-            <TabsTrigger value="recovery" className="px-3 py-2">Payment Recovery</TabsTrigger>
+            <TabsTrigger value="recovery" className="px-3 py-2">Recovery Cases</TabsTrigger>
             <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Readiness</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
             <TabsTrigger value="billing" className="px-3 py-2">Billing</TabsTrigger>
@@ -434,7 +434,7 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="recovery" className="space-y-5">
           <WorkspaceIntro
-            title="Payment recovery"
+            title="Recovery Cases"
             text="Create documented outreach, call logs, payment-plan records, and resolution tracking. This is a private workflow for factual follow-up, not automated collection."
           />
           <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
@@ -442,7 +442,7 @@ export function RiskOpsWorkspace({
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="flex items-center gap-2 text-xl">
               <PhoneCall className="size-5 text-amber-700" aria-hidden="true" />
-              Payment recovery center
+              Recovery case center
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -738,7 +738,7 @@ export function RiskOpsWorkspace({
               ["Business verification", "Pending/verified profile status keeps report context accountable."],
               ["Private matching", "Phone and email checks remain hashed and never appear on public pages."],
               ["2FA-ready sign-in", "The account model is ready for stronger authentication prompts."],
-              ["Compliance gates", "Recovery, lien, and contract workflows stay private until reviewed."],
+              ["Compliance gates", "Recovery cases, lien, and contract workflows stay private until reviewed."],
             ].map(([title, text]) => (
               <Card key={title} className="rounded-md border-slate-200 bg-white shadow-sm">
                 <CardContent className="space-y-3 p-5">

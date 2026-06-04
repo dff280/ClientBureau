@@ -25,7 +25,7 @@ export default function PricingPage() {
     ["Evidence uploads", "Basic", "Expanded", "Team library", "Custom retention"],
     ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
     ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
-    ["Payment recovery workflow", "-", "Private tracking", "Team workflow", "Partner handoff"],
+    ["Recovery case workflow", "-", "Private tracking", "Team workflow", "Partner handoff"],
     ["Contract signing links", "-", "Client review, e-signature, and change-order tracking", "Shared link controls", "Custom templates"],
     ["Client invite portal", "-", "Private agreement link", "Team-managed invites", "Custom onboarding"],
     ["Notice-readiness checklists", "-", "Private checklist", "Team review", "Specialist workflow"],

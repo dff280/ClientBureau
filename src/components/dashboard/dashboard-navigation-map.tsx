@@ -23,7 +23,7 @@ const sectionIcons = {
   Reports: ClipboardCheck,
   Watchlist: AlertTriangle,
   "Contracts / Templates": Signature,
-  "Payment Recovery": PhoneCall,
+  "Recovery Cases": PhoneCall,
   "Lien Readiness": Landmark,
   "Evidence Vault": Vault,
   Alerts: BellRing,

@@ -121,7 +121,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <TabsTrigger value="contractors" className="px-3 py-2">Businesses / Users</TabsTrigger>
               <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
               <TabsTrigger value="uploads" className="px-3 py-2">Uploads / CSV Intake</TabsTrigger>
-              <TabsTrigger value="recovery" className="px-3 py-2">Recovery</TabsTrigger>
+              <TabsTrigger value="recovery" className="px-3 py-2">Recovery Cases</TabsTrigger>
               <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
               <TabsTrigger value="audit" className="px-3 py-2">Audit</TabsTrigger>
               <TabsTrigger value="settings" className="px-3 py-2">Settings</TabsTrigger>
@@ -139,7 +139,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
                 ["Client Profiles", "Control public visibility, profile health, and SEO-safe identity fields."],
                 ["Businesses / Users", "Review accounts, verification, plan readiness, and report behavior."],
                 ["Contracts / Templates", "Oversee templates, private signing links, client invites, and payment coordination status."],
-                ["Recovery", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
+                ["Recovery Cases", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
               ].map(([title, text]) => (
                 <div key={title} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
                   <p className="font-semibold text-slate-950">{title}</p>
@@ -262,14 +262,14 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="recovery" className="space-y-5">
             <AdminModuleIntro
-              title="Recovery, lien, and contract safeguards"
-              text="Payment recovery and lien-readiness workflows stay private and operational, with compliance review before any sensitive action."
+              title="Recovery Cases"
+              text="Recovery cases and lien-readiness workflows stay private and operational, with compliance review before any sensitive action."
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink
                 href="/admin/settings"
                 icon={<PhoneCall className="size-5" />}
-                title="Payment recovery"
+                title="Recovery Cases"
                 text="Monitor documented outreach, call logging, response windows, and resolution status."
                 badge={`${recoveryCases} open`}
               />

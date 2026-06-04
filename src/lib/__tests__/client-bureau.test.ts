@@ -185,7 +185,7 @@ describe("product positioning", () => {
     ])
     expect(corePositioning).toBe("Check the client before you take the job.")
     expect(copy).toContain("Set the terms")
-    expect(copy).toContain("Recovery is documentation-first")
+    expect(copy).toContain("Recovery cases are documentation-first")
     expect(copy.toLowerCase()).not.toMatch(/blacklist|shame|scammer|deadbeat|fraudster/)
   })
 
@@ -204,7 +204,7 @@ describe("product positioning", () => {
       "Reports",
       "Watchlist",
       "Contracts / Templates",
-      "Payment Recovery",
+      "Recovery Cases",
       "Lien Readiness",
       "Evidence Vault",
       "Alerts",
@@ -242,7 +242,7 @@ describe("product positioning", () => {
       "Uploads / CSV Intake",
       "Client Profiles",
       "Businesses / Users",
-      "Recovery",
+      "Recovery Cases",
       "Contracts / Templates",
       "Audit Log",
       "Settings",
@@ -568,7 +568,7 @@ describe("platform expansion feature utilities", () => {
     })
 
     expect(work.length).toBeGreaterThan(4)
-    expect(work.map((item) => item.label)).toContain("Recovery")
+    expect(work.map((item) => item.label)).toContain("Recovery Cases")
     expect(work.map((item) => item.label)).toContain("Evidence")
   })
 

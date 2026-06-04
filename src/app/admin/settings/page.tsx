@@ -32,7 +32,7 @@ export default async function AdminSettingsPage() {
             ["Route protection", "Admin routes require the admin role. Normal users cannot access internal sections."],
             ["Feature data mode", `Platform expansion workflows currently read from ${platformFeatureMode} feature data.`],
             ["Decision reasons", "Moderation cases require a decision reason before final closure in the CRM workflow."],
-            ["Payment recovery", "Recovery actions require factual invoice context, documented contact attempts, response windows, and respectful communication language."],
+            ["Recovery cases", "Recovery actions require factual invoice context, documented contact attempts, response windows, and respectful communication language."],
             ["Phone outreach", "Call workflows are logged as documented outreach. The platform does not place automated payment calls."],
             ["Notice-readiness checklists", "Lien notice tools create private readiness checklists only. State-specific deadlines, recipients, delivery methods, and contract terms must be reviewed before sending."],
             ["Contract signing links", "Contract workspace records track scope, deposit, milestone billing, change orders, payment plans, client invite status, and signed-document status."],
