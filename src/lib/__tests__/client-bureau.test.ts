@@ -206,7 +206,7 @@ describe("product positioning", () => {
       "Contracts / Templates",
       "Recovery Cases",
       "Lien Packets",
-      "Evidence Vault",
+      "Evidence Review",
       "Alerts",
       "Billing",
     ])
@@ -569,7 +569,7 @@ describe("platform expansion feature utilities", () => {
 
     expect(work.length).toBeGreaterThan(4)
     expect(work.map((item) => item.label)).toContain("Recovery Cases")
-    expect(work.map((item) => item.label)).toContain("Evidence")
+    expect(work.map((item) => item.label)).toContain("Evidence Review")
   })
 
   it("tracks recovery attempts, payment plans, contract packets, and saved views", () => {

@@ -209,7 +209,7 @@ export function buildTodaysWorkItems(input: {
     .slice(0, 2)
     .map((item) => ({
       id: `evidence_${item.id}`,
-      label: "Evidence",
+      label: "Evidence Review",
       title: item.clientName,
       detail: item.publicSummary,
       tone: item.status === "needs_more_info" ? "high" : "normal",

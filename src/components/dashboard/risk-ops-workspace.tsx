@@ -228,7 +228,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Pipeline" value={openPipelineItems} helper="Open client records" tone="slate" />
         <RiskMetric label="Watchlist alerts" value={activeAlertCount + unreadMonitoringAlerts} helper="Monitoring changes" tone="amber" />
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
-        <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
+        <RiskMetric label="Evidence Review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Recovery Cases" value={openRecoveryCases} helper="Open private records" tone="amber" />
         <RiskMetric label="Lien Packets" value={lienDraftsRequiringReview} helper="Review-gated packets" tone="rose" />
         <RiskMetric label="Contracts / Templates" value={openContractPackets} helper="Client signing links" tone="emerald" />
@@ -242,7 +242,7 @@ export function RiskOpsWorkspace({
             <TabsTrigger value="watchlist" className="px-3 py-2">Watchlist</TabsTrigger>
             <TabsTrigger value="alerts" className="px-3 py-2">Alerts</TabsTrigger>
             <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
-            <TabsTrigger value="evidence" className="px-3 py-2">Evidence Vault</TabsTrigger>
+            <TabsTrigger value="evidence" className="px-3 py-2">Evidence Review</TabsTrigger>
             <TabsTrigger value="recovery" className="px-3 py-2">Recovery Cases</TabsTrigger>
             <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Packets</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
@@ -627,7 +627,7 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="reports" className="space-y-5">
           <WorkspaceIntro
-            title="Reports, evidence, and submission readiness"
+            title="Reports, Evidence Review, and submission readiness"
             text="Continue report drafts, check evidence review, and follow the next recommended documentation step."
           />
           <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
@@ -659,7 +659,7 @@ export function RiskOpsWorkspace({
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
-                Evidence status center
+                Evidence Review Center
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -704,14 +704,14 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="evidence" className="space-y-5">
           <WorkspaceIntro
-            title="Private evidence vault"
-            text="Track invoices, screenshots, contracts, photos, and PDFs as private operational records. Public pages only show evidence summaries."
+            title="Evidence Review"
+            text="Track invoices, screenshots, contracts, photos, and PDFs as private review records. Public pages only show evidence summaries."
           />
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Vault className="size-5 text-amber-700" aria-hidden="true" />
-                Evidence vault
+                Evidence Review Center
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3 p-5 md:grid-cols-2">

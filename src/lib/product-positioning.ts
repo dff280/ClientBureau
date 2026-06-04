@@ -52,9 +52,9 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
     phase: "During the job",
     title: "Document the job",
     text: "Keep project notes, evidence, invoices, screenshots, photos, approvals, and completion records organized privately.",
-    tools: ["Evidence vault", "Work files", "Draft reports"],
+    tools: ["Evidence Review", "Work files", "Draft reports"],
     href: "/dashboard",
-    cta: "Open evidence",
+    cta: "Open evidence review",
     icon: FolderKanban,
   },
   {

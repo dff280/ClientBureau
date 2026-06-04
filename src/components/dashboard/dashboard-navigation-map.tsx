@@ -25,7 +25,7 @@ const sectionIcons = {
   "Contracts / Templates": Signature,
   "Recovery Cases": PhoneCall,
   "Lien Packets": Landmark,
-  "Evidence Vault": Vault,
+  "Evidence Review": Vault,
   Alerts: BellRing,
   Billing: CreditCard,
 }

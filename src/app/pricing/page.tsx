@@ -22,7 +22,7 @@ export default function PricingPage() {
     ["Client profile search", "Limited", "Unlimited", "Team shared", "Custom"],
     ["Positive client reports", "Included", "Included", "Included", "Included"],
     ["Documented report submission", "Included", "Included", "Included", "Included"],
-    ["Evidence uploads", "Basic", "Expanded", "Team library", "Custom retention"],
+    ["Evidence Review", "Basic", "Expanded", "Team library", "Custom retention"],
     ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
     ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
     ["Recovery case workflow", "-", "Private tracking", "Team workflow", "Partner handoff"],
@@ -118,7 +118,7 @@ export default function PricingPage() {
               <h2 className="text-2xl font-semibold text-slate-950">Client intake tools are built into Pro.</h2>
               <p className="text-sm leading-6 text-slate-600">
                 Pro Contractor adds watchlists, draft reports, saved searches, intake assessments,
-                recovery case tracking, lien packets, contract signing links, and client invite controls for repeat client review.
+                recovery case tracking, lien packets, contract signing links, evidence review, and client invite controls for repeat client review.
               </p>
               <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>

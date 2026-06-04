@@ -46,7 +46,7 @@ const workflowModes: WorkflowMode[] = [
     cta: "Submit a report",
     href: "/submit-report",
     icon: ClipboardCheck,
-    tools: ["Evidence Vault", "Reports", "Recovery Cases", "Lien Packets"],
+    tools: ["Evidence Review", "Reports", "Recovery Cases", "Lien Packets"],
   },
 ]
 

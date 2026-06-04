@@ -1046,7 +1046,7 @@ export async function updateEvidenceVaultStatusAction(
 
   try {
     const evidence = await updateEvidenceVaultStatusService(parsed.data)
-    if (!evidence) return fail("Evidence vault feature data is not available yet.")
+    if (!evidence) return fail("Evidence Review feature data is not available yet.")
 
     revalidatePath("/dashboard")
     return ok(evidence, `Evidence marked ${evidence.status.replaceAll("_", " ")}.`)
