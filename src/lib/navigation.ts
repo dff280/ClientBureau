@@ -33,21 +33,44 @@ export const contractorDashboardNav: NavigationItem[] = [
 
 export const contractorDashboardGroups: NavigationGroup[] = [
   {
-    title: "Before the Job",
+    title: "Start Here",
+    links: [
+      contractorDashboardNav.find((item) => item.label === "Overview"),
+      { href: "/search", label: "Search a Client", description: "Check a client before accepting the job." },
+      { href: "/submit-report", label: "Submit a Report", description: "Document a client experience for review." },
+      contractorDashboardNav.find((item) => item.label === "Contracts"),
+      contractorDashboardNav.find((item) => item.label === "Payment Recovery"),
+      contractorDashboardNav.find((item) => item.label === "Lien Readiness"),
+    ].filter(Boolean) as NavigationItem[],
+  },
+  {
+    title: "Find Clients",
     links: contractorDashboardNav.filter((item) =>
-      ["Overview", "Search Clients", "Watchlist", "Alerts"].includes(item.label),
+      ["Search Clients", "Watchlist", "Alerts"].includes(item.label),
+    ),
+  },
+  {
+    title: "Reports",
+    links: contractorDashboardNav.filter((item) =>
+      ["Reports"].includes(item.label),
     ),
   },
   {
     title: "Documents",
     links: contractorDashboardNav.filter((item) =>
-      ["Contracts", "Evidence Vault", "Reports"].includes(item.label),
+      ["Contracts", "Evidence Vault"].includes(item.label),
     ),
   },
   {
     title: "Payments",
     links: contractorDashboardNav.filter((item) =>
       ["Payment Recovery", "Lien Readiness"].includes(item.label),
+    ),
+  },
+  {
+    title: "Protection Tools",
+    links: contractorDashboardNav.filter((item) =>
+      ["Watchlist", "Alerts", "Lien Readiness"].includes(item.label),
     ),
   },
   {
@@ -141,35 +164,37 @@ export const footerNavigationGroups: NavigationGroup[] = [
 
 export const adminNavigationGroups: NavigationGroup[] = [
   {
-    title: "Command",
+    title: "Command Center",
     links: [
-      { href: "/admin", label: "Command Center", description: "Queue metrics, workload, and daily operating view." },
+      { href: "/admin", label: "Overview", description: "Platform health, urgent queues, and daily operating view." },
     ],
   },
   {
     title: "Moderation",
     links: [
-      { href: "/admin/reports", label: "Report Queue", description: "Approve, reject, edit summaries, and bulk moderate reports." },
-      { href: "/admin/discussions", label: "Discussions", description: "Moderate discussion entries, responses, and corrections." },
-      { href: "/admin/uploads", label: "Uploads / CSV Intake", description: "Review CSV batches, duplicate signals, validation errors, and staged imports." },
+      { href: "/admin/reports", label: "Review Reports", description: "Approve, reject, edit summaries, and bulk moderate reports." },
+      { href: "/admin/discussions", label: "Review Discussions", description: "Moderate discussion entries, responses, and corrections." },
+      { href: "/admin/discussions?view=responses", label: "Client Responses", description: "Review client responses, disputes, corrections, and resolution updates." },
     ],
   },
   {
     title: "Records",
     links: [
-      { href: "/admin/clients", label: "Client Profiles", description: "Manage client profiles, public visibility, and SEO-safe fields." },
+      { href: "/admin/clients", label: "Manage Client Profiles", description: "Manage client profiles, public visibility, and SEO-safe fields." },
       { href: "/admin/contractors", label: "Businesses / Users", description: "Review business profiles, user accounts, verification, and account health." },
+      { href: "/admin/reports?view=all", label: "All Reports", description: "Review report records across statuses." },
     ],
   },
   {
-    title: "Operations",
+    title: "Tools",
     links: [
+      { href: "/admin/uploads", label: "CSV Intake", description: "Review CSV batches, duplicate signals, validation errors, and staged imports." },
       { href: "/admin?workspace=recovery", label: "Recovery Cases", description: "Review payment follow-up cases, call logs, and lien packets." },
       { href: "/admin?workspace=contracts", label: "Contracts / Templates", description: "Oversee templates, signing links, client invites, and contract workflow rules." },
     ],
   },
   {
-    title: "System",
+    title: "Platform",
     links: [
       { href: "/admin/audit-log", label: "Audit Log", description: "Track admin actions, status changes, and publication decisions." },
       { href: "/admin/settings", label: "Settings", description: "Configure moderation, publication, evidence privacy, and workflow defaults." },

@@ -553,8 +553,8 @@ function ModerationWorkspace({
             <WorkflowSection
               compact
               step="5"
-              title="Approval controls"
-              description="Approval publishes or updates the public profile."
+              title="Safety checklist and decision"
+              description="Approve only when the public summary is neutral, supportable, and private-data safe."
             >
               <div className="space-y-3">
                 <label className="flex items-start gap-2 text-sm text-slate-700">
@@ -580,7 +580,7 @@ function ModerationWorkspace({
                     disabled={currentStatus === "approved"}
                   >
                     <ShieldCheck aria-hidden="true" />
-                    Approve and publish
+                    Approve and publish profile
                   </PendingSubmitButton>
                   <Button
                     type="submit"
@@ -590,7 +590,7 @@ function ModerationWorkspace({
                     disabled={currentStatus === "rejected"}
                   >
                     <XCircle aria-hidden="true" />
-                    Reject report
+                    Reject and keep private
                   </Button>
                 </div>
                 {state.ok ? (

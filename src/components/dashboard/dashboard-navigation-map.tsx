@@ -20,6 +20,8 @@ import { contractorDashboardGroups } from "@/lib/navigation"
 const sectionIcons = {
   Overview: LayoutDashboard,
   "Search Clients": Search,
+  "Search a Client": Search,
+  "Submit a Report": FilePlus2,
   Reports: ClipboardCheck,
   Watchlist: AlertTriangle,
   Contracts: Signature,

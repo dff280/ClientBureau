@@ -222,28 +222,33 @@ describe("product positioning", () => {
       "/dashboard?workspace=billing",
     )
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
-      "Before the Job",
+      "Start Here",
+      "Find Clients",
+      "Reports",
       "Documents",
       "Payments",
+      "Protection Tools",
       "Account",
     ])
     expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/score-methodology",
     )
     expect(adminNavigationGroups.map((group) => group.title)).toEqual([
-      "Command",
+      "Command Center",
       "Moderation",
       "Records",
-      "Operations",
-      "System",
+      "Tools",
+      "Platform",
     ])
     expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.label)).toEqual([
-      "Command Center",
-      "Report Queue",
-      "Discussions",
-      "Uploads / CSV Intake",
-      "Client Profiles",
+      "Overview",
+      "Review Reports",
+      "Review Discussions",
+      "Client Responses",
+      "Manage Client Profiles",
       "Businesses / Users",
+      "All Reports",
+      "CSV Intake",
       "Recovery Cases",
       "Contracts / Templates",
       "Audit Log",

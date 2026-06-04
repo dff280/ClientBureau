@@ -5,8 +5,8 @@ import { CheckCircle2, ShieldCheck, Trash2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
+import { DataTableToolbar, EmptyState, StatusBadge } from "@/components/dashboard/dashboard-ui"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
-import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { adminDiscussionReviewAction } from "@/lib/actions/client-bureau"
 import type { ActionResult, ClientProfile, ClientReport, CommunityDiscussion } from "@/lib/types"
@@ -45,23 +45,28 @@ export function DiscussionModerationPanel({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        {(["pending", "approved", "rejected", "all"] as const).map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => setFilter(item)}
-            className={cn(
-              "rounded-md border px-3 py-2 text-sm font-semibold capitalize",
-              filter === item
-                ? "border-slate-950 bg-slate-950 text-white"
-                : "border-slate-200 bg-white text-slate-700",
-            )}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
+      <DataTableToolbar
+        title="Discussion queue"
+        description="Pending entries stay private until an admin approves them."
+      >
+        <div className="flex flex-wrap gap-2">
+          {(["pending", "approved", "rejected", "all"] as const).map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => setFilter(item)}
+              className={cn(
+                "rounded-md border px-3 py-2 text-sm font-semibold capitalize",
+                filter === item
+                  ? "border-slate-950 bg-slate-950 text-white"
+                  : "border-slate-200 bg-white text-slate-700",
+              )}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      </DataTableToolbar>
       <div className="grid gap-4">
         {items.map((discussion) => (
           <DiscussionCard
@@ -73,9 +78,10 @@ export function DiscussionModerationPanel({
           />
         ))}
         {items.length === 0 ? (
-          <div className="rounded-md border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-600">
-            No discussion entries in this filter.
-          </div>
+          <EmptyState
+            title="No discussion entries here"
+            description="Switch filters or wait for the next response, correction, or community submission."
+          />
         ) : null}
       </div>
     </div>
@@ -107,11 +113,11 @@ function DiscussionCard({
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div className="space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={discussion.status === "pending" ? "outline" : "secondary"} className="rounded-md capitalize">
+            <StatusBadge tone={discussion.status === "pending" ? "amber" : discussion.status === "approved" ? "emerald" : "rose"}>
               {discussion.status}
-            </Badge>
+            </StatusBadge>
             {discussion.isVerified ? (
-              <Badge className="rounded-md bg-emerald-700 text-white">Verified</Badge>
+              <StatusBadge tone="emerald">Verified</StatusBadge>
             ) : null}
             <span className="text-xs font-semibold uppercase text-slate-500">{discussion.relationshipCategory}</span>
           </div>

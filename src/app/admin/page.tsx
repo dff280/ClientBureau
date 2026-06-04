@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import type { LucideIcon } from "lucide-react"
 import type React from "react"
 import Link from "next/link"
 import {
@@ -12,12 +13,20 @@ import {
   ShieldCheck,
   Signature,
   UploadCloud,
+  UserRound,
+  UsersRound,
 } from "lucide-react"
 
 import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
 import { AdminOpsExpansion } from "@/components/admin/admin-ops-expansion"
+import {
+  DashboardPageHeader,
+  DashboardSection,
+  HeaderActionButton,
+  QuickActionCard,
+  StatCard,
+} from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   getAdminModerationCrmDataService,
@@ -53,6 +62,51 @@ const adminWorkspaces = new Set([
   "settings",
 ])
 
+const adminWorkspaceGroups: {
+  title: string
+  text: string
+  items: { value: string; label: string; icon: LucideIcon }[]
+}[] = [
+  {
+    title: "Command Center",
+    text: "Daily operating view.",
+    items: [{ value: "overview", label: "Overview", icon: ShieldCheck }],
+  },
+  {
+    title: "Moderation",
+    text: "Approve public content.",
+    items: [
+      { value: "reports", label: "Review Reports", icon: ClipboardCheck },
+      { value: "discussions", label: "Discussions", icon: MessageSquareText },
+      { value: "uploads", label: "CSV Intake", icon: UploadCloud },
+    ],
+  },
+  {
+    title: "Records",
+    text: "Manage profiles and users.",
+    items: [
+      { value: "clients", label: "Client Profiles", icon: UserRound },
+      { value: "contractors", label: "Businesses / Users", icon: UsersRound },
+    ],
+  },
+  {
+    title: "Tools",
+    text: "Private workflow oversight.",
+    items: [
+      { value: "recovery", label: "Recovery Cases", icon: PhoneCall },
+      { value: "contracts", label: "Contracts", icon: Signature },
+    ],
+  },
+  {
+    title: "Platform",
+    text: "Rules and audit trail.",
+    items: [
+      { value: "audit", label: "Audit Log", icon: History },
+      { value: "settings", label: "Settings", icon: Settings },
+    ],
+  },
+]
+
 function normalizeAdminWorkspace(value: string | string[] | undefined) {
   const workspace = Array.isArray(value) ? value[0] : value
 
@@ -74,109 +128,107 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
     ["queued", "needs_dispute_review"].includes(item.review.status),
   ).length
   const pendingDiscussions = data.discussions.filter((item) => item.status === "pending").length
+  const pendingResponses = data.responses.filter((item) => item.status === "pending").length
+  const pendingDisputes = data.reviews.filter((item) => item.review.status === "needs_dispute_review").length
   const publicClients = data.clients.filter((item) => item.isPublic).length
+  const evidenceAwaitingReview = data.reviews.filter((item) =>
+    ["queued", "needs_dispute_review"].includes(item.review.status) && item.evidence.length > 0,
+  ).length
   const escalatedCases = moderationCrm?.cases.filter((item) => item.status === "escalated").length ?? 0
   const recoveryCases = riskOps ? countOpenRecoveryCases(riskOps.paymentRecoveryCases) : 0
   const lienPackets = riskOps?.lienNoticeDrafts.filter((item) => item.requiredReview).length ?? 0
   const contractLinks = riskOps?.contractPackets.filter((item) => item.status !== "archived").length ?? 0
+  const recentUsers = [...data.users]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, 5)
+    .length
+  const commandStats = [
+    { label: "Pending reports", value: pendingReports, helper: "Reports waiting for an admin decision", icon: ClipboardCheck, tone: pendingReports > 0 ? "amber" as const : "emerald" as const, href: "/admin/reports" },
+    { label: "Pending discussions", value: pendingDiscussions, helper: "Community entries not public yet", icon: MessageSquareText, tone: pendingDiscussions > 0 ? "amber" as const : "slate" as const, href: "/admin/discussions" },
+    { label: "Pending disputes", value: pendingDisputes + pendingResponses, helper: "Responses, corrections, and dispute context", icon: FileText, tone: pendingDisputes + pendingResponses > 0 ? "rose" as const : "slate" as const, href: "/admin/discussions" },
+    { label: "Evidence review", value: evidenceAwaitingReview, helper: "Report records with private evidence attached", icon: UploadCloud, tone: evidenceAwaitingReview > 0 ? "blue" as const : "slate" as const, href: "/admin/reports" },
+    { label: "Recovery cases", value: recoveryCases, helper: "Private payment follow-up records", icon: PhoneCall, tone: recoveryCases > 0 ? "amber" as const : "slate" as const, href: "/admin?workspace=recovery" },
+    { label: "Lien packets", value: lienPackets, helper: "Review-gated private readiness packets", icon: Landmark, tone: lienPackets > 0 ? "rose" as const : "slate" as const, href: "/admin?workspace=recovery" },
+    { label: "Public profiles", value: publicClients, helper: "Approved SEO-visible client records", icon: UserRound, tone: "emerald" as const, href: "/admin/clients" },
+    { label: "Audit events", value: data.auditLog.length, helper: "Admin actions and system changes", icon: History, tone: "slate" as const, href: "/admin/audit-log" },
+    { label: "Recent users", value: recentUsers, helper: "Latest account records loaded", icon: UsersRound, tone: "blue" as const, href: "/admin/contractors" },
+  ]
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-end">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase text-amber-700">Internal command</p>
-            <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-              Client Bureau admin
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600">
-              Moderate reports, manage public client records, review community submissions, and
-              track operational audit history from a separate internal workspace.
-            </p>
-          </div>
-          <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-            <Link href="/admin/reports" prefetch={false}>
+        <DashboardPageHeader
+          eyebrow="Admin Command Center"
+          title="Platform operations"
+          description="Review public content, manage records, monitor private workflow safeguards, and keep every moderation action accountable."
+          actions={
+            <>
+              <HeaderActionButton href="/admin/reports">
               <ClipboardCheck aria-hidden="true" />
-              Open report queue
-            </Link>
-          </Button>
-        </header>
+                Review reports
+              </HeaderActionButton>
+              <HeaderActionButton href="/admin/audit-log" variant="outline">
+                <History aria-hidden="true" />
+                View audit log
+              </HeaderActionButton>
+            </>
+          }
+          meta={
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="rounded-md bg-slate-50">Admin only</Badge>
+              <Badge variant="outline" className="rounded-md bg-slate-50">{escalatedCases} escalations</Badge>
+              <Badge variant="outline" className="rounded-md bg-slate-50">{contractLinks} active contract links</Badge>
+            </div>
+          }
+        />
 
-        <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-7">
-          <Metric label="Pending reports" value={pendingReports} />
-          <Metric label="Pending discussions" value={pendingDiscussions} />
-          <Metric label="Public clients" value={publicClients} />
-          <Metric label="Escalations" value={escalatedCases} />
-          <Metric label="Recovery cases" value={recoveryCases} />
-          <Metric label="Lien packets" value={lienPackets} />
-          <Metric label="Contract links" value={contractLinks} />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {commandStats.map((stat) => (
+            <StatCard key={stat.label} {...stat} />
+          ))}
         </div>
 
         <Tabs defaultValue={activeWorkspace} className="space-y-5">
-          <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
-            <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
-              <TabsTrigger value="overview" className="px-3 py-2">Command Center</TabsTrigger>
-              <TabsTrigger value="reports" className="px-3 py-2">Report Queue</TabsTrigger>
-              <TabsTrigger value="clients" className="px-3 py-2">Client Profiles</TabsTrigger>
-              <TabsTrigger value="contractors" className="px-3 py-2">Businesses / Users</TabsTrigger>
-              <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
-              <TabsTrigger value="uploads" className="px-3 py-2">Uploads / CSV Intake</TabsTrigger>
-              <TabsTrigger value="recovery" className="px-3 py-2">Recovery Cases</TabsTrigger>
-              <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
-              <TabsTrigger value="audit" className="px-3 py-2">Audit Log</TabsTrigger>
-              <TabsTrigger value="settings" className="px-3 py-2">Settings</TabsTrigger>
-            </TabsList>
-          </div>
+          <AdminWorkspaceNavigation />
 
           <TabsContent value="overview" className="space-y-5">
-            <AdminModuleIntro
-              title="Command center"
-              text="Start with the moderation queue, then move into client, contractor, upload, settings, or review workflows as needed."
-            />
-            <div className="grid gap-4 lg:grid-cols-5">
-              {[
-                ["Report Queue", "Approve only moderated, documented public summaries."],
-                ["Client Profiles", "Control public visibility, profile health, and SEO-safe identity fields."],
-                ["Businesses / Users", "Review accounts, verification, plan readiness, and report behavior."],
-                ["Contracts / Templates", "Oversee templates, private signing links, client invites, and payment coordination status."],
-                ["Recovery Cases", "Keep payment follow-up, calls, and lien packets private until reviewed."],
-              ].map(([title, text]) => (
-                <div key={title} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="font-semibold text-slate-950">{title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
-                </div>
-              ))}
-            </div>
-            <div className="grid gap-4 lg:grid-cols-4">
-              <QuickLink
+            <DashboardSection
+              eyebrow="Urgent work"
+              title="Start with records that can become public."
+              description="Pending public content and private evidence always come before platform housekeeping."
+            >
+              <div className="grid gap-4 lg:grid-cols-4">
+                <QuickActionCard
                 href="/admin/reports"
-                icon={<ShieldCheck className="size-5" />}
-                title="Report Queue"
-                text="Approve, reject, bulk update, or delete contractor-submitted reports."
+                  icon={ShieldCheck}
+                  title="Review Reports"
+                  description="Approve, reject, bulk update, or delete contractor-submitted reports."
                 badge={`${pendingReports} pending`}
+                  primary
               />
-              <QuickLink
+                <QuickActionCard
                 href="/admin/discussions"
-                icon={<MessageSquareText className="size-5" />}
+                  icon={MessageSquareText}
                 title="Discussions"
-                text="Verify context, approve public comments, and remove unsafe submissions."
+                  description="Verify context, approve public comments, and remove unsafe submissions."
                 badge={`${pendingDiscussions} pending`}
               />
-              <QuickLink
+                <QuickActionCard
                 href="/admin/clients"
-                icon={<ClipboardCheck className="size-5" />}
+                  icon={ClipboardCheck}
                 title="Client Profiles"
-                text="Review public visibility, duplicate signals, profile health, and SEO summaries."
+                  description="Review public visibility, duplicate signals, profile health, and SEO summaries."
                 badge={`${publicClients} public`}
               />
-              <QuickLink
+                <QuickActionCard
                 href="/admin/settings"
-                icon={<Settings className="size-5" />}
+                  icon={Settings}
                 title="Settings"
-                text="Review recovery cases, lien packets, evidence privacy, and audit defaults."
+                  description="Review recovery cases, lien packets, evidence privacy, and audit defaults."
                 badge="Rules"
               />
-            </div>
+              </div>
+            </DashboardSection>
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-5">
@@ -363,11 +415,43 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
   )
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
+function AdminWorkspaceNavigation() {
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
+    <div className="rounded-md border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="mb-3 flex flex-col justify-between gap-2 border-b border-slate-100 pb-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Admin areas</p>
+          <h2 className="text-lg font-semibold text-slate-950">Choose the queue or record set.</h2>
+        </div>
+        <p className="max-w-xl text-xs leading-5 text-slate-500">
+          Admin is grouped by daily operating work: moderate public content, manage records,
+          supervise private tools, and audit platform changes.
+        </p>
+      </div>
+      <TabsList className="grid h-auto w-full gap-3 bg-transparent p-0 md:grid-cols-2 xl:grid-cols-5">
+        {adminWorkspaceGroups.map((group) => (
+          <div key={group.title} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase text-slate-500">{group.title}</p>
+            <p className="mt-1 min-h-8 text-xs leading-4 text-slate-500">{group.text}</p>
+            <div className="mt-3 grid gap-2">
+              {group.items.map((item) => {
+                const Icon = item.icon
+
+                return (
+                  <TabsTrigger
+                    key={item.value}
+                    value={item.value}
+                    className="h-auto justify-start gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-sm font-semibold text-slate-700 shadow-none data-[state=active]:border-slate-950 data-[state=active]:bg-slate-950 data-[state=active]:text-white"
+                  >
+                    <Icon className="size-4" aria-hidden="true" />
+                    {item.label}
+                  </TabsTrigger>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </TabsList>
     </div>
   )
 }

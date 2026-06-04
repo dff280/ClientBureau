@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
+import { ClipboardCheck, FileSpreadsheet, ShieldAlert, UploadCloud } from "lucide-react"
 
 import { BulkUploadPanel } from "@/components/admin/bulk-upload-panel"
+import { AdminPageHeader, HeaderActionButton, StatCard, StatusBadge } from "@/components/dashboard/dashboard-ui"
 import { getAdminModerationCrmDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -12,19 +14,36 @@ export const dynamic = "force-dynamic"
 
 export default async function AdminUploadsPage() {
   const moderationCrm = await getAdminModerationCrmDataService()
+  const totals = moderationCrm?.importBatches.reduce(
+    (summary, batch) => ({
+      rows: summary.rows + batch.totalRows,
+      ready: summary.ready + batch.readyRows,
+      duplicates: summary.duplicates + batch.duplicateRows,
+      imported: summary.imported + batch.importedRows,
+    }),
+    { rows: 0, ready: 0, duplicates: 0, imported: 0 },
+  ) ?? { rows: 0, ready: 0, duplicates: 0, imported: 0 }
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="border-b border-slate-200 pb-6">
-          <p className="text-sm font-semibold uppercase text-amber-700">Uploads / CSV intake</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-            Uploads / CSV Intake
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Preview report rows before import, flag duplicates, show validation errors, and create pending records by default.
-          </p>
-        </header>
+        <AdminPageHeader
+          eyebrow="Tools"
+          title="CSV Intake"
+          description="Preview report rows before import, flag duplicates, show validation errors, and create pending records by default."
+          actions={
+            <HeaderActionButton href="/admin/reports" variant="outline">
+              <ClipboardCheck aria-hidden="true" />
+              Review imported reports
+            </HeaderActionButton>
+          }
+        />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Total rows" value={totals.rows} helper="Rows staged across recent batches" icon={FileSpreadsheet} tone="slate" />
+          <StatCard label="Ready rows" value={totals.ready} helper="Rows passing validation" icon={UploadCloud} tone="emerald" />
+          <StatCard label="Duplicate warnings" value={totals.duplicates} helper="Rows blocked for review" icon={ShieldAlert} tone={totals.duplicates > 0 ? "amber" : "slate"} />
+          <StatCard label="Imported" value={totals.imported} helper="Records created as pending" icon={ClipboardCheck} tone="blue" />
+        </div>
         {moderationCrm ? (
           <div className="grid gap-4 md:grid-cols-2">
             {moderationCrm.importBatches.map((batch) => (
@@ -35,9 +54,9 @@ export default async function AdminUploadsPage() {
                     <h2 className="mt-2 font-semibold text-slate-950">{batch.fileName}</h2>
                     <p className="mt-1 text-sm text-slate-600">{new Date(batch.createdAt).toLocaleDateString()}</p>
                   </div>
-                  <span className="rounded-md border border-slate-200 px-2 py-1 text-xs font-semibold capitalize text-slate-600">
+                  <StatusBadge tone={batch.status === "imported" ? "emerald" : "amber"}>
                     {batch.status.replace("_", " ")}
-                  </span>
+                  </StatusBadge>
                 </div>
                 <div className="mt-4 grid grid-cols-4 gap-2 text-center text-xs">
                   <Stat label="Rows" value={batch.totalRows} />

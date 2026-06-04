@@ -145,7 +145,7 @@ const workspaceNavigationGroups: {
     ],
   },
   {
-    title: "Find clients",
+    title: "Find Clients",
     text: "Screen and monitor before the job.",
     items: [
       { value: "watchlist", label: "Watchlist", icon: Radar },
@@ -153,12 +153,18 @@ const workspaceNavigationGroups: {
     ],
   },
   {
-    title: "Documents",
-    text: "Reports, evidence, and agreements.",
+    title: "Reports",
+    text: "Draft, submit, and track reports.",
     items: [
       { value: "reports", label: "Reports", icon: ClipboardCheck },
-      { value: "evidence", label: "Evidence", icon: Vault },
+    ],
+  },
+  {
+    title: "Documents",
+    text: "Agreements and private records.",
+    items: [
       { value: "contracts", label: "Contracts", icon: Signature },
+      { value: "evidence", label: "Evidence", icon: Vault },
     ],
   },
   {
@@ -166,7 +172,14 @@ const workspaceNavigationGroups: {
     text: "Follow-up and readiness tracking.",
     items: [
       { value: "recovery", label: "Recovery", icon: PhoneCall },
+    ],
+  },
+  {
+    title: "Protection Tools",
+    text: "Private safeguards before escalation.",
+    items: [
       { value: "lien-readiness", label: "Lien Packets", icon: Landmark },
+      { value: "account", label: "Verification", icon: ShieldCheck },
     ],
   },
   {
@@ -174,7 +187,6 @@ const workspaceNavigationGroups: {
     text: "Plan, settings, and history.",
     items: [
       { value: "billing", label: "Billing", icon: CreditCard },
-      { value: "account", label: "Profile", icon: ShieldCheck },
       { value: "activity", label: "Timeline", icon: FileText },
     ],
   },
@@ -954,7 +966,7 @@ function WorkspaceTabNavigation() {
           manage payments, and keep account records current.
         </p>
       </div>
-      <TabsList className="grid h-auto w-full gap-3 bg-transparent p-0 md:grid-cols-2 xl:grid-cols-5">
+      <TabsList className="grid h-auto w-full gap-3 bg-transparent p-0 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-7">
         {workspaceNavigationGroups.map((group) => (
           <div key={group.title} className="rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold uppercase text-slate-500">{group.title}</p>

@@ -80,7 +80,10 @@ export function AdminAppShell({
               <div key={group.title} className="space-y-1">
                 <p className="px-3 text-xs font-semibold uppercase text-slate-500">{group.title}</p>
                 {group.links.map((item) => {
-                  const Icon = adminIcons[item.href as keyof typeof adminIcons] ?? ShieldCheck
+                  const Icon =
+                    adminIcons[item.href as keyof typeof adminIcons] ??
+                    adminIcons[item.href.split("?")[0] as keyof typeof adminIcons] ??
+                    ShieldCheck
                   const isActive = isActiveAdminLink(item.href)
 
                   return (

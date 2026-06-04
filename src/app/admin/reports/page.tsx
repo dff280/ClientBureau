@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
+import { ClipboardCheck, History, MessageSquareText, UploadCloud } from "lucide-react"
 
 import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
 import { AdminReviewPanel } from "@/components/admin/admin-review-panel"
+import { AdminPageHeader, HeaderActionButton, StatCard } from "@/components/dashboard/dashboard-ui"
 import {
   getAdminModerationCrmDataService,
   getAdminWorkspaceDataService,
@@ -26,26 +28,37 @@ export default async function AdminReportsPage() {
     getAdminWorkspaceDataService(),
     getAdminModerationCrmDataService(),
   ])
+  const pending = reviews.filter((item) => ["queued", "needs_dispute_review"].includes(item.review.status)).length
+  const published = reviews.filter((item) => item.review.status === "approved").length
+  const evidence = reviews.filter((item) => item.evidence.length > 0).length
+  const discussions = workspace.discussions.filter((item) => item.status === "pending").length
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-6 lg:flex-row lg:items-end">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase text-amber-700">Moderation command</p>
-            <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-              Report queue
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-slate-600">
-              Approve contractor-submitted reports, edit public summaries, bulk reject/delete unsafe
-              records, and publish client profiles without stale cards lingering after action.
-            </p>
-          </div>
-          <div className="rounded-md border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
-            <span className="font-semibold text-slate-950">{reviews.length}</span>{" "}
-            <span className="text-slate-600">review records loaded</span>
-          </div>
-        </header>
+        <AdminPageHeader
+          eyebrow="Moderation"
+          title="Review Reports"
+          description="Approve documented public summaries, reject records that need policy action, and keep private evidence out of public pages."
+          actions={
+            <>
+              <HeaderActionButton href="/admin/discussions" variant="outline">
+                <MessageSquareText aria-hidden="true" />
+                Discussion queue
+              </HeaderActionButton>
+              <HeaderActionButton href="/admin/audit-log" variant="outline">
+                <History aria-hidden="true" />
+                Audit log
+              </HeaderActionButton>
+            </>
+          }
+        />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Needs review" value={pending} helper="Queued reports and dispute reviews" icon={ClipboardCheck} tone={pending > 0 ? "amber" : "emerald"} />
+          <StatCard label="Evidence attached" value={evidence} helper="Private files available for moderator review" icon={UploadCloud} tone="blue" />
+          <StatCard label="Published" value={published} helper="Approved report review records" icon={ClipboardCheck} tone="emerald" />
+          <StatCard label="Discussion queue" value={discussions} helper="Related community entries waiting" icon={MessageSquareText} tone={discussions > 0 ? "amber" : "slate"} href="/admin/discussions" />
+        </div>
         {moderationCrm ? <AdminModerationCrm data={moderationCrm} users={workspace.users} /> : null}
         <AdminReviewPanel items={reviews} />
       </div>

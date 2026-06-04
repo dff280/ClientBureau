@@ -1,6 +1,16 @@
 import type { Metadata } from "next"
+import { Search, ShieldCheck, UserCheck, UsersRound } from "lucide-react"
 
 import { AdminContractorEditor } from "@/components/admin/admin-record-forms"
+import {
+  AdminPageHeader,
+  DataTableToolbar,
+  EmptyState,
+  StatCard,
+  StatusBadge,
+} from "@/components/dashboard/dashboard-ui"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -10,61 +20,102 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic"
 
-export default async function AdminContractorsPage() {
+type AdminBusinessesSearchParams = Promise<{
+  q?: string
+  verification?: string
+}>
+
+export default async function AdminContractorsPage({ searchParams }: { searchParams: AdminBusinessesSearchParams }) {
+  const params = await searchParams
   const data = await getAdminWorkspaceDataService()
+  const query = params.q?.trim().toLowerCase() ?? ""
+  const verification = params.verification ?? "all"
   const verified = data.contractors.filter((contractor) => contractor.verificationStatus === "verified").length
   const pending = data.contractors.filter((contractor) => contractor.verificationStatus === "pending").length
+  const filteredContractors = data.contractors.filter((contractor) => {
+    const text = [contractor.businessName, contractor.trade, contractor.city, contractor.state, contractor.licenseNumber]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+
+    return (!query || text.includes(query)) && (verification === "all" || contractor.verificationStatus === verification)
+  })
+  const filteredUsers = data.users.filter((user) => {
+    const text = [user.fullName, user.email, user.role].join(" ").toLowerCase()
+
+    return !query || text.includes(query)
+  })
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
-        <header className="border-b border-slate-200 pb-6">
-          <p className="text-sm font-semibold uppercase text-amber-700">Record management</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-            Businesses / Users
-          </h1>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Modify business profiles, verify accounts, view users, and keep admin notes in the audit log.
-          </p>
-        </header>
+        <AdminPageHeader
+          eyebrow="Records"
+          title="Businesses / Users"
+          description="Review business-owner accounts, verification status, plans, account health, and admin notes without mixing this queue into the public product."
+        />
 
-        <div className="grid gap-3 md:grid-cols-4">
-          <Metric label="Users" value={data.users.length} />
-          <Metric label="Businesses" value={data.contractors.length} />
-          <Metric label="Verified" value={verified} />
-          <Metric label="Pending verification" value={pending} />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatCard label="Users" value={data.users.length} helper="All platform user records" icon={UsersRound} tone="slate" />
+          <StatCard label="Businesses" value={data.contractors.length} helper="Business-owner workspaces" icon={ShieldCheck} tone="blue" />
+          <StatCard label="Verified" value={verified} helper="Accounts with verified business status" icon={UserCheck} tone="emerald" />
+          <StatCard label="Pending verification" value={pending} helper="Accounts needing review" icon={ShieldCheck} tone={pending > 0 ? "amber" : "slate"} />
         </div>
 
+        <DataTableToolbar
+          title="Find an account"
+          description="Search by business, owner, email, trade, city, state, or license number."
+        >
+          <form className="grid w-full gap-2 sm:w-auto sm:grid-cols-[240px_170px_auto]">
+            <Input name="q" defaultValue={params.q} placeholder="Search accounts" aria-label="Search accounts" />
+            <select name="verification" defaultValue={verification} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+              <option value="all">All verification</option>
+              <option value="unverified">Unverified</option>
+              <option value="pending">Pending</option>
+              <option value="verified">Verified</option>
+            </select>
+            <Button className="bg-slate-950 text-white hover:bg-slate-800">
+              <Search aria-hidden="true" />
+              Filter
+            </Button>
+          </form>
+        </DataTableToolbar>
+
         <div className="grid gap-4 md:grid-cols-3">
-          {data.users.map((user) => (
+          {filteredUsers.map((user) => (
             <div key={user.id} className="rounded-md border border-slate-200 bg-white p-4 text-sm shadow-sm">
               <p className="font-semibold text-slate-950">{user.fullName}</p>
               <p className="mt-1 text-slate-600">{user.email}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
-                <span className="rounded-md border border-slate-200 px-2 py-1 text-slate-500">{user.role}</span>
-                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-700">
-                  account active
-                </span>
+                <StatusBadge tone={user.role === "admin" ? "amber" : "slate"}>{user.role}</StatusBadge>
+                <StatusBadge tone="emerald">Account active</StatusBadge>
               </div>
             </div>
           ))}
+          {filteredUsers.length === 0 ? (
+            <div className="md:col-span-3">
+              <EmptyState
+                icon={Search}
+                title="No users match"
+                description="Clear the filters or search another owner name, email, role, trade, city, or state."
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="grid gap-4">
-          {data.contractors.map((contractor) => (
+          {filteredContractors.map((contractor) => (
             <AdminContractorEditor key={contractor.id} contractor={contractor} />
           ))}
+          {filteredContractors.length === 0 ? (
+            <EmptyState
+              icon={ShieldCheck}
+              title="No business profiles match"
+              description="Try another business name, trade, location, license number, or verification status."
+            />
+          ) : null}
         </div>
       </div>
     </section>
-  )
-}
-
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
-    </div>
   )
 }
