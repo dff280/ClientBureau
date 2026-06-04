@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export const metadata: Metadata = {
-  title: "Enterprise Contractor Intelligence",
+  title: "Enterprise Business Protection",
   description:
-    "Client Bureau enterprise options for contractor teams, regional groups, franchises, moderation workflows, and audit visibility.",
+    "Client Bureau enterprise options for business teams, regional groups, franchises, moderation workflows, and audit visibility.",
   alternates: {
     canonical: "/enterprise",
   },

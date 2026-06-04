@@ -15,7 +15,7 @@ export function BrandMark({ className }: { className?: string }) {
         </span>
         <span className="sr-only"> - </span>
         <span className="hidden text-[11px] font-medium uppercase tracking-normal text-slate-500 sm:block">
-          Contractor Intelligence
+          Business Protection
         </span>
       </span>
     </Link>

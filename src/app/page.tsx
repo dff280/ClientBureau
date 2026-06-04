@@ -6,24 +6,28 @@ import {
   BadgeCheck,
   BriefcaseBusiness,
   Building2,
-  CalendarX2,
   CheckCircle2,
   ClipboardCheck,
-  CreditCard,
+  FileCheck2,
   FilePlus2,
-  Hammer,
+  FolderKanban,
+  Handshake,
+  Landmark,
   LockKeyhole,
-  PackageOpen,
-  Receipt,
+  MessageSquareText,
+  ReceiptText,
   Scale,
   Search,
   ShieldCheck,
+  Signature,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { RiskBadge } from "@/components/client/risk-badge"
 import { BusinessProtectionWorkflow } from "@/components/marketing/business-protection-workflow"
 import { PricingCard } from "@/components/pricing/pricing-card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -55,104 +59,140 @@ export const dynamic = "force-dynamic"
 
 type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
 
-const trustSignals = [
-  "Reports moderated before publication",
-  "Private phone and email matching",
+const heroTrustSignals = [
+  "Private matching for phone and email signals",
+  "Admin-approved public summaries only",
   "Evidence reviewed privately",
   "Client response and correction path",
 ]
 
-const painPoints = [
+const decisionStats = [
+  { label: "Use before", value: "Estimate, deposit, contract, scheduling" },
+  { label: "Protects", value: "Labor, materials, invoices, reputation" },
+  { label: "Public content", value: "Moderated summaries and responses" },
+]
+
+const platformModules = [
   {
-    icon: Receipt,
-    title: "Finished the job and never got paid",
-    text: "Check for reported payment issues before final labor, closeout work, or another large job is accepted.",
+    icon: Search,
+    title: "Client Risk Intelligence",
+    text: "Search by name, business, city, state, phone, or email and review public context plus private-match signals before accepting work.",
+    href: "/search",
+    cta: "Search clients",
   },
   {
-    icon: ClipboardCheck,
-    title: "Scope changed without approved change orders",
-    text: "Review documented scope-creep context and require written approvals before extra work starts.",
+    icon: Signature,
+    title: "Contracts and Signing Links",
+    text: "Create agreement packets, send a client signing link, track signatures, deposits, change orders, and client invite status.",
+    href: "/dashboard?workspace=contracts",
+    cta: "Open contracts",
   },
   {
-    icon: CreditCard,
-    title: "Chargeback filed after completion",
-    text: "Look for payment reversal history and keep completion evidence ready before accepting risk.",
+    icon: FolderKanban,
+    title: "Evidence Vault",
+    text: "Keep invoices, screenshots, contracts, photos, PDFs, approvals, and completion notes private and organized by client.",
+    href: "/dashboard?workspace=evidence",
+    cta: "Review evidence",
   },
   {
-    icon: PackageOpen,
-    title: "Materials ordered, then client canceled",
-    text: "Search before buying non-returnable materials or placing your crew on the calendar.",
+    icon: ReceiptText,
+    title: "Payment Recovery Tracking",
+    text: "Document invoice timelines, call notes, payment promises, payment-plan status, and next follow-up dates without public exposure.",
+    href: "/dashboard?workspace=recovery",
+    cta: "Track recovery",
   },
   {
-    icon: CalendarX2,
-    title: "Crew scheduled, then client disappeared",
-    text: "Use client history, deposits, and intake assessments to avoid wasted schedule capacity.",
+    icon: Landmark,
+    title: "Lien Readiness",
+    text: "Prepare private notice packets, deadline reminders, jurisdiction notes, and supporting-document checklists for required review.",
+    href: "/dashboard?workspace=lien-readiness",
+    cta: "Open lien packets",
   },
   {
-    icon: Building2,
-    title: "Client delayed access to the property",
-    text: "Spot reported access delays and document access windows before mobilizing a team.",
-  },
-  {
-    icon: BriefcaseBusiness,
-    title: "Prior disputes with other businesses",
-    text: "Client Bureau helps surface moderated patterns so the next business can make a better intake decision.",
+    icon: MessageSquareText,
+    title: "Responses and Resolutions",
+    text: "Clients can submit responses, disputes, corrections, and resolution updates that are moderated before public display.",
+    href: "/client-response",
+    cta: "View response path",
   },
 ]
 
-const beforeSteps = ["Accept job", "Buy materials", "Schedule crew", "Hope client pays"]
-const afterSteps = ["Search client", "Review history", "Send contract link", "Document evidence", "Track payment timing"]
+const intakeMoments = [
+  {
+    icon: BriefcaseBusiness,
+    title: "Before you accept the job",
+    text: "Search the client, review payment context, look for positive reports, and set intake terms before committing resources.",
+  },
+  {
+    icon: Handshake,
+    title: "Before you send the crew",
+    text: "Send a clear agreement link, collect signatures, define deposits, and keep change orders tied to the project record.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Before final payment is due",
+    text: "Upload evidence, document approvals, track invoice timing, and keep a clean record if payment follow-up becomes necessary.",
+  },
+  {
+    icon: Scale,
+    title: "If there is a dispute",
+    text: "Keep public summaries neutral, include response context, and document corrections or resolutions through moderation.",
+  },
+]
+
+const moderationStandards = [
+  ["No private identifiers", "Raw phone numbers, emails, street addresses, evidence files, and internal notes stay off public pages."],
+  ["Approved summaries only", "Pending, rejected, and private content does not appear on public profiles or SEO pages."],
+  ["Positive context supported", "Positive reports, resolved reports, and would-work-again feedback help avoid one-sided client records."],
+  ["Right of response", "Clients can submit a response, dispute, correction request, or resolution update for review."],
+]
 
 const businessTypes = [
-  "Contractors",
-  "Remodelers",
+  "General contractors",
   "Roofers",
+  "Remodelers",
   "Painters",
   "Landscapers",
+  "HVAC teams",
   "Pool companies",
-  "HVAC companies",
-  "Pressure washing companies",
-  "Flooring companies",
-  "Freelancers",
-  "Agencies",
-  "Photographers",
+  "Flooring crews",
+  "Pressure washing",
   "Event vendors",
-  "Designers",
-  "Developers",
+  "Creative agencies",
   "Consultants",
 ]
 
 const directoryLinks = [
-  { href: "/clients/florida", label: "Florida client reports" },
+  { href: "/clients/florida", label: "Florida profiles" },
   { href: "/clients/orlando-fl", label: "Orlando FL" },
   { href: "/clients/tampa-fl", label: "Tampa FL" },
   { href: "/clients/miami-fl", label: "Miami FL" },
-  { href: "/reports/non-payment", label: "Non-payment reports" },
-  { href: "/reports/high-risk", label: "High-risk profiles" },
+  { href: "/reports/recent", label: "Recent reports" },
+  { href: "/reports/non-payment", label: "Payment reports" },
   { href: "/industries/contractors", label: "Contractors" },
   { href: "/industries/service-businesses", label: "Service businesses" },
 ]
 
 const faqs = [
   {
-    question: "What problem does Client Bureau solve?",
+    question: "What is Client Bureau?",
     answer:
-      "Client Bureau helps business owners check documented client experiences, reported payment issues, disputes, and response context before committing labor, materials, appointments, or deliverables.",
+      "Client Bureau is a business-owner protection platform for checking client history, setting terms, documenting work, tracking payment issues, and resolving disputes with moderated public context.",
+  },
+  {
+    question: "What is Client Bureau not?",
+    answer:
+      "Client Bureau is not a place for unsupported accusations. It is a moderated client intelligence platform for documented experiences, positive reports, evidence-on-file summaries, client responses, corrections, and resolution context.",
   },
   {
     question: "Are reports published automatically?",
     answer:
-      "No. Public profile content is moderated before publication and uses factual contractor-submitted report language.",
+      "No. Public client profile content is reviewed before publication and uses careful, supportable summary language.",
   },
   {
-    question: "Are phone numbers and emails public?",
+    question: "Are phone numbers, emails, or evidence files public?",
     answer:
-      "No. Phone numbers and emails can support private matching, but raw private identifiers are not displayed on public client profile pages.",
-  },
-  {
-    question: "Can clients respond or request corrections?",
-    answer:
-      "Yes. Public profiles include a right-of-response path for responses, disputes, corrections, and resolution updates that are reviewed before display.",
+      "No. Private identifiers and raw evidence can support matching and moderation, but they are not displayed on public client profile pages.",
   },
 ]
 
@@ -170,24 +210,22 @@ export default async function Home() {
       new Date(b.report.approvedAt ?? b.report.createdAt).getTime() -
       new Date(a.report.approvedAt ?? a.report.createdAt).getTime(),
     )
-    .slice(0, 4)
+    .slice(0, 3)
   const allReports = profiles.flatMap((profile) => profile.reports)
+  const positiveReports = allReports.filter((report) =>
+    ["Positive experience", "Would work with again"].includes(report.reportCategory),
+  ).length
+  const openResponses = profiles.reduce((total, profile) => total + profile.clientResponses.length, 0)
+  const reviewedEvidence = profiles.reduce((total, profile) => total + profile.evidence.length, 0)
+  const totalReportedUnpaid = profiles.reduce(
+    (total, profile) => total + profile.balanceSummary.totalReportedUnpaid,
+    0,
+  )
   const stats = [
-    { label: "Public client profiles", value: profiles.length.toLocaleString() },
-    { label: "Published reports", value: allReports.length.toLocaleString() },
-    {
-      label: "Reported unpaid balances",
-      value: formatCurrency(profiles.reduce((total, profile) => total + profile.balanceSummary.totalReportedUnpaid, 0)),
-    },
-    { label: "Reports moderated before publication", value: "100%" },
-    {
-      label: "Client responses available",
-      value: profiles.reduce((total, profile) => total + profile.clientResponses.length, 0).toLocaleString(),
-    },
-    {
-      label: "Evidence files reviewed privately",
-      value: profiles.reduce((total, profile) => total + profile.evidence.length, 0).toLocaleString(),
-    },
+    { label: "Public profiles", value: profiles.length.toLocaleString(), text: "Approved profile pages indexed for careful public research." },
+    { label: "Published reports", value: allReports.length.toLocaleString(), text: "Contractor-submitted experiences reviewed before display." },
+    { label: "Positive reports", value: positiveReports.toLocaleString(), text: "Good client history belongs in the record too." },
+    { label: "Evidence files", value: reviewedEvidence.toLocaleString(), text: "Evidence reviewed privately, summarized publicly." },
   ]
 
   return (
@@ -201,43 +239,50 @@ export default async function Home() {
       <section className="relative isolate overflow-hidden bg-slate-950 text-white">
         <Image
           src="/images/client-bureau-platform-hero-bright.webp"
-          alt="Client Bureau trust platform dashboard showing client search, reports, score context, and evidence review."
+          alt="Client Bureau dashboard interface for client search, contract packets, report review, and evidence workflow."
           fill
           priority
           sizes="100vw"
-          className="absolute inset-0 z-0 object-cover object-[68%_center] opacity-100"
+          className="absolute inset-0 z-0 object-cover object-[68%_center] opacity-90"
         />
-        <div className="absolute inset-0 z-10 bg-gradient-to-r from-slate-950/95 via-slate-950/65 to-slate-950/5" />
-        <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/20" />
-        <div className="bureau-container relative z-20 grid min-h-[760px] items-end gap-10 py-12 lg:grid-cols-[1fr_380px] lg:py-16">
-          <div className="max-w-4xl space-y-8">
-            <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-medium text-amber-200">
+        <div className="absolute inset-0 z-10 bg-gradient-to-r from-slate-950 via-slate-950/82 to-slate-950/20" />
+        <div className="absolute inset-0 z-10 bg-gradient-to-t from-slate-950 via-slate-950/10 to-slate-950/25" />
+
+        <div className="bureau-container relative z-20 grid min-h-[680px] items-center gap-10 py-14 lg:grid-cols-[1.08fr_0.92fr]">
+          <div className="max-w-4xl space-y-7">
+            <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
               <ShieldCheck className="size-4" aria-hidden="true" />
-              Business-owner protection network
+              Moderated client intelligence for contractors and service businesses
             </div>
+
             <div className="space-y-5">
-              <h1 className="text-5xl font-semibold leading-tight tracking-normal sm:text-6xl lg:text-7xl">
+              <h1 className="max-w-4xl text-5xl font-semibold leading-tight tracking-normal sm:text-6xl lg:text-7xl">
                 {corePositioning}
               </h1>
-              <p className="max-w-3xl text-xl leading-8 text-slate-100">
-                Check client history, set clear terms, send agreement links, document the job,
-                track payment issues, and review moderated client context before you commit labor,
-                materials, contracts, or scheduling.
+              <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
+                Search client reports, send agreement links, document the job, track payment issues,
+                and keep disputes organized before risk turns into lost time, materials, or unpaid invoices.
               </p>
             </div>
+
             <form action="/search" className="grid max-w-3xl gap-3 rounded-md border border-white/15 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_auto]">
+              <label htmlFor="homepage-client-search" className="sr-only">
+                Search for a client
+              </label>
               <div className="relative">
-                <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                 <Input
+                  id="homepage-client-search"
                   name="q"
-                  placeholder="Search by client name, business, city, phone, or email"
+                  placeholder="Search by name, business, city, phone, or email"
                   className="h-12 border-0 pl-10 text-slate-950 shadow-none focus-visible:ring-0"
                 />
               </div>
-              <Button className="h-12 bg-amber-500 px-6 text-slate-950 hover:bg-amber-400">
-                Search a Client
+              <Button className="h-12 bg-amber-500 px-6 font-semibold text-slate-950 hover:bg-amber-400">
+                Search
               </Button>
             </form>
+
             <div className="flex flex-wrap gap-3">
               <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
                 <Link href="/search">
@@ -245,198 +290,183 @@ export default async function Home() {
                   Search a Client
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
+              <Button asChild variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Submit a Report
+                  Submit a Documented Report
                 </Link>
               </Button>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {trustSignals.map((signal) => (
-                <div key={signal} className="flex items-center gap-3 rounded-md border border-white/15 bg-slate-950/55 p-3 text-sm text-slate-100 shadow-lg backdrop-blur">
+
+            <div className="grid max-w-4xl gap-3 sm:grid-cols-2">
+              {heroTrustSignals.map((signal) => (
+                <div key={signal} className="flex items-center gap-3 border-l border-amber-300/50 bg-slate-950/55 px-4 py-3 text-sm text-slate-100 backdrop-blur">
                   <CheckCircle2 className="size-4 text-amber-300" aria-hidden="true" />
-                  {signal}
+                  <span>{signal}</span>
                 </div>
               ))}
             </div>
           </div>
-          <Card className="hidden rounded-md border-white/10 bg-white/10 text-white shadow-2xl backdrop-blur lg:block">
-            <CardContent className="space-y-5 p-6">
-              <p className="text-sm font-semibold uppercase text-amber-200">Intake principle</p>
-              <p className="text-3xl font-semibold leading-tight">
-                Search. Review. Report. Protect.
+
+          <div className="hidden border-l border-white/15 pl-8 lg:block">
+            <div className="space-y-5">
+              <p className="text-sm font-semibold uppercase text-amber-200">The operating rule</p>
+              <p className="text-4xl font-semibold leading-tight">
+                Search first. Set terms clearly. Keep the record clean.
               </p>
-              <p className="text-sm leading-6 text-slate-200">
-                Client Bureau is built for businesses that need better pre-client decisions, not
-                after-the-fact arguments. Search first, send a clear agreement link, document the
-                job, and keep recovery case or lien packet work private until it is reviewed.
+              <p className="text-sm leading-6 text-slate-300">
+                Client Bureau is built for decisions before the job starts and documentation after
+                the job begins. It is serious, moderated, and private where it needs to be.
               </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-slate-200 bg-white">
+        <div className="bureau-container grid gap-4 py-5 lg:grid-cols-3">
+          {decisionStats.map((stat) => (
+            <div key={stat.label} className="grid gap-1 border-l border-amber-300 pl-4">
+              <p className="text-xs font-semibold uppercase text-slate-500">{stat.label}</p>
+              <p className="text-sm font-semibold text-slate-950">{stat.value}</p>
+            </div>
+          ))}
         </div>
       </section>
 
       <section className="bureau-section bg-white">
-        <div className="bureau-container space-y-8">
-          <div className="max-w-3xl space-y-3">
-            <p className="text-sm font-semibold uppercase text-amber-700">Sound familiar?</p>
-            <h2 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-              The expensive client problem usually starts before the first invoice.
-            </h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Client Bureau gives business owners a practical intake checkpoint for common project
-              risks: final payment delays, chargebacks, unclear changes, no-shows, access issues,
-              and repeated dispute patterns.
-            </p>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {painPoints.map((item) => (
-              <Card key={item.title} className="rounded-md border-slate-200 shadow-sm">
-                <CardContent className="space-y-4 p-5">
-                  <item.icon className="size-8 text-slate-950" aria-hidden="true" />
-                  <h3 className="text-lg font-semibold text-slate-950">{item.title}</h3>
-                  <p className="text-sm leading-6 text-slate-600">{item.text}</p>
-                </CardContent>
-              </Card>
+        <div className="bureau-container grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+          <SectionIntro
+            eyebrow="Why it exists"
+            title="Business owners are expected to trust first and recover later."
+            text="Client Bureau flips that workflow into a professional intake process: check available client context, set terms, document the work, and keep recovery or dispute records organized if payment becomes an issue."
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            {intakeMoments.map((item) => (
+              <ProcessTile key={item.title} item={item} />
             ))}
           </div>
         </div>
       </section>
 
       <section className="bureau-section bg-slate-100">
-        <div className="bureau-container grid gap-6 lg:grid-cols-2">
-          <WorkflowPanel title="Before Client Bureau" tone="light" steps={beforeSteps} />
-          <WorkflowPanel title="After Client Bureau" tone="dark" steps={afterSteps} />
+        <div className="bureau-container space-y-8">
+          <SectionIntro
+            eyebrow="Product modules"
+            title="One workspace before, during, and after the job."
+            text="The platform is expanding beyond public reports into a daily operating system for client risk, contracts, evidence, recovery tracking, and moderated resolution."
+          />
+          <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+            {platformModules.map((module, index) => (
+              <ModuleRow key={module.title} module={module} index={index} />
+            ))}
+          </div>
         </div>
       </section>
 
       <section className="bureau-section bg-white">
         <div className="bureau-container">
-          <BusinessProtectionWorkflow />
-        </div>
-      </section>
-
-      <section className="bureau-section bg-white">
-        <div className="bureau-container space-y-8">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div className="max-w-3xl space-y-3">
-              <p className="text-sm font-semibold uppercase text-amber-700">Recent public reports</p>
-              <h2 className="text-3xl font-semibold text-slate-950">
-                Public profiles show moderated, approved context only.
-              </h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Recent report cards emphasize reported balance, risk level, category, and a link to
-                the approved public client profile. Private identifiers and raw evidence stay private.
-              </p>
-            </div>
-            <Button asChild variant="outline">
-              <Link href="/reports/recent">
-                View recent reports
-                <ArrowRight aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {recentReports.map(({ profile, report }) => (
-              <Card key={report.id} className="rounded-md border-slate-200 shadow-sm">
-                <CardContent className="space-y-5 p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xl font-semibold text-slate-950">
-                        {profile.firstName} {profile.lastName}
-                      </p>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {profile.city}, {profile.state}
-                      </p>
-                    </div>
-                    <RiskBadge riskLevel={profile.riskLevel} />
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <Fact label="Category" value={report.reportCategory} />
-                    <Fact label="Reported unpaid" value={formatCurrency(report.amountUnpaid)} />
-                    <Fact label="Status" value={report.resolutionStatus ?? report.paymentStatus} />
-                  </div>
-                  <p className="text-sm leading-6 text-slate-600">{report.publicSummary}</p>
-                  <Button asChild variant="outline">
-                    <Link href={`/client/${profile.publicSlug}`}>
-                      View public profile
-                      <ArrowRight aria-hidden="true" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <BusinessProtectionWorkflow
+            compact
+            ctaHref="/signup"
+            ctaLabel="Create account"
+          />
         </div>
       </section>
 
       <section className="bureau-section bg-slate-950 text-white">
-        <div className="bureau-container space-y-8">
-          <div className="max-w-3xl space-y-3">
-            <p className="text-sm font-semibold uppercase text-amber-300">Platform stats</p>
-            <h2 className="text-3xl font-semibold tracking-normal">
-              Built around moderation, privacy, and business-owner decisions.
-            </h2>
-            <p className="text-sm leading-6 text-slate-300">
-              Client Bureau is designed to become the standard pre-client check for businesses that
-              work with deposits, invoices, appointments, deliverables, or scheduled crews.
-            </p>
+        <div className="bureau-container grid gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
+          <div className="space-y-5">
+            <SectionIntro
+              eyebrow="Moderated public intelligence"
+              title="Public profiles should help contractors decide, not inflame disputes."
+              text="Profile pages show approved summaries, report counts, score context, evidence-on-file summaries, positive reports, disputes, and client responses after moderation."
+              dark
+            />
+            <div className="grid gap-3 sm:grid-cols-2">
+              {moderationStandards.map(([title, text]) => (
+                <div key={title} className="rounded-md border border-white/10 bg-white/5 p-4">
+                  <Scale className="size-5 text-amber-300" aria-hidden="true" />
+                  <p className="mt-3 font-semibold text-white">{title}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
+                </div>
+              ))}
+            </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.label} className="rounded-md border border-white/10 bg-white/5 p-5">
-                <p className="text-sm font-semibold uppercase text-slate-400">{stat.label}</p>
-                <p className="mt-3 text-3xl font-semibold text-white">{stat.value}</p>
+
+          <div className="grid gap-4">
+            {recentReports.length > 0 ? (
+              recentReports.map(({ profile, report }) => (
+                <PublicReportPreview key={report.id} profile={profile} report={report} />
+              ))
+            ) : (
+              <div className="rounded-md border border-white/10 bg-white/5 p-6">
+                <p className="font-semibold text-white">Public report previews will appear after approval.</p>
+                <p className="mt-2 text-sm leading-6 text-slate-300">
+                  The homepage only displays approved public profile context.
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
 
       <section className="bureau-section bg-white">
-        <div className="bureau-container grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
-          <LegalNotice />
+        <div className="bureau-container grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+          <div className="space-y-6">
+            <SectionIntro
+              eyebrow="Trust signals"
+              title="A serious platform needs fairness built into the workflow."
+              text="Client Bureau separates public summaries from private evidence, supports client responses, and gives contractors a place to document positive experiences, resolved matters, and disputed context."
+            />
+            <LegalNotice />
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Moderated reports", "Reports are reviewed before public publication and may be edited for neutral, supportable public summary language."],
-              ["Private matching", "Phone, email, and sensitive matching details are not shown publicly."],
-              ["Evidence stays private", "Invoices, screenshots, contracts, photos, and PDFs can remain available only to moderators."],
-              ["Right of response", "Clients can submit responses, disputes, corrections, and resolution updates for moderation."],
-            ].map(([title, text]) => (
-              <Card key={title} className="rounded-md border-slate-200 shadow-sm">
-                <CardContent className="space-y-3 p-5">
-                  <Scale className="size-6 text-amber-700" aria-hidden="true" />
-                  <h3 className="font-semibold text-slate-950">{title}</h3>
-                  <p className="text-sm leading-6 text-slate-600">{text}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <TrustMetric label="Reported unpaid balances" value={formatCurrency(totalReportedUnpaid)} text="Shown only as aggregated report context from approved public profiles." />
+            <TrustMetric label="Client responses" value={openResponses.toLocaleString()} text="Responses, disputes, corrections, and resolution updates are reviewable before display." />
+            <TrustMetric label="Evidence privacy" value="Private" text="Public pages show summaries like invoices reviewed or documents reviewed." />
+            <TrustMetric label="Positive reports" value={positiveReports.toLocaleString()} text="Good client experiences can be submitted and moderated too." />
           </div>
         </div>
       </section>
 
+      <section className="border-y border-slate-200 bg-slate-950 text-white">
+        <div className="bureau-container grid gap-4 py-6 sm:grid-cols-2 lg:grid-cols-4">
+          {stats.map((stat) => (
+            <div key={stat.label} className="border-l border-amber-300/60 pl-4">
+              <p className="text-xs font-semibold uppercase text-slate-400">{stat.label}</p>
+              <p className="mt-2 text-3xl font-semibold text-white">{stat.value}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{stat.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <section className="bureau-section bg-slate-100">
-        <div className="bureau-container grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-700">Contractor-first, business-owner ready</p>
-            <h2 className="text-3xl font-semibold tracking-normal text-slate-950">
-              A client reporting network for any business that accepts work before payment is complete.
-            </h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Client Bureau starts with Florida contractors because the risk is immediate: crews,
-              materials, schedules, deposits, and final invoices. The same protection layer can
-              support service businesses, vendors, creative teams, and professional firms.
-            </p>
+        <div className="bureau-container space-y-8">
+          <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+            <SectionIntro
+              eyebrow="Markets and industries"
+              title="Built for contractors first, useful for service businesses next."
+              text="The first use case is contractor intake because a risky client relationship can affect crew time, materials, schedules, deposits, invoices, and property access. The same workflow fits any business that takes client risk before payment is complete."
+            />
+            <Button asChild variant="outline">
+              <Link href="/resources">
+                Browse resources
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {businessTypes.map((type) => (
-              <div key={type} className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
-                {type}
-              </div>
-            ))}
-          </div>
-          <div className="lg:col-span-2">
+
+          <div className="grid gap-5 lg:grid-cols-[1fr_0.72fr]">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {businessTypes.map((type) => (
+                <div key={type} className="flex items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 shadow-sm">
+                  <Building2 className="size-4 text-amber-700" aria-hidden="true" />
+                  {type}
+                </div>
+              ))}
+            </div>
             <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-semibold uppercase text-amber-700">Browse public directories</p>
               <div className="mt-4 flex flex-wrap gap-2">
@@ -452,18 +482,12 @@ export default async function Home() {
       </section>
 
       <section className="bureau-section bg-white">
-        <div className="bureau-container grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-700">Plans</p>
-            <h2 className="text-3xl font-semibold tracking-normal text-slate-950">
-              Upgrade when client checks become part of your operating process.
-            </h2>
-            <p className="text-sm leading-6 text-slate-600">
-              Free supports basic checks and report submission. Pro and Team add watchlists, saved
-              searches, alerts, intake assessments, evidence workflow, contract signing links, and
-              shared operations.
-            </p>
-          </div>
+        <div className="bureau-container grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+          <SectionIntro
+            eyebrow="Plans"
+            title="Start with client checks. Upgrade when protection becomes part of operations."
+            text="Free supports searching and report submission. Pro and Team plans support watchlists, saved searches, evidence workflows, contract packets, recovery tracking, and shared business operations."
+          />
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {pricingTiers.map((tier) => (
               <PricingCard key={tier.id} tier={tier} />
@@ -473,36 +497,30 @@ export default async function Home() {
       </section>
 
       <section className="bureau-section bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-300">Before you commit</p>
-            <h2 className="text-4xl font-semibold tracking-normal">
-              Before you schedule the crew, order materials, or sign the contract, check the client.
+        <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_0.82fr] lg:items-center">
+          <div className="space-y-5">
+            <p className="text-sm font-semibold uppercase text-amber-300">Make it part of intake</p>
+            <h2 className="text-4xl font-semibold tracking-normal sm:text-5xl">
+              Before you schedule the crew, order materials, or send the contract, check the client.
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-300">
-              Make client review part of intake. Search public profiles, submit documented reports,
-              and help build a fairer business-owner protection network.
+              Search public profiles, submit documented experiences, and build a fairer record for
+              contractors, service businesses, and clients who resolve issues responsibly.
             </p>
           </div>
-          <div className="rounded-md border border-white/10 bg-white/5 p-6 shadow-sm">
-            <BadgeCheck className="size-10 text-amber-300" aria-hidden="true" />
-            <h3 className="mt-4 text-2xl font-semibold tracking-normal">
-              Start with one client check.
-            </h3>
-            <div className="mt-5 flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href="/search">
-                  Search a Client
-                  <Search aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
-                <Link href="/signup">
-                  Create Free Account
-                  <LockKeyhole aria-hidden="true" />
-                </Link>
-              </Button>
-            </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <Button asChild className="h-12 bg-amber-500 text-slate-950 hover:bg-amber-400">
+              <Link href="/search">
+                <Search aria-hidden="true" />
+                Search a Client
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="h-12 border-white/20 bg-transparent text-white hover:bg-white/10">
+              <Link href="/signup">
+                <LockKeyhole aria-hidden="true" />
+                Create Free Account
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -519,49 +537,160 @@ async function getHomepageProfiles(): Promise<HomepageProfile[]> {
   return detailedProfiles.filter((profile): profile is HomepageProfile => Boolean(profile))
 }
 
-function WorkflowPanel({
+function SectionIntro({
+  eyebrow,
   title,
-  steps,
-  tone,
+  text,
+  dark = false,
 }: {
+  eyebrow: string
   title: string
-  steps: string[]
-  tone: "light" | "dark"
+  text: string
+  dark?: boolean
 }) {
-  const dark = tone === "dark"
-
   return (
-    <div className={dark ? "rounded-md bg-slate-950 p-6 text-white shadow-sm" : "rounded-md border border-slate-200 bg-white p-6 shadow-sm"}>
-      <div className="flex items-center gap-3">
-        {dark ? (
-          <ShieldCheck className="size-6 text-amber-300" aria-hidden="true" />
-        ) : (
-          <Hammer className="size-6 text-slate-500" aria-hidden="true" />
-        )}
-        <h2 className="text-2xl font-semibold">{title}</h2>
-      </div>
-      <div className="mt-6 grid gap-3">
-        {steps.map((step, index) => (
-          <div
-            key={step}
-            className={dark ? "rounded-md border border-white/10 bg-white/5 p-4" : "rounded-md border border-slate-200 bg-slate-50 p-4"}
-          >
-            <p className={dark ? "text-xs font-semibold uppercase text-amber-200" : "text-xs font-semibold uppercase text-slate-500"}>
-              Step {index + 1}
-            </p>
-            <p className="mt-1 font-semibold">{step}</p>
-          </div>
-        ))}
-      </div>
+    <div className="max-w-3xl space-y-3">
+      <p className={dark ? "text-sm font-semibold uppercase text-amber-300" : "text-sm font-semibold uppercase text-amber-700"}>
+        {eyebrow}
+      </p>
+      <h2 className={dark ? "text-3xl font-semibold tracking-normal text-white sm:text-4xl" : "text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl"}>
+        {title}
+      </h2>
+      <p className={dark ? "text-sm leading-6 text-slate-300" : "text-sm leading-6 text-slate-600"}>
+        {text}
+      </p>
     </div>
   )
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function ProcessTile({
+  item,
+}: {
+  item: {
+    icon: LucideIcon
+    title: string
+    text: string
+  }
+}) {
+  const Icon = item.icon
+
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+    <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+      <Icon className="size-7 text-slate-950" aria-hidden="true" />
+      <h3 className="mt-4 text-lg font-semibold text-slate-950">{item.title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+    </div>
+  )
+}
+
+function ModuleRow({
+  module,
+  index,
+}: {
+  module: {
+    icon: LucideIcon
+    title: string
+    text: string
+    href: string
+    cta: string
+  }
+  index: number
+}) {
+  const Icon = module.icon
+
+  return (
+    <div className="grid gap-4 border-b border-slate-200 p-5 last:border-b-0 md:grid-cols-[64px_1fr_auto] md:items-center">
+      <div className="flex size-12 items-center justify-center rounded-md bg-slate-950 text-white">
+        <Icon className="size-5" aria-hidden="true" />
+      </div>
+      <div>
+        <p className="text-xs font-semibold uppercase text-slate-500">
+          {String(index + 1).padStart(2, "0")} / Client Bureau module
+        </p>
+        <h3 className="mt-1 text-xl font-semibold text-slate-950">{module.title}</h3>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{module.text}</p>
+      </div>
+      <Button asChild variant="outline" className="md:justify-self-end">
+        <Link href={module.href}>
+          {module.cta}
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
+function PublicReportPreview({
+  profile,
+  report,
+}: {
+  profile: HomepageProfile
+  report: HomepageProfile["reports"][number]
+}) {
+  return (
+    <Card className="rounded-md border-white/10 bg-white/[0.06] text-white shadow-sm">
+      <CardContent className="space-y-5 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xl font-semibold text-white">
+                {profile.firstName} {profile.lastName}
+              </p>
+              <Badge className="rounded-md bg-emerald-500/15 text-emerald-100">
+                <BadgeCheck className="mr-1 size-3" aria-hidden="true" />
+                Approved
+              </Badge>
+            </div>
+            <p className="mt-1 text-sm text-slate-300">
+              {profile.city}, {profile.state}
+            </p>
+          </div>
+          <RiskBadge riskLevel={profile.riskLevel} />
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <DarkFact label="Category" value={report.reportCategory} />
+          <DarkFact label="Reported unpaid" value={formatCurrency(report.amountUnpaid)} />
+          <DarkFact label="Client score" value={`${profile.clientBureauScore}/100`} />
+        </div>
+
+        <p className="text-sm leading-6 text-slate-300">{report.publicSummary}</p>
+        <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-300">
+          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1">
+            <FileCheck2 className="size-3" aria-hidden="true" />
+            Evidence-on-file summary
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md border border-white/10 px-2 py-1">
+            <MessageSquareText className="size-3" aria-hidden="true" />
+            Response path available
+          </span>
+        </div>
+        <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
+          <Link href={`/client/${profile.publicSlug}`}>
+            View public profile
+            <ArrowRight aria-hidden="true" />
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function TrustMetric({ label, value, text }: { label: string; value: string; text: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-1 font-semibold text-slate-950">{value}</p>
+      <p className="mt-3 text-3xl font-semibold text-slate-950">{value}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
+function DarkFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-white/10 bg-white/5 p-3">
+      <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
+      <p className="mt-1 font-semibold text-white">{value}</p>
     </div>
   )
 }
