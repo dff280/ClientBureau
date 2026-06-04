@@ -966,7 +966,7 @@ export async function reviewCommunityDiscussionSupabase(
       action: "deleted_discussion",
       entityType: "discussion",
       entityId: discussionId,
-      summary: "Deleted community discussion entry.",
+      summary: "Deleted discussion entry.",
     })
 
     return undefined
@@ -996,7 +996,7 @@ export async function reviewCommunityDiscussionSupabase(
     action: `${decision}_discussion`,
     entityType: "discussion",
     entityId: discussionId,
-    summary: `Community discussion marked ${decision}.`,
+    summary: `Discussion marked ${decision}.`,
   })
 
   return mapCommunityDiscussion(data)

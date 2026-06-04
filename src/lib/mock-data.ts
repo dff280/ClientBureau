@@ -430,7 +430,7 @@ export const auditLogs: AuditLogEntry[] = [
     action: "queued_discussion",
     entityType: "discussion",
     entityId: "discussion_02",
-    summary: "Community discussion entry queued for moderation.",
+    summary: "Discussion entry queued for moderation.",
     createdAt: "2026-05-28T12:15:00.000Z",
   },
 ]
@@ -1017,7 +1017,7 @@ export const moderationCases: ModerationCase[] = [
     id: "case_03",
     discussionId: "discussion_02",
     clientId: "client_03",
-    title: "Community discussion verification",
+    title: "Discussion verification",
     summary: "Supporting context requires contact verification before public display.",
     priority: "normal",
     status: "assigned",

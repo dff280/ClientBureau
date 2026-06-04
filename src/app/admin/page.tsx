@@ -158,7 +158,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/discussions"
                 icon={<MessageSquareText className="size-5" />}
-                title="Community discussion"
+                title="Discussions"
                 text="Verify context, approve public comments, and remove unsafe submissions."
                 badge={`${pendingDiscussions} pending`}
               />
@@ -218,7 +218,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             <div className="grid gap-4 lg:grid-cols-4">
               <QuickLink href="/admin/clients" icon={<ClipboardCheck className="size-5" />} title="Client editor" text="Edit public profile fields, risk score, and visibility." badge={`${data.clients.length} records`} />
               <QuickLink href="/search" icon={<FileText className="size-5" />} title="SEO preview" text="Review how public records appear in search and profile cards." badge={`${publicClients} public`} />
-              <QuickLink href="/admin/discussions" icon={<MessageSquareText className="size-5" />} title="Responses" text="Review responses, corrections, and dispute context." badge={`${pendingDiscussions} pending`} />
+              <QuickLink href="/admin/discussions" icon={<MessageSquareText className="size-5" />} title="Discussions" text="Review responses, corrections, and dispute context." badge={`${pendingDiscussions} pending`} />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Visibility audit" text="Track profile edits and publication decisions." badge="Audit" />
             </div>
           </TabsContent>
@@ -238,11 +238,11 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="discussions" className="space-y-5">
             <AdminModuleIntro
-              title="Discussion and response moderation"
+              title="Discussions"
               text="Moderate community entries, client responses, correction requests, verification context, and public-safe summaries."
             />
             <div className="grid gap-4 lg:grid-cols-3">
-              <QuickLink href="/admin/discussions" icon={<MessageSquareText className="size-5" />} title="Discussion queue" text="Approve, reject, verify, or delete public discussion records." badge={`${pendingDiscussions} pending`} />
+              <QuickLink href="/admin/discussions" icon={<MessageSquareText className="size-5" />} title="Discussions" text="Approve, reject, verify, or delete public discussion records." badge={`${pendingDiscussions} pending`} />
               <QuickLink href="/client-response" icon={<FileText className="size-5" />} title="Response workflow" text="Review the client-facing response, dispute, correction, and resolution path." badge="Public" />
               <QuickLink href="/moderation-policy" icon={<ShieldCheck className="size-5" />} title="Policy alignment" text="Keep public discussion language neutral and moderated." badge="Policy" />
             </div>
