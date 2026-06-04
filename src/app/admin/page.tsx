@@ -27,7 +27,7 @@ import {
 import { countOpenRecoveryCases } from "@/lib/platform-features"
 
 export const metadata: Metadata = {
-  title: "Admin Command",
+  title: "Admin Command Center",
   robots: {
     index: false,
     follow: false,
@@ -115,7 +115,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
         <Tabs defaultValue={activeWorkspace} className="space-y-5">
           <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
             <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
-              <TabsTrigger value="overview" className="px-3 py-2">Overview</TabsTrigger>
+              <TabsTrigger value="overview" className="px-3 py-2">Command Center</TabsTrigger>
               <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
               <TabsTrigger value="clients" className="px-3 py-2">Clients</TabsTrigger>
               <TabsTrigger value="contractors" className="px-3 py-2">Contractors</TabsTrigger>
@@ -130,7 +130,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="overview" className="space-y-5">
             <AdminModuleIntro
-              title="Today's operating view"
+              title="Command center"
               text="Start with the moderation queue, then move into client, contractor, upload, or safeguard workflows as needed."
             />
             <div className="grid gap-4 lg:grid-cols-5">

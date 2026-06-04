@@ -143,7 +143,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
   {
     title: "Command",
     links: [
-      { href: "/admin", label: "Overview", description: "Queue metrics, workload, and daily operating view." },
+      { href: "/admin", label: "Command Center", description: "Queue metrics, workload, and daily operating view." },
     ],
   },
   {

@@ -236,7 +236,7 @@ describe("product positioning", () => {
       "System",
     ])
     expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.label)).toEqual([
-      "Overview",
+      "Command Center",
       "Reports",
       "Discussions",
       "Uploads",
