@@ -29,6 +29,10 @@ import {
   getScoreFactors,
   paymentReliabilityLabel,
 } from "@/lib/scoring"
+import {
+  buildBusinessSlug,
+  calculateBusinessRating,
+} from "@/lib/business-rating"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import type {
   AdminSavedViewInput,
@@ -61,6 +65,7 @@ import type {
   ContractPacket,
   ContractWorkspaceItem,
   ContractorRiskOpsData,
+  ContractorProfile,
   DiscussionStatus,
   EvidenceVaultItem,
   LienNoticeDraft,
@@ -74,12 +79,15 @@ import type {
   PublicationAudit,
   RecoveryComplianceReview,
   PublicClientProfile,
+  PublicBusinessProfile,
+  ReportEvidence,
   ReportDraft,
   ReportDraftStatus,
   ReportTimelineEvent,
   ReviewChecklistItem,
   ReviewChecklistStatus,
   SearchFilters,
+  Subscription,
 } from "@/lib/types"
 
 function reviewableReportsForClient(clientId: string) {
@@ -182,6 +190,81 @@ export function getPublicClientProfile(slug: string): PublicClientProfile | unde
       clientReports.filter((report) => report.clientId === client.id),
     ),
   }
+}
+
+function buildPublicBusinessProfile(input: {
+  contractor: ContractorProfile
+  reports: ClientReport[]
+  evidence: ReportEvidence[]
+  subscription?: Subscription
+}): PublicBusinessProfile {
+  const { contractor, reports, evidence, subscription } = input
+  const approvedReports = reports.filter((report) => report.status === "approved")
+  const publicClientReports = approvedReports
+    .map((report) => ({
+      report,
+      client: clientProfiles.find((client) => client.id === report.clientId && client.isPublic),
+    }))
+    .filter((item): item is { report: ClientReport; client: ClientProfile } => Boolean(item.client))
+  const positiveReports = approvedReports.filter((report) => isPositiveReportCategory(report.reportCategory))
+  const disputedReports = reports.filter((report) => report.status === "disputed")
+  const rating = calculateBusinessRating({ contractor, reports, evidence, subscription })
+  const serviceAreas = [
+    `${contractor.city}, ${contractor.state}`,
+    ...reports.map((report) => `${report.projectCity}, ${report.projectState}`),
+  ].filter((value, index, values) => values.indexOf(value) === index)
+  const publicProfileStatus =
+    contractor.verificationStatus === "verified"
+      ? "Verified"
+      : contractor.verificationStatus === "pending"
+        ? "Verification pending"
+        : "Basic profile"
+
+  return {
+    ...contractor,
+    licenseNumber: contractor.licenseNumber ? "Information on file" : undefined,
+    publicSlug: buildBusinessSlug(contractor),
+    ratingScore: rating.score,
+    ratingGrade: rating.grade,
+    ratingConfidence: rating.confidence,
+    ratingSummary: rating.summary,
+    ratingFactors: rating.factors,
+    memberSince: contractor.createdAt,
+    lastUpdated: [...reports.map((report) => report.approvedAt ?? report.createdAt), contractor.createdAt].sort().at(-1) ?? contractor.createdAt,
+    serviceAreas,
+    publicProfileStatus,
+    reportStats: {
+      submitted: reports.length,
+      approved: approvedReports.length,
+      published: publicClientReports.length,
+      positive: positiveReports.length,
+      disputed: disputedReports.length,
+      evidenceAttached: reports.filter((report) => report.evidenceAttached).length,
+    },
+    publicClientReports,
+    trustHighlights: [
+      `${publicProfileStatus} business profile`,
+      `${rating.confidence} rating confidence`,
+      `${publicClientReports.length} public client report${publicClientReports.length === 1 ? "" : "s"} contributed`,
+      evidence.length > 0 ? "Private evidence records on file" : "Evidence workflow available",
+    ],
+  }
+}
+
+export function getPublicBusinessProfiles() {
+  return contractorProfiles.map((contractor) => {
+    const reports = clientReports.filter((report) => report.contractorId === contractor.id)
+    const evidence = reportEvidence.filter((item) =>
+      reports.some((report) => report.id === item.reportId),
+    )
+    const subscription = subscriptions.find((item) => item.contractorId === contractor.id)
+
+    return buildPublicBusinessProfile({ contractor, reports, evidence, subscription })
+  })
+}
+
+export function getPublicBusinessProfile(slug: string): PublicBusinessProfile | undefined {
+  return getPublicBusinessProfiles().find((profile) => profile.publicSlug === slug)
 }
 
 function publicEvidenceLabel(item: { fileName: string; fileType: string }) {

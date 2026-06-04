@@ -1,14 +1,26 @@
 import { getSiteUrl } from "@/lib/env"
-import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
+import {
+  getPublicBusinessProfilesService,
+  getPublicClientProfilesService,
+} from "@/lib/repositories/client-bureau-service"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   const siteUrl = getSiteUrl()
-  const profiles = (await getPublicClientProfilesService()).filter((profile) => profile.isPublic).slice(0, 5)
+  const [profiles, businesses] = await Promise.all([
+    getPublicClientProfilesService(),
+    getPublicBusinessProfilesService(),
+  ])
   const profileLinks = profiles
+    .filter((profile) => profile.isPublic)
+    .slice(0, 5)
     .map((profile) => `- [${profile.firstName} ${profile.lastName} client profile](${siteUrl}/client/${profile.publicSlug})`)
+    .join("\n")
+  const businessLinks = businesses
+    .slice(0, 5)
+    .map((profile) => `- [${profile.businessName} business profile](${siteUrl}/business/${profile.publicSlug})`)
     .join("\n")
   const landingLinks = allSeoLandingPages
     .map((page) => `- [${page.title}](${siteUrl}${page.canonicalPath})`)
@@ -28,6 +40,8 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 - [Contact Client Bureau](${siteUrl}/contact)
 - [Enterprise](${siteUrl}/enterprise)
 - [Score Methodology](${siteUrl}/score-methodology)
+- [Business Profiles](${siteUrl}/businesses)
+- [Business Rating Methodology](${siteUrl}/business-rating-methodology)
 - [Report Policy](${siteUrl}/report-policy)
 - [Dispute and Response Policy](${siteUrl}/dispute-policy)
 - [Content Moderation Policy](${siteUrl}/moderation-policy)
@@ -42,9 +56,13 @@ ${landingLinks}
 
 ${profileLinks || "- Public client profiles are listed in the sitemap after admin approval."}
 
+## Public Business Profile Examples
+
+${businessLinks || "- Public business profiles are listed in the sitemap when business profiles are available."}
+
 ## Content Standard
 
-Public Client Bureau pages use careful language: documented contractor experiences, moderated summaries, evidence reviewed privately, private matching, client response, dispute context, and reported payment risk. Public pages should not display private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions.
+Public Client Bureau pages use careful language: documented contractor experiences, moderated summaries, evidence reviewed privately, private matching, client response, dispute context, business verification, and reported payment risk. Public pages should not display private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions.
 `
 
   return new Response(body, {

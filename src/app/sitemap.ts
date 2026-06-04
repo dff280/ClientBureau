@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next"
 
 import { getSiteUrl } from "@/lib/env"
-import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
+import {
+  getPublicBusinessProfilesService,
+  getPublicClientProfilesService,
+} from "@/lib/repositories/client-bureau-service"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 const siteUrl = getSiteUrl()
@@ -28,6 +31,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.65,
+    },
+    {
+      url: `${siteUrl}/businesses`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${siteUrl}/business-rating-methodology`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.55,
     },
     {
       url: `${siteUrl}/about`,
@@ -91,12 +106,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  const profiles = await getPublicClientProfilesService()
+  const [profiles, businesses] = await Promise.all([
+    getPublicClientProfilesService(),
+    getPublicBusinessProfilesService(),
+  ])
   const clientRoutes = profiles.map((profile) => ({
     url: `${siteUrl}/client/${profile.publicSlug}`,
     lastModified: new Date(profile.updatedAt),
     changeFrequency: "weekly" as const,
     priority: 0.9,
+  }))
+  const businessRoutes = businesses.map((profile) => ({
+    url: `${siteUrl}/business/${profile.publicSlug}`,
+    lastModified: new Date(profile.lastUpdated),
+    changeFrequency: "weekly" as const,
+    priority: 0.75,
   }))
   const landingRoutes = allSeoLandingPages.map((page) => ({
     url: `${siteUrl}${page.canonicalPath}`,
@@ -105,5 +129,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: page.kind === "clients" ? 0.75 : 0.7,
   }))
 
-  return [...publicRoutes, ...landingRoutes, ...clientRoutes]
+  return [...publicRoutes, ...landingRoutes, ...clientRoutes, ...businessRoutes]
 }

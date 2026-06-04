@@ -44,6 +44,8 @@ export type VerificationBadge =
   | "Verified insurance"
   | "Verified email"
   | "Verified phone"
+export type BusinessRatingGrade = "A+" | "A" | "B" | "C" | "Review Pending"
+export type BusinessRatingConfidence = "Basic" | "Moderate" | "Strong"
 export type WatchlistStatus = "active" | "cleared"
 export type WatchlistAlertEventType =
   | "new_report"
@@ -191,6 +193,40 @@ export interface ContractorProfile {
   verificationStatus: VerificationStatus
   verificationBadges?: VerificationBadge[]
   createdAt: string
+}
+
+export interface BusinessRatingFactor {
+  label: string
+  score: number
+  maxScore: number
+  status: "strong" | "good" | "needs_attention"
+  description: string
+}
+
+export interface PublicBusinessProfile extends ContractorProfile {
+  publicSlug: string
+  ratingScore: number
+  ratingGrade: BusinessRatingGrade
+  ratingConfidence: BusinessRatingConfidence
+  ratingSummary: string
+  ratingFactors: BusinessRatingFactor[]
+  memberSince: string
+  lastUpdated: string
+  serviceAreas: string[]
+  publicProfileStatus: "Verified" | "Verification pending" | "Basic profile"
+  reportStats: {
+    submitted: number
+    approved: number
+    published: number
+    positive: number
+    disputed: number
+    evidenceAttached: number
+  }
+  publicClientReports: Array<{
+    report: ClientReport
+    client: ClientProfile
+  }>
+  trustHighlights: string[]
 }
 
 export interface ClientProfile {

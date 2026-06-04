@@ -3,7 +3,13 @@ import { describe, expect, it } from "vitest"
 import { formDataToObject } from "@/lib/actions/result"
 import sitemap from "@/app/sitemap"
 import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
+import { generateMetadata as generateBusinessProfileMetadata } from "@/app/business/[slug]/page"
 import { getSafeInternalPath } from "@/lib/auth"
+import {
+  buildBusinessSlug,
+  businessRatingGrade,
+  calculateBusinessRating,
+} from "@/lib/business-rating"
 import { noStoreHeaders } from "@/lib/http"
 import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
 import {
@@ -39,6 +45,7 @@ import {
 } from "@/lib/platform-features"
 import {
   getPublicClientProfile,
+  getPublicBusinessProfile,
   createContractShareLink,
   getContractPacketByShareToken,
   searchClients,
@@ -62,6 +69,10 @@ import {
 } from "@/lib/navigation"
 import {
   clientProfiles,
+  clientReports,
+  contractorProfiles,
+  reportEvidence,
+  subscriptions,
   adminSavedViews,
   clientPipelineItems,
   contractPackets,
@@ -233,6 +244,9 @@ describe("product positioning", () => {
     expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/score-methodology",
     )
+    expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
+      "/business-rating-methodology",
+    )
     expect(adminNavigationGroups.map((group) => group.title)).toEqual([
       "Command Center",
       "Moderation",
@@ -276,6 +290,16 @@ describe("slug generation", () => {
     expect(ensureUniqueSlug("john-smith-orlando-fl", ["john-smith-orlando-fl"])).toBe(
       "john-smith-orlando-fl-2",
     )
+  })
+
+  it("creates canonical public business profile slugs", () => {
+    expect(
+      buildBusinessSlug({
+        businessName: "RidgeBuild Contracting",
+        city: "Orlando",
+        state: "FL",
+      }),
+    ).toBe("ridgebuild-contracting-orlando-fl")
   })
 })
 
@@ -349,6 +373,39 @@ describe("search and public profiles", () => {
   })
 })
 
+describe("business ratings and public business profiles", () => {
+  it("calculates explainable contractor and business-owner ratings", () => {
+    const contractor = contractorProfiles[0]
+    const reports = clientReports.filter((report) => report.contractorId === contractor.id)
+    const evidence = reportEvidence.filter((item) =>
+      reports.some((report) => report.id === item.reportId),
+    )
+    const subscription = subscriptions.find((item) => item.contractorId === contractor.id)
+    const rating = calculateBusinessRating({ contractor, reports, evidence, subscription })
+
+    expect(rating.score).toBeGreaterThan(50)
+    expect(businessRatingGrade(rating.score)).toBe(rating.grade)
+    expect(rating.factors.map((factor) => factor.label)).toEqual([
+      "Business verification",
+      "Documentation discipline",
+      "Approved contribution history",
+      "Resolution posture",
+      "Account completeness",
+    ])
+    expect(rating.summary).toContain("not a customer review score")
+  })
+
+  it("returns public business profiles without private account identifiers", () => {
+    const profile = getPublicBusinessProfile("ridgebuild-contracting-orlando-fl")
+
+    expect(profile).toBeDefined()
+    expect(profile?.ratingGrade).toBeDefined()
+    expect(profile?.publicClientReports.every((item) => item.client.isPublic)).toBe(true)
+    expect(JSON.stringify(profile)).not.toContain("@")
+    expect(JSON.stringify(profile)).not.toContain("FL-CBC-49201")
+  })
+})
+
 describe("public SEO landing pages", () => {
   it("defines the requested public landing page clusters", () => {
     expect(getSeoLandingPage("clients", "florida")?.canonicalPath).toBe("/clients/florida")
@@ -361,6 +418,9 @@ describe("public SEO landing pages", () => {
     const urls = (await sitemap()).map((entry) => entry.url)
 
     expect(urls).toContain("https://clientbureau.com/resources")
+    expect(urls).toContain("https://clientbureau.com/businesses")
+    expect(urls).toContain("https://clientbureau.com/business-rating-methodology")
+    expect(urls).toContain("https://clientbureau.com/business/ridgebuild-contracting-orlando-fl")
     expect(urls).toContain("https://clientbureau.com/clients/florida")
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
     expect(urls).toContain("https://clientbureau.com/industries/contractors")
@@ -373,6 +433,15 @@ describe("public SEO landing pages", () => {
 
     expect(String(metadata.title)).toContain("John Smith")
     expect(String(metadata.description)).toContain("moderated contractor-submitted")
+  })
+
+  it("generates careful metadata for public business profiles", async () => {
+    const metadata = await generateBusinessProfileMetadata({
+      params: Promise.resolve({ slug: "ridgebuild-contracting-orlando-fl" }),
+    })
+
+    expect(String(metadata.title)).toContain("RidgeBuild Contracting")
+    expect(String(metadata.description)).toContain("business profile")
   })
 })
 

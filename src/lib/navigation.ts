@@ -87,6 +87,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
     links: [
       { href: "/how-it-works", label: "How It Works", description: "Search, decide, document, and resolve." },
       { href: "/score-methodology", label: "Score Methodology", description: "How scores, risk levels, and confidence are presented." },
+      { href: "/business-rating-methodology", label: "Business Rating", description: "How public contractor and business-owner ratings are calculated." },
       { href: "/pricing", label: "Pricing", description: "Plans for contractors, teams, and enterprise review." },
       { href: "/enterprise", label: "Enterprise", description: "Team workflows, moderation controls, and account support." },
     ],
@@ -106,6 +107,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
       { href: "/reports/recent", label: "Recent Reports", description: "Approved public client-report context." },
       { href: "/reports/non-payment", label: "Non-Payment Reports", description: "Moderated reports involving payment issues." },
       { href: "/clients/florida", label: "Florida Profiles", description: "SEO-visible public profiles by market." },
+      { href: "/businesses", label: "Business Profiles", description: "Public contractor and service-business trust profiles." },
       { href: "/industries/contractors", label: "Contractors", description: "Client Bureau for contractor workflows." },
     ],
   },
@@ -121,11 +123,13 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/resources", label: "Resources" },
       { href: "/enterprise", label: "Enterprise" },
       { href: "/score-methodology", label: "Score Methodology" },
+      { href: "/business-rating-methodology", label: "Business Rating" },
     ],
   },
   {
     title: "Contractor Tools",
     links: [
+      { href: "/businesses", label: "Business Profiles" },
       { href: "/submit-report", label: "Submit Report" },
       { href: "/dashboard?workspace=contracts", label: "Contracts" },
       { href: "/dashboard?workspace=recovery", label: "Payment Recovery" },

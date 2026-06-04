@@ -3,6 +3,7 @@ import Link from "next/link"
 import {
   AlertCircle,
   BellRing,
+  Building2,
   CheckCircle2,
   CreditCard,
   DollarSign,
@@ -32,6 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { requireContractorAccess } from "@/lib/auth"
+import { buildBusinessSlug } from "@/lib/business-rating"
 import {
   getContractorDashboardService,
   getContractorRiskOpsDataService,
@@ -77,6 +79,7 @@ export default async function DashboardPage() {
   }
 
   const subscriptionTier = dashboard.subscription?.tier ?? "free"
+  const businessProfileHref = `/business/${buildBusinessSlug(dashboard.contractor)}`
   const subscriptionStatus =
     !dashboard.subscription || dashboard.subscription.status === "mock"
       ? "active"
@@ -239,6 +242,12 @@ export default async function DashboardPage() {
                 <Link href="/dashboard?workspace=contracts">
                   <Signature aria-hidden="true" />
                   Create contract
+                </Link>
+              </Button>
+              <Button asChild variant="ghost" className="text-slate-100 hover:bg-white/10 hover:text-white">
+                <Link href={businessProfileHref}>
+                  <Building2 aria-hidden="true" />
+                  Public profile
                 </Link>
               </Button>
             </div>

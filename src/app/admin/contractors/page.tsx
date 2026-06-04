@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
-import { Search, ShieldCheck, UserCheck, UsersRound } from "lucide-react"
+import Link from "next/link"
+import { ExternalLink, Search, ShieldCheck, UserCheck, UsersRound } from "lucide-react"
 
 import { AdminContractorEditor } from "@/components/admin/admin-record-forms"
 import {
@@ -11,6 +12,7 @@ import {
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { buildBusinessSlug } from "@/lib/business-rating"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -105,7 +107,21 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
 
         <div className="grid gap-4">
           {filteredContractors.map((contractor) => (
-            <AdminContractorEditor key={contractor.id} contractor={contractor} />
+            <div key={contractor.id} className="grid gap-3">
+              <div className="flex flex-col justify-between gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-slate-500">Public business profile</p>
+                  <p className="mt-1 font-semibold text-slate-950">{contractor.businessName}</p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link href={`/business/${buildBusinessSlug(contractor)}`}>
+                    <ExternalLink aria-hidden="true" />
+                    Public profile
+                  </Link>
+                </Button>
+              </div>
+              <AdminContractorEditor contractor={contractor} />
+            </div>
           ))}
           {filteredContractors.length === 0 ? (
             <EmptyState

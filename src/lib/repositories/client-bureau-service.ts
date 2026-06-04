@@ -19,6 +19,8 @@ import {
   getPendingAdminReviews,
   getPublicClientProfile,
   getPublicClientProfiles,
+  getPublicBusinessProfile,
+  getPublicBusinessProfiles,
   getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
@@ -64,6 +66,8 @@ import {
   getPendingAdminReviewsSupabase,
   getPublicClientProfileSupabase,
   getPublicClientProfilesSupabase,
+  getPublicBusinessProfileSupabase,
+  getPublicBusinessProfilesSupabase,
   logPaymentRecoveryAttemptSupabase,
   reviewCommunityDiscussionSupabase,
   reviewRecoveryComplianceSupabase,
@@ -155,6 +159,18 @@ export async function getPublicClientProfileService(slug: string) {
   if (shouldUseSupabase()) return getPublicClientProfileSupabase(slug)
 
   return getPublicClientProfile(slug)
+}
+
+export async function getPublicBusinessProfilesService() {
+  if (shouldUseSupabase()) return getPublicBusinessProfilesSupabase()
+
+  return getPublicBusinessProfiles()
+}
+
+export async function getPublicBusinessProfileService(slug: string) {
+  if (shouldUseSupabase()) return getPublicBusinessProfileSupabase(slug)
+
+  return getPublicBusinessProfile(slug)
 }
 
 export async function searchClientsService(query?: string, filters?: SearchFilters) {

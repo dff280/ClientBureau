@@ -10,6 +10,10 @@ import {
   paymentReliabilityLabel,
 } from "@/lib/scoring"
 import {
+  buildBusinessSlug,
+  calculateBusinessRating,
+} from "@/lib/business-rating"
+import {
   intakeAssessmentScore,
   intakeRiskRecommendation,
   paymentRecoveryPriority,
@@ -72,6 +76,7 @@ import type {
   RecoveryComplianceReview,
   ContractorProfile,
   PublicClientProfile,
+  PublicBusinessProfile,
   ReportEvidence,
   ReportDraft,
   ReportTimelineEvent,
@@ -995,6 +1000,107 @@ export async function getPublicClientProfileSupabase(slug: string): Promise<Publ
     paymentReliability: paymentReliabilityLabel(profile.clientBureauScore),
     disputeHistory: disputeHistoryLabel(reports),
   }
+}
+
+function buildPublicBusinessProfileFromRows(input: {
+  contractor: ContractorProfile
+  reports: ClientReport[]
+  evidence: ReportEvidence[]
+  clients: ClientProfile[]
+  subscription?: Subscription
+}): PublicBusinessProfile {
+  const { contractor, reports, evidence, clients, subscription } = input
+  const approvedReports = reports.filter((report) => report.status === "approved")
+  const publicClientReports = approvedReports
+    .map((report) => ({
+      report,
+      client: clients.find((client) => client.id === report.clientId && client.isPublic),
+    }))
+    .filter((item): item is { report: ClientReport; client: ClientProfile } => Boolean(item.client))
+  const positiveReports = approvedReports.filter((report) => isPositiveReportCategory(report.reportCategory))
+  const disputedReports = reports.filter((report) => report.status === "disputed")
+  const rating = calculateBusinessRating({ contractor, reports, evidence, subscription })
+  const serviceAreas = [
+    `${contractor.city}, ${contractor.state}`,
+    ...reports.map((report) => `${report.projectCity}, ${report.projectState}`),
+  ].filter((value, index, values) => values.indexOf(value) === index)
+  const publicProfileStatus =
+    contractor.verificationStatus === "verified"
+      ? "Verified"
+      : contractor.verificationStatus === "pending"
+        ? "Verification pending"
+        : "Basic profile"
+
+  return {
+    ...contractor,
+    licenseNumber: contractor.licenseNumber ? "Information on file" : undefined,
+    publicSlug: buildBusinessSlug(contractor),
+    ratingScore: rating.score,
+    ratingGrade: rating.grade,
+    ratingConfidence: rating.confidence,
+    ratingSummary: rating.summary,
+    ratingFactors: rating.factors,
+    memberSince: contractor.createdAt,
+    lastUpdated: [...reports.map((report) => report.approvedAt ?? report.createdAt), contractor.createdAt].sort().at(-1) ?? contractor.createdAt,
+    serviceAreas,
+    publicProfileStatus,
+    reportStats: {
+      submitted: reports.length,
+      approved: approvedReports.length,
+      published: publicClientReports.length,
+      positive: positiveReports.length,
+      disputed: disputedReports.length,
+      evidenceAttached: reports.filter((report) => report.evidenceAttached).length,
+    },
+    publicClientReports,
+    trustHighlights: [
+      `${publicProfileStatus} business profile`,
+      `${rating.confidence} rating confidence`,
+      `${publicClientReports.length} public client report${publicClientReports.length === 1 ? "" : "s"} contributed`,
+      evidence.length > 0 ? "Private evidence records on file" : "Evidence workflow available",
+    ],
+  }
+}
+
+export async function getPublicBusinessProfilesSupabase(): Promise<PublicBusinessProfile[]> {
+  const supabase = createServiceClient()
+  const [contractorsResult, reportsResult, evidenceResult, clientsResult, subscriptionsResult] = await Promise.all([
+    supabase.from("contractor_profiles").select("*").order("created_at", { ascending: false }),
+    supabase.from("client_reports").select("*"),
+    supabase.from("report_evidence").select("*"),
+    supabase.from("client_profiles").select("*").eq("is_public", true),
+    supabase.from("subscriptions").select("*"),
+  ])
+
+  for (const result of [contractorsResult, reportsResult, evidenceResult, clientsResult, subscriptionsResult]) {
+    if (result.error) throw new Error(result.error.message)
+  }
+
+  const contractors = (contractorsResult.data ?? []).map(mapContractorProfile)
+  const reports = (reportsResult.data ?? []).map(mapClientReport)
+  const evidence = (evidenceResult.data ?? []).map(mapEvidence)
+  const clients = (clientsResult.data ?? []).map(mapClientProfile)
+  const subscriptions = (subscriptionsResult.data ?? []).map(mapSubscription)
+
+  return contractors.map((contractor) => {
+    const contractorReports = reports.filter((report) => report.contractorId === contractor.id)
+
+    return buildPublicBusinessProfileFromRows({
+      contractor,
+      reports: contractorReports,
+      evidence: evidence.filter((item) =>
+        contractorReports.some((report) => report.id === item.reportId),
+      ),
+      clients,
+      subscription: subscriptions.find((item) => item.contractorId === contractor.id),
+    })
+  })
+}
+
+export async function getPublicBusinessProfileSupabase(slug: string): Promise<PublicBusinessProfile | undefined> {
+  const profiles = await getPublicBusinessProfilesSupabase()
+
+  return profiles.find((profile) => profile.publicSlug === slug)
 }
 
 export async function searchClientsSupabase(
