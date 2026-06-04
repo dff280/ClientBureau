@@ -149,7 +149,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
   {
     title: "Moderation",
     links: [
-      { href: "/admin/reports", label: "Reports", description: "Approve, reject, edit summaries, and bulk moderate reports." },
+      { href: "/admin/reports", label: "Report Queue", description: "Approve, reject, edit summaries, and bulk moderate reports." },
       { href: "/admin/discussions", label: "Discussions", description: "Moderate responses, corrections, and public discussion entries." },
       { href: "/admin/uploads", label: "Uploads", description: "Review CSV batches, duplicates, and staged imports." },
     ],

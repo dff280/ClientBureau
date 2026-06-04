@@ -116,7 +116,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
           <div className="overflow-x-auto rounded-md border border-slate-200 bg-white p-1 shadow-sm">
             <TabsList className="h-auto w-max min-w-full justify-start gap-1 bg-transparent p-0">
               <TabsTrigger value="overview" className="px-3 py-2">Command Center</TabsTrigger>
-              <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
+              <TabsTrigger value="reports" className="px-3 py-2">Report Queue</TabsTrigger>
               <TabsTrigger value="clients" className="px-3 py-2">Clients</TabsTrigger>
               <TabsTrigger value="contractors" className="px-3 py-2">Contractors</TabsTrigger>
               <TabsTrigger value="discussions" className="px-3 py-2">Discussions</TabsTrigger>
@@ -135,7 +135,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             />
             <div className="grid gap-4 lg:grid-cols-5">
               {[
-                ["Reports", "Approve only moderated, documented public summaries."],
+                ["Report Queue", "Approve only moderated, documented public summaries."],
                 ["Clients", "Control public visibility, profile health, and SEO-safe identity fields."],
                 ["Contractors", "Review accounts, verification, plan readiness, and report behavior."],
                 ["Contracts", "Oversee private signing links, client invites, and payment coordination status."],
@@ -151,7 +151,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/reports"
                 icon={<ShieldCheck className="size-5" />}
-                title="Report queue"
+                title="Report Queue"
                 text="Approve, reject, bulk update, or delete contractor-submitted reports."
                 badge={`${pendingReports} pending`}
               />
@@ -188,7 +188,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/reports"
                 icon={<ShieldCheck className="size-5" />}
-                title="Reports"
+                title="Report Queue"
                 text="Approve, reject, edit summaries, and keep pending content private."
                 badge={`${pendingReports} pending`}
               />

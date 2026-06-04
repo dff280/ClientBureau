@@ -9,7 +9,7 @@ import {
 } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
-  title: "Admin Reports",
+  title: "Admin Report Queue",
   description:
     "Client Bureau admin report queue for approvals, rejections, bulk moderation, evidence review, and public profile publication.",
   robots: {
