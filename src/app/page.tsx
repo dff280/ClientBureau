@@ -261,8 +261,8 @@ export default async function Home() {
                 {heroHeadline}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                Before you buy materials, block off a crew, or wait weeks on a final invoice,
-                search client history, set written terms, and keep the job record organized.
+                Search reported payment issues, disputes, chargebacks, and documented client
+                experiences before you commit labor, materials, scheduling, or deposits.
               </p>
             </div>
 
