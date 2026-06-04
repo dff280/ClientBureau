@@ -270,7 +270,7 @@ export default async function Home() {
               <p className="text-sm leading-6 text-slate-200">
                 Client Bureau is built for businesses that need better pre-client decisions, not
                 after-the-fact arguments. Search first, send a clear agreement link, document the
-                job, and keep recovery or lien-readiness work private until it is reviewed.
+                job, and keep recovery case or lien packet work private until it is reviewed.
               </p>
             </CardContent>
           </Card>

@@ -108,7 +108,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
           <Metric label="Public clients" value={publicClients} />
           <Metric label="Escalations" value={escalatedCases} />
           <Metric label="Recovery cases" value={recoveryCases} />
-          <Metric label="Notice review" value={lienPackets} />
+          <Metric label="Lien packets" value={lienPackets} />
           <Metric label="Contract links" value={contractLinks} />
         </div>
 
@@ -139,7 +139,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
                 ["Client Profiles", "Control public visibility, profile health, and SEO-safe identity fields."],
                 ["Businesses / Users", "Review accounts, verification, plan readiness, and report behavior."],
                 ["Contracts / Templates", "Oversee templates, private signing links, client invites, and payment coordination status."],
-                ["Recovery Cases", "Keep payment follow-up, calls, and notice readiness private until reviewed."],
+                ["Recovery Cases", "Keep payment follow-up, calls, and lien packets private until reviewed."],
               ].map(([title, text]) => (
                 <div key={title} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
                   <p className="font-semibold text-slate-950">{title}</p>
@@ -173,7 +173,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
                 href="/admin/settings"
                 icon={<Settings className="size-5" />}
                 title="Safeguard settings"
-                text="Review recovery, lien-readiness, evidence privacy, and audit defaults."
+                text="Review recovery cases, lien packets, evidence privacy, and audit defaults."
                 badge="Rules"
               />
             </div>
@@ -263,7 +263,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
           <TabsContent value="recovery" className="space-y-5">
             <AdminModuleIntro
               title="Recovery Cases"
-              text="Recovery cases and lien-readiness workflows stay private and operational, with compliance review before any sensitive action."
+              text="Recovery cases and lien packets stay private and operational, with compliance review before any sensitive action."
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink
@@ -276,8 +276,8 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/settings"
                 icon={<Landmark className="size-5" />}
-                title="Lien readiness"
-                text="Keep notice-readiness checklists private until deadlines, recipients, and documents are reviewed."
+                title="Lien packets"
+                text="Keep lien packets private until deadlines, recipients, and documents are reviewed."
                 badge={`${lienPackets} review`}
               />
               <QuickLink

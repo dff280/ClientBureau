@@ -767,19 +767,19 @@ export async function createLienNoticeDraftAction(
   })
 
   if (!parsed.success) {
-    return fail("Please correct the lien notice readiness fields.", zodFieldErrors(parsed.error))
+    return fail("Please correct the lien packet fields.", zodFieldErrors(parsed.error))
   }
 
   const user = await requireContractorAccess()
 
   try {
     const noticeDraft = await createLienNoticeDraftService(user.id, parsed.data)
-    if (!noticeDraft) return fail("Lien notice feature data is not available yet.")
+    if (!noticeDraft) return fail("Lien packet feature data is not available yet.")
 
     revalidatePath("/dashboard")
-    return ok(noticeDraft, "Notice readiness checklist created for state-specific review.")
+    return ok(noticeDraft, "Lien packet created for state-specific review.")
   } catch (error) {
-    return fail(actionErrorMessage(error, "Notice readiness checklist could not be created."))
+    return fail(actionErrorMessage(error, "Lien packet could not be created."))
   }
 }
 

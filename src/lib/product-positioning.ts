@@ -61,8 +61,8 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
     id: "payment",
     phase: "After invoicing",
     title: "Protect payment",
-    text: "Track invoice timing, payment promises, follow-up attempts, payment plans, and notice-readiness checkpoints.",
-    tools: ["Payment follow-up", "Plans", "Notice readiness"],
+    text: "Track invoice timing, payment promises, follow-up attempts, payment plans, and lien packet checkpoints.",
+    tools: ["Payment follow-up", "Plans", "Lien packets"],
     href: "/dashboard",
     cta: "Open recovery cases",
     icon: ReceiptText,
@@ -92,7 +92,7 @@ export const protectionGuardrails = [
   },
   {
     title: "Recovery cases are documentation-first",
-    text: "Payment follow-up, call logs, payment plans, and notice-readiness tools are private workflow records, not automated enforcement.",
+    text: "Payment follow-up, call logs, payment plans, and lien packets are private workflow records, not automated enforcement.",
     icon: FileCheck2,
   },
 ]

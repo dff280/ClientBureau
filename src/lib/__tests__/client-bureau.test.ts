@@ -205,7 +205,7 @@ describe("product positioning", () => {
       "Watchlist",
       "Contracts / Templates",
       "Recovery Cases",
-      "Lien Readiness",
+      "Lien Packets",
       "Evidence Vault",
       "Alerts",
       "Billing",
@@ -213,7 +213,7 @@ describe("product positioning", () => {
     expect(contractorPrimaryNav.find((item) => item.label === "Contracts / Templates")?.href).toBe(
       "/dashboard?workspace=contracts",
     )
-    expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
+    expect(contractorDashboardNav.find((item) => item.label === "Lien Packets")?.href).toBe(
       "/dashboard?workspace=lien-readiness",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Billing")?.href).toBe(
@@ -540,7 +540,7 @@ describe("platform expansion feature utilities", () => {
     expect(isValidDecisionReason("unsafe_reason")).toBe(false)
   })
 
-  it("scores recovery, lien readiness, and contract packets", () => {
+  it("scores recovery cases, lien packets, and contract packets", () => {
     expect(paymentRecoveryPriority({ amountDue: 12000, invoiceAgeDays: 20 })).toBe("urgent")
     expect(paymentRecoveryPriority({ amountDue: 800, invoiceAgeDays: 10 })).toBe("low")
     expect(countOpenRecoveryCases(paymentRecoveryCases)).toBe(2)

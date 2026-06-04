@@ -28,7 +28,7 @@ export default function PricingPage() {
     ["Recovery case workflow", "-", "Private tracking", "Team workflow", "Partner handoff"],
     ["Contract signing links", "-", "Client review, e-signature, and change-order tracking", "Shared link controls", "Custom templates"],
     ["Client invite portal", "-", "Private agreement link", "Team-managed invites", "Custom onboarding"],
-    ["Notice-readiness checklists", "-", "Private checklist", "Team review", "Specialist workflow"],
+    ["Lien packets", "-", "Private packet", "Team review", "Specialist workflow"],
     ["Moderation priority", "Standard", "Priority", "Team priority", "Dedicated review"],
     ["Audit and exports", "-", "-", "Included", "Custom"],
   ]
@@ -118,7 +118,7 @@ export default function PricingPage() {
               <h2 className="text-2xl font-semibold text-slate-950">Client intake tools are built into Pro.</h2>
               <p className="text-sm leading-6 text-slate-600">
                 Pro Contractor adds watchlists, draft reports, saved searches, intake assessments,
-                payment follow-up tracking, notice-readiness checklists, contract signing links, and client invite controls for repeat client review.
+                recovery case tracking, lien packets, contract signing links, and client invite controls for repeat client review.
               </p>
               <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>

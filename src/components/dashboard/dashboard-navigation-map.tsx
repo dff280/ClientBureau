@@ -24,7 +24,7 @@ const sectionIcons = {
   Watchlist: AlertTriangle,
   "Contracts / Templates": Signature,
   "Recovery Cases": PhoneCall,
-  "Lien Readiness": Landmark,
+  "Lien Packets": Landmark,
   "Evidence Vault": Vault,
   Alerts: BellRing,
   Billing: CreditCard,

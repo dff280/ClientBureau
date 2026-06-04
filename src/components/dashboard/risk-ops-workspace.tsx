@@ -230,7 +230,7 @@ export function RiskOpsWorkspace({
         <RiskMetric label="Ready drafts" value={readyDrafts} helper="Reports close to submission" tone="emerald" />
         <RiskMetric label="Evidence review" value={evidenceNeedingReview} helper="Files needing attention" tone="rose" />
         <RiskMetric label="Recovery Cases" value={openRecoveryCases} helper="Open private records" tone="amber" />
-        <RiskMetric label="Lien readiness" value={lienDraftsRequiringReview} helper="Review-gated checklists" tone="rose" />
+        <RiskMetric label="Lien Packets" value={lienDraftsRequiringReview} helper="Review-gated packets" tone="rose" />
         <RiskMetric label="Contracts / Templates" value={openContractPackets} helper="Client signing links" tone="emerald" />
       </div>
 
@@ -244,7 +244,7 @@ export function RiskOpsWorkspace({
             <TabsTrigger value="reports" className="px-3 py-2">Reports</TabsTrigger>
             <TabsTrigger value="evidence" className="px-3 py-2">Evidence Vault</TabsTrigger>
             <TabsTrigger value="recovery" className="px-3 py-2">Recovery Cases</TabsTrigger>
-            <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Readiness</TabsTrigger>
+            <TabsTrigger value="lien-readiness" className="px-3 py-2">Lien Packets</TabsTrigger>
             <TabsTrigger value="contracts" className="px-3 py-2">Contracts / Templates</TabsTrigger>
             <TabsTrigger value="billing" className="px-3 py-2">Billing</TabsTrigger>
             <TabsTrigger value="account" className="px-3 py-2">Account</TabsTrigger>
@@ -511,8 +511,8 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="lien-readiness" className="space-y-5">
           <WorkspaceIntro
-            title="Lien readiness"
-            text="Track deadlines, contract context, invoice history, and supporting documents in a private review-gated checklist before any sensitive notice is considered."
+            title="Lien Packets"
+            text="Track deadlines, contract context, invoice history, and supporting documents in a private review-gated packet before any sensitive notice is considered."
           />
           <div className="grid gap-3 md:grid-cols-3">
             <ToolExplainer
@@ -532,7 +532,7 @@ export function RiskOpsWorkspace({
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Landmark className="size-5 text-amber-700" aria-hidden="true" />
-                Lien readiness checklists
+                Lien packet center
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -543,8 +543,8 @@ export function RiskOpsWorkspace({
                 ))}
                 {riskOps.lienNoticeDrafts.length === 0 ? (
                   <EmptyState
-                    title="No readiness checklists yet"
-                    text="Create a private checklist to track deadline review, contract context, evidence, and state-specific notice checks."
+                    title="No lien packets yet"
+                    text="Create a private packet to track deadline review, contract context, evidence, and state-specific notice checks."
                   />
                 ) : null}
               </div>
@@ -738,7 +738,7 @@ export function RiskOpsWorkspace({
               ["Business verification", "Pending/verified profile status keeps report context accountable."],
               ["Private matching", "Phone and email checks remain hashed and never appear on public pages."],
               ["2FA-ready sign-in", "The account model is ready for stronger authentication prompts."],
-              ["Compliance gates", "Recovery cases, lien, and contract workflows stay private until reviewed."],
+              ["Compliance gates", "Recovery cases, lien packet, and contract workflows stay private until reviewed."],
             ].map(([title, text]) => (
               <Card key={title} className="rounded-md border-slate-200 bg-white shadow-sm">
                 <CardContent className="space-y-3 p-5">
@@ -1461,11 +1461,11 @@ function LienNoticeDraftForm() {
       </div>
       <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
         <Checkbox name="reviewCertification" className="mt-1" />
-        State-specific notice requirements will be reviewed before any notice is sent.
+        State-specific lien packet requirements will be reviewed before any notice is sent.
       </label>
       <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
         <Landmark aria-hidden="true" />
-        Create readiness checklist
+        Create lien packet
       </PendingSubmitButton>
       <FieldError name="reviewCertification" errors={state.ok ? undefined : state.fieldErrors} />
     </form>
