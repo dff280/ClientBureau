@@ -131,7 +131,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
           <TabsContent value="overview" className="space-y-5">
             <AdminModuleIntro
               title="Command center"
-              text="Start with the moderation queue, then move into client, contractor, upload, or safeguard workflows as needed."
+              text="Start with the moderation queue, then move into client, contractor, upload, settings, or review workflows as needed."
             />
             <div className="grid gap-4 lg:grid-cols-5">
               {[
@@ -172,7 +172,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/settings"
                 icon={<Settings className="size-5" />}
-                title="Safeguard settings"
+                title="Settings"
                 text="Review recovery cases, lien packets, evidence privacy, and audit defaults."
                 badge="Rules"
               />
@@ -297,7 +297,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               text="Track agreement templates, private signing links, client invites, payment coordination, and contracts required before scheduling."
             />
             <div className="grid gap-4 lg:grid-cols-3">
-              <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults and safeguard language." badge={`${contractLinks} active`} />
+              <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults, client invite rules, and contract language." badge={`${contractLinks} active`} />
               <QuickLink href="/dashboard?workspace=contracts" icon={<ClipboardCheck className="size-5" />} title="Contracts / Templates" text="Preview contractor-side templates, signing links, and status tracking." badge="Ops" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track agreement status, reviewer actions, and settings changes." badge="Audit" />
             </div>
@@ -307,7 +307,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
           <TabsContent value="audit" className="space-y-5">
             <AdminModuleIntro
               title="Audit Log"
-              text="Review status changes, publication decisions, imports, deletes, decision reasons, and private safeguard reviews."
+              text="Review status changes, publication decisions, imports, deletes, decision reasons, and private compliance reviews."
             />
             <div className="grid gap-4 lg:grid-cols-4">
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Audit Log" text="Filter admin action history by actor, entity, action, date, and severity." badge={`${data.auditLog.length} events`} />
@@ -328,7 +328,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               <QuickLink
                 href="/admin/settings"
                 icon={<Settings className="size-5" />}
-                title="Safeguards"
+                title="Settings"
                 text="Review audit defaults, evidence privacy controls, and publication rules."
                 badge="Rules"
               />
@@ -337,15 +337,15 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 
           <TabsContent value="settings" className="space-y-5">
             <AdminModuleIntro
-              title="Settings and controls"
-              text="Moderation defaults, evidence privacy controls, publication rules, recovery safeguards, and contract workflow settings."
+              title="Settings"
+              text="Moderation defaults, evidence privacy controls, publication rules, recovery review rules, and contract workflow settings."
             />
             <div className="grid gap-4 lg:grid-cols-4">
               <QuickLink
                 href="/admin/settings"
                 icon={<Settings className="size-5" />}
-                title="Admin settings"
-                text="Review moderation rules, publication defaults, evidence privacy, and recovery controls."
+                title="Settings"
+                text="Review moderation rules, publication defaults, evidence privacy, recovery controls, and contract workflow settings."
                 badge="Settings"
               />
               <QuickLink href="/report-policy" icon={<FileText className="size-5" />} title="Report policy" text="Review public policy language used by reports and moderation." badge="Policy" />

@@ -165,14 +165,14 @@ export const adminNavigationGroups: NavigationGroup[] = [
     title: "Operations",
     links: [
       { href: "/admin?workspace=recovery", label: "Recovery Cases", description: "Review payment follow-up cases, call logs, and lien packets." },
-      { href: "/admin?workspace=contracts", label: "Contracts / Templates", description: "Oversee templates, signing links, client invites, and contract safeguards." },
+      { href: "/admin?workspace=contracts", label: "Contracts / Templates", description: "Oversee templates, signing links, client invites, and contract workflow rules." },
     ],
   },
   {
     title: "System",
     links: [
       { href: "/admin/audit-log", label: "Audit Log", description: "Track admin actions, status changes, and publication decisions." },
-      { href: "/admin/settings", label: "Settings", description: "Configure moderation, evidence privacy, and safeguard defaults." },
+      { href: "/admin/settings", label: "Settings", description: "Configure moderation, publication, evidence privacy, and workflow defaults." },
     ],
   },
 ]

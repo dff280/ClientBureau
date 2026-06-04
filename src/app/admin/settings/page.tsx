@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { getPlatformFeatureDataMode } from "@/lib/env"
 
 export const metadata: Metadata = {
-  title: "Admin Settings",
+  title: "Settings",
   robots: { index: false, follow: false },
 }
 
@@ -16,12 +16,12 @@ export default async function AdminSettingsPage() {
     <section className="px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <header className="border-b border-slate-200 pb-6">
-          <p className="text-sm font-semibold uppercase text-amber-700">Platform settings</p>
+          <p className="text-sm font-semibold uppercase text-amber-700">Admin workspace</p>
           <h1 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-            Safety defaults
+            Settings
           </h1>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-            Production defaults keep the platform restrained: public pages show only approved content, private identifiers stay hashed, evidence files remain private, and admin actions require audit history.
+            Configure moderation defaults, publication rules, evidence privacy, recovery review requirements, contract workflow defaults, and audit expectations.
           </p>
         </header>
         <div className="grid gap-4 md:grid-cols-2">
