@@ -103,6 +103,7 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
   const stateUrl = `${siteUrl}${getClientStateDirectoryHref(profile)}`
   const cityUrl = `${siteUrl}${getClientCityDirectoryHref(profile)}`
   const subjectId = `${profileUrl}#subject`
+  const reportListId = `${profileUrl}#approved-report-summaries`
 
   return {
     "@context": "https://schema.org",
@@ -129,13 +130,43 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
           "@id": `${profileUrl}#breadcrumb`,
         },
         hasPart: {
-          "@id": `${profileUrl}#approved-report-summaries`,
+          "@id": reportListId,
+        },
+        primaryImageOfPage: {
+          "@type": "ImageObject",
+          url: `${profileUrl}/opengraph-image`,
+          width: 1200,
+          height: 630,
+          caption: `Client Bureau public profile card for ${name} in ${profile.city}, ${profile.state}`,
+        },
+      },
+      {
+        "@type": "ProfilePage",
+        "@id": `${profileUrl}#profilepage`,
+        url: profileUrl,
+        name: `${name} in ${profile.city}, ${profile.state}: Client Bureau Public Profile`,
+        description:
+          `Public Client Bureau profile with moderated contractor-submitted summaries, response context, and private evidence-review indicators for ${name}.`,
+        dateCreated: profile.createdAt,
+        dateModified: profile.updatedAt,
+        mainEntity: {
+          "@id": subjectId,
+        },
+        hasPart: {
+          "@id": reportListId,
         },
       },
       {
         "@type": "Person",
         "@id": subjectId,
         name,
+        description:
+          `Client Bureau public profile subject for ${name} in ${profile.city}, ${profile.state}. This page shows approved contractor-submitted report summaries and moderated response context only.`,
+        identifier: {
+          "@type": "PropertyValue",
+          name: "Client Bureau public profile slug",
+          value: profile.publicSlug,
+        },
         ...(profile.businessName
           ? {
               affiliation: {
@@ -189,7 +220,7 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
       },
       {
         "@type": "ItemList",
-        "@id": `${profileUrl}#approved-report-summaries`,
+        "@id": reportListId,
         name: "Approved contractor-submitted report summaries",
         numberOfItems: profile.reports.length,
         itemListElement: profile.reports.map((report, index) => ({
@@ -197,11 +228,19 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
           position: index + 1,
           item: {
             "@type": "Article",
+            "@id": `${profileUrl}#report-${report.id}`,
             headline: `${report.reportCategory} contractor-submitted report summary`,
             articleBody: report.publicSummary,
             datePublished: report.approvedAt ?? report.createdAt,
+            dateModified: report.approvedAt ?? report.createdAt,
+            isPartOf: {
+              "@id": `${profileUrl}#webpage`,
+            },
             about: {
               "@id": subjectId,
+            },
+            publisher: {
+              "@id": `${siteUrl}/#organization`,
             },
           },
         })),
@@ -214,7 +253,7 @@ export function JsonLd({ data }: { data: unknown }) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />
   )
 }

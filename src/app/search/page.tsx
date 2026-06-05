@@ -2,18 +2,19 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { FilePlus2, LockKeyhole, Radar, ShieldCheck } from "lucide-react"
 
-import { ClientSearchForm } from "@/components/search/client-search-form"
+import { SearchCommandCenter } from "@/components/search/search-command-center"
 import { SearchResultCard } from "@/components/search/search-result-card"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { requireAuthenticatedUser } from "@/lib/auth"
-import { searchClientsService } from "@/lib/repositories/client-bureau-service"
+import { getContractorDashboardService, searchClientsService } from "@/lib/repositories/client-bureau-service"
+import { toSearchPreviewProfile } from "@/lib/search-experience"
 import { reportCategories, riskLevels, type ReportCategory, type RiskLevel } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Search Clients",
   description:
-    "Search Client Bureau for moderated client profiles, contractor-submitted reports, payment dispute history, and approved public report summaries.",
+    "Search Client Bureau for moderated client reputation profiles, contractor-submitted reviews, private matching, and approved public summaries.",
   alternates: {
     canonical: "/search",
   },
@@ -55,14 +56,19 @@ function reportPrefillHref(query: string, state?: string) {
 }
 
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
-  await requireAuthenticatedUser()
+  const user = await requireAuthenticatedUser()
 
   const params = await searchParams
   const query = params.q ?? ""
   const state = params.state?.trim().toUpperCase() || undefined
   const riskLevel = toRiskLevel(params.risk)
   const category = toReportCategory(params.category)
-  const results = await searchClientsService(query, { state, riskLevel, category })
+  const [results, previewResults, dashboard] = await Promise.all([
+    searchClientsService(query, { state, riskLevel, category }),
+    searchClientsService("", {}),
+    getContractorDashboardService(user.id).catch(() => undefined),
+  ])
+  const previewProfiles = previewResults.slice(0, 100).map(toSearchPreviewProfile)
   const hasSearch = Boolean(query || state || riskLevel || category)
 
   return (
@@ -75,11 +81,11 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
               Contractor account required
             </div>
             <h1 className="max-w-3xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-              Search clients before accepting the job.
+              Search Clients Before You Take the Job.
             </h1>
             <p className="max-w-3xl leading-7 text-slate-600">
-              Search by first name, last name, business name, city, state, phone, or email.
-              Phone and email values are matched privately and never displayed on public profiles.
+              Type a name, business, city, phone, or email to see predictive suggestions, reputation previews,
+              saved searches, and public-safe contractor review context before you commit to the work.
             </p>
           </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -100,16 +106,27 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           </Card>
         </div>
 
-        <ClientSearchForm query={query} state={state} riskLevel={riskLevel} category={category} />
+        <SearchCommandCenter
+          key={`${query}|${state ?? ""}|${riskLevel ?? ""}|${category ?? ""}`}
+          query={query}
+          state={state}
+          riskLevel={riskLevel}
+          category={category}
+          profiles={previewProfiles}
+          initialSavedSearches={dashboard?.savedSearches}
+        />
 
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-sm font-medium text-slate-600">
-            {results.length} {results.length === 1 ? "profile" : "profiles"} found
-          </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold uppercase text-slate-500">Server-verified results</p>
+            <p className="mt-1 text-sm font-medium text-slate-600">
+              {results.length} {results.length === 1 ? "profile" : "profiles"} found from approved public records
+            </p>
+          </div>
           <Button asChild variant="outline">
             <Link href={reportPrefillHref(query, state)}>
               <FilePlus2 aria-hidden="true" />
-              Create a report
+              Leave a review
             </Link>
           </Button>
         </div>
@@ -131,12 +148,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                   {hasSearch ? "No approved profile found." : "Start with a client search."}
                 </h2>
                 <p className="mx-auto max-w-2xl text-sm leading-6 text-slate-600">
-                  If your documented experience should be reviewed, create a report for this client.
+                  If your documented experience should be reviewed, leave a contractor review for this client.
                   Public pages are created only after admin approval.
                 </p>
               </div>
               <Button asChild className="mx-auto bg-slate-950 text-white hover:bg-slate-800">
-                <Link href={reportPrefillHref(query, state)}>Create a report for this client</Link>
+                <Link href={reportPrefillHref(query, state)}>Leave a review for this client</Link>
               </Button>
             </CardContent>
           </Card>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { MessageSquareText, Scale } from "lucide-react"
+import { CheckCircle2, Clock3, FileText, MessageSquareText, Scale, ShieldCheck } from "lucide-react"
 
 import { ClientResponseForm } from "@/components/forms/client-response-form"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +15,29 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
+
+const responseWorkflow = [
+  {
+    icon: ShieldCheck,
+    title: "Verify contact",
+    text: "The submitter provides contact information so moderators can match the response to the correct profile.",
+  },
+  {
+    icon: FileText,
+    title: "Review documentation",
+    text: "Documents, links, or proof are reviewed privately. Raw files are not published on public profiles.",
+  },
+  {
+    icon: Clock3,
+    title: "Moderation review",
+    text: "Moderators review privacy, relevance, tone, profile match, and whether the update adds useful public context.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Publish approved context",
+    text: "Approved responses, corrections, disputes, or resolution updates can appear publicly with careful wording.",
+  },
+]
 
 export default async function ClientResponsePage() {
   return (
@@ -41,6 +64,23 @@ export default async function ClientResponsePage() {
               <ClientResponseForm />
             </CardContent>
           </Card>
+
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader>
+              <CardTitle>What happens after you submit?</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2">
+              {responseWorkflow.map((step) => (
+                <div key={step.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-center gap-2">
+                    <step.icon className="size-5 text-amber-700" aria-hidden="true" />
+                    <h2 className="font-semibold text-slate-950">{step.title}</h2>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{step.text}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </div>
 
         <aside className="space-y-5">
@@ -52,6 +92,10 @@ export default async function ClientResponsePage() {
                 Approved responses, correction notes, and resolution updates can appear on public
                 profiles after moderation. Active disputes are labeled without declaring either
                 side correct.
+              </p>
+              <p className="text-sm leading-6 text-slate-600">
+                Client Bureau does not publish raw identity documents, private evidence files,
+                phone numbers, emails, or internal moderator notes.
               </p>
             </CardContent>
           </Card>

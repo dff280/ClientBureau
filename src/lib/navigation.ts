@@ -21,8 +21,9 @@ export const publicPrimaryNav: NavigationItem[] = [
 export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard", label: "Overview", description: "Daily work queue, account health, and next actions." },
   { href: "/search", label: "Search Clients", description: "Check a client before taking the job." },
-  { href: "/dashboard/reports", label: "Reports", description: "Draft, submit, and track client reports." },
+  { href: "/dashboard/reports", label: "Reviews", description: "Draft, submit, and track contractor reviews." },
   { href: "/dashboard/watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
+  { href: "/dashboard/growth", label: "Growth", description: "Invite contractors, earn credits, claim your profile, and request reviews." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Signing links, agreement packets, change orders, and client invites." },
   { href: "/dashboard/recovery", label: "Payment Recovery", description: "Get help recovering payment, track Resolution Desk cases, and document invoice follow-up." },
   { href: "/dashboard/lien-readiness", label: "Florida Lien Service", description: "Private Florida notice, filing, recording proof, and release workflows." },
@@ -38,7 +39,8 @@ export const contractorDashboardGroups: NavigationGroup[] = [
     links: [
       contractorDashboardNav.find((item) => item.label === "Overview"),
       { href: "/search", label: "Search a Client", description: "Check a client before accepting the job." },
-      { href: "/submit-report", label: "Submit a Report", description: "Document a client experience for review." },
+      { href: "/submit-report", label: "Leave a Review", description: "Document a client experience for review." },
+      contractorDashboardNav.find((item) => item.label === "Growth"),
       contractorDashboardNav.find((item) => item.label === "Contracts"),
       contractorDashboardNav.find((item) => item.label === "Payment Recovery"),
       contractorDashboardNav.find((item) => item.label === "Florida Lien Service"),
@@ -51,9 +53,13 @@ export const contractorDashboardGroups: NavigationGroup[] = [
     ),
   },
   {
-    title: "Reports",
+    title: "Growth",
+    links: contractorDashboardNav.filter((item) => ["Growth"].includes(item.label)),
+  },
+  {
+    title: "Reviews",
     links: contractorDashboardNav.filter((item) =>
-      ["Reports"].includes(item.label),
+      ["Reviews"].includes(item.label),
     ),
   },
   {
@@ -135,6 +141,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/businesses", label: "Business Profiles" },
       { href: "/submit-report", label: "Submit Report" },
       { href: "/dashboard/contracts", label: "Contracts" },
+      { href: "/dashboard/growth", label: "Growth Engine" },
       { href: "/dashboard/recovery", label: "Payment Recovery" },
       { href: "/dashboard/lien-readiness", label: "Florida Lien Service" },
       { href: "/payment-recovery-service", label: "Recovery Service" },

@@ -149,6 +149,15 @@ function reportTimeline(report: ClientReport): ReportTimelineEvent[] {
       description: "Public summary passed moderation and became eligible for the client profile.",
       createdAt: report.approvedAt ?? report.createdAt,
     })
+
+    events.push({
+      id: `${report.id}_published`,
+      reportId: report.id,
+      type: "published",
+      title: "Profile record updated",
+      description: "Approved public profile details were refreshed with the moderated report summary.",
+      createdAt: report.approvedAt ?? report.createdAt,
+    })
   }
 
   if (report.status === "disputed") {

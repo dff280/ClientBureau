@@ -9,6 +9,7 @@ import {
   HelpCircle,
   ShieldCheck,
   Star,
+  UserCheck,
 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +19,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getSiteUrl } from "@/lib/env"
 import { getPublicBusinessProfileService } from "@/lib/repositories/client-bureau-service"
+import { JsonLd } from "@/lib/seo"
 
 type BusinessProfilePageProps = {
   params: Promise<{ slug: string }>
@@ -111,10 +113,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
 
   return (
     <article className="bg-slate-100">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd data={structuredData} />
       <section className="border-b border-slate-200 bg-white">
         <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
           <div className="space-y-5">
@@ -146,6 +145,12 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
                 <Link href="/signup">
                   <Building2 aria-hidden="true" />
                   Create business profile
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href={`/claim-profile?profile=${encodeURIComponent(profile.publicSlug)}`}>
+                  <UserCheck aria-hidden="true" />
+                  Claim or update profile
                 </Link>
               </Button>
               <Button asChild variant="outline">
@@ -191,7 +196,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
 
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
-          <div className="space-y-6">
+          <div className="min-w-0 space-y-6">
             <div className="grid gap-3 md:grid-cols-4">
               <TrustMetric label="Reports submitted" value={String(profile.reportStats.submitted)} />
               <TrustMetric label="Public contributions" value={String(profile.reportStats.published)} />
@@ -266,7 +271,25 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
             </Card>
           </div>
 
-          <aside className="space-y-5">
+          <aside className="min-w-0 space-y-5">
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle>Profile claiming</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm leading-6 text-slate-600">
+                  Authorized business owners can request updates, add verification context, and
+                  manage profile badge and review request workflows from a private account.
+                </p>
+                <Button asChild className="w-full bg-slate-950 text-white hover:bg-slate-800">
+                  <Link href={`/claim-profile?profile=${encodeURIComponent(profile.publicSlug)}`}>
+                    <UserCheck aria-hidden="true" />
+                    Claim or update
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle>Business summary</CardTitle>
@@ -303,7 +326,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
                   Businesses may link to this public profile with branded badge text. The embed is
                   built for referral trust, not keyword-stuffed backlink schemes.
                 </p>
-                <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-950 p-3 text-xs leading-5 text-slate-100">
+                <pre className="max-w-full overflow-x-auto rounded-md border border-slate-200 bg-slate-950 p-3 text-xs leading-5 text-slate-100">
                   <code>{badgeEmbed}</code>
                 </pre>
               </CardContent>

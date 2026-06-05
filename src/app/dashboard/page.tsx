@@ -3,13 +3,11 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import {
   AlertCircle,
-  BellRing,
   Building2,
   CheckCircle2,
   CreditCard,
-  DollarSign,
-  FileCheck2,
   FilePlus2,
+  Gift,
   Landmark,
   PhoneCall,
   Search,
@@ -19,10 +17,10 @@ import {
 } from "lucide-react"
 
 import { ClientDashboardShell } from "@/components/dashboard/client-dashboard-shell"
+import { EnterpriseDashboardOverview } from "@/components/dashboard/enterprise-dashboard-overview"
 import {
   DashboardSection,
   QuickActionCard,
-  StatCard,
   StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
@@ -30,12 +28,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { buildBusinessSlug } from "@/lib/business-rating"
 import { getClientDashboardData } from "@/lib/dashboard-data"
+import { buildEnterpriseDashboardSummary } from "@/lib/enterprise-dashboard"
 import { buildTodaysWorkItems } from "@/lib/platform-features"
 
 export const metadata: Metadata = {
-  title: "Business Protection Dashboard",
+  title: "Client Reputation Dashboard",
   description:
-    "Client Bureau dashboard for client searches, reports, contracts, evidence, payment recovery, watchlists, alerts, and billing.",
+    "Client Bureau dashboard for client search activity, contractor reviews, client reputation metrics, public profiles, watchlists, and pending actions.",
   robots: {
     index: false,
     follow: false,
@@ -51,6 +50,7 @@ const workspaceRedirects: Record<string, string> = {
   billing: "/dashboard/billing",
   contracts: "/dashboard/contracts",
   evidence: "/dashboard/evidence",
+  growth: "/dashboard/growth",
   lien: "/dashboard/lien-readiness",
   "lien-readiness": "/dashboard/lien-readiness",
   "notice-readiness": "/dashboard/lien-readiness",
@@ -80,7 +80,7 @@ export default async function DashboardPage({
     return (
       <DashboardSetupState
         title="Your dashboard workspace is being prepared."
-        message="Your account is signed in, but Client Bureau could not load a business workspace yet. Start with a client search or refresh the dashboard after profile setup completes."
+        message="Your account is signed in, but Client Bureau could not load a reputation workspace yet. Start with a client search or refresh the dashboard after profile setup completes."
       />
     )
   }
@@ -95,36 +95,8 @@ export default async function DashboardPage({
   }
 
   const subscriptionTier = dashboard.subscription?.tier ?? "free"
-  const subscriptionStatus =
-    !dashboard.subscription || dashboard.subscription.status === "mock"
-      ? "active"
-      : dashboard.subscription.status.replace("_", " ")
   const businessProfileHref = `/business/${buildBusinessSlug(dashboard.contractor)}`
-  const reportCounts = {
-    pending: dashboard.reports.filter((report) => report.status === "pending").length,
-    approved: dashboard.reports.filter((report) => report.status === "approved").length,
-    rejected: dashboard.reports.filter((report) => report.status === "rejected").length,
-    disputed: dashboard.reports.filter((report) => report.status === "disputed").length,
-    published: dashboard.reports.filter((report) => {
-      const client = clientProfiles.find((profile) => profile.id === report.clientId)
-      return report.status === "approved" && Boolean(client?.isPublic)
-    }).length,
-    resolved: dashboard.reports.filter((report) =>
-      ["Paid in full", "Settled", "Resolved", "Admin verified"].includes(report.resolutionStatus ?? ""),
-    ).length,
-    needsInfo: dashboard.reports.filter((report) =>
-      report.moderationNote?.toLowerCase().includes("more info"),
-    ).length,
-  }
-  const activeWatchlist = riskOps.watchlist.filter((item) => item.status === "active").length
   const unreadAlerts = riskOps.watchlistAlerts.filter((item) => !item.readAt).length
-  const openRecoveryCases = [
-    ...riskOps.paymentRecoveryCases.filter(
-    (item) => !["resolved", "paused"].includes(item.status),
-    ),
-    ...riskOps.managedRecoveryCases.filter((item) => !["resolved", "closed", "paused"].includes(item.status)),
-  ]
-  const openBalance = openRecoveryCases.reduce((total, item) => total + item.amountDue, 0)
   const signedContracts = riskOps.contractPackets.filter(
     (item) => item.status === "signed" || item.signatureStatus === "fully_signed",
   ).length
@@ -181,87 +153,29 @@ export default async function DashboardPage({
   const recentRecovery = [...riskOps.paymentRecoveryCases]
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     .slice(0, 3)
+  const enterpriseSummary = buildEnterpriseDashboardSummary({
+    dashboard,
+    clientProfiles,
+    riskOps,
+  })
 
   return (
     <ClientDashboardShell
       activeHref="/dashboard"
       badge={`${subscriptionTier.replace("_", " ")} plan`}
-      description="A simple private workspace for checking clients, tracking reports, sending agreement packets, organizing evidence, and following up on payment issues."
+      description="A simple private command center for checking clients, leaving contractor reviews, monitoring reputation signals, and handling the next action before a job turns risky."
       primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
-      secondaryAction={{ href: "/submit-report", label: "Submit report", icon: FilePlus2 }}
-      title={`${dashboard.contractor.businessName} Command Center`}
+      secondaryAction={{ href: "/submit-report", label: "Leave a review", icon: FilePlus2 }}
+      title={`${dashboard.contractor.businessName} Reputation Command Center`}
     >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          href="/dashboard/billing"
-          icon={CreditCard}
-          label="Current plan"
-          value={subscriptionTier.replace("_", " ")}
-          helper={subscriptionStatus}
-        />
-        <StatCard
-          href="/dashboard/billing"
-          icon={ShieldCheck}
-          label="Verification"
-          value={dashboard.contractor.verificationStatus}
-          helper={dashboard.contractor.verificationBadges?.join(", ") || "Business profile status"}
-          tone={dashboard.contractor.verificationStatus === "verified" ? "emerald" : "amber"}
-        />
-        <StatCard
-          href="/search"
-          icon={Search}
-          label="Searches this month"
-          value={dashboard.savedSearches.length}
-          helper="Saved searches available"
-        />
-        <StatCard
-          href="/dashboard/reports"
-          icon={FileCheck2}
-          label="Reports submitted"
-          value={dashboard.reports.length}
-          helper={`${reportCounts.published} published, ${reportCounts.pending} pending`}
-          tone="blue"
-        />
-        <StatCard
-          href="/dashboard/reports"
-          icon={FileCheck2}
-          label="Published reports"
-          value={reportCounts.published}
-          helper={`${reportCounts.resolved} resolved records`}
-          tone="emerald"
-        />
-        <StatCard
-          href="/dashboard/reports"
-          icon={AlertCircle}
-          label="Pending reports"
-          value={reportCounts.pending + reportCounts.needsInfo}
-          helper={`${reportCounts.needsInfo} need more information`}
-          tone={reportCounts.pending + reportCounts.needsInfo > 0 ? "amber" : "slate"}
-        />
-        <StatCard
-          href="/dashboard/watchlist"
-          icon={BellRing}
-          label="Watched clients"
-          value={activeWatchlist}
-          helper={`${unreadAlerts} unread alerts`}
-          tone={unreadAlerts > 0 ? "amber" : "slate"}
-        />
-        <StatCard
-          href="/dashboard/recovery"
-          icon={DollarSign}
-          label="Open balances"
-          value={formatCurrency(openBalance)}
-          helper={`${openRecoveryCases.length} managed or tracked recovery cases`}
-          tone={openRecoveryCases.length > 0 ? "rose" : "emerald"}
-        />
-      </div>
+      <EnterpriseDashboardOverview summary={enterpriseSummary} />
 
       <DashboardSection
         eyebrow="Start here"
-        title="What do you need to do today?"
-        description="Choose one task. Each tool opens on its own page so the dashboard stays simple."
+        title="Search first. Review when you have experience."
+        description="Client Bureau is built around client reputation. Start with a search before taking the job, then leave a documented review after a real client experience."
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <QuickActionCard
             href="/search"
             icon={Search}
@@ -273,8 +187,14 @@ export default async function DashboardPage({
           <QuickActionCard
             href="/submit-report"
             icon={FilePlus2}
-            title="Submit a report"
-            description="Document a positive or concerning experience for review."
+            title="Leave a review"
+            description="Document a positive, resolved, or concerning client experience for moderation."
+          />
+          <QuickActionCard
+            href="/dashboard/growth"
+            icon={Gift}
+            title="Grow your network"
+            description="Invite contractors, claim your profile, and request reviews after completed jobs."
           />
           <QuickActionCard
             href="/dashboard/contracts"
@@ -300,7 +220,7 @@ export default async function DashboardPage({
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <DashboardSection
           eyebrow="Today"
-          title="Today’s work"
+          title="Today's work"
           description="Urgent alerts, drafts, contract tasks, evidence requests, and payment follow-up."
         >
           {todaysWork.length ? (
@@ -382,14 +302,14 @@ export default async function DashboardPage({
 
       <DashboardSection
         eyebrow="Recent"
-        title="Recent work"
-        description="A short snapshot of the records most contractors check when they start the day."
+        title="Recent reputation activity"
+        description="A short snapshot of recent reviews, agreements, and payment items that may affect client decisions."
       >
         <div className="grid gap-4 lg:grid-cols-3">
           <RecentList
             emptyText="No reports yet."
             href="/dashboard/reports"
-            title="Reports"
+            title="Reviews"
             items={recentReports.map((report) => ({
               id: report.id,
               label: report.reportCategory,
@@ -512,7 +432,7 @@ function DashboardSetupState({ title, message }: { title: string; message: strin
               <Button asChild variant="outline">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Submit report
+                  Leave review
                 </Link>
               </Button>
               <Button asChild variant="ghost">

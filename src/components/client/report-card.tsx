@@ -1,12 +1,15 @@
-import { FileText, ThumbsUp } from "lucide-react"
+import { FileText, ShieldCheck, ThumbsUp } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { reportConfidenceLabel, reportConfidenceScore } from "@/lib/trust-verification"
 import { isPositiveReportCategory, type ClientReport } from "@/lib/types"
 
 export function ReportCard({ report }: { report: ClientReport }) {
   const isPositive = isPositiveReportCategory(report.reportCategory)
+  const confidenceLabel = reportConfidenceLabel(report)
+  const confidenceScore = reportConfidenceScore(report)
 
   return (
     <Card
@@ -27,9 +30,15 @@ export function ReportCard({ report }: { report: ClientReport }) {
             {isPositive ? <ThumbsUp className="size-3" aria-hidden="true" /> : null}
             {report.reportCategory}
           </Badge>
-          <span className="text-xs font-medium uppercase text-slate-500">
-            {report.status === "approved" ? "Admin-approved" : report.status}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="rounded-md border-slate-300 bg-white">
+              <ShieldCheck className="size-3" aria-hidden="true" />
+              {confidenceLabel} confidence
+            </Badge>
+            <span className="text-xs font-medium uppercase text-slate-500">
+              {report.status === "approved" ? "Admin-approved" : report.status}
+            </span>
+          </div>
         </div>
         <CardTitle className="text-lg text-slate-950">
           {isPositive ? "Positive contractor experience" : report.projectType}
@@ -72,6 +81,16 @@ export function ReportCard({ report }: { report: ClientReport }) {
               {report.evidenceAttached ? "Evidence on file" : "No evidence summary"}
             </p>
           </div>
+        </div>
+        <div className="rounded-md border border-slate-200 bg-white p-3 text-sm">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase text-slate-500">Review confidence</p>
+            <span className="font-semibold text-slate-950">{confidenceScore}/100</span>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-600">
+            Confidence reflects moderation status, private evidence indicators, dispute context,
+            and resolution information. It is not a legal finding.
+          </p>
         </div>
       </CardContent>
     </Card>

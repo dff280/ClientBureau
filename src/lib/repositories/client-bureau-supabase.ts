@@ -1123,6 +1123,15 @@ function reportTimeline(report: ClientReport): ReportTimelineEvent[] {
       description: "Public summary passed moderation and became eligible for the client profile.",
       createdAt: report.approvedAt ?? report.createdAt,
     })
+
+    events.push({
+      id: `${report.id}_published`,
+      reportId: report.id,
+      type: "published",
+      title: "Profile record updated",
+      description: "Approved public profile details were refreshed with the moderated report summary.",
+      createdAt: report.approvedAt ?? report.createdAt,
+    })
   }
 
   if (report.status === "disputed") {
@@ -1403,6 +1412,14 @@ export async function searchClientsSupabase(
 ): Promise<ClientSearchResult[]> {
   const supabase = createServiceClient()
   const normalizedQuery = query.trim().toLowerCase()
+  const normalizedDigits = query.replace(/\D/g, "")
+  const privateIntent = normalizedQuery.includes("@") || normalizedDigits.length >= 7
+  const privateSearchHashes = new Set(
+    [
+      normalizedQuery.includes("@") ? hashIdentifier(query, "email") : undefined,
+      normalizedDigits.length >= 7 ? hashIdentifier(query, "phone") : undefined,
+    ].filter((value): value is string => Boolean(value && value !== emptyHash)),
+  )
   let builder = supabase.from("client_profiles").select("*").eq("is_public", true)
 
   if (filters.state) builder = builder.eq("state", filters.state)
@@ -1430,9 +1447,10 @@ export async function searchClientsSupabase(
         .toLowerCase()
       const privateIdentifiers = [client.phoneHash, client.emailHash].join(" ").toLowerCase()
       const searchable = `${nameLocation} ${privateIdentifiers}`
-      const privateIntent = normalizedQuery.includes("@") || /\d{7,}/.test(normalizedQuery)
       const exactNameMatch = normalizedQuery.length > 0 && nameLocation.includes(normalizedQuery)
-      const privateMatch = privateIntent && privateIdentifiers.includes(normalizedQuery)
+      const privateMatch =
+        privateIntent &&
+        (privateSearchHashes.has(client.phoneHash) || privateSearchHashes.has(client.emailHash))
       const reportMatch = reports.some((report) =>
         [report.reportCategory, report.paymentStatus, report.publicSummary]
           .join(" ")
@@ -1456,6 +1474,7 @@ export async function searchClientsSupabase(
         matchScore,
         latestCategory: latestReport?.reportCategory,
         latestSummary: latestReport?.publicSummary,
+        privateMatch,
         searchable,
         reports,
       }
@@ -1464,7 +1483,10 @@ export async function searchClientsSupabase(
 
   return results
     .filter((client) => {
-      const matchesQuery = normalizedQuery.length === 0 || client.searchable.includes(normalizedQuery)
+      const matchesQuery =
+        normalizedQuery.length === 0 ||
+        client.searchable.includes(normalizedQuery) ||
+        client.privateMatch
       const matchesCategory =
         !filters.category ||
         client.reports.some((report) => report.reportCategory === filters.category)
@@ -1473,8 +1495,9 @@ export async function searchClientsSupabase(
     })
     .sort((a, b) => b.matchScore - a.matchScore || b.reportCount - a.reportCount)
     .map((client) => {
-      const { searchable, reports, ...result } = client
+      const { privateMatch, searchable, reports, ...result } = client
 
+      void privateMatch
       void searchable
       void reports
 

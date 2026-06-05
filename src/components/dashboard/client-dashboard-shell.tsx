@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   CreditCard,
   FilePlus2,
+  Gift,
   Landmark,
   LayoutDashboard,
   PhoneCall,
@@ -25,9 +26,10 @@ const navIcons: Record<string, LucideIcon> = {
   Overview: LayoutDashboard,
   "Search Clients": Search,
   "Search a Client": Search,
-  "Submit a Report": FilePlus2,
-  Reports: ClipboardCheck,
+  "Leave a Review": FilePlus2,
+  Reviews: ClipboardCheck,
   Watchlist: BellRing,
+  Growth: Gift,
   Contracts: Signature,
   "Payment Recovery": PhoneCall,
   "Florida Lien Service": Landmark,
@@ -36,6 +38,14 @@ const navIcons: Record<string, LucideIcon> = {
   Billing: CreditCard,
   Activity,
 }
+
+const mobileDashboardLinks = contractorDashboardGroups
+  .flatMap((group) => group.links)
+  .filter(
+    (item, index, links) =>
+      links.findIndex((candidate) => candidate.href === item.href && candidate.label === item.label) ===
+      index,
+  )
 
 export function ClientDashboardShell({
   activeHref,
@@ -104,8 +114,50 @@ export function ClientDashboardShell({
         </div>
       </div>
 
+      <div className="border-b border-slate-200 bg-white lg:hidden">
+        <div className="bureau-container py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase text-amber-700">Tools</p>
+              <p className="text-sm text-slate-600">Jump to the task you need now.</p>
+            </div>
+            <Badge variant="outline" className="rounded-md border-slate-200 bg-slate-50 text-slate-700">
+              Mobile
+            </Badge>
+          </div>
+          <nav
+            aria-label="Mobile dashboard tools"
+            className="mt-3 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1"
+          >
+            {mobileDashboardLinks.map((item) => {
+              const Icon = navIcons[item.label] ?? ShieldCheck
+              const active = item.href === activeHref
+
+              return (
+                <Link
+                  key={`mobile-${item.href}-${item.label}`}
+                  href={item.href}
+                  className={cn(
+                    "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium shadow-sm transition",
+                    active
+                      ? "border-slate-950 bg-slate-950 text-white"
+                      : "border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-slate-950",
+                  )}
+                >
+                  <Icon
+                    aria-hidden="true"
+                    className={cn("size-4 shrink-0", active ? "text-amber-300" : "text-amber-700")}
+                  />
+                  {item.label}
+                </Link>
+              )
+            })}
+          </nav>
+        </div>
+      </div>
+
       <div className="bureau-container grid gap-6 py-6 lg:grid-cols-[260px_1fr]">
-        <aside className="h-fit rounded-md border border-slate-200 bg-white p-3 shadow-sm lg:sticky lg:top-4">
+        <aside className="hidden h-fit rounded-md border border-slate-200 bg-white p-3 shadow-sm lg:sticky lg:top-4 lg:block">
           <div className="mb-3 rounded-md bg-slate-50 p-3">
             <p className="text-xs font-semibold uppercase text-amber-700">Tools</p>
             <p className="mt-1 text-sm leading-5 text-slate-600">

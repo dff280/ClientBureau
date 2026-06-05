@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "mobile:check": "node scripts/verify-mobile-readiness.mjs",
     "seo:check": "node scripts/verify-seo.mjs"
   },
   "dependencies": {

@@ -5,14 +5,17 @@ import {
   AlertCircle,
   CreditCard,
   FilePlus2,
+  Gift,
   Landmark,
   PhoneCall,
   Search,
   Signature,
+  UserCheck,
   Vault,
 } from "lucide-react"
 
 import { ClientDashboardShell } from "@/components/dashboard/client-dashboard-shell"
+import { ContractorGrowthEngine } from "@/components/dashboard/contractor-growth-engine"
 import { DashboardReports } from "@/components/dashboard/dashboard-reports"
 import { DashboardSection, StatusBadge } from "@/components/dashboard/dashboard-ui"
 import {
@@ -22,8 +25,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getClientDashboardData } from "@/lib/dashboard-data"
+import { getSiteUrl } from "@/lib/env"
+import { getMockGrowthEngineData } from "@/lib/growth-engine"
 
 export const dynamic = "force-dynamic"
+
+type DashboardToolTab = DashboardWorkspaceTab | "growth"
 
 type DashboardToolConfig = {
   activeHref: string
@@ -43,7 +50,7 @@ type DashboardToolConfig = {
     icon: typeof Search
     label: string
   }
-  tab: DashboardWorkspaceTab
+  tab: DashboardToolTab
   title: string
 }
 
@@ -137,6 +144,29 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     tab: "evidence",
     title: "Evidence Vault",
   },
+  growth: {
+    activeHref: "/dashboard/growth",
+    badge: "Growth",
+    description: "Invite trusted contractors, earn platform credits, claim your business profile, and request reviews after real jobs.",
+    explanations: [
+      {
+        title: "What this does",
+        text: "Turns referrals, business profile claiming, and review requests into one simple growth loop.",
+      },
+      {
+        title: "When to use it",
+        text: "Use Growth after a completed job, when onboarding referral partners, or when strengthening your public business profile.",
+      },
+      {
+        title: "What stays private",
+        text: "Invite emails, credit details, and review-request drafts stay inside your private workspace.",
+      },
+    ],
+    primaryAction: { href: "/dashboard/growth", icon: Gift, label: "Invite contractor" },
+    secondaryAction: { href: "/claim-profile", icon: UserCheck, label: "Claim profile" },
+    tab: "growth",
+    title: "Growth Engine",
+  },
   "lien-readiness": {
     activeHref: "/dashboard/lien-readiness",
     badge: "Florida service",
@@ -183,26 +213,26 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
   },
   reports: {
     activeHref: "/dashboard/reports",
-    badge: "Reports",
-    description: "Track draft, pending, approved, published, disputed, rejected, and needs-info reports.",
+    badge: "Reviews",
+    description: "Track draft, pending, approved, published, disputed, rejected, and needs-info contractor reviews.",
     explanations: [
       {
         title: "What this does",
-        text: "Shows submitted reports, saved drafts, moderation status, evidence readiness, and next documentation steps.",
+        text: "Shows submitted reviews, saved drafts, moderation status, evidence readiness, and next documentation steps.",
       },
       {
         title: "When to use it",
-        text: "Use Reports when you need to finish a draft, respond to moderation, or review what is published.",
+        text: "Use Reviews when you need to finish a draft, respond to moderation, or review what is published.",
       },
       {
         title: "What stays private",
-        text: "Pending, rejected, and needs-info reports stay private and do not appear publicly.",
+        text: "Pending, rejected, and needs-info reviews stay private and do not appear publicly.",
       },
     ],
-    primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Submit report" },
+    primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Leave a review" },
     secondaryAction: { href: "/dashboard/evidence", icon: Vault, label: "Evidence vault" },
     tab: "reports",
-    title: "Reports",
+    title: "Reviews",
   },
   watchlist: {
     activeHref: "/dashboard/watchlist",
@@ -270,9 +300,9 @@ export default async function DashboardToolPage({
       <ClientDashboardShell
         activeHref={config.activeHref}
         badge={config.badge}
-        description="Your workspace is being prepared. You can still search clients or submit reports while this tool finishes loading."
+        description="Your workspace is being prepared. You can still search clients or leave reviews while this tool finishes loading."
         primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
-        secondaryAction={{ href: "/submit-report", label: "Submit report", icon: FilePlus2 }}
+        secondaryAction={{ href: "/submit-report", label: "Leave a review", icon: FilePlus2 }}
         title={config.title}
       >
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -280,7 +310,7 @@ export default async function DashboardToolPage({
             <AlertCircle className="size-8 text-amber-700" aria-hidden="true" />
             <h2 className="text-xl font-semibold text-slate-950">This tool is getting ready.</h2>
             <p className="text-sm leading-6 text-slate-600">
-              Refresh the page after account setup completes. Your core search and report tools are still available.
+              Refresh the page after account setup completes. Your core search and review tools are still available.
             </p>
           </CardContent>
         </Card>
@@ -307,6 +337,10 @@ export default async function DashboardToolPage({
           </Card>
         ))}
       </div>
+
+      {config.tab === "growth" ? (
+        <ContractorGrowthEngine data={getMockGrowthEngineData(dashboard.contractor, getSiteUrl())} />
+      ) : null}
 
       {config.tab === "reports" ? (
         <DashboardSection
@@ -386,12 +420,14 @@ export default async function DashboardToolPage({
         </DashboardSection>
       ) : null}
 
-      <RiskOpsWorkspace
-        clients={clientProfiles}
-        focusTab={config.tab}
-        riskOps={riskOps}
-        subscription={dashboard.subscription}
-      />
+      {config.tab !== "growth" ? (
+        <RiskOpsWorkspace
+          clients={clientProfiles}
+          focusTab={config.tab}
+          riskOps={riskOps}
+          subscription={dashboard.subscription}
+        />
+      ) : null}
     </ClientDashboardShell>
   )
 }

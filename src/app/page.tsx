@@ -10,12 +10,9 @@ import {
   ClipboardCheck,
   FileCheck2,
   FilePlus2,
-  FolderKanban,
   Handshake,
-  Landmark,
   LockKeyhole,
   MessageSquareText,
-  ReceiptText,
   Scale,
   Search,
   ShieldCheck,
@@ -46,9 +43,9 @@ import {
 } from "@/lib/seo"
 
 export const metadata: Metadata = {
-  title: "Client Bureau | Check Clients Before You Take the Job",
+  title: "Client Bureau | Search Client Ratings Before the Job",
   description:
-    "Check clients before you take the job. Review moderated reports, private matching, unpaid invoice context, evidence summaries, and responses.",
+    "Search client ratings, contractor reviews, public profiles, payment-risk context, positive references, and client responses before the job.",
   alternates: {
     canonical: "/",
   },
@@ -58,63 +55,63 @@ export const dynamic = "force-dynamic"
 
 type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
 
-const heroHeadline = "Check a Client Before You Take the Job."
+const heroHeadline = "One Search Could Save Thousands."
 
 const heroTrustSignals = [
-  "Search before buying materials",
-  "Protect crew time before scheduling",
-  "Document changes before scope grows",
-  "Keep evidence private if payment stalls",
+  "Contractor-powered client reputation",
+  "Moderated public client profiles",
+  "Positive and concerning reviews",
+  "Private matching, public-safe summaries",
 ]
 
 const decisionStats = [
-  { label: "Before materials", value: "Check client history and set deposit terms" },
-  { label: "Before scheduling", value: "Confirm contract, access, scope, and change orders" },
-  { label: "Before final invoice", value: "Keep approvals, photos, messages, and payment notes together" },
+  { label: "Cause", value: "Businesses lose money when they accept the wrong clients." },
+  { label: "Effect", value: "Unpaid invoices, wasted labor, missed payroll, and stressed cash flow." },
+  { label: "Prevention", value: "Search reputation, reviews, ratings, and response context before you commit." },
 ]
 
 const painWorkflows = [
   {
     icon: Search,
-    title: "A new lead wants a fast start, but you do not know their payment history.",
-    text: "Search by name, business, city, state, phone, or email before you quote, hold dates, or agree to rush scheduling.",
+    title: "Search the client before you risk labor, materials, or calendar space.",
+    text: "Look up client reputation by name, business, phone, city, state, or address before you quote, hold dates, order supplies, or rush scheduling.",
     href: "/search",
-    cta: "Search first",
+    cta: "Search clients",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Read contractor-submitted reviews with moderated public summaries.",
+    text: "Client Bureau organizes documented payment issues, disputes, chargebacks, positive references, resolved reports, and client response context.",
+    href: "/reports/recent",
+    cta: "View reviews",
+  },
+  {
+    icon: BadgeCheck,
+    title: "Check the client rating and reputation indicators before saying yes.",
+    text: "Review score context, report count, positive references, open disputes, resolved issues, and evidence-on-file summaries without exposing private data.",
+    href: "/score-methodology",
+    cta: "Score method",
+  },
+  {
+    icon: Building2,
+    title: "Use public client profiles as a reputation record, not a rumor page.",
+    text: "Profiles are built from approved report summaries, positive reports, public responses, timelines, risk indicators, and careful moderation language.",
+    href: "/clients",
+    cta: "Browse profiles",
   },
   {
     icon: Signature,
-    title: "The client says yes verbally, but the scope and payment terms are still loose.",
-    text: "Send a contract link, capture signatures, clarify deposits, milestones, and change-order rules before the job starts.",
+    title: "When you proceed, protect the job with contracts and documentation.",
+    text: "Agreement packets, evidence records, and change-order controls support the core reputation workflow after the client search is complete.",
     href: "/dashboard/contracts",
-    cta: "Send terms",
-  },
-  {
-    icon: FolderKanban,
-    title: "Materials, approvals, photos, and messages are scattered across your phone.",
-    text: "Keep invoices, screenshots, contracts, photos, PDFs, approvals, and completion notes in one private client record.",
-    href: "/dashboard/evidence",
-    cta: "Organize proof",
-  },
-  {
-    icon: ReceiptText,
-    title: "The final invoice is late and every follow-up becomes another promise.",
-    text: "Open a managed Resolution Desk case or track invoice dates, payment promises, call notes, payment-plan status, and next follow-up steps without making the issue public.",
-    href: "/dashboard/recovery",
-    cta: "Get recovery help",
-  },
-  {
-    icon: Landmark,
-    title: "Lien and notice deadlines are easy to miss while you are still working jobs.",
-    text: "Start a private Florida notice or claim-of-lien workflow with documents, fee tracking, contractor authorization, attorney/vendor review, and recording proof.",
-    href: "/dashboard/lien-readiness",
-    cta: "Start lien service",
+    cta: "Create contract",
   },
   {
     icon: MessageSquareText,
-    title: "A disagreement needs context, not a one-sided public argument.",
-    text: "Give clients a moderated path for responses, disputes, corrections, and resolution updates before public display.",
+    title: "When payment breaks down, preserve a fair response and resolution path.",
+    text: "Client responses, disputes, corrections, managed recovery records, and resolution updates keep public context more credible and useful.",
     href: "/client-response",
-    cta: "Review response path",
+    cta: "Response path",
   },
 ]
 
@@ -178,7 +175,7 @@ const faqs = [
   {
     question: "What is Client Bureau?",
     answer:
-      "Client Bureau helps business owners check client history before accepting work, set clear terms, document the job, track payment issues, and resolve disputes with moderated public context.",
+      "Client Bureau is a contractor-powered client reputation platform. Business owners use it to search client ratings, contractor reviews, public profiles, payment-risk context, positive references, and response history before accepting work.",
   },
   {
     question: "What is Client Bureau not?",
@@ -223,8 +220,8 @@ export default async function Home() {
     0,
   )
   const stats = [
-    { label: "Public profiles", value: profiles.length.toLocaleString(), text: "Approved profile pages indexed for careful public research." },
-    { label: "Published reports", value: allReports.length.toLocaleString(), text: "Contractor-submitted experiences reviewed before display." },
+    { label: "Public profiles", value: profiles.length.toLocaleString(), text: "Approved client reputation pages indexed for careful public research." },
+    { label: "Contractor reviews", value: allReports.length.toLocaleString(), text: "Documented experiences reviewed before display." },
     { label: "Positive reports", value: positiveReports.toLocaleString(), text: "Good client history belongs in the record too." },
     { label: "Evidence files", value: reviewedEvidence.toLocaleString(), text: "Evidence reviewed privately, summarized publicly." },
   ]
@@ -254,7 +251,7 @@ export default async function Home() {
           <div className="max-w-4xl space-y-7">
             <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
               <ShieldCheck className="size-4" aria-hidden="true" />
-              For jobs where one client decision can tie up cash, crew, and calendar
+              Contractor-powered client reputation
             </div>
 
             <div className="space-y-5">
@@ -262,12 +259,13 @@ export default async function Home() {
                 {heroHeadline}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                Search reported payment issues, disputes, chargebacks, and documented client
-                experiences before you commit labor, materials, scheduling, or deposits.
+                Research clients before risking labor, materials, deposits, crew time, and profit.
+                Search contractor reviews, client ratings, public profiles, and response context
+                before you take the job.
               </p>
             </div>
 
-            <form action="/search" className="grid max-w-3xl gap-3 rounded-md border border-white/15 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_auto]">
+            <form action="/search" className="grid max-w-4xl gap-3 rounded-md border border-white/15 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_auto]">
               <label htmlFor="homepage-client-search" className="sr-only">
                 Search for a client
               </label>
@@ -276,20 +274,27 @@ export default async function Home() {
                 <Input
                   id="homepage-client-search"
                   name="q"
-                  placeholder="Search by name, business, city, phone, or email"
+                  placeholder="Search by name, phone, business, or address"
                   className="h-12 border-0 pl-10 text-slate-950 shadow-none focus-visible:ring-0"
                 />
               </div>
               <Button className="h-12 bg-amber-500 px-6 font-semibold text-slate-950 hover:bg-amber-400">
-                Search a Client
+                Search Clients
               </Button>
             </form>
+            <div className="flex max-w-4xl flex-wrap gap-2 text-xs font-semibold uppercase text-slate-300">
+              {["Name", "Phone", "Business", "Address"].map((label) => (
+                <span key={label} className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5">
+                  {label}
+                </span>
+              ))}
+            </div>
 
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Submit a Client Report
+                  Leave a Review
                 </Link>
               </Button>
               <Button asChild className="bg-white text-slate-950 hover:bg-slate-100">
@@ -347,7 +352,7 @@ export default async function Home() {
           <SectionIntro
             eyebrow="Where the money leaks"
             title="Turn painful client moments into checkpoints before they become losses."
-            text="Client Bureau connects the painful parts of the job lifecycle to practical actions: search first, get terms signed, save proof, track payment, watch deadlines, and keep disputes fair."
+            text="Client Bureau turns client reputation into a practical intake checkpoint: search first, review ratings, read contractor experiences, check public responses, then decide how much risk to accept."
           />
           <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
             {painWorkflows.map((workflow, index) => (
@@ -494,24 +499,24 @@ export default async function Home() {
           <div className="space-y-5">
             <p className="text-sm font-semibold uppercase text-amber-300">Make it part of intake</p>
             <h2 className="text-4xl font-semibold tracking-normal sm:text-5xl">
-              Before you schedule the crew, order materials, or send the contract, check the client.
+              Before you schedule the crew, order materials, or accept the job, search the client.
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-300">
-              Search public profiles, submit documented experiences, and build a fairer record for
-              contractors, service businesses, and clients who resolve issues responsibly.
+              Search public profiles, review client ratings, read contractor experiences, and build
+              a fairer reputation record for business owners and clients who resolve issues responsibly.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <Button asChild className="h-12 bg-amber-500 text-slate-950 hover:bg-amber-400">
               <Link href="/search">
                 <Search aria-hidden="true" />
-                Search a Client
+                Search Clients
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-12 border-white/20 bg-transparent text-white hover:bg-white/10">
-              <Link href="/signup">
-                <LockKeyhole aria-hidden="true" />
-                Create Free Account
+              <Link href="/submit-report">
+                <FilePlus2 aria-hidden="true" />
+                Leave a Review
               </Link>
             </Button>
           </div>

@@ -96,16 +96,16 @@ export function DashboardSection({
   className?: string
 }) {
   return (
-    <section className={cn("rounded-md border border-slate-200 bg-white shadow-sm", className)}>
-      <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-start">
-        <div>
+    <section className={cn("min-w-0 rounded-md border border-slate-200 bg-white shadow-sm", className)}>
+      <div className="flex min-w-0 flex-col justify-between gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-start">
+        <div className="min-w-0">
           {eyebrow ? <p className="text-xs font-semibold uppercase text-amber-700">{eyebrow}</p> : null}
           <h2 className="mt-1 text-xl font-semibold tracking-normal text-slate-950">{title}</h2>
           {description ? <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
         </div>
         {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
       </div>
-      <div className="p-5">{children}</div>
+      <div className="min-w-0 p-5">{children}</div>
     </section>
   )
 }

@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Banknote, CalendarClock, FilePlus2, HelpCircle, MessageSquareText, Share2, ShieldAlert, ShieldCheck } from "lucide-react"
+import { Banknote, CalendarClock, FilePlus2, HelpCircle, MessageSquareText, ShieldAlert, ShieldCheck, Star } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
@@ -9,7 +9,9 @@ import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
 import { ReportTimeline } from "@/components/profile/report-timeline"
 import { CommunityDiscussionSection } from "@/components/profile/community-discussion-section"
+import { PublicProfileShareCard } from "@/components/profile/public-profile-share-card"
 import { ScoreBreakdown } from "@/components/profile/score-breakdown"
+import { TrustVerificationPanel } from "@/components/profile/trust-verification-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,6 +21,7 @@ import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-
 import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
 import { JsonLd, getClientProfileStructuredData } from "@/lib/seo"
+import { getPublicTrustSummary } from "@/lib/trust-verification"
 import { isPositiveReportCategory } from "@/lib/types"
 
 type ClientProfilePageProps = {
@@ -40,26 +43,28 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
 
   const name = `${profile.firstName} ${profile.lastName}`
   const location = `${profile.city}, ${profile.state}`
-  const title = `${name} ${location} Client Bureau Profile | Contractor-Submitted Reports`
-  const description = `${name} in ${location}: Client Bureau profile with moderated contractor-submitted report summaries, reported payment risk context, risk level, and right-of-response information.`
+  const title = `${name} ${profile.city} ${profile.state} Client Reputation Profile`
+  const description = `${name} in ${location}: moderated contractor-submitted reviews, public response context, evidence-on-file summary, and Client Bureau score.`
+  const profileUrl = `${siteUrl}/client/${profile.publicSlug}`
+  const imageUrl = `${profileUrl}/opengraph-image`
 
   return {
     title,
     description,
     alternates: {
-      canonical: `${siteUrl}/client/${profile.publicSlug}`,
+      canonical: profileUrl,
     },
     openGraph: {
       title,
       description,
-      url: `${siteUrl}/client/${profile.publicSlug}`,
+      url: profileUrl,
       type: "profile",
       images: [
         {
-          url: `${siteUrl}/opengraph-image`,
+          url: imageUrl,
           width: 1200,
           height: 630,
-          alt: `Client Bureau profile summary for ${name} in ${location}`,
+          alt: `Client Bureau public profile card for ${name} in ${location}`,
         },
       ],
     },
@@ -67,7 +72,7 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
       card: "summary_large_image",
       title,
       description,
-      images: [`${siteUrl}/twitter-image`],
+      images: [`${profileUrl}/twitter-image`],
     },
     keywords: [
       name,
@@ -88,6 +93,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   if (!profile) notFound()
 
   const name = `${profile.firstName} ${profile.lastName}`
+  const location = `${profile.city}, ${profile.state}`
+  const profileUrl = `${getSiteUrl()}/client/${profile.publicSlug}`
+  const profileImageUrl = `${profileUrl}/opengraph-image`
   const structuredData = getClientProfileStructuredData(profile)
   const stateHref = getClientStateDirectoryHref(profile)
   const cityHref = getClientCityDirectoryHref(profile)
@@ -96,49 +104,67 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const openDisputes = profile.balanceSummary.openDisputeCount
   const resolvedReports = profile.balanceSummary.resolvedReportCount
   const evidenceSummary = summarizeEvidence(profile.evidence)
+  const trustSummary = getPublicTrustSummary(profile)
 
   return (
     <article className="bg-slate-100">
       <JsonLd data={structuredData} />
-      <section className="border-b border-slate-200 bg-white">
+      <section className="border-b border-slate-900 bg-slate-950 text-white">
         <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
           <div className="space-y-5">
-            <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-slate-500">
-              <Link href="/clients" className="hover:text-slate-950">Client Directory</Link>
+            <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-slate-400">
+              <Link href="/clients" className="hover:text-white">Client Directory</Link>
               <span aria-hidden="true">/</span>
-              <Link href={stateHref} className="hover:text-slate-950">{profile.state}</Link>
+              <Link href={stateHref} className="hover:text-white">{profile.state}</Link>
               <span aria-hidden="true">/</span>
-              <Link href={cityHref} className="hover:text-slate-950">{profile.city}</Link>
+              <Link href={cityHref} className="hover:text-white">{profile.city}</Link>
             </nav>
             <div className="flex flex-wrap items-center gap-3">
               <RiskBadge riskLevel={profile.riskLevel} />
-              <Badge className="rounded-md bg-emerald-700 text-white">
+              <Badge className="rounded-md bg-emerald-600 text-white">
                 <ShieldCheck className="size-3" aria-hidden="true" />
-                Verified public record
+                Verified public profile
+              </Badge>
+              <Badge variant="outline" className="rounded-md border-white/20 bg-white/10 text-slate-100">
+                Admin-approved summaries
               </Badge>
             </div>
             <div>
-              <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
+              <h1 className="text-4xl font-semibold tracking-normal text-white sm:text-5xl">
                 {name} in {profile.city}, {profile.state}: Client Bureau Public Profile
               </h1>
-              <p className="mt-3 text-lg text-slate-600">
+              <p className="mt-3 text-lg text-slate-300">
                 {profile.businessName ? `${profile.businessName} | ` : ""}
-                Contractor-submitted reports, moderated summaries, client response context, and evidence reviewed privately.
+                {profile.city}, {profile.state} / Contractor reviews, client rating, positive references, public responses, and moderated reputation context.
               </p>
             </div>
-            <p className="max-w-3xl leading-7 text-slate-600">
-              This Client Bureau page contains moderated, contractor-submitted reports and client
-              response information. It is limited to approved summaries and does not display full
-              phone numbers or email addresses.
+            <p className="max-w-3xl leading-7 text-slate-300">
+              This Client Bureau profile is built from contractor-submitted reviews, approved
+              public summaries, client response information, and reputation indicators. Private
+              phone numbers, emails, addresses, raw evidence, and internal notes are not displayed.
             </p>
+            <div className="grid gap-3 rounded-md border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-200 md:grid-cols-3">
+              <div>
+                <p className="text-xs font-semibold uppercase text-amber-300">Search result intent</p>
+                <p className="mt-1">{name} client profile in {location}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-amber-300">Public record type</p>
+                <p className="mt-1">Moderated contractor-submitted reviews</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-amber-300">Fairness layer</p>
+                <p className="mt-1">Client response and dispute path included</p>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
                   Add a report
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
                 <Link href={`/submit-report?${new URLSearchParams({
                   firstName: profile.firstName,
                   lastName: profile.lastName,
@@ -151,7 +177,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   Recommend this client
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
                 <Link href="/client-response">
                   <MessageSquareText aria-hidden="true" />
                   Respond or dispute
@@ -159,9 +185,16 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </Button>
             </div>
           </div>
-          <Card className="rounded-md border-slate-200 shadow-sm">
+          <Card className="rounded-md border-white/10 bg-white text-slate-950 shadow-2xl">
             <CardContent className="space-y-5 p-6">
-              <ScoreGauge score={profile.clientBureauScore} />
+              <div className="flex items-center justify-between gap-4">
+                <Badge className="rounded-md bg-slate-950 text-white">
+                  <Star className="size-3" aria-hidden="true" />
+                  Overall rating
+                </Badge>
+                <span className="text-xs font-semibold uppercase text-slate-500">Client Bureau</span>
+              </div>
+              <ScoreGauge score={profile.clientBureauScore} label="Client Reputation Score" />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -200,6 +233,10 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   <span className="font-semibold text-slate-950">{profile.reports.length}</span>
                 </div>
                 <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Positive references</span>
+                  <span className="font-semibold text-slate-950">{profile.positiveReports.length}</span>
+                </div>
+                <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Last updated</span>
                   <span className="text-right font-semibold text-slate-950">
                     {new Date(profile.updatedAt).toLocaleDateString()}
@@ -227,11 +264,54 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
             <div className="grid gap-3 md:grid-cols-4">
-              <TrustMetric label="Approved reports" value={String(profile.reports.length)} />
-              <TrustMetric label="Positive reports" value={String(profile.positiveReports.length)} />
-              <TrustMetric label="Reported unpaid" value={formatCurrency(profile.balanceSummary.totalReportedUnpaid)} />
-              <TrustMetric label="Resolved amount" value={formatCurrency(profile.balanceSummary.resolvedAmount)} />
+              <TrustMetric label="Contractor reviews" value={String(profile.reports.length)} />
+              <TrustMetric label="Positive references" value={String(profile.positiveReports.length)} />
+              <TrustMetric label="Open disputes" value={String(openDisputes)} />
+              <TrustMetric label="Resolved reports" value={String(resolvedReports)} />
             </div>
+
+            <TrustVerificationPanel profileName={name} summary={trustSummary} />
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
+                  Reputation indicators
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 md:grid-cols-3">
+                <BalanceFact label="Overall rating" value={`${profile.clientBureauScore}/100`} />
+                <BalanceFact label="Risk level" value={profile.riskLevel} />
+                <BalanceFact label="Evidence status" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private review"} />
+                <BalanceFact label="Payment reliability" value={profile.paymentReliability} />
+                <BalanceFact label="Dispute history" value={profile.disputeHistory} />
+                <BalanceFact label="Last updated" value={new Date(profile.updatedAt).toLocaleDateString()} />
+              </CardContent>
+            </Card>
+
+            <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader className="border-b border-slate-200 bg-slate-50">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <CalendarClock className="size-5 text-amber-700" aria-hidden="true" />
+                  Contractor report timeline
+                </CardTitle>
+                <p className="text-sm leading-6 text-slate-600">
+                  A public timeline of approved report activity, evidence-review markers, disputes, and publication updates.
+                </p>
+              </CardHeader>
+              <CardContent className="p-5">
+                <ReportTimeline events={profile.timeline} />
+              </CardContent>
+            </Card>
+
+            <ProfileSearchSummary
+              name={name}
+              location={location}
+              score={profile.clientBureauScore}
+              riskLevel={profile.riskLevel}
+              reportCount={profile.reports.length}
+              evidenceSummary={evidenceSummary}
+            />
 
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
@@ -270,10 +350,10 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             </Card>
 
             <div className="space-y-3">
-              <h2 className="text-3xl font-semibold text-slate-950">Approved report summaries</h2>
+              <h2 className="text-3xl font-semibold text-slate-950">Contractor reviews</h2>
               <p className="max-w-3xl text-sm leading-6 text-slate-600">
-                These summaries are published after admin review and are presented as reported
-                experiences from contractors.
+                These contractor-submitted reviews are published after moderation and are presented
+                as reported experiences, not legal findings or unsupported accusations.
               </p>
             </div>
             {concernReports.length > 0 ? (
@@ -292,9 +372,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
             <div className="space-y-4">
               <div>
-                <h2 className="text-2xl font-semibold text-slate-950">Positive client reports</h2>
+                <h2 className="text-2xl font-semibold text-slate-950">Positive references</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Approved positive reports help show paid, cooperative, or would-work-with-again contractor experiences.
+                  Approved positive references help show paid, cooperative, or would-work-with-again contractor experiences.
                 </p>
               </div>
               {profile.positiveReports.length > 0 ? (
@@ -310,11 +390,6 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   </CardContent>
                 </Card>
               )}
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-2xl font-semibold text-slate-950">Report timeline</h2>
-              <ReportTimeline events={profile.timeline} />
             </div>
 
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -349,6 +424,15 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
           <aside className="space-y-5">
             <LegalNotice />
+            <PublicProfileShareCard
+              name={name}
+              location={location}
+              profileUrl={profileUrl}
+              imageUrl={profileImageUrl}
+              score={profile.clientBureauScore}
+              riskLevel={profile.riskLevel}
+              reportCount={profile.reports.length}
+            />
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">Score factors</CardTitle>
@@ -368,27 +452,8 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 <p>Public profile is active.</p>
                 <p>All published reports are admin-approved or marked with dispute context.</p>
                 <p>Private matching identifiers are stored as hashes.</p>
-              </CardContent>
-            </Card>
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Share2 className="size-5 text-amber-700" aria-hidden="true" />
-                  Share-ready summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
-                <p className="font-semibold text-slate-950">
-                  {name} / {profile.city}, {profile.state}
-                </p>
                 <p>
-                  Risk level: <span className="font-semibold text-slate-950">{profile.riskLevel}</span>
-                </p>
-                <p>
-                  Reports: <span className="font-semibold text-slate-950">{profile.reports.length}</span>
-                </p>
-                <p>
-                  Profile language should stay limited to moderated Client Bureau context and reported experience summaries.
+                  Review confidence: <span className="font-semibold text-slate-950">{trustSummary.confidence.level}</span>
                 </p>
               </CardContent>
             </Card>
@@ -439,6 +504,58 @@ function TrustMetric({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
     </div>
+  )
+}
+
+function ProfileSearchSummary({
+  name,
+  location,
+  score,
+  riskLevel,
+  reportCount,
+  evidenceSummary,
+}: {
+  name: string
+  location: string
+  score: number
+  riskLevel: string
+  reportCount: number
+  evidenceSummary: string[]
+}) {
+  return (
+    <Card className="rounded-md border-amber-200 bg-amber-50 shadow-sm">
+      <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_220px] lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-900">Profile summary for searchers</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+            {name} in {location}: public reputation context for contractors
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-700">
+            This public page summarizes moderated contractor-submitted experiences, approved report
+            status, private evidence-review indicators, score context, and client response options.
+            It is not a legal finding and does not publish raw contact details or private files.
+          </p>
+        </div>
+        <div className="grid gap-2 rounded-md border border-amber-200 bg-white p-4 text-sm">
+          <div className="flex justify-between gap-3">
+            <span className="text-slate-500">Score</span>
+            <span className="font-semibold text-slate-950">{score}/100</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-slate-500">Risk level</span>
+            <span className="font-semibold text-slate-950">{riskLevel}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-slate-500">Approved reports</span>
+            <span className="font-semibold text-slate-950">{reportCount}</span>
+          </div>
+          <div className="flex justify-between gap-3">
+            <span className="text-slate-500">Evidence</span>
+            <span className="text-right font-semibold text-slate-950">{evidenceSummary.at(-1)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

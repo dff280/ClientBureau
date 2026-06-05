@@ -30,6 +30,31 @@ import {
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
+  buildSearchExperienceStats,
+  toSearchPreviewProfile,
+} from "@/lib/search-experience"
+import {
+  getMockGrowthEngineData,
+  networkGrowthScore,
+  profileClaimCompletion,
+  rankReviewRequests,
+  referralCreditSummary,
+} from "@/lib/growth-engine"
+import {
+  getPublicTrustSummary,
+  reportConfidenceLabel,
+  reviewConfidenceLevel,
+} from "@/lib/trust-verification"
+import { buildEnterpriseDashboardSummary } from "@/lib/enterprise-dashboard"
+import {
+  getMobileAppApiBacklog,
+  getMobileFirstWorkflows,
+  getMobileReadinessSummary,
+  mobileApiAudit,
+  mobileComponentAudit,
+  responsiveAudit,
+} from "@/lib/mobile-readiness"
+import {
   assignModerationCase,
   buildTodaysWorkItems,
   contractCompletionPercentage,
@@ -58,6 +83,8 @@ import {
   createContractShareLink,
   createServiceFeeOrder,
   getContractPacketByShareToken,
+  getContractorDashboard,
+  getContractorRiskOpsData,
   signLienFilingAuthorization,
   searchClients,
   signContractShare,
@@ -233,8 +260,9 @@ describe("product positioning", () => {
     expect(contractorDashboardNav.map((item) => item.label)).toEqual([
       "Overview",
       "Search Clients",
-      "Reports",
+      "Reviews",
       "Watchlist",
+      "Growth",
       "Contracts",
       "Payment Recovery",
       "Florida Lien Service",
@@ -255,7 +283,8 @@ describe("product positioning", () => {
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
       "Start Here",
       "Find Clients",
-      "Reports",
+      "Growth",
+      "Reviews",
       "Documents",
       "Payments",
       "Protection Tools",
@@ -455,6 +484,45 @@ describe("launch health gates", () => {
   })
 })
 
+describe("mobile app readiness", () => {
+  it("covers components, APIs, responsive surfaces, and mobile workflows", () => {
+    const summary = getMobileReadinessSummary()
+
+    expect(summary.categoryCounts).toEqual({
+      api: mobileApiAudit.length,
+      component: mobileComponentAudit.length,
+      responsive: responsiveAudit.length,
+      workflow: getMobileFirstWorkflows().length,
+    })
+    expect(summary.total).toBeGreaterThan(20)
+    expect(summary.readinessScore).toBeGreaterThanOrEqual(40)
+  })
+
+  it("keeps web-only and app-facing API boundaries explicit", () => {
+    const webhook = mobileApiAudit.find((item) => item.route === "/api/stripe/webhook")
+    const health = mobileApiAudit.find((item) => item.route === "/api/health")
+    const backlog = getMobileAppApiBacklog()
+
+    expect(webhook?.status).toBe("web-only")
+    expect(webhook?.auth).toBe("webhook")
+    expect(health?.status).toBe("ready")
+    expect(backlog.map((item) => item.route)).toContain("/api/session")
+    expect(backlog.every((item) => item.status === "needs-adapter")).toBe(true)
+  })
+
+  it("maps every authenticated mobile workflow to a future BFF endpoint", () => {
+    const authenticatedWorkflows = getMobileFirstWorkflows().filter((workflow) => workflow.authRequired)
+
+    expect(authenticatedWorkflows).toHaveLength(6)
+    expect(
+      authenticatedWorkflows.every((workflow) => workflow.apiStrategy.includes("/api/mobile/")),
+    ).toBe(true)
+    expect(
+      authenticatedWorkflows.map((workflow) => workflow.entryRoute),
+    ).toContain("/dashboard/lien-readiness")
+  })
+})
+
 describe("search and public profiles", () => {
   it("ranks matching search results and preserves private identifier language", () => {
     const results = searchClients("John", { state: "FL" })
@@ -462,6 +530,29 @@ describe("search and public profiles", () => {
     expect(results[0]?.publicSlug).toBe("john-smith-orlando-fl")
     expect(results[0]?.matchScore).toBeGreaterThan(0)
     expect(results[0]?.matchedBy).toContain("Name")
+  })
+
+  it("builds public-safe predictive search previews", () => {
+    const result = searchClients("John", { state: "FL" })[0]
+    if (!result) throw new Error("Expected John Smith search result")
+    const preview = toSearchPreviewProfile(result)
+
+    expect(preview.publicSlug).toBe("john-smith-orlando-fl")
+    expect(preview.reportCount).toBeGreaterThan(0)
+    expect("phoneHash" in preview).toBe(false)
+    expect("emailHash" in preview).toBe(false)
+    expect(JSON.stringify(preview)).not.toContain(result.phoneHash)
+    expect(JSON.stringify(preview)).not.toContain(result.emailHash)
+  })
+
+  it("summarizes approved search signals for the search analytics panel", () => {
+    const previews = searchClients("").map(toSearchPreviewProfile)
+    const stats = buildSearchExperienceStats(previews)
+
+    expect(stats.publicProfiles).toBeGreaterThan(0)
+    expect(stats.approvedReportSignals).toBeGreaterThan(0)
+    expect(stats.statesCovered).toBeGreaterThan(0)
+    expect(stats.averageScore).toBeGreaterThan(0)
   })
 
   it("only returns public profile data with reviewable reports", () => {
@@ -486,6 +577,37 @@ describe("search and public profiles", () => {
     expect(profile?.scoreBreakdown.length).toBeGreaterThanOrEqual(6)
     expect(profile?.balanceSummary.totalReportedUnpaid).toBe(4200)
     expect(JSON.stringify(profile)).not.toContain("final-invoice.pdf")
+  })
+
+  it("builds public-safe trust and verification signals for profiles", () => {
+    const profile = getPublicClientProfile("john-smith-orlando-fl")
+    if (!profile) throw new Error("Expected public profile")
+    const trust = getPublicTrustSummary(profile)
+    const serialized = JSON.stringify(trust)
+
+    expect(trust.verificationBadges.map((badge) => badge.label)).toContain("Verified public profile")
+    expect(trust.verificationBadges.map((badge) => badge.label)).toContain("Evidence reviewed privately")
+    expect(trust.confidence.score).toBeGreaterThan(50)
+    expect(trust.confidence.level).toBe(reviewConfidenceLevel(trust.confidence.score))
+    expect(trust.evidenceIndicators.map((item) => item.label)).toContain("Invoices reviewed")
+    expect(trust.responseWorkflow.map((step) => step.label)).toEqual([
+      "Verify contact",
+      "Attach documentation",
+      "Moderation review",
+      "Publish approved context",
+    ])
+    expect(serialized).not.toContain("report-evidence/")
+    expect(serialized).not.toContain("@")
+  })
+
+  it("labels individual report confidence from moderation and evidence context", () => {
+    const evidenceBacked = clientReports.find((report) => report.id === "report_01")
+    const noEvidence = clientReports.find((report) => report.id === "report_03")
+
+    if (!evidenceBacked || !noEvidence) throw new Error("Expected seeded reports")
+
+    expect(reportConfidenceLabel(evidenceBacked)).toBe("Strong")
+    expect(reportConfidenceLabel(noEvidence)).toBe("Moderate")
   })
 })
 
@@ -519,6 +641,90 @@ describe("business ratings and public business profiles", () => {
     expect(profile?.publicClientReports.every((item) => item.client.isPublic)).toBe(true)
     expect(JSON.stringify(profile)).not.toContain("@")
     expect(JSON.stringify(profile)).not.toContain("FL-CBC-49201")
+  })
+})
+
+describe("contractor growth engine", () => {
+  it("summarizes referral credits without exposing full invite emails", () => {
+    const data = getMockGrowthEngineData(contractorProfiles[0], "https://clientbureau.com")
+    const summary = referralCreditSummary(data.invites, data.creditLedger)
+
+    expect(summary.availableCents).toBe(2500)
+    expect(summary.pendingCents).toBe(6000)
+    expect(summary.completedInvites).toBe(1)
+    expect(data.referralUrl).toContain("/signup?ref=")
+    expect(JSON.stringify(data.badgeEmbed)).toContain("View RidgeBuild Contracting on Client Bureau")
+  })
+
+  it("tracks profile claiming and network score as a plain growth loop", () => {
+    const data = getMockGrowthEngineData(contractorProfiles[0], "https://clientbureau.com")
+    const completion = profileClaimCompletion(data.claimWorkflow)
+    const score = networkGrowthScore({
+      claimCompletion: completion,
+      completedInvites: 2,
+      completedReviewRequests: 3,
+      publicProfileViews: 280,
+    })
+
+    expect(completion).toBeGreaterThan(50)
+    expect(completion).toBeLessThanOrEqual(100)
+    expect(score).toBeGreaterThan(completion / 2)
+    expect(score).toBeLessThanOrEqual(100)
+  })
+
+  it("prioritizes active review requests before completed requests", () => {
+    const data = getMockGrowthEngineData(contractorProfiles[0], "https://clientbureau.com")
+    const ranked = rankReviewRequests([
+      ...data.reviewRequests,
+      {
+        id: "request_completed",
+        contractorId: contractorProfiles[0].id,
+        clientName: "Completed Client",
+        projectType: "Completed project",
+        requestType: "positive_reference",
+        status: "completed",
+        requestUrl: "https://clientbureau.com/submit-report?intent=positive",
+        dueAt: "2026-06-01T14:00:00.000Z",
+      },
+    ])
+
+    expect(ranked[0]?.status).not.toBe("completed")
+    expect(ranked.at(-1)?.status).toBe("completed")
+  })
+})
+
+describe("enterprise dashboard summary", () => {
+  it("builds KPI cards, trends, activity, reports, and insights for the contractor dashboard", () => {
+    const dashboard = getContractorDashboard("user_contractor_01")
+    const riskOps = getContractorRiskOpsData("user_contractor_01")
+
+    if (!dashboard || !riskOps) throw new Error("Expected contractor dashboard data")
+
+    const summary = buildEnterpriseDashboardSummary({
+      dashboard,
+      riskOps,
+      clientProfiles,
+      asOf: "2026-06-05T12:00:00.000Z",
+    })
+
+    expect(summary.kpis.map((kpi) => kpi.id)).toEqual([
+      "open-balance",
+      "pipeline-value",
+      "agreement-status",
+      "public-reviews",
+    ])
+    expect(summary.trends).toHaveLength(6)
+    expect(summary.trends.at(-1)?.label).toBe("Jun")
+    expect(summary.activityFeed.length).toBeGreaterThan(3)
+    expect(summary.reportSummaries.map((item) => item.label)).toEqual([
+      "Reviews",
+      "Documents",
+      "Watchlist",
+      "Saved searches",
+    ])
+    expect(summary.insights.map((item) => item.id)).toContain("open-balance")
+    expect(summary.healthScore).toBeGreaterThan(0)
+    expect(JSON.stringify(summary)).not.toContain("report-evidence/")
   })
 })
 
@@ -559,8 +765,9 @@ describe("public SEO landing pages", () => {
     })
 
     expect(String(metadata.title)).toContain("John Smith")
-    expect(String(metadata.title)).toContain("Client Bureau Profile")
+    expect(String(metadata.title)).toContain("Client Reputation Profile")
     expect(String(metadata.description)).toContain("moderated contractor-submitted")
+    expect(JSON.stringify(metadata.openGraph)).toContain("/client/john-smith-orlando-fl/opengraph-image")
   })
 
   it("generates safe public profile structured data without rating-rich-result markup", () => {
@@ -570,9 +777,11 @@ describe("public SEO landing pages", () => {
 
     const json = JSON.stringify(getClientProfileStructuredData(profile!))
 
+    expect(json).toContain("ProfilePage")
     expect(json).toContain("BreadcrumbList")
     expect(json).toContain("ItemList")
     expect(json).toContain("Approved contractor-submitted report summaries")
+    expect(json).toContain("primaryImageOfPage")
     expect(json).not.toContain("AggregateRating")
     expect(json).not.toContain("\"Review\"")
     expect(json).not.toContain("ratingValue")
