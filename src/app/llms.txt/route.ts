@@ -3,6 +3,7 @@ import {
   getPublicBusinessProfilesService,
   getPublicClientProfilesService,
 } from "@/lib/repositories/client-bureau-service"
+import { getClientDirectory } from "@/lib/client-directory"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 export const dynamic = "force-dynamic"
@@ -22,6 +23,15 @@ export async function GET() {
     .slice(0, 5)
     .map((profile) => `- [${profile.businessName} business profile](${siteUrl}/business/${profile.publicSlug})`)
     .join("\n")
+  const directoryLinks = getClientDirectory(profiles)
+    .flatMap((state) => [
+      `- [${state.name} client profiles](${siteUrl}/clients/${state.slug})`,
+      ...state.cities
+        .slice(0, 5)
+        .map((city) => `- [${city.name}, ${state.code} client profiles](${siteUrl}/clients/${state.slug}/${city.slug})`),
+    ])
+    .slice(0, 20)
+    .join("\n")
   const landingLinks = allSeoLandingPages
     .map((page) => `- [${page.title}](${siteUrl}${page.canonicalPath})`)
     .join("\n")
@@ -36,6 +46,7 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 - [Pricing](${siteUrl}/pricing)
 - [How It Works](${siteUrl}/how-it-works)
 - [Resources](${siteUrl}/resources)
+- [Client Directory](${siteUrl}/clients)
 - [About Client Bureau](${siteUrl}/about)
 - [Contact Client Bureau](${siteUrl}/contact)
 - [Enterprise](${siteUrl}/enterprise)
@@ -54,6 +65,10 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 ## Public Landing Pages
 
 ${landingLinks}
+
+## Client Directory Pages
+
+${directoryLinks || "- State and city client directories are listed after approved public profiles are available."}
 
 ## Public Client Profile Examples
 

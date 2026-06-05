@@ -10,6 +10,7 @@ import {
   businessRatingGrade,
   calculateBusinessRating,
 } from "@/lib/business-rating"
+import { getClientDirectory } from "@/lib/client-directory"
 import { noStoreHeaders } from "@/lib/http"
 import {
   coreLaunchTables,
@@ -79,6 +80,7 @@ import {
   publicPrimaryNav,
   resourceNavigationGroups,
 } from "@/lib/navigation"
+import { getClientProfileStructuredData } from "@/lib/seo"
 import {
   clientProfiles,
   clientReports,
@@ -528,14 +530,25 @@ describe("public SEO landing pages", () => {
     expect(allSeoLandingPages.length).toBe(12)
   })
 
+  it("builds state and city directory paths from approved public profiles", () => {
+    const directory = getClientDirectory(clientProfiles)
+    const florida = directory.find((state) => state.slug === "florida")
+    const orlando = florida?.cities.find((city) => city.slug === "orlando")
+
+    expect(florida?.profileCount).toBeGreaterThan(0)
+    expect(orlando?.profiles.some((profile) => profile.publicSlug === "john-smith-orlando-fl")).toBe(true)
+  })
+
   it("includes SEO landing pages in the sitemap", async () => {
     const urls = (await sitemap()).map((entry) => entry.url)
 
     expect(urls).toContain("https://clientbureau.com/resources")
+    expect(urls).toContain("https://clientbureau.com/clients")
     expect(urls).toContain("https://clientbureau.com/businesses")
     expect(urls).toContain("https://clientbureau.com/business-rating-methodology")
     expect(urls).toContain("https://clientbureau.com/business/ridgebuild-contracting-orlando-fl")
     expect(urls).toContain("https://clientbureau.com/clients/florida")
+    expect(urls).toContain("https://clientbureau.com/clients/florida/orlando")
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
     expect(urls).toContain("https://clientbureau.com/industries/contractors")
   })
@@ -546,7 +559,26 @@ describe("public SEO landing pages", () => {
     })
 
     expect(String(metadata.title)).toContain("John Smith")
+    expect(String(metadata.title)).toContain("Client Bureau Profile")
     expect(String(metadata.description)).toContain("moderated contractor-submitted")
+  })
+
+  it("generates safe public profile structured data without rating-rich-result markup", () => {
+    const profile = getPublicClientProfile("john-smith-orlando-fl")
+
+    expect(profile).toBeDefined()
+
+    const json = JSON.stringify(getClientProfileStructuredData(profile!))
+
+    expect(json).toContain("BreadcrumbList")
+    expect(json).toContain("ItemList")
+    expect(json).toContain("Approved contractor-submitted report summaries")
+    expect(json).not.toContain("AggregateRating")
+    expect(json).not.toContain("\"Review\"")
+    expect(json).not.toContain("ratingValue")
+    expect(json).not.toContain("phoneHash")
+    expect(json).not.toContain("emailHash")
+    expect(json).not.toContain("storagePath")
   })
 
   it("generates careful metadata for public business profiles", async () => {

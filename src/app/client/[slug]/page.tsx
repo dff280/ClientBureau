@@ -16,7 +16,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
+import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
+import { JsonLd, getClientProfileStructuredData } from "@/lib/seo"
 import { isPositiveReportCategory } from "@/lib/types"
 
 type ClientProfilePageProps = {
@@ -38,7 +40,7 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
 
   const name = `${profile.firstName} ${profile.lastName}`
   const location = `${profile.city}, ${profile.state}`
-  const title = `${name} ${location} Contractor Client Report`
+  const title = `${name} ${location} Client Bureau Profile | Contractor-Submitted Reports`
   const description = `${name} in ${location}: Client Bureau profile with moderated contractor-submitted report summaries, reported payment risk context, risk level, and right-of-response information.`
 
   return {
@@ -86,23 +88,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   if (!profile) notFound()
 
   const name = `${profile.firstName} ${profile.lastName}`
-  const siteUrl = getSiteUrl()
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: `${name} Client Bureau profile`,
-    description: `Moderated contractor-submitted report profile for ${name} in ${profile.city}, ${profile.state}.`,
-    url: `${siteUrl}/client/${profile.publicSlug}`,
-    about: {
-      "@type": "Person",
-      name,
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: profile.city,
-        addressRegion: profile.state,
-      },
-    },
-  }
+  const structuredData = getClientProfileStructuredData(profile)
+  const stateHref = getClientStateDirectoryHref(profile)
+  const cityHref = getClientCityDirectoryHref(profile)
 
   const concernReports = profile.reports.filter((report) => !isPositiveReportCategory(report.reportCategory))
   const openDisputes = profile.balanceSummary.openDisputeCount
@@ -111,13 +99,17 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
   return (
     <article className="bg-slate-100">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
+      <JsonLd data={structuredData} />
       <section className="border-b border-slate-200 bg-white">
         <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
           <div className="space-y-5">
+            <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-slate-500">
+              <Link href="/clients" className="hover:text-slate-950">Client Directory</Link>
+              <span aria-hidden="true">/</span>
+              <Link href={stateHref} className="hover:text-slate-950">{profile.state}</Link>
+              <span aria-hidden="true">/</span>
+              <Link href={cityHref} className="hover:text-slate-950">{profile.city}</Link>
+            </nav>
             <div className="flex flex-wrap items-center gap-3">
               <RiskBadge riskLevel={profile.riskLevel} />
               <Badge className="rounded-md bg-emerald-700 text-white">
@@ -127,11 +119,11 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             </div>
             <div>
               <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-                {name}
+                {name} in {profile.city}, {profile.state}: Client Bureau Public Profile
               </h1>
               <p className="mt-3 text-lg text-slate-600">
                 {profile.businessName ? `${profile.businessName} | ` : ""}
-                {profile.city}, {profile.state}
+                Contractor-submitted reports, moderated summaries, client response context, and evidence reviewed privately.
               </p>
             </div>
             <p className="max-w-3xl leading-7 text-slate-600">

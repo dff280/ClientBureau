@@ -82,7 +82,9 @@ const publicContentPages = [
   "/report-policy",
   "/dispute-policy",
   "/moderation-policy",
+  "/clients",
   "/clients/orlando-fl",
+  "/clients/florida/orlando",
   "/reports/non-payment",
   "/industries/contractors",
 ]
@@ -135,6 +137,24 @@ if (publicProfile.response.ok) {
 
   if (!hasEmail && !hasPhone) pass("Public profile hides raw email and phone")
   else fail("Public profile hides raw email and phone")
+
+  for (const type of ["WebPage", "Person", "BreadcrumbList", "ItemList"]) {
+    if (publicProfile.text.includes(`"@type":"${type}"`) || publicProfile.text.includes(`"@type": "${type}"`)) {
+      pass(`Public profile ${type} schema present`)
+    } else {
+      fail(`Public profile ${type} schema present`)
+    }
+  }
+
+  if (
+    !publicProfile.text.includes("AggregateRating") &&
+    !publicProfile.text.includes("\"Review\"") &&
+    !publicProfile.text.includes("ratingValue")
+  ) {
+    pass("Public profile avoids rating-rich-result markup")
+  } else {
+    fail("Public profile avoids rating-rich-result markup")
+  }
 } else {
   fail("Public profile returns 200", String(publicProfile.response.status))
 }

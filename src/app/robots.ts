@@ -11,6 +11,12 @@ export default function robots(): MetadataRoute.Robots {
       allow: [
         "/",
         "/client/",
+        "/clients",
+        "/clients/",
+        "/reports/",
+        "/industries/",
+        "/business/",
+        "/businesses",
         "/pricing",
         "/about",
         "/contact",

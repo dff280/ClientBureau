@@ -1,4 +1,6 @@
 import { getPublicContactInfo, getPublicSocialLinks, getSiteUrl } from "@/lib/env"
+import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
+import type { PublicClientProfile } from "@/lib/types"
 
 const siteUrl = getSiteUrl()
 
@@ -92,6 +94,119 @@ export function getLocalBusinessSchema() {
       postalCode: contact.zip,
       addressCountry: "US",
     },
+  }
+}
+
+export function getClientProfileStructuredData(profile: PublicClientProfile) {
+  const name = `${profile.firstName} ${profile.lastName}`
+  const profileUrl = `${siteUrl}/client/${profile.publicSlug}`
+  const stateUrl = `${siteUrl}${getClientStateDirectoryHref(profile)}`
+  const cityUrl = `${siteUrl}${getClientCityDirectoryHref(profile)}`
+  const subjectId = `${profileUrl}#subject`
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${profileUrl}#webpage`,
+        url: profileUrl,
+        name: `${name} Client Bureau public profile`,
+        description:
+          `Moderated contractor-submitted public profile for ${name} in ${profile.city}, ${profile.state}.`,
+        datePublished: profile.createdAt,
+        dateModified: profile.updatedAt,
+        isPartOf: {
+          "@id": `${siteUrl}/#website`,
+        },
+        about: {
+          "@id": subjectId,
+        },
+        mainEntity: {
+          "@id": subjectId,
+        },
+        breadcrumb: {
+          "@id": `${profileUrl}#breadcrumb`,
+        },
+        hasPart: {
+          "@id": `${profileUrl}#approved-report-summaries`,
+        },
+      },
+      {
+        "@type": "Person",
+        "@id": subjectId,
+        name,
+        ...(profile.businessName
+          ? {
+              affiliation: {
+                "@type": "Organization",
+                name: profile.businessName,
+              },
+            }
+          : {}),
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: profile.city,
+          addressRegion: profile.state,
+          addressCountry: "US",
+        },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${profileUrl}#breadcrumb`,
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Client Bureau",
+            item: siteUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Client Directory",
+            item: `${siteUrl}/clients`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: `${profile.state} client profiles`,
+            item: stateUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 4,
+            name: `${profile.city}, ${profile.state} client profiles`,
+            item: cityUrl,
+          },
+          {
+            "@type": "ListItem",
+            position: 5,
+            name,
+            item: profileUrl,
+          },
+        ],
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${profileUrl}#approved-report-summaries`,
+        name: "Approved contractor-submitted report summaries",
+        numberOfItems: profile.reports.length,
+        itemListElement: profile.reports.map((report, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: {
+            "@type": "Article",
+            headline: `${report.reportCategory} contractor-submitted report summary`,
+            articleBody: report.publicSummary,
+            datePublished: report.approvedAt ?? report.createdAt,
+            about: {
+              "@id": subjectId,
+            },
+          },
+        })),
+      },
+    ],
   }
 }
 

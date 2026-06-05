@@ -84,6 +84,7 @@ import type {
 } from "@/lib/types"
 import { isPositiveReportCategory, reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
+import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
 import {
   getAuthCookieDiagnostics,
   getCurrentUser,
@@ -105,6 +106,7 @@ import {
   createServiceFeeOrderService,
   createWatchlistItemService,
   deleteReportDraftService,
+  getPublicClientProfileService,
   logPaymentRecoveryAttemptService,
   logResolutionDeskContactService,
   markRecoveryResolvedService,
@@ -163,6 +165,18 @@ function actionErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback
+}
+
+function revalidatePublicProfileDirectories(profile?: Pick<ClientProfile, "city" | "state">) {
+  revalidatePath("/clients")
+  revalidatePath("/reports/recent")
+  revalidatePath("/llms.txt")
+  revalidatePath("/sitemap.xml")
+
+  if (profile) {
+    revalidatePath(getClientStateDirectoryHref(profile))
+    revalidatePath(getClientCityDirectoryHref(profile))
+  }
 }
 
 async function getAdminMutationUser(context: string, formData: FormData) {
@@ -363,10 +377,14 @@ export async function reviewReportAction(
   revalidatePath("/admin/reports")
   revalidatePath("/dashboard")
   revalidatePath("/search")
-  revalidatePath("/sitemap.xml")
 
   if (review.publishedProfileSlug) {
     revalidatePath(`/client/${review.publishedProfileSlug}`)
+    const publishedProfile = await getPublicClientProfileService(review.publishedProfileSlug).catch(() => undefined)
+
+    revalidatePublicProfileDirectories(publishedProfile)
+  } else {
+    revalidatePublicProfileDirectories()
   }
 
   return ok(
@@ -407,7 +425,7 @@ export async function bulkReviewReportsAction(
   revalidatePath("/admin/reviews")
   revalidatePath("/admin/audit-log")
   revalidatePath("/search")
-  revalidatePath("/sitemap.xml")
+  revalidatePublicProfileDirectories()
 
   return ok(
     result,
@@ -512,7 +530,7 @@ export async function adminUpdateClientAction(
   revalidatePath("/admin/audit-log")
   revalidatePath("/search")
   revalidatePath(`/client/${client.publicSlug}`)
-  revalidatePath("/sitemap.xml")
+  revalidatePublicProfileDirectories(client)
 
   return ok(client, "Client profile updated.")
 }
@@ -577,7 +595,7 @@ export async function adminDeleteRecordAction(
   revalidatePath(`/admin/${parsed.data.entityType}s`)
   revalidatePath("/admin/audit-log")
   revalidatePath("/search")
-  revalidatePath("/sitemap.xml")
+  revalidatePublicProfileDirectories()
 
   return ok(result, "Record deleted and audit entry created.")
 }

@@ -4,6 +4,7 @@ import { ArrowRight, FilePlus2, LockKeyhole, Search, ShieldCheck } from "lucide-
 import { RiskBadge } from "@/components/client/risk-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getClientDirectory } from "@/lib/client-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import type { SeoLandingPage } from "@/lib/seo-landing-pages"
 import type { PublicClientProfile } from "@/lib/types"
@@ -25,6 +26,9 @@ export function SeoLandingPageView({
   const openDisputes = profiles.reduce((total, profile) => total + profile.balanceSummary.openDisputeCount, 0)
   const landingSections = getLandingSections(page)
   const faqs = getLandingFaqs(page)
+  const cityDirectories = page.kind === "clients"
+    ? getClientDirectory(profiles).flatMap((state) => state.cities.map((city) => ({ ...city, state })))
+    : []
 
   return (
     <section className="bg-slate-100">
@@ -116,6 +120,40 @@ export function SeoLandingPageView({
             </Card>
           ))}
         </div>
+
+        {cityDirectories.length > 0 ? (
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="space-y-5 p-6">
+              <div className="grid gap-4 lg:grid-cols-[1fr_280px] lg:items-end">
+                <div>
+                  <p className="text-sm font-semibold uppercase text-amber-700">City directories</p>
+                  <h2 className="mt-2 text-2xl font-semibold text-slate-950">
+                    Browse approved profiles by city
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    These indexable city pages give search engines and contractors direct links to
+                    approved public profiles in each market.
+                  </p>
+                </div>
+                <Button asChild variant="outline">
+                  <Link href="/clients">Open client directory</Link>
+                </Button>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {cityDirectories.map((city) => (
+                  <Link
+                    key={`${city.state.slug}-${city.slug}`}
+                    href={`/clients/${city.state.slug}/${city.slug}`}
+                    className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 hover:border-amber-300 hover:bg-white hover:text-slate-950"
+                  >
+                    {city.name}, {city.state.code}
+                    <span className="ml-2 text-xs text-slate-500">{city.profileCount} profiles</span>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
 
         <div className="space-y-4">
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">

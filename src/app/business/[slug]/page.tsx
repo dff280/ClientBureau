@@ -107,6 +107,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
       },
     ],
   }
+  const badgeEmbed = `<a href="${siteUrl}/business/${profile.publicSlug}" rel="nofollow noopener">View ${profile.businessName} on Client Bureau</a>`
 
   return (
     <article className="bg-slate-100">
@@ -290,6 +291,21 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
                     <span>{highlight}</span>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
+                <CardTitle>Share profile badge</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm leading-6 text-slate-600">
+                  Businesses may link to this public profile with branded badge text. The embed is
+                  built for referral trust, not keyword-stuffed backlink schemes.
+                </p>
+                <pre className="overflow-x-auto rounded-md border border-slate-200 bg-slate-950 p-3 text-xs leading-5 text-slate-100">
+                  <code>{badgeEmbed}</code>
+                </pre>
               </CardContent>
             </Card>
 

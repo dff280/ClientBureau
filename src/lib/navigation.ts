@@ -105,6 +105,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
   {
     title: "Public Research",
     links: [
+      { href: "/clients", label: "Client Directory", description: "Browse approved public profiles by state and city." },
       { href: "/reports/recent", label: "Recent Reports", description: "Approved public client-report context." },
       { href: "/reports/non-payment", label: "Non-Payment Reports", description: "Moderated reports involving payment issues." },
       { href: "/clients/florida", label: "Florida Profiles", description: "SEO-visible public profiles by market." },
@@ -122,6 +123,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/how-it-works", label: "How It Works" },
       { href: "/pricing", label: "Pricing" },
       { href: "/resources", label: "Resources" },
+      { href: "/clients", label: "Client Directory" },
       { href: "/enterprise", label: "Enterprise" },
       { href: "/score-methodology", label: "Score Methodology" },
       { href: "/business-rating-methodology", label: "Business Rating" },
@@ -145,6 +147,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Public Records",
     links: [
       { href: "/client-response", label: "Client Response" },
+      { href: "/clients", label: "Client Directory" },
       { href: "/reports/recent", label: "Recent Reports" },
       { href: "/clients/florida", label: "Florida Profiles" },
       { href: "/industries/contractors", label: "Contractors" },

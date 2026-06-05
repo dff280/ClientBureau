@@ -5,6 +5,7 @@ import {
   getPublicBusinessProfilesService,
   getPublicClientProfilesService,
 } from "@/lib/repositories/client-bureau-service"
+import { getClientDirectory } from "@/lib/client-directory"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 const siteUrl = getSiteUrl()
@@ -31,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: now,
       changeFrequency: "monthly",
       priority: 0.65,
+    },
+    {
+      url: `${siteUrl}/clients`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.75,
     },
     {
       url: `${siteUrl}/businesses`,
@@ -146,6 +153,38 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly" as const,
     priority: page.kind === "clients" ? 0.75 : 0.7,
   }))
+  const directory = getClientDirectory(profiles)
+  const directoryRoutes = directory.flatMap((state) => [
+    {
+      url: `${siteUrl}/clients/${state.slug}`,
+      lastModified: new Date(state.lastUpdated),
+      changeFrequency: "weekly" as const,
+      priority: 0.78,
+    },
+    ...state.cities.map((city) => ({
+      url: `${siteUrl}/clients/${state.slug}/${city.slug}`,
+      lastModified: new Date(city.lastUpdated),
+      changeFrequency: "weekly" as const,
+      priority: 0.76,
+    })),
+  ])
 
-  return [...publicRoutes, ...landingRoutes, ...clientRoutes, ...businessRoutes]
+  return dedupeSitemapEntries([
+    ...publicRoutes,
+    ...landingRoutes,
+    ...directoryRoutes,
+    ...clientRoutes,
+    ...businessRoutes,
+  ])
+}
+
+function dedupeSitemapEntries(entries: MetadataRoute.Sitemap) {
+  const seen = new Set<string>()
+
+  return entries.filter((entry) => {
+    if (seen.has(entry.url)) return false
+    seen.add(entry.url)
+
+    return true
+  })
 }
