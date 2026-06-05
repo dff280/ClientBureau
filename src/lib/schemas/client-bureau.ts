@@ -29,6 +29,30 @@ const money = (label: string) =>
     .min(0, `${label} cannot be negative.`)
     .max(10_000_000, `${label} is above the current review limit.`)
 
+function milestoneScheduleTotals(value?: string) {
+  const lines = (value ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  if (lines.length === 0) return { valid: true, total: 0 }
+
+  let total = 0
+
+  for (const line of lines) {
+    const [, amountPart] = line.split("|").map((part) => part.trim())
+    const amount = Number((amountPart ?? "").replace(/[$,]/g, ""))
+
+    if (!amountPart || !Number.isFinite(amount) || amount < 0) {
+      return { valid: false, total: 0 }
+    }
+
+    total += amount
+  }
+
+  return { valid: true, total }
+}
+
 export const clientReportSchema = z
   .object({
     firstName: requiredText("Client first name"),
@@ -359,6 +383,8 @@ export const paymentPlanSchema = z.object({
 
 export const contractPacketSchema = z.object({
   clientName: requiredText("Client name"),
+  clientLegalName: optionalText,
+  contractorLegalName: optionalText,
   projectType: requiredText("Project type"),
   templateType: z.enum([
     "service_agreement",
@@ -375,10 +401,32 @@ export const contractPacketSchema = z.object({
     .min(0, "Milestone count cannot be negative.")
     .max(24, "Milestone count is above the current workflow limit."),
   requiredBeforeScheduling: z.coerce.boolean().optional(),
+  scopeSummary: requiredText("Scope summary", 20).max(1200, "Keep the scope summary under 1,200 characters."),
+  includedWork: requiredText("Included work", 12).max(1600, "Keep included work under 1,600 characters."),
+  excludedWork: z.string().trim().max(1200, "Keep excluded work under 1,200 characters.").optional(),
+  paymentTerms: requiredText("Payment terms", 20).max(1600, "Keep payment terms under 1,600 characters."),
+  milestoneSchedule: z.string().trim().max(2000, "Keep milestone schedule under 2,000 characters.").optional(),
+  changeOrderPolicy: requiredText("Change-order policy", 20).max(1200, "Keep the change-order policy under 1,200 characters."),
+  cancellationPolicy: requiredText("Cancellation policy", 20).max(1200, "Keep the cancellation policy under 1,200 characters."),
+  projectStartDate: optionalText,
+  projectEndDate: optionalText,
   nextAction: requiredText("Next action", 8).max(240, "Keep the next action under 240 characters."),
-}).refine((value) => value.depositRequired <= value.packetValue, {
-  path: ["depositRequired"],
-  message: "Deposit required cannot exceed the agreement value.",
+  }).refine((value) => value.depositRequired <= value.packetValue, {
+    path: ["depositRequired"],
+    message: "Deposit required cannot exceed the agreement value.",
+  }).refine((value) => milestoneScheduleTotals(value.milestoneSchedule).valid, {
+    path: ["milestoneSchedule"],
+    message: "Use one milestone per line with label, amount, and optional due date separated by |.",
+  }).refine((value) => milestoneScheduleTotals(value.milestoneSchedule).total <= value.packetValue, {
+    path: ["milestoneSchedule"],
+    message: "Milestone amounts cannot exceed the agreement value.",
+  }).refine((value) => {
+  if (!value.projectStartDate || !value.projectEndDate) return true
+
+  return value.projectEndDate >= value.projectStartDate
+}, {
+  path: ["projectEndDate"],
+  message: "Projected end date cannot be before the start date.",
 })
 
 export const updateContractPacketStatusSchema = z.object({
@@ -400,9 +448,17 @@ export const contractSignatureSchema = z.object({
   signerName: requiredText("Signer name"),
   signerEmail: z.email("Enter a valid email for signature verification."),
   signatureName: requiredText("Typed signature"),
+  scopeReviewCertification: z.coerce.boolean().optional(),
+  paymentTermsCertification: z.coerce.boolean().optional(),
   consentToElectronicSignature: z.coerce.boolean().optional(),
   authorityCertification: z.coerce.boolean().optional(),
   recordsCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.scopeReviewCertification === true, {
+  path: ["scopeReviewCertification"],
+  message: "Confirm you reviewed the scope, included work, and excluded work.",
+}).refine((value) => value.paymentTermsCertification === true, {
+  path: ["paymentTermsCertification"],
+  message: "Confirm you reviewed the payment terms and milestone schedule.",
 }).refine((value) => value.consentToElectronicSignature === true, {
   path: ["consentToElectronicSignature"],
   message: "Confirm consent to use electronic records and signatures for this agreement.",

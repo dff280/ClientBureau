@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect } from "react"
-import { ClipboardCheck, Filter, ShieldCheck } from "lucide-react"
+import { ClipboardCheck, Filter, ShieldCheck, Signature } from "lucide-react"
 import { toast } from "sonner"
 
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
@@ -91,6 +91,45 @@ export function AdminOpsExpansion({
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-md border-slate-200 bg-white shadow-sm xl:col-span-2">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Signature className="size-5 text-amber-700" aria-hidden="true" />
+            Contract packet visibility
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          {riskOps?.contractPackets.map((packet) => {
+            const digest = packet.signedDigest
+              ? `${packet.signedDigest.slice(0, 16)}...${packet.signedDigest.slice(-8)}`
+              : "pending"
+
+            return (
+              <div key={packet.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline" className="rounded-md capitalize">{packet.status.replaceAll("_", " ")}</Badge>
+                  <Badge variant="secondary" className="rounded-md capitalize">{packet.shareStatus?.replaceAll("_", " ") ?? "draft"}</Badge>
+                </div>
+                <h3 className="mt-3 font-semibold text-slate-950">{packet.clientName}</h3>
+                <p className="mt-1 text-sm text-slate-600">{packet.projectType} / {packet.templateType.replaceAll("_", " ")}</p>
+                <div className="mt-3 grid gap-1 text-xs leading-5 text-slate-500">
+                  <span>Signature: {packet.signatureStatus?.replaceAll("_", " ") ?? "not sent"}</span>
+                  <span>Payment mode: {packet.paymentMode?.replaceAll("_", " ") ?? "none"}</span>
+                  <span>Client contact: {packet.clientEmailMasked ?? "not added"}</span>
+                  <span>Signed: {packet.signedRecordAt ? new Date(packet.signedRecordAt).toLocaleDateString() : "not signed"}</span>
+                  <span>Digest: {digest}</span>
+                </div>
+              </div>
+            )
+          })}
+          {!riskOps?.contractPackets.length ? (
+            <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
+              Contract packet records will appear here after contractors create private agreement packets.
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

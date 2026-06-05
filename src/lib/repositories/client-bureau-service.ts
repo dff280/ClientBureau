@@ -1,4 +1,5 @@
 import { getDataMode, getPlatformFeatureDataMode } from "@/lib/env"
+import type { ContractSignatureAuditInput } from "@/lib/contract-packets"
 import {
   assignMockModerationCase,
   createContractWorkspaceItem,
@@ -488,10 +489,13 @@ export async function getContractShareByTokenService(token: string) {
   return getContractPacketByShareToken(token)
 }
 
-export async function signContractShareService(input: ContractSignatureInput) {
-  if (shouldUsePlatformSupabase()) return signContractShareSupabase(input)
+export async function signContractShareService(
+  input: ContractSignatureInput,
+  audit?: ContractSignatureAuditInput,
+) {
+  if (shouldUsePlatformSupabase()) return signContractShareSupabase(input, audit)
 
-  return signContractShare(input)
+  return signContractShare(input, audit)
 }
 
 export async function updateEvidenceVaultStatusService(userId: string, input: UpdateEvidenceVaultStatusInput) {

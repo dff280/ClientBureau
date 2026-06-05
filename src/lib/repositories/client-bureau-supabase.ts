@@ -2,6 +2,13 @@ import { createHash } from "node:crypto"
 
 import type { Database } from "@/lib/database.types"
 import {
+  agreementDefaults,
+  buildSignedContractSnapshot,
+  normalizeMilestoneSchedule,
+  normalizeSignedSnapshot,
+  type ContractSignatureAuditInput,
+} from "@/lib/contract-packets"
+import {
   calculateClientBureauScore,
   disputeHistoryLabel,
   getReportedBalanceSummary,
@@ -125,6 +132,17 @@ const emptyHash = "sha256:empty-private"
 
 function isMissingRelationError(error: { message?: string; code?: string } | null | undefined) {
   return error?.code === "42P01" || error?.message?.toLowerCase().includes("does not exist")
+}
+
+function isMissingContractPacketColumnError(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return (
+    error?.code === "42703" ||
+    message.includes("scope_summary") ||
+    message.includes("milestone_schedule") ||
+    message.includes("signed_snapshot")
+  )
 }
 
 function mapUser(row: UserRow): User {
@@ -547,6 +565,8 @@ function mapContractPacket(row: ContractPacketRow): ContractPacket {
     id: row.id,
     contractorId: row.contractor_id,
     clientName: row.client_name,
+    clientLegalName: row.client_legal_name ?? undefined,
+    contractorLegalName: row.contractor_legal_name ?? undefined,
     projectType: row.project_type,
     templateType: row.template_type,
     status: row.status,
@@ -554,6 +574,15 @@ function mapContractPacket(row: ContractPacketRow): ContractPacket {
     depositRequired: row.deposit_required,
     milestoneCount: row.milestone_count,
     requiredBeforeScheduling: row.required_before_scheduling,
+    scopeSummary: row.scope_summary,
+    includedWork: row.included_work,
+    excludedWork: row.excluded_work,
+    paymentTerms: row.payment_terms,
+    milestoneSchedule: normalizeMilestoneSchedule(row.milestone_schedule),
+    changeOrderPolicy: row.change_order_policy,
+    cancellationPolicy: row.cancellation_policy,
+    projectStartDate: row.project_start_date ?? undefined,
+    projectEndDate: row.project_end_date ?? undefined,
     nextAction: row.next_action,
     shareToken: row.share_token ?? undefined,
     shareUrl: row.share_url ?? undefined,
@@ -565,6 +594,14 @@ function mapContractPacket(row: ContractPacketRow): ContractPacket {
     paymentSummary: row.payment_summary ?? undefined,
     clientSignedAt: row.client_signed_at ?? undefined,
     contractorSignedAt: row.contractor_signed_at ?? undefined,
+    signerName: row.signer_name ?? undefined,
+    signatureNameHash: row.signature_name_hash ?? undefined,
+    signerEmailHash: row.signer_email_hash ?? undefined,
+    signerIpHash: row.signer_ip_hash ?? undefined,
+    signerUserAgentHash: row.signer_user_agent_hash ?? undefined,
+    signedSnapshot: normalizeSignedSnapshot(row.signed_snapshot),
+    signedDigest: row.signed_digest ?? undefined,
+    signedRecordAt: row.signed_recorded_at ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
@@ -1825,7 +1862,11 @@ function platformTableError(table: string, error: { message?: string; code?: str
   if (!error) return
 
   if (isMissingRelationError(error)) {
-    throw new Error(`Missing platform table ${table}. Apply Supabase migrations 0003, 0004, 0005, and 0006 before enabling PLATFORM_FEATURE_DATA_MODE=supabase.`)
+    throw new Error(`Missing platform table ${table}. Apply Supabase migrations 0003, 0004, 0005, 0006, and 0007 before enabling PLATFORM_FEATURE_DATA_MODE=supabase.`)
+  }
+
+  if (table === "contract_packets" && isMissingContractPacketColumnError(error)) {
+    throw new Error("Missing contract signing packet columns. Apply Supabase migration 0007_contract_signing_packets.sql before enabling Supabase-backed contract workflows.")
   }
 
   throw new Error(error.message ?? `Platform table ${table} could not be read.`)
@@ -2289,12 +2330,15 @@ export async function createPaymentPlanSupabase(userId: string, input: PaymentPl
 
 export async function createContractPacketSupabase(userId: string, input: ContractPacketInput) {
   const contractorId = await requireContractorIdForUser(userId)
+  const agreement = agreementDefaults(input)
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from("contract_packets")
     .insert({
       contractor_id: contractorId,
       client_name: input.clientName,
+      client_legal_name: input.clientLegalName || null,
+      contractor_legal_name: input.contractorLegalName || null,
       project_type: input.projectType,
       template_type: input.templateType,
       status: input.requiredBeforeScheduling ? "review_ready" : "draft",
@@ -2302,6 +2346,15 @@ export async function createContractPacketSupabase(userId: string, input: Contra
       deposit_required: input.depositRequired,
       milestone_count: input.milestoneCount,
       required_before_scheduling: Boolean(input.requiredBeforeScheduling),
+      scope_summary: agreement.scopeSummary,
+      included_work: agreement.includedWork,
+      excluded_work: agreement.excludedWork,
+      payment_terms: agreement.paymentTerms,
+      milestone_schedule: agreement.milestoneSchedule as unknown as Tables["contract_packets"]["Insert"]["milestone_schedule"],
+      change_order_policy: agreement.changeOrderPolicy,
+      cancellation_policy: agreement.cancellationPolicy,
+      project_start_date: input.projectStartDate || null,
+      project_end_date: input.projectEndDate || null,
       next_action: input.nextAction,
     })
     .select("*")
@@ -2393,7 +2446,10 @@ export async function getContractPacketByShareTokenSupabase(token: string) {
   return mapContractPacket(data)
 }
 
-export async function signContractShareSupabase(input: ContractSignatureInput) {
+export async function signContractShareSupabase(
+  input: ContractSignatureInput,
+  audit?: ContractSignatureAuditInput,
+) {
   const supabase = createServiceClient()
   const existing = await getContractPacketByShareTokenSupabase(input.shareToken)
 
@@ -2401,7 +2457,7 @@ export async function signContractShareSupabase(input: ContractSignatureInput) {
     throw new Error("Contract signing link was not found.")
   }
 
-  const now = new Date().toISOString()
+  const signed = buildSignedContractSnapshot(existing, input, audit)
   const shareStatus = existing.paymentMode && existing.paymentMode !== "none" ? "payment_pending" : "signed"
   const { data, error } = await supabase
     .from("contract_packets")
@@ -2412,7 +2468,15 @@ export async function signContractShareSupabase(input: ContractSignatureInput) {
       client_invite_status: "joined",
       signature_status: "client_signed",
       share_status: shareStatus,
-      client_signed_at: now,
+      client_signed_at: signed.signedRecordAt,
+      signer_name: signed.signerName,
+      signature_name_hash: signed.signatureNameHash,
+      signer_email_hash: signed.signerEmailHash,
+      signer_ip_hash: signed.signerIpHash ?? null,
+      signer_user_agent_hash: signed.signerUserAgentHash ?? null,
+      signed_snapshot: signed.signedSnapshot as unknown as Tables["contract_packets"]["Update"]["signed_snapshot"],
+      signed_digest: signed.signedDigest,
+      signed_recorded_at: signed.signedRecordAt,
       next_action:
         "Client signature recorded. Contractor should countersign, store the final agreement, and confirm payment timing before work starts.",
     })
@@ -2431,6 +2495,7 @@ export async function signContractShareSupabase(input: ContractSignatureInput) {
     summary: "Client signature recorded on private contract signing link.",
     metadata: {
       signer_email_hash: hashIdentifier(input.signerEmail),
+      signed_digest: signed.signedDigest,
       share_token: input.shareToken,
     },
   })

@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useEffect } from "react"
-import { CheckCircle2, Signature } from "lucide-react"
+import { CheckCircle2, Printer, Signature } from "lucide-react"
 import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
@@ -35,6 +35,14 @@ export function ContractSigningForm({ shareToken }: { shareToken: string }) {
           <AlertDescription>
             {state.message} Contract status: {state.data.signatureStatus?.replaceAll("_", " ") ?? "client signed"}.
           </AlertDescription>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-100"
+          >
+            <Printer className="size-4" aria-hidden="true" />
+            Print signed summary
+          </button>
         </Alert>
       ) : state.message ? (
         <Alert variant="destructive" className="rounded-md">
@@ -63,6 +71,16 @@ export function ContractSigningForm({ shareToken }: { shareToken: string }) {
       </div>
 
       <div className="grid gap-3">
+        <SigningCheck
+          name="scopeReviewCertification"
+          label="I reviewed the scope summary, included work, excluded work, change-order policy, and cancellation terms."
+          errors={state.ok ? undefined : state.fieldErrors}
+        />
+        <SigningCheck
+          name="paymentTermsCertification"
+          label="I reviewed the documented payment terms, deposit amount, milestone schedule, and due-date context."
+          errors={state.ok ? undefined : state.fieldErrors}
+        />
         <SigningCheck
           name="consentToElectronicSignature"
           label="I consent to use electronic records and electronic signatures for this agreement."

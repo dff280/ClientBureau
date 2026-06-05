@@ -30,6 +30,7 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0004_recovery_contracts.sql`
    - `supabase/migrations/0005_ops_workspace.sql`
    - `supabase/migrations/0006_launch_ops_hardening.sql`
+   - `supabase/migrations/0007_contract_signing_packets.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -180,7 +181,7 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, and `0006` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, `0006`, and `0007` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
 
@@ -291,12 +292,36 @@ order by table_name;
 
 Expected result: every row has `exists = true`.
 
+Then verify the contract signing packet fields from Supabase SQL Editor:
+
+```sql
+select column_name
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'contract_packets'
+  and column_name in (
+    'scope_summary',
+    'included_work',
+    'payment_terms',
+    'milestone_schedule',
+    'change_order_policy',
+    'cancellation_policy',
+    'signed_snapshot',
+    'signed_digest',
+    'signed_recorded_at'
+  )
+order by column_name;
+```
+
+Expected result: 9 rows.
+
 Expected `/api/health` signal before the flip:
 
 ```json
 {
   "readiness": {
     "platformCanUseSupabase": true,
+    "platformSchemaReady": true,
     "recommendedPlatformFeatureDataMode": "supabase",
     "readinessLabel": "Ready to flip"
   }

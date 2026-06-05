@@ -750,6 +750,17 @@ export interface Database {
         deposit_required: number
         milestone_count: number
         required_before_scheduling: boolean
+        client_legal_name: string | null
+        contractor_legal_name: string | null
+        scope_summary: string
+        included_work: string
+        excluded_work: string
+        payment_terms: string
+        milestone_schedule: Json
+        change_order_policy: string
+        cancellation_policy: string
+        project_start_date: string | null
+        project_end_date: string | null
         next_action: string
         share_token: string | null
         share_url: string | null
@@ -762,6 +773,14 @@ export interface Database {
         payment_summary: string | null
         client_signed_at: string | null
         contractor_signed_at: string | null
+        signer_name: string | null
+        signature_name_hash: string | null
+        signer_email_hash: string | null
+        signer_ip_hash: string | null
+        signer_user_agent_hash: string | null
+        signed_snapshot: Json | null
+        signed_digest: string | null
+        signed_recorded_at: string | null
         created_at: string
         updated_at: string
       }, {
@@ -775,6 +794,17 @@ export interface Database {
         deposit_required?: number
         milestone_count?: number
         required_before_scheduling?: boolean
+        client_legal_name?: string | null
+        contractor_legal_name?: string | null
+        scope_summary?: string
+        included_work?: string
+        excluded_work?: string
+        payment_terms?: string
+        milestone_schedule?: Json
+        change_order_policy?: string
+        cancellation_policy?: string
+        project_start_date?: string | null
+        project_end_date?: string | null
         next_action: string
         share_token?: string | null
         share_url?: string | null
@@ -787,6 +817,14 @@ export interface Database {
         payment_summary?: string | null
         client_signed_at?: string | null
         contractor_signed_at?: string | null
+        signer_name?: string | null
+        signature_name_hash?: string | null
+        signer_email_hash?: string | null
+        signer_ip_hash?: string | null
+        signer_user_agent_hash?: string | null
+        signed_snapshot?: Json | null
+        signed_digest?: string | null
+        signed_recorded_at?: string | null
         created_at?: string
         updated_at?: string
       }>

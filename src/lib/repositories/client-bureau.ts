@@ -16,6 +16,11 @@ import {
 } from "@/lib/mock-data"
 import { isPositiveReportCategory } from "@/lib/types"
 import {
+  agreementDefaults,
+  buildSignedContractSnapshot,
+  type ContractSignatureAuditInput,
+} from "@/lib/contract-packets"
+import {
   assignModerationCase,
   intakeAssessmentScore,
   intakeRiskRecommendation,
@@ -756,11 +761,14 @@ export function createPaymentPlan(contractorId: string, input: PaymentPlanInput)
 
 export function createContractPacket(contractorId: string, input: ContractPacketInput): ContractPacket {
   const now = new Date().toISOString()
+  const agreement = agreementDefaults(input)
 
   return {
     id: `contract_packet_${Date.now()}`,
     contractorId,
     clientName: input.clientName,
+    clientLegalName: input.clientLegalName,
+    contractorLegalName: input.contractorLegalName,
     projectType: input.projectType,
     templateType: input.templateType,
     status: input.requiredBeforeScheduling ? "review_ready" : "draft",
@@ -768,6 +776,15 @@ export function createContractPacket(contractorId: string, input: ContractPacket
     depositRequired: input.depositRequired,
     milestoneCount: input.milestoneCount,
     requiredBeforeScheduling: Boolean(input.requiredBeforeScheduling),
+    scopeSummary: agreement.scopeSummary,
+    includedWork: agreement.includedWork,
+    excludedWork: agreement.excludedWork,
+    paymentTerms: agreement.paymentTerms,
+    milestoneSchedule: agreement.milestoneSchedule,
+    changeOrderPolicy: agreement.changeOrderPolicy,
+    cancellationPolicy: agreement.cancellationPolicy,
+    projectStartDate: input.projectStartDate,
+    projectEndDate: input.projectEndDate,
     nextAction: input.nextAction,
     clientInviteStatus: "not_invited",
     signatureStatus: "not_sent",
@@ -814,11 +831,50 @@ function maskEmail(email: string) {
   return `${visible}@${domainName.slice(0, 1)}***${suffix ? `.${suffix}` : ""}`
 }
 
-function withShareDefaults(item: ContractPacket): ContractPacket {
-  const token = item.shareToken ?? contractShareToken(item)
+function withAgreementDefaults(item: ContractPacket): ContractPacket {
+  const existingMilestones = item.milestoneSchedule ?? []
+  const fallback = agreementDefaults({
+    clientName: item.clientName,
+    clientLegalName: item.clientLegalName,
+    contractorLegalName: item.contractorLegalName,
+    projectType: item.projectType,
+    templateType: item.templateType,
+    packetValue: item.packetValue,
+    depositRequired: item.depositRequired,
+    milestoneCount: item.milestoneCount,
+    requiredBeforeScheduling: item.requiredBeforeScheduling,
+    scopeSummary: item.scopeSummary,
+    includedWork: item.includedWork,
+    excludedWork: item.excludedWork,
+    paymentTerms: item.paymentTerms,
+    milestoneSchedule: existingMilestones
+      .map((milestone) => [milestone.label, milestone.amount, milestone.due].filter(Boolean).join(" | "))
+      .join("\n"),
+    changeOrderPolicy: item.changeOrderPolicy,
+    cancellationPolicy: item.cancellationPolicy,
+    projectStartDate: item.projectStartDate,
+    projectEndDate: item.projectEndDate,
+    nextAction: item.nextAction,
+  })
 
   return {
     ...item,
+    scopeSummary: item.scopeSummary ?? fallback.scopeSummary,
+    includedWork: item.includedWork ?? fallback.includedWork,
+    excludedWork: item.excludedWork ?? fallback.excludedWork,
+    paymentTerms: item.paymentTerms ?? fallback.paymentTerms,
+    milestoneSchedule: existingMilestones.length ? existingMilestones : fallback.milestoneSchedule,
+    changeOrderPolicy: item.changeOrderPolicy ?? fallback.changeOrderPolicy,
+    cancellationPolicy: item.cancellationPolicy ?? fallback.cancellationPolicy,
+  }
+}
+
+function withShareDefaults(item: ContractPacket): ContractPacket {
+  const agreementItem = withAgreementDefaults(item)
+  const token = item.shareToken ?? contractShareToken(item)
+
+  return {
+    ...agreementItem,
     shareToken: token,
     shareUrl: item.shareUrl ?? contractSharePath(token),
     clientInviteStatus: item.clientInviteStatus ?? "not_invited",
@@ -877,13 +933,17 @@ export function createContractShareLink(
   }
 }
 
-export function signContractShare(input: ContractSignatureInput): ContractPacket {
-  const now = new Date().toISOString()
+export function signContractShare(
+  input: ContractSignatureInput,
+  audit?: ContractSignatureAuditInput,
+): ContractPacket {
   const existing = getContractPacketByShareToken(input.shareToken)
 
   if (!existing) {
     throw new Error("Contract signing link was not found.")
   }
+
+  const signed = buildSignedContractSnapshot(existing, input, audit)
 
   return {
     ...existing,
@@ -892,9 +952,17 @@ export function signContractShare(input: ContractSignatureInput): ContractPacket
     clientInviteStatus: "joined",
     signatureStatus: "client_signed",
     shareStatus: existing.paymentMode && existing.paymentMode !== "none" ? "payment_pending" : "signed",
-    clientSignedAt: now,
+    clientSignedAt: signed.signedRecordAt,
+    signerName: signed.signerName,
+    signatureNameHash: signed.signatureNameHash,
+    signerEmailHash: signed.signerEmailHash,
+    signerIpHash: signed.signerIpHash,
+    signerUserAgentHash: signed.signerUserAgentHash,
+    signedSnapshot: signed.signedSnapshot,
+    signedDigest: signed.signedDigest,
+    signedRecordAt: signed.signedRecordAt,
     nextAction: "Client signature recorded. Contractor should countersign, store the final agreement, and confirm payment timing before work starts.",
-    updatedAt: now,
+    updatedAt: signed.signedRecordAt,
   }
 }
 

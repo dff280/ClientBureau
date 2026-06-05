@@ -52,9 +52,29 @@ type LaunchTableStatus = {
   message?: string
 }
 
+export const requiredContractPacketColumns = [
+  "scope_summary",
+  "included_work",
+  "payment_terms",
+  "milestone_schedule",
+  "change_order_policy",
+  "cancellation_policy",
+  "signed_snapshot",
+  "signed_digest",
+  "signed_recorded_at",
+] as const
+
+type LaunchColumnStatus = {
+  table: RequiredTable
+  name: (typeof requiredContractPacketColumns)[number]
+  exists: boolean
+  message?: string
+}
+
 export type LaunchReadinessSummary = {
   coreTablesReady: boolean
   platformTablesReady: boolean
+  platformSchemaReady: boolean
   coreLiveReady: boolean
   platformCanUseSupabase: boolean
   recommendedPlatformFeatureDataMode: "mock" | "supabase"
@@ -62,11 +82,16 @@ export type LaunchReadinessSummary = {
   readinessMessage: string
   missingCoreTables: RequiredTable[]
   missingPlatformTables: RequiredTable[]
+  missingPlatformColumns: string[]
   coreTableCount: {
     ready: number
     total: number
   }
   platformTableCount: {
+    ready: number
+    total: number
+  }
+  platformColumnCount: {
     ready: number
     total: number
   }
@@ -81,6 +106,7 @@ export type LaunchHealth = {
   stripeConfigured: boolean
   stripeWebhookConfigured: boolean
   requiredTables: LaunchTableStatus[]
+  requiredColumns: LaunchColumnStatus[]
   readiness: LaunchReadinessSummary
   timestamp: string
 }
@@ -109,6 +135,32 @@ async function checkRequiredTables() {
   )
 }
 
+async function checkRequiredColumns() {
+  if (!hasSupabaseServiceConfig()) {
+    return requiredContractPacketColumns.map((name) => ({
+      table: "contract_packets" as const,
+      name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+  }
+
+  const supabase = createServiceClient()
+
+  return Promise.all(
+    requiredContractPacketColumns.map(async (name) => {
+      const { error } = await supabase.from("contract_packets").select(name, { head: true }).limit(1)
+
+      return {
+        table: "contract_packets" as const,
+        name,
+        exists: !error,
+        message: error?.message,
+      }
+    }),
+  )
+}
+
 export function summarizeLaunchHealth(input: {
   dataMode: ReturnType<typeof getDataMode>
   platformFeatureDataMode: ReturnType<typeof getPlatformFeatureDataMode>
@@ -117,6 +169,7 @@ export function summarizeLaunchHealth(input: {
   stripeConfigured: boolean
   stripeWebhookConfigured: boolean
   requiredTables: LaunchTableStatus[]
+  requiredColumns?: LaunchColumnStatus[]
 }): LaunchReadinessSummary {
   const missingCoreTables = coreLaunchTables.filter((name) =>
     !input.requiredTables.find((table) => table.name === name && table.exists),
@@ -126,8 +179,12 @@ export function summarizeLaunchHealth(input: {
   )
   const coreTablesReady = missingCoreTables.length === 0
   const platformTablesReady = missingPlatformTables.length === 0
+  const missingPlatformColumns = (input.requiredColumns ?? [])
+    .filter((column) => !column.exists)
+    .map((column) => `${column.table}.${column.name}`)
+  const platformSchemaReady = missingPlatformColumns.length === 0
   const coreLiveReady = input.supabaseConfigured && input.serviceRoleConfigured && coreTablesReady
-  const platformCanUseSupabase = coreLiveReady && platformTablesReady
+  const platformCanUseSupabase = coreLiveReady && platformTablesReady && platformSchemaReady
   const recommendedPlatformFeatureDataMode = platformCanUseSupabase ? "supabase" : "mock"
 
   let readinessLabel = "Ready to flip"
@@ -144,7 +201,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Keep advanced tools mocked"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003, 0004, 0005, and 0006 before flipping advanced tools."
+      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003, 0004, 0005, 0006, and 0007 before flipping advanced tools."
+  } else if (!platformSchemaReady) {
+    readinessLabel = "Contract signing migration needed"
+    readinessMessage =
+      "Platform tables exist, but contract signing packet columns are missing. Apply migration 0007 before using Supabase-backed contract workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin ops are configured for Supabase-backed persistence."
@@ -153,6 +214,7 @@ export function summarizeLaunchHealth(input: {
   return {
     coreTablesReady,
     platformTablesReady,
+    platformSchemaReady,
     coreLiveReady,
     platformCanUseSupabase,
     recommendedPlatformFeatureDataMode,
@@ -160,6 +222,7 @@ export function summarizeLaunchHealth(input: {
     readinessMessage,
     missingCoreTables,
     missingPlatformTables,
+    missingPlatformColumns,
     coreTableCount: {
       ready: coreLaunchTables.length - missingCoreTables.length,
       total: coreLaunchTables.length,
@@ -168,11 +231,18 @@ export function summarizeLaunchHealth(input: {
       ready: platformLaunchTables.length - missingPlatformTables.length,
       total: platformLaunchTables.length,
     },
+    platformColumnCount: {
+      ready: requiredContractPacketColumns.length - missingPlatformColumns.length,
+      total: requiredContractPacketColumns.length,
+    },
   }
 }
 
 export async function getLaunchHealth(): Promise<LaunchHealth> {
-  const requiredTables = await checkRequiredTables()
+  const [requiredTables, requiredColumns] = await Promise.all([
+    checkRequiredTables(),
+    checkRequiredColumns(),
+  ])
   const supabaseConfigured = hasSupabaseConfig()
   const serviceRoleConfigured = hasSupabaseServiceConfig()
   const dataMode = getDataMode()
@@ -187,6 +257,7 @@ export async function getLaunchHealth(): Promise<LaunchHealth> {
     stripeConfigured,
     stripeWebhookConfigured,
     requiredTables,
+    requiredColumns,
   })
   const degraded =
     !supabaseConfigured ||
@@ -203,6 +274,7 @@ export async function getLaunchHealth(): Promise<LaunchHealth> {
     stripeConfigured,
     stripeWebhookConfigured,
     requiredTables,
+    requiredColumns,
     readiness,
     timestamp: new Date().toISOString(),
   }

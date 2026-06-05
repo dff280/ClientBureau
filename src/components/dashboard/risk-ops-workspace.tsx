@@ -1680,30 +1680,97 @@ function ContractPacketForm() {
   useToastState(state)
 
   return (
-    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
-      <Input name="clientName" placeholder="Client name" />
-      <Input name="projectType" placeholder="Project type" />
-      <select name="templateType" defaultValue="service_agreement" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
-        <option value="service_agreement">Service agreement</option>
-        <option value="change_order">Change order</option>
-        <option value="payment_plan">Payment plan</option>
-        <option value="completion_certificate">Completion certificate</option>
-        <option value="notice_of_nonpayment">Notice of non-payment</option>
-      </select>
+    <form action={action} className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div>
+        <p className="text-sm font-semibold text-slate-950">Create agreement packet</p>
+        <p className="mt-1 text-xs leading-5 text-slate-500">
+          Build the private record first. Send the signing link only after scope, payment terms, and policies are ready.
+        </p>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="clientName" placeholder="Client display name" />
+        <Input name="clientLegalName" placeholder="Client legal name, if different" />
+        <Input name="contractorLegalName" placeholder="Your legal business name" />
+        <Input name="projectType" placeholder="Project type" />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-[1fr_150px_150px]">
+        <select name="templateType" defaultValue="service_agreement" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="service_agreement">Service agreement</option>
+          <option value="change_order">Change order</option>
+          <option value="payment_plan">Payment plan</option>
+          <option value="completion_certificate">Completion certificate</option>
+          <option value="notice_of_nonpayment">Notice of non-payment</option>
+        </select>
+        <Input name="projectStartDate" type="date" aria-label="Projected start date" />
+        <Input name="projectEndDate" type="date" aria-label="Projected end date" />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
         <Input name="packetValue" type="number" placeholder="Agreement value" />
         <Input name="depositRequired" type="number" placeholder="Deposit required" />
+        <Input name="milestoneCount" type="number" placeholder="Milestone count" />
       </div>
-      <Input name="milestoneCount" type="number" placeholder="Milestone count" />
+
+      <Textarea
+        name="scopeSummary"
+        placeholder="Scope summary: what job this agreement covers"
+        className="min-h-20"
+      />
+      <Textarea
+        name="includedWork"
+        placeholder="Included work: labor, materials, deliverables, access requirements, cleanup"
+        className="min-h-24"
+      />
+      <Textarea
+        name="excludedWork"
+        placeholder="Excluded work: anything that requires a written change order"
+        className="min-h-20"
+      />
+      <Textarea
+        name="paymentTerms"
+        placeholder="Payment terms: deposit, milestone timing, due dates, accepted payment methods"
+        className="min-h-24"
+      />
+      <Textarea
+        name="milestoneSchedule"
+        placeholder="Milestone schedule, one per line: Deposit before scheduling | 2500 | Before scheduling"
+        className="min-h-24"
+      />
+
+      <Accordion type="single" collapsible className="rounded-md border border-slate-200 bg-white px-3">
+        <AccordionItem value="policies" className="border-none">
+          <AccordionTrigger className="text-sm font-semibold text-slate-950">Agreement policies</AccordionTrigger>
+          <AccordionContent className="grid gap-3">
+            <Textarea
+              name="changeOrderPolicy"
+              placeholder="Change-order policy: how added work, material changes, or schedule changes are approved"
+              className="min-h-20"
+            />
+            <Textarea
+              name="cancellationPolicy"
+              placeholder="Cancellation policy: pause, reschedule, materials, completed work, and written notice"
+              className="min-h-20"
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+
       <Textarea name="nextAction" placeholder="Next contract action before scheduling" className="min-h-20" />
       <label className="flex items-center gap-2 text-sm text-slate-700">
         <Checkbox name="requiredBeforeScheduling" />
-        Required before scheduling
+        Require this signed packet before scheduling work
       </label>
       <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
         <Signature aria-hidden="true" />
-        Create signing link
+        Create agreement packet
       </PendingSubmitButton>
+      <FieldError name="scopeSummary" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="includedWork" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="paymentTerms" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="changeOrderPolicy" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="cancellationPolicy" errors={state.ok ? undefined : state.fieldErrors} />
       <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
     </form>
   )
@@ -1716,6 +1783,10 @@ function ContractPacketCard({ item }: { item: ContractPacket }) {
   const completion = contractPacketCompletionPercentage(displayItem)
   const shareUrl = displayItem.shareUrl
   const shareUrlLabel = shareUrl?.startsWith("/") ? shareUrl : shareUrl?.replace(/^https?:\/\//, "")
+  const milestones = displayItem.milestoneSchedule ?? []
+  const signedDigestLabel = displayItem.signedDigest
+    ? `${displayItem.signedDigest.slice(0, 18)}...${displayItem.signedDigest.slice(-8)}`
+    : undefined
 
   useToastState(statusState)
   useToastState(shareState)
@@ -1740,12 +1811,44 @@ function ContractPacketCard({ item }: { item: ContractPacket }) {
       <p className="mt-2 text-xs text-slate-500">{completion}% link readiness / {displayItem.milestoneCount} milestones</p>
       <p className="mt-3 text-sm leading-6 text-slate-700">{displayItem.nextAction}</p>
 
+      <div className="mt-4 grid gap-3 rounded-md border border-slate-200 bg-white p-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">Scope summary</p>
+          <p className="mt-1 text-sm leading-6 text-slate-700">{displayItem.scopeSummary}</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase text-slate-500">Included work</p>
+            <p className="mt-1 line-clamp-4 text-sm leading-6 text-slate-700">{displayItem.includedWork}</p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase text-slate-500">Payment terms</p>
+            <p className="mt-1 line-clamp-4 text-sm leading-6 text-slate-700">{displayItem.paymentTerms}</p>
+          </div>
+        </div>
+        {milestones.length > 0 ? (
+          <div className="grid gap-2">
+            <p className="text-xs font-semibold uppercase text-slate-500">Milestones</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {milestones.slice(0, 4).map((milestone) => (
+                <div key={milestone.id} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+                  <p className="font-semibold text-slate-950">{milestone.label}</p>
+                  <p className="mt-1">${milestone.amount.toLocaleString()} {milestone.due ? `/ ${milestone.due}` : ""}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
       <div className="mt-4 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
         <div className="grid gap-2 sm:grid-cols-2">
           <span>Client invite: {displayItem.clientInviteStatus?.replaceAll("_", " ") ?? "not invited"}</span>
           <span>Share status: {displayItem.shareStatus?.replaceAll("_", " ") ?? "draft"}</span>
           <span>Client contact: {displayItem.clientEmailMasked ?? "not added"}</span>
           <span>Payment mode: {displayItem.paymentMode?.replaceAll("_", " ") ?? "none"}</span>
+          <span>Signed record: {displayItem.signedRecordAt ? new Date(displayItem.signedRecordAt).toLocaleDateString() : "not signed"}</span>
+          <span>Signed digest: {signedDigestLabel ?? "pending"}</span>
         </div>
         {displayItem.paymentSummary ? <p>{displayItem.paymentSummary}</p> : null}
         {shareUrl ? (

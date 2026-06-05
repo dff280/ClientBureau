@@ -360,7 +360,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults, client invite rules, and contract language." badge={`${contractLinks} active`} />
-              <QuickLink href="/dashboard?workspace=contracts" icon={<ClipboardCheck className="size-5" />} title="Contracts / Templates" text="Preview contractor-side templates, signing links, and status tracking." badge="Ops" />
+              <QuickLink href="/dashboard/contracts" icon={<ClipboardCheck className="size-5" />} title="Contracts / Templates" text="Preview contractor-side templates, signing links, and status tracking." badge="Ops" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track agreement status, reviewer actions, and settings changes." badge="Audit" />
             </div>
             {moderationCrm ? (
@@ -426,6 +426,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
 function LiveOpsReadinessPanel({ health }: { health: Awaited<ReturnType<typeof getLaunchHealth>> }) {
   const readiness = health.readiness
   const missingPlatformPreview = readiness.missingPlatformTables.slice(0, 6)
+  const missingColumnPreview = readiness.missingPlatformColumns.slice(0, 6)
 
   return (
     <DashboardSection
@@ -453,6 +454,12 @@ function LiveOpsReadinessPanel({ health }: { health: Awaited<ReturnType<typeof g
             ok={readiness.platformTablesReady}
           />
           <ReadinessFact
+            icon={Signature}
+            label="Signing fields"
+            value={`${readiness.platformColumnCount.ready}/${readiness.platformColumnCount.total} columns`}
+            ok={readiness.platformSchemaReady}
+          />
+          <ReadinessFact
             icon={Settings}
             label="Current feature mode"
             value={health.platformFeatureDataMode}
@@ -468,8 +475,8 @@ function LiveOpsReadinessPanel({ health }: { health: Awaited<ReturnType<typeof g
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
           <p className="text-sm font-semibold text-slate-950">Staged activation path</p>
           <ol className="mt-3 grid gap-2 text-sm leading-6 text-slate-600">
-            <li>1. Apply Supabase migrations 0003 through 0006.</li>
-            <li>2. Confirm this panel shows platform ops {readiness.platformTableCount.total}/{readiness.platformTableCount.total}.</li>
+            <li>1. Apply Supabase migrations 0003 through 0007.</li>
+            <li>2. Confirm this panel shows platform ops {readiness.platformTableCount.total}/{readiness.platformTableCount.total} and signing fields {readiness.platformColumnCount.total}/{readiness.platformColumnCount.total}.</li>
             <li>3. Set <code className="rounded bg-white px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=supabase</code> and redeploy.</li>
             <li>4. Roll back with <code className="rounded bg-white px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=mock</code> if any advanced tool needs review.</li>
           </ol>
@@ -486,9 +493,26 @@ function LiveOpsReadinessPanel({ health }: { health: Awaited<ReturnType<typeof g
                   <Badge variant="outline" className="rounded-md bg-white">
                     +{readiness.missingPlatformTables.length - missingPlatformPreview.length} more
                   </Badge>
-                ) : null}
+            ) : null}
+            {missingColumnPreview.length > 0 ? (
+              <div className="mt-4">
+                <p className="text-xs font-semibold uppercase text-slate-500">Missing signing fields</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {missingColumnPreview.map((column) => (
+                    <Badge key={column} variant="outline" className="rounded-md bg-white">
+                      {column}
+                    </Badge>
+                  ))}
+                  {readiness.missingPlatformColumns.length > missingColumnPreview.length ? (
+                    <Badge variant="outline" className="rounded-md bg-white">
+                      +{readiness.missingPlatformColumns.length - missingColumnPreview.length} more
+                    </Badge>
+                  ) : null}
+                </div>
               </div>
-            </div>
+            ) : null}
+          </div>
+        </div>
           ) : null}
         </div>
       </div>

@@ -14,9 +14,11 @@ import { noStoreHeaders } from "@/lib/http"
 import {
   coreLaunchTables,
   platformLaunchTables,
+  requiredContractPacketColumns,
   requiredLaunchTables,
   summarizeLaunchHealth,
 } from "@/lib/launch-health"
+import type { Database } from "@/lib/database.types"
 import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
 import {
   calculateClientBureauScore,
@@ -230,7 +232,7 @@ describe("product positioning", () => {
       "Billing",
     ])
     expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
-      "/dashboard?workspace=contracts",
+      "/dashboard/contracts",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
       "/dashboard?workspace=lien-readiness",
@@ -353,6 +355,14 @@ describe("launch health gates", () => {
     }))
   }
 
+  function columnStatuses(missing: string[] = []) {
+    return requiredContractPacketColumns.map((name) => ({
+      table: "contract_packets" as const,
+      name,
+      exists: !missing.includes(`contract_packets.${name}`),
+    }))
+  }
+
   it("keeps core and platform launch table groups distinct", () => {
     expect(new Set(requiredLaunchTables).size).toBe(requiredLaunchTables.length)
     expect(coreLaunchTables).toContain("client_reports")
@@ -369,6 +379,7 @@ describe("launch health gates", () => {
       stripeConfigured: true,
       stripeWebhookConfigured: true,
       requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(),
     })
 
     expect(summary.coreLiveReady).toBe(true)
@@ -386,6 +397,7 @@ describe("launch health gates", () => {
       stripeConfigured: true,
       stripeWebhookConfigured: true,
       requiredTables: tableStatuses(["contract_packets"]),
+      requiredColumns: columnStatuses(),
     })
 
     expect(summary.coreLiveReady).toBe(true)
@@ -403,11 +415,31 @@ describe("launch health gates", () => {
       stripeConfigured: true,
       stripeWebhookConfigured: true,
       requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(),
     })
 
     expect(summary.coreLiveReady).toBe(false)
     expect(summary.platformCanUseSupabase).toBe(false)
     expect(summary.readinessLabel).toBe("Configuration missing")
+  })
+
+  it("keeps live contract workflows gated until signing packet columns exist", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(["contract_packets.signed_snapshot"]),
+    })
+
+    expect(summary.platformTablesReady).toBe(true)
+    expect(summary.platformSchemaReady).toBe(false)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.readinessLabel).toBe("Contract signing migration needed")
+    expect(summary.recommendedPlatformFeatureDataMode).toBe("mock")
   })
 })
 
@@ -757,6 +789,8 @@ describe("platform expansion feature utilities", () => {
       signerName: "Client Contact",
       signerEmail: "client@example.com",
       signatureName: "Client Contact",
+      scopeReviewCertification: true,
+      paymentTermsCertification: true,
       consentToElectronicSignature: true,
       authorityCertification: true,
       recordsCertification: true,
@@ -764,6 +798,9 @@ describe("platform expansion feature utilities", () => {
 
     expect(signed.signatureStatus).toBe("client_signed")
     expect(signed.clientInviteStatus).toBe("joined")
+    expect(signed.signedSnapshot?.signerName).toBe("Client Contact")
+    expect(signed.signedDigest).toMatch(/^sha256:/)
+    expect(JSON.stringify(signed)).not.toContain("client@example.com")
   })
 
   it("detects obvious private evidence leaks in public-facing payloads", () => {
@@ -917,15 +954,42 @@ describe("platform expansion schemas", () => {
     expect(
       contractPacketSchema.safeParse({
         clientName: "Maria Alvarez",
+        clientLegalName: "Maria Alvarez",
+        contractorLegalName: "RidgeBuild Contracting LLC",
         projectType: "Deck maintenance",
         templateType: "service_agreement",
         packetValue: 3900,
         depositRequired: 750,
         milestoneCount: 2,
         requiredBeforeScheduling: true,
+        scopeSummary: "Deck maintenance agreement packet prepared for client review before scheduling.",
+        includedWork: "Cleaning, sanding touch-ups, fastener inspection, finish application, and ordinary cleanup.",
+        excludedWork: "Structural repairs, hidden rot remediation, and permit work require written change orders.",
+        paymentTerms: "A deposit is due before scheduling with the final balance due after the completion walkthrough.",
+        milestoneSchedule: "Deposit before scheduling | 750 | Before scheduling\nFinal walkthrough | 3150 | Completion",
+        changeOrderPolicy: "Any added scope or material change must be approved in writing before added work begins.",
+        cancellationPolicy: "Cancellation or rescheduling should be documented in writing with costs reconciled.",
         nextAction: "Review agreement before scheduling.",
       }).success,
     ).toBe(true)
+
+    expect(
+      contractPacketSchema.safeParse({
+        clientName: "Maria Alvarez",
+        projectType: "Deck maintenance",
+        templateType: "service_agreement",
+        packetValue: 3900,
+        depositRequired: 750,
+        milestoneCount: 2,
+        scopeSummary: "Deck maintenance agreement packet prepared for client review before scheduling.",
+        includedWork: "Cleaning, sanding touch-ups, fastener inspection, finish application, and ordinary cleanup.",
+        paymentTerms: "A deposit is due before scheduling with the final balance due after the completion walkthrough.",
+        milestoneSchedule: "Deposit before scheduling | 5000 | Before scheduling",
+        changeOrderPolicy: "Any added scope or material change must be approved in writing before added work begins.",
+        cancellationPolicy: "Cancellation or rescheduling should be documented in writing with costs reconciled.",
+        nextAction: "Review agreement before scheduling.",
+      }).success,
+    ).toBe(false)
 
     expect(updateContractPacketStatusSchema.safeParse({ packetId: "contract_packet_01", status: "signed" }).success).toBe(true)
     expect(
@@ -943,6 +1007,8 @@ describe("platform expansion schemas", () => {
         signerName: "Client Contact",
         signerEmail: "client@example.com",
         signatureName: "Client Contact",
+        scopeReviewCertification: true,
+        paymentTermsCertification: true,
         consentToElectronicSignature: true,
         authorityCertification: true,
         recordsCertification: true,
@@ -954,6 +1020,9 @@ describe("platform expansion schemas", () => {
         signerName: "Client Contact",
         signerEmail: "client@example.com",
         signatureName: "Client Contact",
+        consentToElectronicSignature: true,
+        authorityCertification: true,
+        recordsCertification: true,
       }).success,
     ).toBe(false)
     expect(updateEvidenceVaultStatusSchema.safeParse({ evidenceId: "vault_01", status: "reviewed" }).success).toBe(true)
@@ -975,5 +1044,27 @@ describe("platform expansion schemas", () => {
     expect(serialized).not.toContain("pending")
     expect(serialized).not.toContain("rejected")
     expect(serialized).not.toContain("signed-completion-form.pdf")
+  })
+
+  it("covers Supabase contract packet migration fields in database types", () => {
+    const typedInsert: Database["public"]["Tables"]["contract_packets"]["Insert"] = {
+      contractor_id: "contractor_01",
+      client_name: "Maria Alvarez",
+      project_type: "Deck maintenance",
+      template_type: "service_agreement",
+      next_action: "Review agreement packet before sending.",
+      scope_summary: "Scope is documented for private signing.",
+      included_work: "Included work is documented.",
+      payment_terms: "Payment terms are documented.",
+      milestone_schedule: [{ id: "milestone_1", label: "Deposit", amount: 750 }],
+      change_order_policy: "Change orders require written approval.",
+      cancellation_policy: "Cancellation should be documented in writing.",
+      signed_snapshot: null,
+      signed_digest: null,
+      signed_recorded_at: null,
+    }
+
+    expect(typedInsert.scope_summary).toContain("Scope")
+    expect(requiredContractPacketColumns).toContain("signed_snapshot")
   })
 })

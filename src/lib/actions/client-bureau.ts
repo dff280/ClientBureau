@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { headers } from "next/headers"
 
 import { verifyAdminActionTokenFromForm } from "@/lib/admin-action-token"
 import {
@@ -119,7 +120,15 @@ function evidenceFilesFromForm(formData: FormData) {
 function actionErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     if (error.message.includes("Missing platform table")) {
-      return `${fallback} Live Ops is not ready for Supabase persistence yet. Apply migrations 0003, 0004, 0005, and 0006, or roll PLATFORM_FEATURE_DATA_MODE back to mock, then try again.`
+      return `${fallback} Live Ops is not ready for Supabase persistence yet. Apply migrations 0003, 0004, 0005, 0006, and 0007, or roll PLATFORM_FEATURE_DATA_MODE back to mock, then try again.`
+    }
+
+    if (
+      error.message.includes("scope_summary") ||
+      error.message.includes("milestone_schedule") ||
+      error.message.includes("signed_snapshot")
+    ) {
+      return `${fallback} Contract signing fields are not ready in Supabase yet. Apply migration 0007_contract_signing_packets.sql, or keep PLATFORM_FEATURE_DATA_MODE=mock, then try again.`
     }
 
     return `${fallback} ${error.message}`
@@ -951,6 +960,7 @@ export async function createContractPacketAction(
     if (!packet) return fail("Contract link feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/contracts")
     return ok(packet, "Contract signing link workspace created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Contract signing link could not be created."))
@@ -974,6 +984,7 @@ export async function updateContractPacketStatusAction(
     if (!packet) return fail("Contract link feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/contracts")
     return ok(packet, `Contract link marked ${packet.status.replaceAll("_", " ")}.`)
   } catch (error) {
     return fail(actionErrorMessage(error, "Contract link status could not be updated."))
@@ -1000,6 +1011,7 @@ export async function createContractShareLinkAction(
     if (!packet) return fail("Contract signing link feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/contracts")
     if (packet.shareUrl) revalidatePath(packet.shareUrl)
 
     return ok(packet, "Private contract signing link is ready to share with the client.")
@@ -1014,6 +1026,8 @@ export async function signContractShareAction(
 ): Promise<ActionResult<ContractPacket>> {
   const parsed = contractSignatureSchema.safeParse({
     ...formDataToObject(formData),
+    scopeReviewCertification: formData.has("scopeReviewCertification"),
+    paymentTermsCertification: formData.has("paymentTermsCertification"),
     consentToElectronicSignature: formData.has("consentToElectronicSignature"),
     authorityCertification: formData.has("authorityCertification"),
     recordsCertification: formData.has("recordsCertification"),
@@ -1024,11 +1038,18 @@ export async function signContractShareAction(
   }
 
   try {
-    const packet = await signContractShareService(parsed.data)
+    const headerList = await headers()
+    const forwardedFor = headerList.get("x-forwarded-for")?.split(",")[0]?.trim()
+    const ipAddress = forwardedFor || headerList.get("x-real-ip") || undefined
+    const userAgent = headerList.get("user-agent") || undefined
+    const packet = await signContractShareService(parsed.data, { ipAddress, userAgent })
     if (!packet) return fail("Contract signing link feature data is not available yet.")
 
     revalidatePath(`/contract/${parsed.data.shareToken}`)
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/contracts")
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
 
     return ok(packet, "Signature recorded. The contractor can countersign and confirm payment timing.")
   } catch (error) {

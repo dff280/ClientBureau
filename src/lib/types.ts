@@ -432,6 +432,42 @@ export interface PaymentPlan {
   updatedAt: string
 }
 
+export interface ContractMilestone {
+  id: string
+  label: string
+  amount: number
+  due?: string
+}
+
+export interface SignedContractSnapshot {
+  packetId: string
+  clientName: string
+  clientLegalName?: string
+  contractorLegalName?: string
+  projectType: string
+  templateType: ContractTemplateType
+  packetValue: number
+  depositRequired: number
+  paymentMode: ContractPaymentMode
+  paymentSummary?: string
+  scopeSummary: string
+  includedWork: string
+  excludedWork: string
+  paymentTerms: string
+  milestoneSchedule: ContractMilestone[]
+  changeOrderPolicy: string
+  cancellationPolicy: string
+  projectStartDate?: string
+  projectEndDate?: string
+  signerName: string
+  signatureNameHash?: string
+  signerEmailHash?: string
+  signerIpHash?: string
+  signerUserAgentHash?: string
+  signedAt: string
+  attestations: string[]
+}
+
 export interface ContractPacket {
   id: string
   contractorId: string
@@ -443,6 +479,17 @@ export interface ContractPacket {
   depositRequired: number
   milestoneCount: number
   requiredBeforeScheduling: boolean
+  clientLegalName?: string
+  contractorLegalName?: string
+  scopeSummary: string
+  includedWork: string
+  excludedWork: string
+  paymentTerms: string
+  milestoneSchedule: ContractMilestone[]
+  changeOrderPolicy: string
+  cancellationPolicy: string
+  projectStartDate?: string
+  projectEndDate?: string
   nextAction: string
   shareToken?: string
   shareUrl?: string
@@ -454,6 +501,14 @@ export interface ContractPacket {
   paymentSummary?: string
   clientSignedAt?: string
   contractorSignedAt?: string
+  signerName?: string
+  signatureNameHash?: string
+  signerEmailHash?: string
+  signerIpHash?: string
+  signerUserAgentHash?: string
+  signedSnapshot?: SignedContractSnapshot
+  signedDigest?: string
+  signedRecordAt?: string
   createdAt: string
   updatedAt: string
 }

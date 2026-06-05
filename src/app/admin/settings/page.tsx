@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Activity, Database, Settings, ShieldCheck } from "lucide-react"
+import { Activity, Database, Settings, ShieldCheck, Signature } from "lucide-react"
 
 import { AdminPageHeader, DashboardSection, StatCard } from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
@@ -57,12 +57,13 @@ export default async function AdminSettingsPage() {
           description="Review moderation rules, publication defaults, evidence privacy, recovery review requirements, contract workflow defaults, and launch readiness."
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard label="Launch status" value={health.status} helper={readiness.readinessLabel} icon={ShieldCheck} tone={health.status === "ok" ? "emerald" : "amber"} />
           <StatCard label="Data mode" value={health.dataMode} helper="Core records source" icon={Database} tone={health.dataMode === "supabase" ? "emerald" : "amber"} />
-          <StatCard label="Feature mode" value={health.platformFeatureDataMode} helper="Advanced ops data source" icon={Settings} tone={health.platformFeatureDataMode === "supabase" ? "emerald" : "amber"} />
-          <StatCard label="Platform tables" value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`} helper="Advanced ops readiness" icon={Activity} tone={readiness.platformTablesReady ? "emerald" : "amber"} />
-        </div>
+            <StatCard label="Feature mode" value={health.platformFeatureDataMode} helper="Advanced ops data source" icon={Settings} tone={health.platformFeatureDataMode === "supabase" ? "emerald" : "amber"} />
+            <StatCard label="Platform tables" value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`} helper="Advanced ops readiness" icon={Activity} tone={readiness.platformTablesReady ? "emerald" : "amber"} />
+            <StatCard label="Signing fields" value={`${readiness.platformColumnCount.ready}/${readiness.platformColumnCount.total}`} helper="Contract packet readiness" icon={Signature} tone={readiness.platformSchemaReady ? "emerald" : "amber"} />
+          </div>
 
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
@@ -84,6 +85,7 @@ export default async function AdminSettingsPage() {
               <HealthFact label="Service role" value={health.serviceRoleConfigured ? "Configured" : "Missing"} ok={health.serviceRoleConfigured} />
               <HealthFact label="Core tables" value={`${readiness.coreTableCount.ready}/${readiness.coreTableCount.total}`} ok={readiness.coreTablesReady} />
               <HealthFact label="Platform tables" value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`} ok={readiness.platformTablesReady} />
+              <HealthFact label="Signing fields" value={`${readiness.platformColumnCount.ready}/${readiness.platformColumnCount.total}`} ok={readiness.platformSchemaReady} />
               <HealthFact label="Stripe" value={health.stripeConfigured ? "Configured" : "Missing"} ok={health.stripeConfigured} />
               <HealthFact label="Webhook" value={health.stripeWebhookConfigured ? "Configured" : "Missing"} ok={health.stripeWebhookConfigured} />
               <HealthFact label="Recommended mode" value={readiness.recommendedPlatformFeatureDataMode} ok={readiness.platformCanUseSupabase} />
@@ -99,16 +101,21 @@ export default async function AdminSettingsPage() {
                 <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=mock</code>,
                 rebuilding, and leaving core Supabase records untouched.
               </div>
-              {missingTables.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {missingTables.slice(0, 8).map((table) => (
-                    <Badge key={table.name} variant="outline" className="rounded-md bg-white">
-                      {table.name}
-                    </Badge>
-                  ))}
-                  {missingTables.length > 8 ? (
-                    <Badge variant="outline" className="rounded-md bg-white">+{missingTables.length - 8} more</Badge>
-                  ) : null}
+                {missingTables.length > 0 || readiness.missingPlatformColumns.length > 0 ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {missingTables.slice(0, 8).map((table) => (
+                      <Badge key={table.name} variant="outline" className="rounded-md bg-white">
+                        {table.name}
+                      </Badge>
+                    ))}
+                    {readiness.missingPlatformColumns.slice(0, 8).map((column) => (
+                      <Badge key={column} variant="outline" className="rounded-md bg-white">
+                        {column}
+                      </Badge>
+                    ))}
+                    {missingTables.length > 8 ? (
+                      <Badge variant="outline" className="rounded-md bg-white">+{missingTables.length - 8} more</Badge>
+                    ) : null}
                 </div>
               ) : null}
             </div>
