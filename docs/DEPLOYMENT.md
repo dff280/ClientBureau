@@ -31,6 +31,7 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0005_ops_workspace.sql`
    - `supabase/migrations/0006_launch_ops_hardening.sql`
    - `supabase/migrations/0007_contract_signing_packets.sql`
+   - `supabase/migrations/0008_managed_recovery_lien_filing.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -93,6 +94,10 @@ invoice.payment_failed
 ```
 
 Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
+
+Managed payment recovery and Florida lien service fees use Stripe payment-mode Checkout with
+dynamic price data. They do not require separate Stripe price IDs in this sprint. The webhook
+marks `service_fee_orders` paid when migration `0008` is applied.
 
 ## 4. Upload Source Through GitHub
 
@@ -181,7 +186,7 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, `0006`, and `0007` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, `0006`, `0007`, and `0008` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
 

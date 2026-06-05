@@ -98,16 +98,16 @@ const painWorkflows = [
   {
     icon: ReceiptText,
     title: "The final invoice is late and every follow-up becomes another promise.",
-    text: "Track invoice dates, payment promises, call notes, payment-plan status, and next follow-up steps without making the issue public.",
+    text: "Open a managed Resolution Desk case or track invoice dates, payment promises, call notes, payment-plan status, and next follow-up steps without making the issue public.",
     href: "/dashboard/recovery",
-    cta: "Track payment",
+    cta: "Get recovery help",
   },
   {
     icon: Landmark,
     title: "Lien and notice deadlines are easy to miss while you are still working jobs.",
-    text: "Prepare private readiness packets with deadline reminders, jurisdiction notes, and supporting-document checklists for required review.",
+    text: "Start a private Florida notice or claim-of-lien workflow with documents, fee tracking, contractor authorization, attorney/vendor review, and recording proof.",
     href: "/dashboard/lien-readiness",
-    cta: "Check deadlines",
+    cta: "Start lien service",
   },
   {
     icon: MessageSquareText,

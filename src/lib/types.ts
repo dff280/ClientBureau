@@ -73,6 +73,19 @@ export type PaymentRecoveryStatus =
   | "payment_plan"
   | "resolved"
   | "paused"
+export type ManagedRecoveryStatus =
+  | "draft"
+  | "fee_due"
+  | "submitted"
+  | "under_review"
+  | "needs_more_info"
+  | "contact_in_progress"
+  | "client_responded"
+  | "payment_plan_offered"
+  | "resolved"
+  | "unresolved"
+  | "paused"
+  | "closed"
 export type RecoveryChannel = "email" | "phone" | "letter" | "client_portal"
 export type LienNoticeStatus =
   | "deadline_review"
@@ -81,6 +94,27 @@ export type LienNoticeStatus =
   | "sent"
   | "released"
   | "not_eligible"
+export type FloridaLienWorkflowType = "notice_packet" | "claim_of_lien_filing"
+export type FloridaLienCaseStatus =
+  | "draft"
+  | "fee_due"
+  | "document_review"
+  | "needs_more_info"
+  | "contractor_signature_required"
+  | "attorney_vendor_review"
+  | "approved_to_send"
+  | "notice_sent"
+  | "approved_to_file"
+  | "filed"
+  | "recording_confirmed"
+  | "release_pending"
+  | "released"
+  | "blocked"
+  | "closed"
+export type LienDeliveryMethod = "certified_mail" | "process_server" | "e_recording_vendor" | "attorney_vendor" | "manual_admin"
+export type LienFilingMethod = "attorney_vendor" | "e_recording_vendor" | "county_clerk_manual"
+export type ServiceFeeKind = "managed_recovery" | "florida_lien_notice" | "florida_lien_filing"
+export type ServiceFeeStatus = "draft" | "checkout_ready" | "paid" | "failed" | "refunded" | "waived"
 export type ContractTemplateType =
   | "service_agreement"
   | "change_order"
@@ -153,6 +187,9 @@ export type AdminEntityType =
   | "lien_readiness"
   | "contract"
   | "contract_packet"
+  | "managed_recovery"
+  | "florida_lien"
+  | "service_fee"
   | "risk_room"
   | "pipeline"
   | "evidence_vault"
@@ -334,6 +371,55 @@ export interface PaymentRecoveryCase {
   updatedAt: string
 }
 
+export interface ManagedRecoveryCase {
+  id: string
+  contractorId: string
+  clientName: string
+  clientEmailMasked?: string
+  city: string
+  state: string
+  amountDue: number
+  invoiceAgeDays: number
+  preferredChannel: RecoveryChannel
+  status: ManagedRecoveryStatus
+  priority: ModerationPriority
+  serviceFeeOrderId?: string
+  evidenceVaultItemIds: string[]
+  assignedToName?: string
+  nextAction: string
+  summary: string
+  contractorDirectPayment: boolean
+  complianceFlags: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RecoveryCommunication {
+  id: string
+  managedRecoveryCaseId: string
+  contractorId: string
+  channel: RecoveryChannel
+  direction: "outbound" | "inbound" | "internal"
+  subject: string
+  note: string
+  outcome: PaymentRecoveryAttemptOutcome
+  contactedAt: string
+  loggedByName: string
+  createdAt: string
+}
+
+export interface RecoveryResolutionOffer {
+  id: string
+  managedRecoveryCaseId: string
+  contractorId: string
+  amountOffered: number
+  paymentDueDate?: string
+  termsSummary: string
+  status: "draft" | "offered" | "accepted" | "rejected" | "expired" | "paid"
+  createdAt: string
+  updatedAt: string
+}
+
 export interface LienNoticeDraft {
   id: string
   contractorId: string
@@ -350,6 +436,124 @@ export interface LienNoticeDraft {
   jurisdictionNote: string
   createdAt: string
   updatedAt: string
+}
+
+export interface FloridaLienCase {
+  id: string
+  contractorId: string
+  workflowType: FloridaLienWorkflowType
+  clientName: string
+  ownerName: string
+  propertyCounty: string
+  propertyCity: string
+  state: "FL"
+  parcelNumber?: string
+  legalDescription?: string
+  contractorRole: "direct_contractor" | "subcontractor" | "supplier" | "laborer" | "other"
+  projectType: string
+  contractAmount: number
+  amountDue: number
+  firstWorkDate?: string
+  lastWorkDate: string
+  noticeHistory: string
+  filingDeadline?: string
+  targetSendDate?: string
+  status: FloridaLienCaseStatus
+  deliveryMethod?: LienDeliveryMethod
+  filingMethod?: LienFilingMethod
+  recordingVendor?: string
+  serviceFeeOrderId?: string
+  contractorSignedAt?: string
+  contractorSignatureName?: string
+  attorneyVendorStatus: "not_started" | "queued" | "in_review" | "approved" | "rejected"
+  nextAction: string
+  privateSummary: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LienNoticeDelivery {
+  id: string
+  floridaLienCaseId: string
+  contractorId: string
+  deliveryMethod: LienDeliveryMethod
+  recipientName: string
+  sentAt?: string
+  trackingNumber?: string
+  deliveryStatus: "queued" | "sent" | "delivered" | "failed" | "returned"
+  proofSummary: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LienFilingRecord {
+  id: string
+  floridaLienCaseId: string
+  contractorId: string
+  filingMethod: LienFilingMethod
+  recordingVendor?: string
+  clerkCounty: string
+  clerkReference?: string
+  officialRecordBook?: string
+  officialRecordPage?: string
+  instrumentNumber?: string
+  filedAt?: string
+  recordingConfirmedAt?: string
+  filingReceiptPath?: string
+  status: "queued" | "submitted" | "filed" | "recording_confirmed" | "rejected"
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LienReleaseRecord {
+  id: string
+  floridaLienCaseId: string
+  contractorId: string
+  releaseReason: "paid" | "settled" | "expired" | "withdrawn" | "error_correction"
+  releaseStatus: "draft" | "sent_for_signature" | "recorded" | "blocked"
+  releaseRecordedAt?: string
+  releaseInstrumentNumber?: string
+  notes: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ServiceFeeOrder {
+  id: string
+  contractorId: string
+  kind: ServiceFeeKind
+  entityId: string
+  status: ServiceFeeStatus
+  clientBureauFeeCents: number
+  passThroughFeeCents: number
+  currency: "usd"
+  stripeCheckoutUrl?: string
+  stripeSessionId?: string
+  paidAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CaseStaffAssignment {
+  id: string
+  entityType: "managed_recovery" | "florida_lien"
+  entityId: string
+  assignedToName: string
+  priority: ModerationPriority
+  dueAt: string
+  status: "open" | "in_review" | "closed"
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CaseAuditEvent {
+  id: string
+  entityType: "managed_recovery" | "florida_lien" | "service_fee"
+  entityId: string
+  actorName: string
+  action: string
+  summary: string
+  createdAt: string
 }
 
 export interface ContractWorkspaceItem {
@@ -549,6 +753,16 @@ export interface ContractorRiskOpsData {
   paymentRecoveryAttempts: PaymentRecoveryAttempt[]
   paymentPlans: PaymentPlan[]
   lienNoticeDrafts: LienNoticeDraft[]
+  managedRecoveryCases: ManagedRecoveryCase[]
+  recoveryCommunications: RecoveryCommunication[]
+  recoveryResolutionOffers: RecoveryResolutionOffer[]
+  floridaLienCases: FloridaLienCase[]
+  lienNoticeDeliveries: LienNoticeDelivery[]
+  lienFilingRecords: LienFilingRecord[]
+  lienReleaseRecords: LienReleaseRecord[]
+  serviceFeeOrders: ServiceFeeOrder[]
+  caseStaffAssignments: CaseStaffAssignment[]
+  caseAuditEvents: CaseAuditEvent[]
   contractDocuments: ContractWorkspaceItem[]
   contractPackets: ContractPacket[]
   activity: ContractorActivityItem[]

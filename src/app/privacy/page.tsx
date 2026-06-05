@@ -44,7 +44,7 @@ export default function PrivacyPage() {
             body: "Contractors and service businesses may provide account details, business profile information, project details, client identity fields, payment timeline information, report summaries, evidence references, contract workflow data, and dashboard activity.",
             bullets: [
               "Report submissions may include client name, business name, city, state, project type, payment status, category, public summary, detailed experience, and supporting documentation.",
-              "Operational tools may include saved searches, watchlists, report drafts, intake assessments, contract packets, recovery notes, lien-readiness records, evidence vault items, and audit history.",
+              "Operational tools may include saved searches, watchlists, report drafts, intake assessments, contract packets, managed recovery notes, Florida lien service records, evidence vault items, and audit history.",
               "Subscription and billing status may be used to determine plan access, usage limits, and account support needs.",
             ],
           },

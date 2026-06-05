@@ -46,7 +46,7 @@ const workflowModes: WorkflowMode[] = [
     cta: "Submit a report",
     href: "/submit-report",
     icon: ClipboardCheck,
-    tools: ["Evidence Vault", "Reports", "Payment Recovery", "Lien Readiness"],
+    tools: ["Evidence Vault", "Reports", "Payment Recovery", "Florida Lien Service"],
   },
 ]
 
@@ -69,11 +69,11 @@ const workspaceGuide = [
   },
   {
     title: "Payment Recovery",
-    text: "A private record of invoice timelines, contact attempts, payment plans, and resolution status. It is not automated payment enforcement.",
+    text: "Open a managed Resolution Desk case for staff-assisted review and follow-up, or keep your own private invoice timeline and payment-plan records.",
   },
   {
-    title: "Lien Readiness",
-    text: "Private packets for state-specific review of deadlines, documents, contract context, and notice requirements before any sensitive action is considered.",
+    title: "Florida Lien Service",
+    text: "Start a private Florida notice or claim-of-lien filing workflow with fee tracking, contractor authorization, attorney/vendor review, recording proof, and release tracking.",
   },
 ]
 

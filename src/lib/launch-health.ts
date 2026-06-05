@@ -39,6 +39,16 @@ export const platformLaunchTables = [
   "admin_saved_views",
   "admin_queue_assignments",
   "recovery_compliance_reviews",
+  "managed_recovery_cases",
+  "recovery_communications",
+  "recovery_resolution_offers",
+  "florida_lien_cases",
+  "lien_notice_deliveries",
+  "lien_filing_records",
+  "lien_release_records",
+  "service_fee_orders",
+  "case_staff_assignments",
+  "case_audit_events",
 ] as const satisfies RequiredTable[]
 
 export const requiredLaunchTables = [
@@ -201,7 +211,7 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Keep advanced tools mocked"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003, 0004, 0005, 0006, and 0007 before flipping advanced tools."
+      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003, 0004, 0005, 0006, 0007, and 0008 before flipping advanced tools."
   } else if (!platformSchemaReady) {
     readinessLabel = "Contract signing migration needed"
     readinessMessage =

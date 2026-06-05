@@ -45,7 +45,7 @@ export default function TermsPage() {
             bullets: [
               "Search public client profiles and private-match context for business intake decisions.",
               "Submit documented contractor experiences that are specific, relevant, and written in good faith.",
-              "Use dashboards, watchlists, contract packets, recovery notes, lien-readiness packets, and evidence vault records as private business workflow tools.",
+              "Use dashboards, watchlists, contract packets, recovery notes, Florida lien service records, and evidence vault records as private business workflow tools.",
               "Do not submit content that you know is false, misleading, harassing, irrelevant, discriminatory, or designed to expose private information.",
             ],
           },
@@ -69,9 +69,9 @@ export default function TermsPage() {
           },
           {
             title: "Private workflow tools",
-            body: "Contract packets, signing links, payment recovery tracking, call logs, lien readiness records, evidence vault items, and client work files are private workspace tools unless a separate approved public report process applies.",
+            body: "Contract packets, signing links, managed recovery cases, call logs, Florida lien service records, evidence vault items, and client work files are private workspace tools unless a separate approved public report process applies.",
             bullets: [
-              "Client Bureau does not automatically contact clients, place calls, send legal notices, file liens, or enforce payment.",
+              "Client Bureau does not automatically contact clients, place calls, send notices, file liens, or enforce payment without the applicable paid service workflow, contractor authorization, and review gate.",
               "Contractors are responsible for reviewing applicable contracts, deadlines, notices, laws, and professional requirements before taking action.",
               "Private notes, uploaded files, raw evidence, phone numbers, email addresses, and street addresses should not appear on public profiles.",
             ],

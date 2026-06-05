@@ -11,6 +11,7 @@ import {
   createContractPacket,
   createContractShareLink,
   createPaymentPlan,
+  createServiceFeeOrder,
   createWatchlistItem,
   deleteReportDraft,
   getContractorDashboard,
@@ -25,6 +26,8 @@ import {
   getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
+  logResolutionDeskContact,
+  markRecoveryResolved,
   reviewRecoveryCompliance,
   reviewReport,
   reviewReportsBulk,
@@ -35,8 +38,17 @@ import {
   setMockModerationDecisionReason,
   signContractShare,
   simulateSubmittedClientReport,
+  signLienFilingAuthorization,
+  submitFloridaLienCase,
+  submitManagedRecoveryCase,
   submitCommunityDiscussion,
   submitClientResponse,
+  adminApproveLienFiling,
+  adminApproveLienNotice,
+  adminRecordLienFiled,
+  adminRecordLienRelease,
+  adminRequestLienMoreInfo,
+  adminUploadRecordingProof,
   updateAdminClientRecord,
   updateAdminContractorRecord,
   updateClientPipelineStage,
@@ -56,6 +68,7 @@ import {
   createLienNoticeDraftSupabase,
   createPaymentPlanSupabase,
   createPaymentRecoveryCaseSupabase,
+  createServiceFeeOrderSupabase,
   createWatchlistItemSupabase,
   deleteAdminRecordSupabase,
   deleteReportDraftSupabase,
@@ -70,6 +83,8 @@ import {
   getPublicBusinessProfileSupabase,
   getPublicBusinessProfilesSupabase,
   logPaymentRecoveryAttemptSupabase,
+  logResolutionDeskContactSupabase,
+  markRecoveryResolvedSupabase,
   reviewCommunityDiscussionSupabase,
   reviewRecoveryComplianceSupabase,
   reviewReportSupabase,
@@ -78,10 +93,19 @@ import {
   saveReportDraftSupabase,
   searchClientsSupabase,
   setModerationDecisionReasonSupabase,
+  signLienFilingAuthorizationSupabase,
   signContractShareSupabase,
+  submitFloridaLienCaseSupabase,
+  submitManagedRecoveryCaseSupabase,
   submitCommunityDiscussionSupabase,
   submitClientReportSupabase,
   submitClientResponseSupabase,
+  adminApproveLienFilingSupabase,
+  adminApproveLienNoticeSupabase,
+  adminRecordLienFiledSupabase,
+  adminRecordLienReleaseSupabase,
+  adminRequestLienMoreInfoSupabase,
+  adminUploadRecordingProofSupabase,
   updateAdminClientRecordSupabase,
   updateAdminContractorRecordSupabase,
   updateClientPipelineStageSupabase,
@@ -100,13 +124,23 @@ import type {
   ContractShareLinkInput,
   ContractSignatureInput,
   ContractWorkspaceItemInput,
+  FloridaLienCaseInput,
   IntakeAssessmentInput,
+  LienFilingAuthorizationInput,
   LienNoticeDraftInput,
+  AdminLienCaseActionInput,
+  AdminRecordLienFiledInput,
+  AdminRecordLienReleaseInput,
+  AdminUploadRecordingProofInput,
+  ManagedRecoveryCaseInput,
+  MarkRecoveryResolvedInput,
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
   PaymentPlanInput,
   RecoveryComplianceReviewInput,
+  ResolutionDeskContactInput,
   ReportDraftInput,
+  ServiceFeeCheckoutInput,
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
@@ -399,6 +433,36 @@ export async function createPaymentRecoveryCaseService(userId: string, input: Pa
   return createPaymentRecoveryCase(dashboard.contractor.id, input)
 }
 
+export async function submitManagedRecoveryCaseService(userId: string, input: ManagedRecoveryCaseInput) {
+  if (shouldUsePlatformSupabase()) return submitManagedRecoveryCaseSupabase(userId, input)
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return submitManagedRecoveryCase(dashboard.contractor.id, input)
+}
+
+export async function createServiceFeeOrderService(userId: string, input: ServiceFeeCheckoutInput) {
+  if (shouldUsePlatformSupabase()) return createServiceFeeOrderSupabase(userId, input)
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return createServiceFeeOrder(dashboard.contractor.id, input)
+}
+
+export async function logResolutionDeskContactService(admin: User, input: ResolutionDeskContactInput) {
+  if (shouldUsePlatformSupabase()) return logResolutionDeskContactSupabase(admin, input)
+
+  return logResolutionDeskContact({ ...input, loggedByName: admin.fullName })
+}
+
+export async function markRecoveryResolvedService(admin: User, input: MarkRecoveryResolvedInput) {
+  if (shouldUsePlatformSupabase()) return markRecoveryResolvedSupabase(admin, input)
+
+  return markRecoveryResolved(input)
+}
+
 export async function createLienNoticeDraftService(userId: string, input: LienNoticeDraftInput) {
   if (shouldUsePlatformSupabase()) return createLienNoticeDraftSupabase(userId, input)
 
@@ -406,6 +470,60 @@ export async function createLienNoticeDraftService(userId: string, input: LienNo
   if (!dashboard) throw new Error("Contractor workspace was not found.")
 
   return createLienNoticeDraft(dashboard.contractor.id, input)
+}
+
+export async function submitFloridaLienCaseService(userId: string, input: FloridaLienCaseInput) {
+  if (shouldUsePlatformSupabase()) return submitFloridaLienCaseSupabase(userId, input)
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return submitFloridaLienCase(dashboard.contractor.id, input)
+}
+
+export async function signLienFilingAuthorizationService(userId: string, input: LienFilingAuthorizationInput) {
+  if (shouldUsePlatformSupabase()) return signLienFilingAuthorizationSupabase(userId, input)
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return signLienFilingAuthorization(dashboard.contractor.id, input)
+}
+
+export async function adminRequestLienMoreInfoService(admin: User, input: AdminLienCaseActionInput) {
+  if (shouldUsePlatformSupabase()) return adminRequestLienMoreInfoSupabase(admin, input)
+
+  return adminRequestLienMoreInfo(input)
+}
+
+export async function adminApproveLienNoticeService(admin: User, input: AdminLienCaseActionInput) {
+  if (shouldUsePlatformSupabase()) return adminApproveLienNoticeSupabase(admin, input)
+
+  return adminApproveLienNotice(input)
+}
+
+export async function adminApproveLienFilingService(admin: User, input: AdminLienCaseActionInput) {
+  if (shouldUsePlatformSupabase()) return adminApproveLienFilingSupabase(admin, input)
+
+  return adminApproveLienFiling(input)
+}
+
+export async function adminRecordLienFiledService(admin: User, input: AdminRecordLienFiledInput) {
+  if (shouldUsePlatformSupabase()) return adminRecordLienFiledSupabase(admin, input)
+
+  return adminRecordLienFiled(input)
+}
+
+export async function adminUploadRecordingProofService(admin: User, input: AdminUploadRecordingProofInput) {
+  if (shouldUsePlatformSupabase()) return adminUploadRecordingProofSupabase(admin, input)
+
+  return adminUploadRecordingProof(input)
+}
+
+export async function adminRecordLienReleaseService(admin: User, input: AdminRecordLienReleaseInput) {
+  if (shouldUsePlatformSupabase()) return adminRecordLienReleaseSupabase(admin, input)
+
+  return adminRecordLienRelease(input)
 }
 
 export async function createContractWorkspaceItemService(userId: string, input: ContractWorkspaceItemInput) {
@@ -561,6 +679,16 @@ function createDefaultRiskOpsData(contractorId: string): ContractorRiskOpsData {
     paymentRecoveryAttempts: [],
     paymentPlans: [],
     lienNoticeDrafts: [],
+    managedRecoveryCases: [],
+    recoveryCommunications: [],
+    recoveryResolutionOffers: [],
+    floridaLienCases: [],
+    lienNoticeDeliveries: [],
+    lienFilingRecords: [],
+    lienReleaseRecords: [],
+    serviceFeeOrders: [],
+    caseStaffAssignments: [],
+    caseAuditEvents: [],
     contractDocuments: [],
     contractPackets: [],
     activity: [

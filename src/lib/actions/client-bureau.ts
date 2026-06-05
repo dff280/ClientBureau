@@ -23,8 +23,16 @@ import {
   communityDiscussionSchema,
   contractWorkspaceItemSchema,
   deleteReportDraftSchema,
+  floridaLienCaseSchema,
   intakeAssessmentSchema,
+  lienFilingAuthorizationSchema,
   lienNoticeDraftSchema,
+  adminLienCaseActionSchema,
+  adminRecordLienFiledSchema,
+  adminRecordLienReleaseSchema,
+  adminUploadRecordingProofSchema,
+  managedRecoveryCaseSchema,
+  markRecoveryResolvedSchema,
   signupSchema,
   moderationCaseAssignmentSchema,
   moderationCaseUpdateSchema,
@@ -32,8 +40,10 @@ import {
   paymentPlanSchema,
   paymentRecoveryAttemptSchema,
   paymentRecoveryCaseSchema,
+  resolutionDeskContactSchema,
   reportDraftSchema,
   recoveryComplianceReviewSchema,
+  serviceFeeCheckoutSchema,
   updateClientPipelineStageSchema,
   updateContractPacketStatusSchema,
   updateEvidenceVaultStatusSchema,
@@ -57,13 +67,19 @@ import type {
   ContractorProfile,
   ContractorWatchlistItem,
   EvidenceVaultItem,
+  FloridaLienCase,
+  LienFilingRecord,
+  LienReleaseRecord,
   LienNoticeDraft,
+  ManagedRecoveryCase,
   ModerationCase,
   PaymentPlan,
   PaymentRecoveryCase,
   PaymentRecoveryAttempt,
   RecoveryComplianceReview,
+  RecoveryCommunication,
   ReportDraft,
+  ServiceFeeOrder,
   User,
 } from "@/lib/types"
 import { isPositiveReportCategory, reportCategories } from "@/lib/types"
@@ -86,10 +102,14 @@ import {
   createContractPacketService,
   createPaymentPlanService,
   createPaymentRecoveryCaseService,
+  createServiceFeeOrderService,
   createWatchlistItemService,
   deleteReportDraftService,
   logPaymentRecoveryAttemptService,
+  logResolutionDeskContactService,
+  markRecoveryResolvedService,
   signContractShareService,
+  signLienFilingAuthorizationService,
   reviewRecoveryComplianceService,
   reviewCommunityDiscussionService,
   reviewReportService,
@@ -97,9 +117,17 @@ import {
   saveAdminQueueViewService,
   saveReportDraftService,
   setModerationDecisionReasonService,
+  submitFloridaLienCaseService,
+  submitManagedRecoveryCaseService,
   submitCommunityDiscussionService,
   submitClientReportService,
   submitClientResponseService,
+  adminApproveLienFilingService,
+  adminApproveLienNoticeService,
+  adminRecordLienFiledService,
+  adminRecordLienReleaseService,
+  adminRequestLienMoreInfoService,
+  adminUploadRecordingProofService,
   updateAdminClientRecordService,
   updateAdminContractorRecordService,
   updateClientPipelineStageService,
@@ -120,7 +148,7 @@ function evidenceFilesFromForm(formData: FormData) {
 function actionErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     if (error.message.includes("Missing platform table")) {
-      return `${fallback} Live Ops is not ready for Supabase persistence yet. Apply migrations 0003, 0004, 0005, 0006, and 0007, or roll PLATFORM_FEATURE_DATA_MODE back to mock, then try again.`
+      return `${fallback} Live Ops is not ready for Supabase persistence yet. Apply migrations 0003, 0004, 0005, 0006, 0007, and 0008, or roll PLATFORM_FEATURE_DATA_MODE back to mock, then try again.`
     }
 
     if (
@@ -776,6 +804,115 @@ export async function createPaymentRecoveryCaseAction(
   }
 }
 
+export async function submitManagedRecoveryCaseAction(
+  _previousState: ActionResult<ManagedRecoveryCase>,
+  formData: FormData,
+): Promise<ActionResult<ManagedRecoveryCase>> {
+  const parsed = managedRecoveryCaseSchema.safeParse({
+    ...formDataToObject(formData),
+    factualCertification: formData.has("factualCertification"),
+    serviceTermsCertification: formData.has("serviceTermsCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the managed recovery case fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const recoveryCase = await submitManagedRecoveryCaseService(user.id, parsed.data)
+    if (!recoveryCase) return fail("Managed recovery feature data is not available yet.")
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    return ok(recoveryCase, "Managed recovery case submitted. Next step: pay the service fee and keep documents private.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Managed recovery case could not be submitted."))
+  }
+}
+
+export async function createRecoveryServiceFeeCheckoutAction(
+  _previousState: ActionResult<ServiceFeeOrder>,
+  formData: FormData,
+): Promise<ActionResult<ServiceFeeOrder>> {
+  const parsed = serviceFeeCheckoutSchema.safeParse({
+    ...formDataToObject(formData),
+    kind: "managed_recovery",
+  })
+
+  if (!parsed.success) {
+    return fail("Select a managed recovery case before starting checkout.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const order = await createServiceFeeOrderService(user.id, parsed.data)
+    if (!order) return fail("Service fee checkout is not available yet.")
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
+    return ok(order, "Service fee checkout is ready. Client payments remain contractor-direct.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Service fee checkout could not be created."))
+  }
+}
+
+export async function logResolutionDeskContactAction(
+  _previousState: ActionResult<RecoveryCommunication>,
+  formData: FormData,
+): Promise<ActionResult<RecoveryCommunication>> {
+  const parsed = resolutionDeskContactSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the Resolution Desk contact fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("Resolution Desk", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const contact = await logResolutionDeskContactService(adminResult.admin, parsed.data)
+    if (!contact) return fail("Resolution Desk contact logging is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/recovery")
+    return ok(contact, "Resolution Desk contact logged.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Resolution Desk contact could not be logged."))
+  }
+}
+
+export async function markRecoveryResolvedAction(
+  _previousState: ActionResult<ManagedRecoveryCase>,
+  formData: FormData,
+): Promise<ActionResult<ManagedRecoveryCase>> {
+  const parsed = markRecoveryResolvedSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the resolution fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("recovery resolution", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const recoveryCase = await markRecoveryResolvedService(adminResult.admin, parsed.data)
+    if (!recoveryCase) return fail("Managed recovery case data is not available yet.")
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/recovery")
+    return ok(recoveryCase, "Managed recovery case marked resolved.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Managed recovery case could not be resolved."))
+  }
+}
+
 export async function createLienNoticeDraftAction(
   _previousState: ActionResult<LienNoticeDraft>,
   formData: FormData,
@@ -800,6 +937,238 @@ export async function createLienNoticeDraftAction(
     return ok(noticeDraft, "Lien packet created for state-specific review.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Lien packet could not be created."))
+  }
+}
+
+export async function submitFloridaLienCaseAction(
+  _previousState: ActionResult<FloridaLienCase>,
+  formData: FormData,
+): Promise<ActionResult<FloridaLienCase>> {
+  const parsed = floridaLienCaseSchema.safeParse({
+    ...formDataToObject(formData),
+    accuracyCertification: formData.has("accuracyCertification"),
+    filingTermsCertification: formData.has("filingTermsCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please correct the Florida lien service fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const lienCase = await submitFloridaLienCaseService(user.id, parsed.data)
+    if (!lienCase) return fail("Florida lien service data is not available yet.")
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/lien-readiness")
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    return ok(lienCase, "Florida lien service case submitted. Next step: pay the service fee and sign authorization.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida lien service case could not be submitted."))
+  }
+}
+
+export async function createLienServiceFeeCheckoutAction(
+  _previousState: ActionResult<ServiceFeeOrder>,
+  formData: FormData,
+): Promise<ActionResult<ServiceFeeOrder>> {
+  const parsed = serviceFeeCheckoutSchema.safeParse({
+    ...formDataToObject(formData),
+    kind: formData.get("kind") || "florida_lien_filing",
+  })
+
+  if (!parsed.success) {
+    return fail("Select a Florida lien case before starting checkout.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const order = await createServiceFeeOrderService(user.id, parsed.data)
+    if (!order) return fail("Florida lien service fee checkout is not available yet.")
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(order, "Florida lien service checkout is ready with pass-through filing costs tracked separately.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida lien service checkout could not be created."))
+  }
+}
+
+export async function signLienFilingAuthorizationAction(
+  _previousState: ActionResult<FloridaLienCase>,
+  formData: FormData,
+): Promise<ActionResult<FloridaLienCase>> {
+  const parsed = lienFilingAuthorizationSchema.safeParse({
+    ...formDataToObject(formData),
+    accuracyCertification: formData.has("accuracyCertification"),
+    authorityCertification: formData.has("authorityCertification"),
+    vendorReviewCertification: formData.has("vendorReviewCertification"),
+  })
+
+  if (!parsed.success) {
+    return fail("Please complete the authorization fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const lienCase = await signLienFilingAuthorizationService(user.id, parsed.data)
+    if (!lienCase) return fail("Florida lien service data is not available yet.")
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/lien-readiness")
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    return ok(lienCase, "Authorization recorded. The case can move to attorney/vendor review.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida lien authorization could not be recorded."))
+  }
+}
+
+export async function adminRequestLienMoreInfoAction(
+  _previousState: ActionResult<FloridaLienCase>,
+  formData: FormData,
+): Promise<ActionResult<FloridaLienCase>> {
+  const parsed = adminLienCaseActionSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Add a clear note before requesting more information.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("Florida lien review", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const lienCase = await adminRequestLienMoreInfoService(adminResult.admin, parsed.data)
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(lienCase, "More information requested for this Florida lien case.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida lien case could not be updated."))
+  }
+}
+
+export async function adminApproveLienNoticeAction(
+  _previousState: ActionResult<FloridaLienCase>,
+  formData: FormData,
+): Promise<ActionResult<FloridaLienCase>> {
+  const parsed = adminLienCaseActionSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Add a review note before approving the notice packet.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("Florida notice approval", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const lienCase = await adminApproveLienNoticeService(adminResult.admin, parsed.data)
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(lienCase, "Notice packet approved to send.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida notice packet could not be approved."))
+  }
+}
+
+export async function adminApproveLienFilingAction(
+  _previousState: ActionResult<FloridaLienCase>,
+  formData: FormData,
+): Promise<ActionResult<FloridaLienCase>> {
+  const parsed = adminLienCaseActionSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Add a review note before approving filing.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("Florida lien filing approval", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const lienCase = await adminApproveLienFilingService(adminResult.admin, parsed.data)
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(lienCase, "Claim of lien approved for attorney/vendor filing.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida lien filing could not be approved."))
+  }
+}
+
+export async function adminRecordLienFiledAction(
+  _previousState: ActionResult<LienFilingRecord>,
+  formData: FormData,
+): Promise<ActionResult<LienFilingRecord>> {
+  const parsed = adminRecordLienFiledSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the filing record fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("Florida lien filing record", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const record = await adminRecordLienFiledService(adminResult.admin, parsed.data)
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(record, "Lien filing record captured.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Lien filing record could not be captured."))
+  }
+}
+
+export async function adminUploadRecordingProofAction(
+  _previousState: ActionResult<LienFilingRecord>,
+  formData: FormData,
+): Promise<ActionResult<LienFilingRecord>> {
+  const parsed = adminUploadRecordingProofSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the recording proof fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("recording proof", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const record = await adminUploadRecordingProofService(adminResult.admin, parsed.data)
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(record, "Recording proof captured.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Recording proof could not be captured."))
+  }
+}
+
+export async function adminRecordLienReleaseAction(
+  _previousState: ActionResult<LienReleaseRecord>,
+  formData: FormData,
+): Promise<ActionResult<LienReleaseRecord>> {
+  const parsed = adminRecordLienReleaseSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the release record fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("lien release", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const record = await adminRecordLienReleaseService(adminResult.admin, parsed.data)
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(record, "Lien release record captured.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Lien release record could not be captured."))
   }
 }
 

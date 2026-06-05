@@ -48,11 +48,21 @@ import type {
   ContractPacketInput,
   ContractShareLinkInput,
   ContractSignatureInput,
+  FloridaLienCaseInput,
+  LienFilingAuthorizationInput,
   LienNoticeDraftInput,
+  AdminLienCaseActionInput,
+  AdminRecordLienFiledInput,
+  AdminRecordLienReleaseInput,
+  AdminUploadRecordingProofInput,
+  ManagedRecoveryCaseInput,
+  MarkRecoveryResolvedInput,
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
   PaymentPlanInput,
   RecoveryComplianceReviewInput,
+  ResolutionDeskContactInput,
+  ServiceFeeCheckoutInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
 } from "@/lib/schemas/client-bureau"
@@ -73,7 +83,11 @@ import type {
   ContractorProfile,
   DiscussionStatus,
   EvidenceVaultItem,
+  FloridaLienCase,
+  LienFilingRecord,
+  LienReleaseRecord,
   LienNoticeDraft,
+  ManagedRecoveryCase,
   ModerationCase,
   ModerationDecisionReason,
   ModerationPriority,
@@ -83,6 +97,8 @@ import type {
   PaymentRecoveryAttempt,
   PublicationAudit,
   RecoveryComplianceReview,
+  RecoveryCommunication,
+  ServiceFeeOrder,
   PublicClientProfile,
   PublicBusinessProfile,
   ReportEvidence,
@@ -436,6 +452,23 @@ export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData 
     paymentRecoveryAttempts: contractorRiskOps.paymentRecoveryAttempts.filter((item) => item.contractorId === contractor.id),
     paymentPlans: contractorRiskOps.paymentPlans.filter((item) => item.contractorId === contractor.id),
     lienNoticeDrafts: contractorRiskOps.lienNoticeDrafts.filter((item) => item.contractorId === contractor.id),
+    managedRecoveryCases: contractorRiskOps.managedRecoveryCases.filter((item) => item.contractorId === contractor.id),
+    recoveryCommunications: contractorRiskOps.recoveryCommunications.filter((item) => item.contractorId === contractor.id),
+    recoveryResolutionOffers: contractorRiskOps.recoveryResolutionOffers.filter((item) => item.contractorId === contractor.id),
+    floridaLienCases: contractorRiskOps.floridaLienCases.filter((item) => item.contractorId === contractor.id),
+    lienNoticeDeliveries: contractorRiskOps.lienNoticeDeliveries.filter((item) => item.contractorId === contractor.id),
+    lienFilingRecords: contractorRiskOps.lienFilingRecords.filter((item) => item.contractorId === contractor.id),
+    lienReleaseRecords: contractorRiskOps.lienReleaseRecords.filter((item) => item.contractorId === contractor.id),
+    serviceFeeOrders: contractorRiskOps.serviceFeeOrders.filter((item) => item.contractorId === contractor.id),
+    caseStaffAssignments: contractorRiskOps.caseStaffAssignments.filter((item) =>
+      contractorRiskOps.managedRecoveryCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId) ||
+      contractorRiskOps.floridaLienCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId),
+    ),
+    caseAuditEvents: contractorRiskOps.caseAuditEvents.filter((item) =>
+      contractorRiskOps.managedRecoveryCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId) ||
+      contractorRiskOps.floridaLienCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId) ||
+      contractorRiskOps.serviceFeeOrders.some((fee) => fee.contractorId === contractor.id && fee.id === item.entityId),
+    ),
     contractDocuments: contractorRiskOps.contractDocuments.filter((item) => item.contractorId === contractor.id),
     contractPackets: contractorRiskOps.contractPackets.filter((item) => item.contractorId === contractor.id),
     activity: contractorRiskOps.activity.filter((item) => item.contractorId === contractor.id),
@@ -572,6 +605,25 @@ function nextRecoveryAction(channel: PaymentRecoveryCaseInput["preferredChannel"
   return "Send a factual payment reminder with invoice context, evidence-on-file reference, and response window."
 }
 
+function parseDelimitedIds(value?: string) {
+  return (value ?? "")
+    .split(/[\n,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function serviceFeeForKind(kind: ServiceFeeCheckoutInput["kind"]) {
+  if (kind === "florida_lien_filing") {
+    return { clientBureauFeeCents: 29900, passThroughFeeCents: 6800 }
+  }
+
+  if (kind === "florida_lien_notice") {
+    return { clientBureauFeeCents: 19900, passThroughFeeCents: 2200 }
+  }
+
+  return { clientBureauFeeCents: 14900, passThroughFeeCents: 0 }
+}
+
 export function createPaymentRecoveryCase(
   contractorId: string,
   input: PaymentRecoveryCaseInput,
@@ -605,6 +657,99 @@ export function createPaymentRecoveryCase(
   }
 }
 
+export function submitManagedRecoveryCase(
+  contractorId: string,
+  input: ManagedRecoveryCaseInput,
+): ManagedRecoveryCase {
+  const now = new Date().toISOString()
+  const priority = paymentRecoveryPriority({
+    amountDue: input.amountDue,
+    invoiceAgeDays: input.invoiceAgeDays,
+  })
+
+  return {
+    id: `managed_recovery_${Date.now()}`,
+    contractorId,
+    clientName: input.clientName,
+    clientEmailMasked: input.clientEmail ? maskEmail(input.clientEmail) : undefined,
+    city: input.city,
+    state: input.state.toUpperCase(),
+    amountDue: input.amountDue,
+    invoiceAgeDays: input.invoiceAgeDays,
+    preferredChannel: input.preferredChannel,
+    status: "fee_due",
+    priority,
+    evidenceVaultItemIds: parseDelimitedIds(input.evidenceVaultItemIds),
+    nextAction: "Pay the service fee, upload supporting documents, and watch for Resolution Desk review.",
+    summary: input.summary,
+    contractorDirectPayment: true,
+    complianceFlags: [
+      "Client Bureau seeks a documented contractor-direct resolution.",
+      "Recovery communications must stay factual, respectful, and privately logged.",
+      "Client payments are not held by Client Bureau in this workflow.",
+    ],
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function createServiceFeeOrder(
+  contractorId: string,
+  input: ServiceFeeCheckoutInput,
+): ServiceFeeOrder {
+  const now = new Date().toISOString()
+  const fee = serviceFeeForKind(input.kind)
+
+  return {
+    id: `service_fee_${Date.now()}`,
+    contractorId,
+    kind: input.kind,
+    entityId: input.entityId,
+    status: "checkout_ready",
+    clientBureauFeeCents: fee.clientBureauFeeCents,
+    passThroughFeeCents: fee.passThroughFeeCents,
+    currency: "usd",
+    stripeCheckoutUrl: `/api/stripe/service-fee/checkout?kind=${input.kind}&entity=${encodeURIComponent(input.entityId)}`,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function logResolutionDeskContact(
+  input: ResolutionDeskContactInput & { loggedByName: string },
+): RecoveryCommunication {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.managedRecoveryCases.find((item) => item.id === input.caseId)
+
+  return {
+    id: `recovery_comm_${Date.now()}`,
+    managedRecoveryCaseId: input.caseId,
+    contractorId: existing?.contractorId ?? "contractor_01",
+    channel: input.channel,
+    direction: input.direction,
+    subject: input.subject,
+    note: input.note,
+    outcome: input.outcome,
+    contactedAt: input.contactedAt,
+    loggedByName: input.loggedByName,
+    createdAt: now,
+  }
+}
+
+export function markRecoveryResolved(input: MarkRecoveryResolvedInput): ManagedRecoveryCase {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.managedRecoveryCases.find((item) => item.id === input.caseId)
+
+  return {
+    ...(existing ?? contractorRiskOps.managedRecoveryCases[0]),
+    id: input.caseId,
+    status: "resolved",
+    nextAction: "Confirm contractor-direct payment records and close the case when documentation is complete.",
+    summary: input.resolutionSummary,
+    updatedAt: now,
+  }
+}
+
 export function createLienNoticeDraft(
   contractorId: string,
   input: LienNoticeDraftInput,
@@ -626,6 +771,157 @@ export function createLienNoticeDraft(
     nextStep: "Review state-specific deadline, notice recipient, delivery method, and contract terms before sending.",
     jurisdictionNote:
       "Mechanics lien and notice requirements vary by state, role, project type, and deadline. This creates a readiness checklist only.",
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function submitFloridaLienCase(
+  contractorId: string,
+  input: FloridaLienCaseInput,
+): FloridaLienCase {
+  const now = new Date().toISOString()
+
+  return {
+    id: `florida_lien_${Date.now()}`,
+    contractorId,
+    workflowType: input.workflowType,
+    clientName: input.clientName,
+    ownerName: input.ownerName,
+    propertyCounty: input.propertyCounty,
+    propertyCity: input.propertyCity,
+    state: "FL",
+    parcelNumber: input.parcelNumber,
+    legalDescription: input.legalDescription,
+    contractorRole: input.contractorRole,
+    projectType: input.projectType,
+    contractAmount: input.contractAmount,
+    amountDue: input.amountDue,
+    firstWorkDate: input.firstWorkDate,
+    lastWorkDate: input.lastWorkDate,
+    noticeHistory: input.noticeHistory,
+    filingDeadline: input.filingDeadline,
+    targetSendDate: input.targetSendDate,
+    status: "fee_due",
+    deliveryMethod: input.deliveryMethod,
+    filingMethod: input.filingMethod,
+    recordingVendor: input.recordingVendor,
+    attorneyVendorStatus: "not_started",
+    nextAction: "Pay the service fee, attach required documents, and sign authorization before attorney/vendor review.",
+    privateSummary: input.privateSummary,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function signLienFilingAuthorization(
+  contractorId: string,
+  input: LienFilingAuthorizationInput,
+): FloridaLienCase {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.floridaLienCases.find((item) => item.id === input.caseId)
+
+  return {
+    ...(existing ?? contractorRiskOps.floridaLienCases[0]),
+    id: input.caseId,
+    contractorId: existing?.contractorId ?? contractorId,
+    status: "attorney_vendor_review",
+    contractorSignedAt: now,
+    contractorSignatureName: input.signerName,
+    attorneyVendorStatus: "queued",
+    nextAction: "Authorization received. Attorney/vendor review can verify eligibility, deadlines, recipients, and recording details.",
+    updatedAt: now,
+  }
+}
+
+function updateFloridaLienCase(caseId: string, updates: Partial<FloridaLienCase>): FloridaLienCase {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.floridaLienCases.find((item) => item.id === caseId)
+
+  return {
+    ...(existing ?? contractorRiskOps.floridaLienCases[0]),
+    id: caseId,
+    ...updates,
+    updatedAt: now,
+  }
+}
+
+export function adminRequestLienMoreInfo(input: AdminLienCaseActionInput): FloridaLienCase {
+  return updateFloridaLienCase(input.caseId, {
+    status: "needs_more_info",
+    attorneyVendorStatus: "in_review",
+    nextAction: `More information requested: ${input.decisionNote}`,
+  })
+}
+
+export function adminApproveLienNotice(input: AdminLienCaseActionInput): FloridaLienCase {
+  return updateFloridaLienCase(input.caseId, {
+    status: "approved_to_send",
+    attorneyVendorStatus: "approved",
+    nextAction: `Notice packet approved to send after review: ${input.decisionNote}`,
+  })
+}
+
+export function adminApproveLienFiling(input: AdminLienCaseActionInput): FloridaLienCase {
+  return updateFloridaLienCase(input.caseId, {
+    status: "approved_to_file",
+    attorneyVendorStatus: "approved",
+    nextAction: `Claim of lien filing approved for attorney/vendor submission: ${input.decisionNote}`,
+  })
+}
+
+export function adminRecordLienFiled(input: AdminRecordLienFiledInput): LienFilingRecord {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.floridaLienCases.find((item) => item.id === input.caseId)
+
+  return {
+    id: `lien_filing_${Date.now()}`,
+    floridaLienCaseId: input.caseId,
+    contractorId: existing?.contractorId ?? "contractor_01",
+    filingMethod: input.filingMethod,
+    recordingVendor: input.recordingVendor,
+    clerkCounty: input.clerkCounty,
+    clerkReference: input.clerkReference,
+    officialRecordBook: input.officialRecordBook,
+    officialRecordPage: input.officialRecordPage,
+    instrumentNumber: input.instrumentNumber,
+    filedAt: input.filedAt,
+    filingReceiptPath: input.filingReceiptPath,
+    status: "filed",
+    createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function adminUploadRecordingProof(input: AdminUploadRecordingProofInput): LienFilingRecord {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.lienFilingRecords.find((item) => item.id === input.filingRecordId)
+
+  return {
+    ...(existing ?? contractorRiskOps.lienFilingRecords[0]),
+    id: input.filingRecordId,
+    officialRecordBook: input.officialRecordBook,
+    officialRecordPage: input.officialRecordPage,
+    instrumentNumber: input.instrumentNumber,
+    recordingConfirmedAt: input.recordingConfirmedAt,
+    status: "recording_confirmed",
+    updatedAt: now,
+  }
+}
+
+export function adminRecordLienRelease(input: AdminRecordLienReleaseInput): LienReleaseRecord {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.floridaLienCases.find((item) => item.id === input.caseId)
+
+  return {
+    id: `lien_release_${Date.now()}`,
+    floridaLienCaseId: input.caseId,
+    contractorId: existing?.contractorId ?? "contractor_01",
+    releaseReason: input.releaseReason,
+    releaseStatus: input.releaseStatus,
+    releaseRecordedAt: input.releaseRecordedAt,
+    releaseInstrumentNumber: input.releaseInstrumentNumber,
+    notes: input.notes,
     createdAt: now,
     updatedAt: now,
   }

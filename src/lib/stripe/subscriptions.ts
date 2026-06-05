@@ -1,7 +1,7 @@
 import type Stripe from "stripe"
 
 import { createServiceClient } from "@/lib/supabase/service"
-import type { SubscriptionTier } from "@/lib/types"
+import type { ServiceFeeKind, SubscriptionTier } from "@/lib/types"
 
 function tierFromPrice(priceId?: string | null, metadataTier?: string | null): SubscriptionTier {
   if (metadataTier === "pro" || metadataTier === "bureau_team" || metadataTier === "free") {
@@ -24,7 +24,20 @@ function periodEndFromSubscription(subscription: Stripe.Subscription) {
     : null
 }
 
+function isServiceFeeKind(value?: string | null): value is ServiceFeeKind {
+  return value === "managed_recovery" || value === "florida_lien_notice" || value === "florida_lien_filing"
+}
+
+function isMissingServiceFeeTable(error: { code?: string; message?: string } | null) {
+  return error?.code === "42P01" || error?.message?.toLowerCase().includes("service_fee_orders")
+}
+
 export async function syncCheckoutSessionSubscription(session: Stripe.Checkout.Session) {
+  if (isServiceFeeKind(session.metadata?.kind)) {
+    await syncCheckoutSessionServiceFee(session)
+    return
+  }
+
   const contractorId = session.client_reference_id ?? session.metadata?.contractorId
 
   if (!contractorId) return
@@ -43,6 +56,58 @@ export async function syncCheckoutSessionSubscription(session: Stripe.Checkout.S
     },
     { onConflict: "contractor_id" },
   )
+}
+
+export async function syncCheckoutSessionServiceFee(session: Stripe.Checkout.Session) {
+  const kind = session.metadata?.kind
+  const entityId = session.metadata?.entityId ?? session.client_reference_id
+
+  if (!isServiceFeeKind(kind) || !entityId) return
+
+  const supabase = createServiceClient()
+  const paidAt = session.payment_status === "paid" ? new Date().toISOString() : null
+  const { data: updated, error: updateError } = await supabase
+    .from("service_fee_orders")
+    .update({
+      status: session.payment_status === "paid" ? "paid" : "checkout_ready",
+      stripe_checkout_url: session.url ?? null,
+      stripe_session_id: session.id,
+      paid_at: paidAt,
+    })
+    .eq("kind", kind)
+    .eq("entity_id", entityId)
+    .select("id")
+
+  if (isMissingServiceFeeTable(updateError)) return
+  if (updateError) throw new Error(updateError.message)
+  if (updated?.length) return
+
+  const userId = session.metadata?.userId
+  if (!userId) return
+
+  const { data: contractor, error: contractorError } = await supabase
+    .from("contractor_profiles")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (contractorError || !contractor) return
+
+  const { error: insertError } = await supabase.from("service_fee_orders").insert({
+    contractor_id: contractor.id,
+    kind,
+    entity_id: entityId,
+    status: session.payment_status === "paid" ? "paid" : "checkout_ready",
+    client_bureau_fee_cents: Number(session.metadata?.serviceFeeCents ?? 0),
+    pass_through_fee_cents: Number(session.metadata?.passThroughFeeCents ?? 0),
+    currency: "usd",
+    stripe_checkout_url: session.url ?? null,
+    stripe_session_id: session.id,
+    paid_at: paidAt,
+  })
+
+  if (isMissingServiceFeeTable(insertError)) return
+  if (insertError) throw new Error(insertError.message)
 }
 
 export async function syncStripeSubscription(subscription: Stripe.Subscription) {

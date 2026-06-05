@@ -288,6 +288,58 @@ export const paymentRecoveryCaseSchema = z.object({
   message: "Confirm that the recovery record is based on accurate invoice and project documentation.",
 })
 
+export const managedRecoveryCaseSchema = z.object({
+  clientName: requiredText("Client name"),
+  clientEmail: z.email("Enter a valid client email.").optional().or(z.literal("")),
+  city: requiredText("City"),
+  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  amountDue: money("Amount due"),
+  invoiceAgeDays: z.coerce
+    .number({ error: "Invoice age must be a number." })
+    .int("Invoice age must be a whole number.")
+    .min(0, "Invoice age cannot be negative.")
+    .max(3650, "Invoice age is above the current workflow limit."),
+  preferredChannel: z.enum(["email", "phone", "letter", "client_portal"]),
+  evidenceVaultItemIds: z.string().trim().max(800).optional(),
+  summary: requiredText("Case summary", 30).max(1200, "Keep the case summary under 1,200 characters."),
+  factualCertification: z.coerce.boolean().optional(),
+  serviceTermsCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.factualCertification === true, {
+  path: ["factualCertification"],
+  message: "Confirm the recovery case is based on accurate invoice, project, and communication records.",
+}).refine((value) => value.serviceTermsCertification === true, {
+  path: ["serviceTermsCertification"],
+  message: "Confirm Client Bureau may review the case and contact the client to seek a contractor-direct resolution.",
+})
+
+export const serviceFeeCheckoutSchema = z.object({
+  entityId: requiredText("Case ID"),
+  kind: z.enum(["managed_recovery", "florida_lien_notice", "florida_lien_filing"]),
+})
+
+export const resolutionDeskContactSchema = z.object({
+  caseId: requiredText("Managed recovery case ID"),
+  channel: z.enum(["email", "phone", "letter", "client_portal"]),
+  direction: z.enum(["outbound", "inbound", "internal"]).default("outbound"),
+  subject: requiredText("Subject", 3).max(160, "Keep the subject under 160 characters."),
+  note: requiredText("Contact note", 12).max(900, "Keep the contact note under 900 characters."),
+  outcome: z.enum([
+    "no_response",
+    "client_responded",
+    "payment_promised",
+    "payment_received",
+    "dispute_raised",
+    "needs_follow_up",
+  ]),
+  contactedAt: requiredText("Contact date", 8),
+})
+
+export const markRecoveryResolvedSchema = z.object({
+  caseId: requiredText("Managed recovery case ID"),
+  amountResolved: money("Resolved amount"),
+  resolutionSummary: requiredText("Resolution summary", 12).max(900, "Keep the resolution summary under 900 characters."),
+})
+
 export const lienNoticeDraftSchema = z.object({
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
@@ -300,6 +352,102 @@ export const lienNoticeDraftSchema = z.object({
 }).refine((value) => value.reviewCertification === true, {
   path: ["reviewCertification"],
   message: "Confirm that state-specific lien and notice requirements will be reviewed before sending.",
+})
+
+export const floridaLienCaseSchema = z.object({
+  workflowType: z.enum(["notice_packet", "claim_of_lien_filing"]),
+  clientName: requiredText("Client name"),
+  ownerName: requiredText("Owner name"),
+  propertyCounty: requiredText("Florida county"),
+  propertyCity: requiredText("Property city"),
+  state: z.literal("FL", { error: "Florida lien service is currently available only for Florida properties." }),
+  parcelNumber: optionalText,
+  legalDescription: z.string().trim().max(1800, "Keep the legal description under 1,800 characters.").optional(),
+  contractorRole: z.enum(["direct_contractor", "subcontractor", "supplier", "laborer", "other"]),
+  projectType: requiredText("Project type"),
+  contractAmount: money("Contract amount"),
+  amountDue: money("Amount due"),
+  firstWorkDate: optionalText,
+  lastWorkDate: requiredText("Last work date", 8),
+  noticeHistory: requiredText("Notice history", 12).max(1200, "Keep notice history under 1,200 characters."),
+  filingDeadline: optionalText,
+  targetSendDate: optionalText,
+  deliveryMethod: z.enum(["certified_mail", "process_server", "e_recording_vendor", "attorney_vendor", "manual_admin"]).default("certified_mail"),
+  filingMethod: z.enum(["attorney_vendor", "e_recording_vendor", "county_clerk_manual"]).default("attorney_vendor"),
+  recordingVendor: z.string().trim().max(120).optional(),
+  privateSummary: requiredText("Private case summary", 30).max(1200, "Keep the private summary under 1,200 characters."),
+  accuracyCertification: z.coerce.boolean().optional(),
+  filingTermsCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.amountDue <= value.contractAmount, {
+  path: ["amountDue"],
+  message: "Amount due cannot exceed the contract amount.",
+}).refine((value) => !value.firstWorkDate || value.firstWorkDate <= value.lastWorkDate, {
+  path: ["lastWorkDate"],
+  message: "Last work date cannot be before first work date.",
+}).refine((value) => value.accuracyCertification === true, {
+  path: ["accuracyCertification"],
+  message: "Confirm the lien case information is accurate to the best of your knowledge.",
+}).refine((value) => value.filingTermsCertification === true, {
+  path: ["filingTermsCertification"],
+  message: "Confirm Client Bureau may route this Florida lien case through attorney/vendor review.",
+})
+
+export const lienFilingAuthorizationSchema = z.object({
+  caseId: requiredText("Florida lien case ID"),
+  signerName: requiredText("Signer name"),
+  authorityTitle: requiredText("Authority/title", 2).max(120, "Keep the authority/title under 120 characters."),
+  signatureName: requiredText("Typed signature"),
+  accuracyCertification: z.coerce.boolean().optional(),
+  authorityCertification: z.coerce.boolean().optional(),
+  vendorReviewCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.signatureName.toLowerCase() === value.signerName.toLowerCase(), {
+  path: ["signatureName"],
+  message: "Typed signature must match signer name.",
+}).refine((value) => value.accuracyCertification === true, {
+  path: ["accuracyCertification"],
+  message: "Confirm the filing information is accurate.",
+}).refine((value) => value.authorityCertification === true, {
+  path: ["authorityCertification"],
+  message: "Confirm you are authorized to sign for the contractor.",
+}).refine((value) => value.vendorReviewCertification === true, {
+  path: ["vendorReviewCertification"],
+  message: "Confirm filing proceeds through attorney/e-recording vendor review.",
+})
+
+export const adminLienCaseActionSchema = z.object({
+  caseId: requiredText("Florida lien case ID"),
+  decisionNote: requiredText("Decision note", 8).max(700, "Keep the decision note under 700 characters."),
+})
+
+export const adminRecordLienFiledSchema = z.object({
+  caseId: requiredText("Florida lien case ID"),
+  filingMethod: z.enum(["attorney_vendor", "e_recording_vendor", "county_clerk_manual"]),
+  recordingVendor: z.string().trim().max(120).optional(),
+  clerkCounty: requiredText("Clerk county"),
+  clerkReference: z.string().trim().max(120).optional(),
+  officialRecordBook: z.string().trim().max(80).optional(),
+  officialRecordPage: z.string().trim().max(80).optional(),
+  instrumentNumber: z.string().trim().max(120).optional(),
+  filedAt: requiredText("Filed date", 8),
+  filingReceiptPath: z.string().trim().max(500).optional(),
+})
+
+export const adminUploadRecordingProofSchema = z.object({
+  filingRecordId: requiredText("Filing record ID"),
+  recordingConfirmedAt: requiredText("Recording confirmed date", 8),
+  officialRecordBook: z.string().trim().max(80).optional(),
+  officialRecordPage: z.string().trim().max(80).optional(),
+  instrumentNumber: requiredText("Instrument number", 3).max(120, "Keep the instrument number under 120 characters."),
+  proofSummary: requiredText("Proof summary", 8).max(700, "Keep the proof summary under 700 characters."),
+})
+
+export const adminRecordLienReleaseSchema = z.object({
+  caseId: requiredText("Florida lien case ID"),
+  releaseReason: z.enum(["paid", "settled", "expired", "withdrawn", "error_correction"]),
+  releaseStatus: z.enum(["draft", "sent_for_signature", "recorded", "blocked"]),
+  releaseRecordedAt: optionalText,
+  releaseInstrumentNumber: z.string().trim().max(120).optional(),
+  notes: requiredText("Release notes", 8).max(700, "Keep release notes under 700 characters."),
 })
 
 export const contractWorkspaceItemSchema = z.object({
@@ -533,7 +681,17 @@ export type WatchlistItemInput = z.infer<typeof watchlistItemSchema>
 export type ReportDraftInput = z.infer<typeof reportDraftSchema>
 export type IntakeAssessmentInput = z.infer<typeof intakeAssessmentSchema>
 export type PaymentRecoveryCaseInput = z.infer<typeof paymentRecoveryCaseSchema>
+export type ManagedRecoveryCaseInput = z.infer<typeof managedRecoveryCaseSchema>
+export type ServiceFeeCheckoutInput = z.infer<typeof serviceFeeCheckoutSchema>
+export type ResolutionDeskContactInput = z.infer<typeof resolutionDeskContactSchema>
+export type MarkRecoveryResolvedInput = z.infer<typeof markRecoveryResolvedSchema>
 export type LienNoticeDraftInput = z.infer<typeof lienNoticeDraftSchema>
+export type FloridaLienCaseInput = z.infer<typeof floridaLienCaseSchema>
+export type LienFilingAuthorizationInput = z.infer<typeof lienFilingAuthorizationSchema>
+export type AdminLienCaseActionInput = z.infer<typeof adminLienCaseActionSchema>
+export type AdminRecordLienFiledInput = z.infer<typeof adminRecordLienFiledSchema>
+export type AdminUploadRecordingProofInput = z.infer<typeof adminUploadRecordingProofSchema>
+export type AdminRecordLienReleaseInput = z.infer<typeof adminRecordLienReleaseSchema>
 export type ContractWorkspaceItemInput = z.infer<typeof contractWorkspaceItemSchema>
 export type ClientPipelineItemInput = z.infer<typeof clientPipelineItemSchema>
 export type UpdateClientPipelineStageInput = z.infer<typeof updateClientPipelineStageSchema>

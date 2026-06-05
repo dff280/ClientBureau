@@ -45,14 +45,19 @@ import {
   createContractPacketAction,
   createContractShareLinkAction,
   createIntakeAssessmentAction,
+  createLienServiceFeeCheckoutAction,
   createLienNoticeDraftAction,
   createPaymentRecoveryCaseAction,
   createPaymentPlanAction,
+  createRecoveryServiceFeeCheckoutAction,
   createRiskRoomAction,
   createWatchlistItemAction,
   deleteReportDraftAction,
   logPaymentRecoveryAttemptAction,
   saveReportDraftAction,
+  signLienFilingAuthorizationAction,
+  submitFloridaLienCaseAction,
+  submitManagedRecoveryCaseAction,
   updateClientPipelineStageAction,
   updateContractPacketStatusAction,
   updateEvidenceVaultStatusAction,
@@ -87,11 +92,14 @@ import type {
   ContractorRiskOpsData,
   ContractorWatchlistItem,
   EvidenceVaultItem,
+  FloridaLienCase,
   LienNoticeDraft,
+  ManagedRecoveryCase,
   PaymentPlan,
   PaymentRecoveryCase,
   PaymentRecoveryAttempt,
   ReportDraft,
+  ServiceFeeOrder,
   Subscription,
   WatchlistAlert,
 } from "@/lib/types"
@@ -103,7 +111,10 @@ const draftState: ActionResult<ReportDraft> = { ok: false, message: "" }
 const deleteDraftState: ActionResult<AuditLogEntry | boolean> = { ok: false, message: "" }
 const intakeState: ActionResult<ClientIntakeAssessment> = { ok: false, message: "" }
 const recoveryState: ActionResult<PaymentRecoveryCase> = { ok: false, message: "" }
+const managedRecoveryState: ActionResult<ManagedRecoveryCase> = { ok: false, message: "" }
+const serviceFeeState: ActionResult<ServiceFeeOrder> = { ok: false, message: "" }
 const lienNoticeState: ActionResult<LienNoticeDraft> = { ok: false, message: "" }
+const floridaLienState: ActionResult<FloridaLienCase> = { ok: false, message: "" }
 const contractState: ActionResult<ContractWorkspaceItem> = { ok: false, message: "" }
 const pipelineState: ActionResult<ClientPipelineItem> = { ok: false, message: "" }
 const riskRoomState: ActionResult<ClientRiskRoom> = { ok: false, message: "" }
@@ -188,16 +199,16 @@ const workspaceNavigationGroups: {
   },
   {
     title: "Payments",
-    text: "Follow-up and readiness tracking.",
+    text: "Recovery help and payment records.",
     items: [
       { value: "recovery", label: "Payment Recovery", icon: PhoneCall },
     ],
   },
   {
     title: "Protection Tools",
-    text: "Private safeguards before escalation.",
+    text: "Private safeguards before filing.",
     items: [
-      { value: "lien-readiness", label: "Lien Readiness", icon: Landmark },
+      { value: "lien-readiness", label: "Florida Lien Service", icon: Landmark },
       { value: "account", label: "Verification", icon: ShieldCheck },
     ],
   },
@@ -268,8 +279,12 @@ export function RiskOpsWorkspace({
       .length +
     riskOps.evidenceVault.filter((item) => ["review_pending", "needs_more_info", "uploaded"].includes(item.status))
       .length
-  const openRecoveryCases = countOpenRecoveryCases(riskOps.paymentRecoveryCases)
-  const lienDraftsRequiringReview = riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length
+  const openRecoveryCases =
+    countOpenRecoveryCases(riskOps.paymentRecoveryCases) +
+    riskOps.managedRecoveryCases.filter((item) => !["resolved", "closed"].includes(item.status)).length
+  const lienDraftsRequiringReview =
+    riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length +
+    riskOps.floridaLienCases.filter((item) => !["released", "closed"].includes(item.status)).length
   const rankedPipeline = useMemo(() => rankClientPipelineItems(riskOps.clientPipeline), [riskOps.clientPipeline])
   const stageCounts = useMemo(() => pipelineStageCounts(riskOps.clientPipeline), [riskOps.clientPipeline])
   const todaysWork = useMemo(
@@ -332,7 +347,7 @@ export function RiskOpsWorkspace({
     {
       label: "Payments",
       value: openRecoveryCases + lienDraftsRequiringReview,
-      helper: "Recovery records and review-gated packets",
+      helper: "Managed recovery and Florida lien service work",
       tone: "rose" as const,
     },
   ]
@@ -544,21 +559,70 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="recovery" className="space-y-5">
           <WorkspaceIntro
-            title="Payment Recovery"
-            text="Create documented outreach, call logs, payment-plan records, and resolution tracking. This is a private workflow for factual follow-up, not automated collection."
+            title="Get Help Recovering Payment"
+            text="Open a private managed case when an invoice is overdue and you want Client Bureau staff to review documents, contact the client, and seek a contractor-direct resolution."
           />
+          <div className="grid gap-3 md:grid-cols-3">
+            <ToolExplainer
+              title="What this service does"
+              text="Resolution Desk reviews your invoice, contract, and evidence, then logs factual outreach and response history."
+            />
+            <ToolExplainer
+              title="How payment works"
+              text="Client Bureau charges a service fee. Any recovered payment is paid directly to your business."
+            />
+            <ToolExplainer
+              title="What stays private"
+              text="Client contact details, private evidence, staff notes, and payment records are not shown on public profiles."
+            />
+          </div>
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <PhoneCall className="size-5 text-amber-700" aria-hidden="true" />
+                Managed Resolution Desk
+              </CardTitle>
+              <p className="text-sm leading-6 text-slate-600">
+                Submit the case, pay the service fee, upload documents, and track staff review, client response, payment-plan offers, and resolution.
+              </p>
+            </CardHeader>
+            <CardContent className="grid gap-5 p-5 xl:grid-cols-[380px_1fr]">
+              <CreatePanel
+                title="Open managed case"
+                text="Use this when you want Client Bureau to help seek a documented payment resolution."
+              >
+                <ManagedRecoveryCaseForm />
+              </CreatePanel>
+              <div className="grid gap-3 md:grid-cols-2">
+                {riskOps.managedRecoveryCases.map((item) => (
+                  <ManagedRecoveryCaseCard
+                    key={item.id}
+                    item={item}
+                    feeOrder={riskOps.serviceFeeOrders.find((order) => order.entityId === item.id)}
+                  />
+                ))}
+                {riskOps.managedRecoveryCases.length === 0 ? (
+                  <EmptyState
+                    title="No managed recovery cases yet"
+                    text="Open a private Resolution Desk case when you want staff help reviewing documents and seeking a contractor-direct payment resolution."
+                  />
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+
           <div className="grid gap-5 xl:grid-cols-[1fr_1fr]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
             <CardTitle className="flex items-center gap-2 text-xl">
               <PhoneCall className="size-5 text-amber-700" aria-hidden="true" />
-              Recovery case center
+              Private follow-up records
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
             <CreatePanel
-              title="Open payment recovery case"
-              text="Create a private invoice follow-up record with factual next steps."
+              title="Create internal tracking record"
+              text="Use this for your own invoice timeline, call logging, and follow-up notes."
             >
               <PaymentRecoveryForm />
             </CreatePanel>
@@ -636,34 +700,68 @@ export function RiskOpsWorkspace({
 
         <TabsContent value="lien-readiness" className="space-y-5">
           <WorkspaceIntro
-            title="Lien Readiness"
-            text="Track deadlines, contract context, invoice history, and supporting documents in a private review-gated packet before any sensitive notice is considered."
+            title="Florida Lien Service"
+            text="Create a private Florida notice or claim-of-lien filing case, pay the service fee plus pass-through filing costs, sign authorization, and track attorney/vendor review through recording proof and release."
           />
           <div className="grid gap-3 md:grid-cols-3">
             <ToolExplainer
-              title="What this does"
-              text="Organizes the facts a contractor may need to review deadlines, required documents, and project context."
+              title="Florida first"
+              text="This workflow is limited to Florida properties while Client Bureau builds attorney/vendor filing operations state by state."
             />
             <ToolExplainer
-              title="Review required"
-              text="Readiness records are private and should be reviewed for state, project, and contract requirements before action."
+              title="Authorization required"
+              text="You must certify accuracy and authorize review before a notice is sent or filing is routed."
             />
             <ToolExplainer
               title="What stays private"
-              text="Client contact details, property addresses, uploaded files, and internal notes are not shown on public profiles."
+              text="Property details, raw documents, staff notes, drafts, receipts, and recording files stay private."
             />
           </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
                 <Landmark className="size-5 text-amber-700" aria-hidden="true" />
-                Lien packet center
+                Florida notice and filing cases
+              </CardTitle>
+              <p className="text-sm leading-6 text-slate-600">
+                Submit case details, pay the Client Bureau service fee plus pass-through costs, sign authorization, and track review through notice, filing, recording proof, and release.
+              </p>
+            </CardHeader>
+            <CardContent className="grid gap-5 p-5 xl:grid-cols-[420px_1fr]">
+              <CreatePanel
+                title="Start Florida lien case"
+                text="Use for a Florida notice packet or claim-of-lien filing workflow."
+              >
+                <FloridaLienCaseForm />
+              </CreatePanel>
+              <div className="grid gap-3 md:grid-cols-2">
+                {riskOps.floridaLienCases.map((item) => (
+                  <FloridaLienCaseCard
+                    key={item.id}
+                    item={item}
+                    feeOrder={riskOps.serviceFeeOrders.find((order) => order.entityId === item.id)}
+                  />
+                ))}
+                {riskOps.floridaLienCases.length === 0 ? (
+                  <EmptyState
+                    title="No Florida lien service cases yet"
+                    text="Start a private Florida notice or claim-of-lien case when deadline, property, contract, and unpaid invoice details need review."
+                  />
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardHeader className="border-b border-slate-100">
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Landmark className="size-5 text-amber-700" aria-hidden="true" />
+                Readiness checklist records
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
               <CreatePanel
-                title="Create lien readiness packet"
-                text="Build a private review checklist for deadlines, contract context, invoices, and supporting records."
+                title="Create internal checklist"
+                text="Use this for early deadline and document review before starting a managed Florida service case."
               >
                 <LienNoticeDraftForm />
               </CreatePanel>
@@ -693,8 +791,8 @@ export function RiskOpsWorkspace({
               text="Contract links give the client a private review page for scope, price, deposit, milestones, and electronic signature."
             />
             <ToolExplainer
-              title="What it does not do yet"
-              text="Client Bureau does not automatically hold funds, place calls, file liens, or send legal notices from this workflow."
+              title="Separate service workflows"
+              text="Recovery outreach and Florida lien filing are handled in their own managed-service pages, not inside contract signing links."
             />
             <ToolExplainer
               title="Future payment path"
@@ -1462,6 +1560,134 @@ function DraftCard({ draft }: { draft: ReportDraft }) {
   )
 }
 
+function ManagedRecoveryCaseForm() {
+  const [state, action] = useActionState(submitManagedRecoveryCaseAction, managedRecoveryState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="grid gap-3 sm:grid-cols-[1fr_100px_80px]">
+        <Input name="clientName" placeholder="Client name" />
+        <Input name="city" placeholder="City" />
+        <Input name="state" placeholder="FL" className="uppercase" />
+      </div>
+      <Input name="clientEmail" type="email" placeholder="Client email for private matching (optional)" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="amountDue" type="number" placeholder="Amount due" />
+        <Input name="invoiceAgeDays" type="number" placeholder="Invoice age in days" />
+      </div>
+      <select name="preferredChannel" defaultValue="email" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="email">Email first</option>
+        <option value="phone">Phone follow-up</option>
+        <option value="letter">Mailed letter</option>
+        <option value="client_portal">Client portal message</option>
+      </select>
+      <Textarea name="evidenceVaultItemIds" placeholder="Evidence vault IDs or labels on file, separated by commas (optional)" className="min-h-16" />
+      <Textarea
+        name="summary"
+        placeholder="Brief factual timeline: contract, work completed, invoice amount, due date, client response, and documents on file"
+        className="min-h-24"
+      />
+      <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
+        <Checkbox name="factualCertification" className="mt-1" />
+        The case is based on accurate invoice, project, and communication records.
+      </label>
+      <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
+        <Checkbox name="serviceTermsCertification" className="mt-1" />
+        I authorize Client Bureau staff to review this private case and contact the client to seek a contractor-direct resolution.
+      </label>
+      <PendingSubmitButton pendingText="Submitting..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <PhoneCall aria-hidden="true" />
+        Submit managed case
+      </PendingSubmitButton>
+      <FieldError name="summary" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="factualCertification" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="serviceTermsCertification" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function RecoveryFeeCheckoutForm({ entityId }: { entityId: string }) {
+  const [state, action] = useActionState(createRecoveryServiceFeeCheckoutAction, serviceFeeState)
+  const router = useRouter()
+
+  useToastState(state)
+  useEffect(() => {
+    if (state.ok && state.data?.stripeCheckoutUrl) router.push(state.data.stripeCheckoutUrl)
+  }, [router, state])
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="entityId" value={entityId} />
+      <PendingSubmitButton size="sm" variant="outline" pendingText="Preparing...">
+        <CreditCard aria-hidden="true" />
+        Pay service fee
+      </PendingSubmitButton>
+    </form>
+  )
+}
+
+function LienFeeCheckoutForm({ entityId, kind }: { entityId: string; kind: "florida_lien_notice" | "florida_lien_filing" }) {
+  const [state, action] = useActionState(createLienServiceFeeCheckoutAction, serviceFeeState)
+  const router = useRouter()
+
+  useToastState(state)
+  useEffect(() => {
+    if (state.ok && state.data?.stripeCheckoutUrl) router.push(state.data.stripeCheckoutUrl)
+  }, [router, state])
+
+  return (
+    <form action={action}>
+      <input type="hidden" name="entityId" value={entityId} />
+      <input type="hidden" name="kind" value={kind} />
+      <PendingSubmitButton size="sm" variant="outline" pendingText="Preparing...">
+        <CreditCard aria-hidden="true" />
+        Pay service fee
+      </PendingSubmitButton>
+    </form>
+  )
+}
+
+function serviceFeeSummary(order?: ServiceFeeOrder) {
+  if (!order) return "Service fee not started"
+
+  const platformFee = order.clientBureauFeeCents / 100
+  const passThrough = order.passThroughFeeCents / 100
+  const extra = passThrough > 0 ? ` + $${passThrough.toLocaleString()} pass-through` : ""
+
+  return `$${platformFee.toLocaleString()} Client Bureau fee${extra} / ${order.status.replaceAll("_", " ")}`
+}
+
+function ManagedRecoveryCaseCard({ item, feeOrder }: { item: ManagedRecoveryCase; feeOrder?: ServiceFeeOrder }) {
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className={cn("rounded-md text-white", priorityClass(item.priority))}>{item.priority}</Badge>
+        <Badge variant="outline" className="rounded-md capitalize">{item.status.replaceAll("_", " ")}</Badge>
+        <Badge variant="secondary" className="rounded-md">Private service</Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {item.city}, {item.state} / ${item.amountDue.toLocaleString()} / {item.invoiceAgeDays} days past invoice
+      </p>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.summary}</p>
+      <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+        <span className="font-semibold text-slate-900">Fee status: {serviceFeeSummary(feeOrder)}</span>
+        <span>Payment recovery remains contractor-direct. Client Bureau does not hold recovered funds.</span>
+        <span>Next: {item.nextAction}</span>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {feeOrder?.status === "paid" ? (
+          <Badge className="rounded-md bg-emerald-700 text-white">Fee paid</Badge>
+        ) : (
+          <RecoveryFeeCheckoutForm entityId={item.id} />
+        )}
+      </div>
+    </div>
+  )
+}
+
 function PaymentRecoveryForm() {
   const [state, action] = useActionState(createPaymentRecoveryCaseAction, recoveryState)
 
@@ -1649,6 +1875,137 @@ function PaymentPlanCard({ item }: { item: PaymentPlan }) {
         Total ${item.totalAmount.toLocaleString()} / due day {item.dueDay}
         {item.nextDueDate ? ` / next ${item.nextDueDate}` : ""}
       </p>
+    </div>
+  )
+}
+
+function FloridaLienCaseForm() {
+  const [state, action] = useActionState(submitFloridaLienCaseAction, floridaLienState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <select name="workflowType" defaultValue="claim_of_lien_filing" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+        <option value="notice_packet">Florida notice packet</option>
+        <option value="claim_of_lien_filing">Florida claim of lien filing</option>
+      </select>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="clientName" placeholder="Client name" />
+        <Input name="ownerName" placeholder="Property owner name" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_70px]">
+        <Input name="propertyCounty" placeholder="Florida county" />
+        <Input name="propertyCity" placeholder="Property city" />
+        <Input name="state" defaultValue="FL" className="uppercase" aria-label="State" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="parcelNumber" placeholder="Parcel number (optional)" />
+        <select name="contractorRole" defaultValue="direct_contractor" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+          <option value="direct_contractor">Direct contractor</option>
+          <option value="subcontractor">Subcontractor</option>
+          <option value="supplier">Supplier</option>
+          <option value="laborer">Laborer</option>
+          <option value="other">Other role</option>
+        </select>
+      </div>
+      <Input name="projectType" placeholder="Project type" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input name="contractAmount" type="number" placeholder="Contract amount" />
+        <Input name="amountDue" type="number" placeholder="Unpaid amount" />
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Input name="firstWorkDate" type="date" aria-label="First work date" />
+        <Input name="lastWorkDate" type="date" aria-label="Last work date" />
+        <Input name="filingDeadline" type="date" aria-label="Filing deadline" />
+      </div>
+      <Textarea name="legalDescription" placeholder="Legal description if available (kept private)" className="min-h-20" />
+      <Textarea name="noticeHistory" placeholder="Notice, invoice, contract, payment request, and communication history" className="min-h-24" />
+      <Textarea name="privateSummary" placeholder="Private case summary for Client Bureau and attorney/vendor review" className="min-h-24" />
+      <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
+        <Checkbox name="accuracyCertification" className="mt-1" />
+        I certify this case information is accurate to the best of my knowledge.
+      </label>
+      <label className="flex items-start gap-2 text-sm leading-6 text-slate-700">
+        <Checkbox name="filingTermsCertification" className="mt-1" />
+        I understand this is a managed workflow routed through attorney/vendor review and does not guarantee lien priority, enforceability, or collection.
+      </label>
+      <PendingSubmitButton pendingText="Submitting..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Landmark aria-hidden="true" />
+        Submit Florida case
+      </PendingSubmitButton>
+      <FieldError name="amountDue" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="state" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="accuracyCertification" errors={state.ok ? undefined : state.fieldErrors} />
+      <FieldError name="filingTermsCertification" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function LienAuthorizationForm({ caseId }: { caseId: string }) {
+  const [state, action] = useActionState(signLienFilingAuthorizationAction, floridaLienState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="mt-3 grid gap-2 rounded-md border border-amber-200 bg-amber-50 p-3">
+      <input type="hidden" name="caseId" value={caseId} />
+      <Input name="signerName" placeholder="Signer name" className="bg-white" />
+      <Input name="authorityTitle" placeholder="Authority/title" className="bg-white" />
+      <Input name="signatureName" placeholder="Type signer name again" className="bg-white" />
+      <label className="flex items-start gap-2 text-xs leading-5 text-amber-950">
+        <Checkbox name="accuracyCertification" className="mt-1" />
+        Filing information is accurate.
+      </label>
+      <label className="flex items-start gap-2 text-xs leading-5 text-amber-950">
+        <Checkbox name="authorityCertification" className="mt-1" />
+        I am authorized to sign for the contractor.
+      </label>
+      <label className="flex items-start gap-2 text-xs leading-5 text-amber-950">
+        <Checkbox name="vendorReviewCertification" className="mt-1" />
+        I authorize attorney/e-recording vendor review before sending or filing.
+      </label>
+      <PendingSubmitButton size="sm" pendingText="Signing..." className="bg-slate-950 text-white hover:bg-slate-800">
+        <Signature aria-hidden="true" />
+        Sign authorization
+      </PendingSubmitButton>
+      <FieldError name="signatureName" errors={state.ok ? undefined : state.fieldErrors} />
+    </form>
+  )
+}
+
+function FloridaLienCaseCard({ item, feeOrder }: { item: FloridaLienCase; feeOrder?: ServiceFeeOrder }) {
+  const kind = item.workflowType === "notice_packet" ? "florida_lien_notice" : "florida_lien_filing"
+
+  return (
+    <div className="rounded-md border border-slate-200 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className="rounded-md capitalize">{item.workflowType.replaceAll("_", " ")}</Badge>
+        <Badge className="rounded-md bg-slate-950 text-white capitalize">{item.status.replaceAll("_", " ")}</Badge>
+        <Badge variant="secondary" className="rounded-md">{item.propertyCounty} County</Badge>
+      </div>
+      <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+      <p className="mt-1 text-sm text-slate-500">
+        {item.projectType} / {item.propertyCity}, FL / ${item.amountDue.toLocaleString()} unpaid
+      </p>
+      <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+        <span>Fee status: {serviceFeeSummary(feeOrder)}</span>
+        <span>Attorney/vendor status: {item.attorneyVendorStatus.replaceAll("_", " ")}</span>
+        <span>Filing deadline: {item.filingDeadline ?? "Review required"}</span>
+        <span>Next: {item.nextAction}</span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-700">{item.privateSummary}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {feeOrder?.status === "paid" ? (
+          <Badge className="rounded-md bg-emerald-700 text-white">Fee paid</Badge>
+        ) : (
+          <LienFeeCheckoutForm entityId={item.id} kind={kind} />
+        )}
+        {item.contractorSignedAt ? (
+          <Badge variant="outline" className="rounded-md">Authorized by {item.contractorSignatureName ?? "contractor"}</Badge>
+        ) : null}
+      </div>
+      {!item.contractorSignedAt ? <LienAuthorizationForm caseId={item.id} /> : null}
     </div>
   )
 }

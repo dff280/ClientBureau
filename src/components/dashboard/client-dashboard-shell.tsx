@@ -30,7 +30,7 @@ const navIcons: Record<string, LucideIcon> = {
   Watchlist: BellRing,
   Contracts: Signature,
   "Payment Recovery": PhoneCall,
-  "Lien Readiness": Landmark,
+  "Florida Lien Service": Landmark,
   "Evidence Vault": Vault,
   Alerts: BellRing,
   Billing: CreditCard,

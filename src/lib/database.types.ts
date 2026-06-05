@@ -19,7 +19,12 @@ import type {
   ContractTemplateType,
   EvidenceReviewStatus,
   EvidenceVaultStatus,
+  FloridaLienCaseStatus,
+  FloridaLienWorkflowType,
+  LienDeliveryMethod,
+  LienFilingMethod,
   LienNoticeStatus,
+  ManagedRecoveryStatus,
   ModerationCaseStatus,
   ModerationDecisionReason,
   ModerationPriority,
@@ -30,6 +35,8 @@ import type {
   RecoveryComplianceStatus,
   ReportDraftStatus,
   ReportResolutionStatus,
+  ServiceFeeKind,
+  ServiceFeeStatus,
   WatchlistAlertEventType,
   WatchlistStatus,
 } from "@/lib/types"
@@ -918,6 +925,316 @@ export interface Database {
         created_at?: string
         updated_at?: string
       }>
+      service_fee_orders: DbTable<{
+        id: string
+        contractor_id: string
+        kind: ServiceFeeKind
+        entity_id: string
+        status: ServiceFeeStatus
+        client_bureau_fee_cents: number
+        pass_through_fee_cents: number
+        currency: "usd"
+        stripe_checkout_url: string | null
+        stripe_session_id: string | null
+        paid_at: string | null
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        contractor_id: string
+        kind: ServiceFeeKind
+        entity_id: string
+        status?: ServiceFeeStatus
+        client_bureau_fee_cents: number
+        pass_through_fee_cents?: number
+        currency?: "usd"
+        stripe_checkout_url?: string | null
+        stripe_session_id?: string | null
+        paid_at?: string | null
+        created_at?: string
+        updated_at?: string
+      }>
+      managed_recovery_cases: DbTable<{
+        id: string
+        contractor_id: string
+        client_name: string
+        client_email_hash: string | null
+        client_email_masked: string | null
+        city: string
+        state: string
+        amount_due: number
+        invoice_age_days: number
+        preferred_channel: RecoveryChannel
+        status: ManagedRecoveryStatus
+        priority: ModerationPriority
+        service_fee_order_id: string | null
+        evidence_vault_item_ids: string[]
+        assigned_to_name: string | null
+        next_action: string
+        summary: string
+        contractor_direct_payment: boolean
+        compliance_flags: string[]
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        contractor_id: string
+        client_name: string
+        client_email_hash?: string | null
+        client_email_masked?: string | null
+        city: string
+        state: string
+        amount_due: number
+        invoice_age_days: number
+        preferred_channel: RecoveryChannel
+        status?: ManagedRecoveryStatus
+        priority?: ModerationPriority
+        service_fee_order_id?: string | null
+        evidence_vault_item_ids?: string[]
+        assigned_to_name?: string | null
+        next_action: string
+        summary: string
+        contractor_direct_payment?: boolean
+        compliance_flags?: string[]
+        created_at?: string
+        updated_at?: string
+      }>
+      recovery_communications: DbTable<{
+        id: string
+        managed_recovery_case_id: string
+        contractor_id: string
+        channel: RecoveryChannel
+        direction: "outbound" | "inbound" | "internal"
+        subject: string
+        note: string
+        outcome: PaymentRecoveryAttemptOutcome
+        contacted_at: string
+        logged_by_name: string
+        created_at: string
+      }, {
+        id?: string
+        managed_recovery_case_id: string
+        contractor_id: string
+        channel: RecoveryChannel
+        direction?: "outbound" | "inbound" | "internal"
+        subject: string
+        note: string
+        outcome: PaymentRecoveryAttemptOutcome
+        contacted_at: string
+        logged_by_name: string
+        created_at?: string
+      }>
+      recovery_resolution_offers: DbTable<{
+        id: string
+        managed_recovery_case_id: string
+        contractor_id: string
+        amount_offered: number
+        payment_due_date: string | null
+        terms_summary: string
+        status: "draft" | "offered" | "accepted" | "rejected" | "expired" | "paid"
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        managed_recovery_case_id: string
+        contractor_id: string
+        amount_offered: number
+        payment_due_date?: string | null
+        terms_summary: string
+        status?: "draft" | "offered" | "accepted" | "rejected" | "expired" | "paid"
+        created_at?: string
+        updated_at?: string
+      }>
+      florida_lien_cases: DbTable<{
+        id: string
+        contractor_id: string
+        workflow_type: FloridaLienWorkflowType
+        client_name: string
+        owner_name: string
+        property_county: string
+        property_city: string
+        state: "FL"
+        parcel_number: string | null
+        legal_description: string | null
+        contractor_role: "direct_contractor" | "subcontractor" | "supplier" | "laborer" | "other"
+        project_type: string
+        contract_amount: number
+        amount_due: number
+        first_work_date: string | null
+        last_work_date: string
+        notice_history: string
+        filing_deadline: string | null
+        target_send_date: string | null
+        status: FloridaLienCaseStatus
+        delivery_method: LienDeliveryMethod | null
+        filing_method: LienFilingMethod | null
+        recording_vendor: string | null
+        service_fee_order_id: string | null
+        contractor_signed_at: string | null
+        contractor_signature_name: string | null
+        attorney_vendor_status: "not_started" | "queued" | "in_review" | "approved" | "rejected"
+        next_action: string
+        private_summary: string
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        contractor_id: string
+        workflow_type: FloridaLienWorkflowType
+        client_name: string
+        owner_name: string
+        property_county: string
+        property_city: string
+        state?: "FL"
+        parcel_number?: string | null
+        legal_description?: string | null
+        contractor_role: "direct_contractor" | "subcontractor" | "supplier" | "laborer" | "other"
+        project_type: string
+        contract_amount: number
+        amount_due: number
+        first_work_date?: string | null
+        last_work_date: string
+        notice_history: string
+        filing_deadline?: string | null
+        target_send_date?: string | null
+        status?: FloridaLienCaseStatus
+        delivery_method?: LienDeliveryMethod | null
+        filing_method?: LienFilingMethod | null
+        recording_vendor?: string | null
+        service_fee_order_id?: string | null
+        contractor_signed_at?: string | null
+        contractor_signature_name?: string | null
+        attorney_vendor_status?: "not_started" | "queued" | "in_review" | "approved" | "rejected"
+        next_action: string
+        private_summary: string
+        created_at?: string
+        updated_at?: string
+      }>
+      lien_notice_deliveries: DbTable<{
+        id: string
+        florida_lien_case_id: string
+        contractor_id: string
+        delivery_method: LienDeliveryMethod
+        recipient_name: string
+        sent_at: string | null
+        tracking_number: string | null
+        delivery_status: "queued" | "sent" | "delivered" | "failed" | "returned"
+        proof_summary: string
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        florida_lien_case_id: string
+        contractor_id: string
+        delivery_method: LienDeliveryMethod
+        recipient_name: string
+        sent_at?: string | null
+        tracking_number?: string | null
+        delivery_status?: "queued" | "sent" | "delivered" | "failed" | "returned"
+        proof_summary: string
+        created_at?: string
+        updated_at?: string
+      }>
+      lien_filing_records: DbTable<{
+        id: string
+        florida_lien_case_id: string
+        contractor_id: string
+        filing_method: LienFilingMethod
+        recording_vendor: string | null
+        clerk_county: string
+        clerk_reference: string | null
+        official_record_book: string | null
+        official_record_page: string | null
+        instrument_number: string | null
+        filed_at: string | null
+        recording_confirmed_at: string | null
+        filing_receipt_path: string | null
+        status: "queued" | "submitted" | "filed" | "recording_confirmed" | "rejected"
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        florida_lien_case_id: string
+        contractor_id: string
+        filing_method: LienFilingMethod
+        recording_vendor?: string | null
+        clerk_county: string
+        clerk_reference?: string | null
+        official_record_book?: string | null
+        official_record_page?: string | null
+        instrument_number?: string | null
+        filed_at?: string | null
+        recording_confirmed_at?: string | null
+        filing_receipt_path?: string | null
+        status?: "queued" | "submitted" | "filed" | "recording_confirmed" | "rejected"
+        created_at?: string
+        updated_at?: string
+      }>
+      lien_release_records: DbTable<{
+        id: string
+        florida_lien_case_id: string
+        contractor_id: string
+        release_reason: "paid" | "settled" | "expired" | "withdrawn" | "error_correction"
+        release_status: "draft" | "sent_for_signature" | "recorded" | "blocked"
+        release_recorded_at: string | null
+        release_instrument_number: string | null
+        notes: string
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        florida_lien_case_id: string
+        contractor_id: string
+        release_reason: "paid" | "settled" | "expired" | "withdrawn" | "error_correction"
+        release_status?: "draft" | "sent_for_signature" | "recorded" | "blocked"
+        release_recorded_at?: string | null
+        release_instrument_number?: string | null
+        notes: string
+        created_at?: string
+        updated_at?: string
+      }>
+      case_staff_assignments: DbTable<{
+        id: string
+        entity_type: "managed_recovery" | "florida_lien"
+        entity_id: string
+        assigned_to: string | null
+        assigned_to_name: string
+        priority: ModerationPriority
+        due_at: string
+        status: "open" | "in_review" | "closed"
+        created_at: string
+        updated_at: string
+      }, {
+        id?: string
+        entity_type: "managed_recovery" | "florida_lien"
+        entity_id: string
+        assigned_to?: string | null
+        assigned_to_name: string
+        priority?: ModerationPriority
+        due_at: string
+        status?: "open" | "in_review" | "closed"
+        created_at?: string
+        updated_at?: string
+      }>
+      case_audit_events: DbTable<{
+        id: string
+        entity_type: "managed_recovery" | "florida_lien" | "service_fee"
+        entity_id: string
+        actor_id: string | null
+        actor_name: string
+        action: string
+        summary: string
+        created_at: string
+      }, {
+        id?: string
+        entity_type: "managed_recovery" | "florida_lien" | "service_fee"
+        entity_id: string
+        actor_id?: string | null
+        actor_name: string
+        action: string
+        summary: string
+        created_at?: string
+      }>
     }
     Views: {
       client_bureau_required_tables: {
@@ -963,6 +1280,13 @@ export interface Database {
       evidence_vault_status: EvidenceVaultStatus
       admin_saved_view_scope: AdminSavedViewScope
       recovery_compliance_status: RecoveryComplianceStatus
+      managed_recovery_status: ManagedRecoveryStatus
+      florida_lien_workflow_type: FloridaLienWorkflowType
+      florida_lien_case_status: FloridaLienCaseStatus
+      lien_delivery_method: LienDeliveryMethod
+      lien_filing_method: LienFilingMethod
+      service_fee_kind: ServiceFeeKind
+      service_fee_status: ServiceFeeStatus
     }
   }
 }

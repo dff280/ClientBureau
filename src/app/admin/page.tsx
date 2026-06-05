@@ -139,8 +139,14 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
     ["queued", "needs_dispute_review"].includes(item.review.status) && item.evidence.length > 0,
   ).length
   const escalatedCases = moderationCrm?.cases.filter((item) => item.status === "escalated").length ?? 0
-  const recoveryCases = riskOps ? countOpenRecoveryCases(riskOps.paymentRecoveryCases) : 0
-  const lienPackets = riskOps?.lienNoticeDrafts.filter((item) => item.requiredReview).length ?? 0
+  const recoveryCases = riskOps
+    ? countOpenRecoveryCases(riskOps.paymentRecoveryCases) +
+      riskOps.managedRecoveryCases.filter((item) => !["resolved", "closed", "paused"].includes(item.status)).length
+    : 0
+  const lienPackets = riskOps
+    ? riskOps.lienNoticeDrafts.filter((item) => item.requiredReview).length +
+      riskOps.floridaLienCases.filter((item) => !["released", "closed"].includes(item.status)).length
+    : 0
   const contractLinks = riskOps?.contractPackets.filter((item) => item.status !== "archived").length ?? 0
   const recentUsers = [...data.users]
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -151,8 +157,8 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
     { label: "Pending discussions", value: pendingDiscussions, helper: "Community entries not public yet", icon: MessageSquareText, tone: pendingDiscussions > 0 ? "amber" as const : "slate" as const, href: "/admin/discussions" },
     { label: "Pending disputes", value: pendingDisputes + pendingResponses, helper: "Responses, corrections, and dispute context", icon: FileText, tone: pendingDisputes + pendingResponses > 0 ? "rose" as const : "slate" as const, href: "/admin/discussions" },
     { label: "Evidence review", value: evidenceAwaitingReview, helper: "Report records with private evidence attached", icon: UploadCloud, tone: evidenceAwaitingReview > 0 ? "blue" as const : "slate" as const, href: "/admin/reports" },
-    { label: "Recovery cases", value: recoveryCases, helper: "Private payment follow-up records", icon: PhoneCall, tone: recoveryCases > 0 ? "amber" as const : "slate" as const, href: "/admin?workspace=recovery" },
-    { label: "Lien packets", value: lienPackets, helper: "Review-gated private readiness packets", icon: Landmark, tone: lienPackets > 0 ? "rose" as const : "slate" as const, href: "/admin?workspace=recovery" },
+    { label: "Resolution Desk", value: recoveryCases, helper: "Managed recovery and private follow-up records", icon: PhoneCall, tone: recoveryCases > 0 ? "amber" as const : "slate" as const, href: "/admin?workspace=recovery" },
+    { label: "Florida liens", value: lienPackets, helper: "Notice, filing, recording proof, and release queues", icon: Landmark, tone: lienPackets > 0 ? "rose" as const : "slate" as const, href: "/admin?workspace=recovery" },
     { label: "Public profiles", value: publicClients, helper: "Approved SEO-visible client records", icon: UserRound, tone: "emerald" as const, href: "/admin/clients" },
     { label: "Audit events", value: data.auditLog.length, helper: "Admin actions and system changes", icon: History, tone: "slate" as const, href: "/admin/audit-log" },
     { label: "Recent users", value: recentUsers, helper: "Latest account records loaded", icon: UsersRound, tone: "blue" as const, href: "/admin/contractors" },

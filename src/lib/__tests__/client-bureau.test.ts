@@ -55,11 +55,15 @@ import {
   getPublicClientProfile,
   getPublicBusinessProfile,
   createContractShareLink,
+  createServiceFeeOrder,
   getContractPacketByShareToken,
+  signLienFilingAuthorization,
   searchClients,
   signContractShare,
   simulateApprovalPublication,
   simulateSubmittedClientReport,
+  submitFloridaLienCase,
+  submitManagedRecoveryCase,
 } from "@/lib/repositories/client-bureau"
 import {
   businessProtectionPromise,
@@ -88,6 +92,7 @@ import {
   contractWorkspaceItems,
   evidenceVaultItems,
   lienNoticeDrafts,
+  managedRecoveryCases,
   moderationCases,
   paymentPlans,
   paymentRecoveryAttempts,
@@ -105,7 +110,10 @@ import {
   contractPacketSchema,
   contractShareLinkSchema,
   contractSignatureSchema,
+  floridaLienCaseSchema,
+  lienFilingAuthorizationSchema,
   lienNoticeDraftSchema,
+  managedRecoveryCaseSchema,
   paymentPlanSchema,
   paymentRecoveryAttemptSchema,
   moderationCaseAssignmentSchema,
@@ -113,6 +121,7 @@ import {
   paymentRecoveryCaseSchema,
   recoveryComplianceReviewSchema,
   reportDraftSchema,
+  serviceFeeCheckoutSchema,
   updateClientPipelineStageSchema,
   updateContractPacketStatusSchema,
   updateEvidenceVaultStatusSchema,
@@ -226,7 +235,7 @@ describe("product positioning", () => {
       "Watchlist",
       "Contracts",
       "Payment Recovery",
-      "Lien Readiness",
+      "Florida Lien Service",
       "Evidence Vault",
       "Alerts",
       "Billing",
@@ -235,7 +244,7 @@ describe("product positioning", () => {
     expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
       "/dashboard/contracts",
     )
-    expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
+    expect(contractorDashboardNav.find((item) => item.label === "Florida Lien Service")?.href).toBe(
       "/dashboard/lien-readiness",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Billing")?.href).toBe(
@@ -767,6 +776,74 @@ describe("platform expansion feature utilities", () => {
     expect(filterAdminSavedViews(adminSavedViews, "recovery")).toHaveLength(1)
   })
 
+  it("creates managed recovery cases and separates service fee costs", () => {
+    expect(managedRecoveryCases[0]?.status).toBe("contact_in_progress")
+
+    const recoveryCase = submitManagedRecoveryCase("contractor_01", {
+      clientName: "John Smith",
+      clientEmail: "john@example.com",
+      city: "Orlando",
+      state: "FL",
+      amountDue: 4200,
+      invoiceAgeDays: 42,
+      preferredChannel: "email",
+      evidenceVaultItemIds: "vault_01, vault_02",
+      summary: "Final invoice is unpaid after documented completion, invoice delivery, and contractor follow-up records.",
+      factualCertification: true,
+      serviceTermsCertification: true,
+    })
+    const order = createServiceFeeOrder("contractor_01", {
+      entityId: recoveryCase.id,
+      kind: "managed_recovery",
+    })
+
+    expect(recoveryCase.status).toBe("fee_due")
+    expect(recoveryCase.contractorDirectPayment).toBe(true)
+    expect(recoveryCase.clientEmailMasked).not.toContain("john@example.com")
+    expect(order.clientBureauFeeCents).toBe(14900)
+    expect(order.passThroughFeeCents).toBe(0)
+  })
+
+  it("creates Florida lien filing cases and requires contractor authorization before review", () => {
+    const lienCase = submitFloridaLienCase("contractor_01", {
+      workflowType: "claim_of_lien_filing",
+      clientName: "John Smith",
+      ownerName: "John Smith",
+      propertyCounty: "Orange",
+      propertyCity: "Orlando",
+      state: "FL",
+      contractorRole: "direct_contractor",
+      projectType: "Kitchen remodel",
+      contractAmount: 18400,
+      amountDue: 4200,
+      firstWorkDate: "2026-03-10",
+      lastWorkDate: "2026-04-06",
+      noticeHistory: "Signed contract, completion record, final invoice, and payment follow-up are documented.",
+      privateSummary: "Private Florida lien case prepared for attorney/vendor review with documents on file.",
+      accuracyCertification: true,
+      filingTermsCertification: true,
+    })
+    const signed = signLienFilingAuthorization("contractor_01", {
+      caseId: lienCase.id,
+      signerName: "Morgan Ellis",
+      authorityTitle: "Owner",
+      signatureName: "Morgan Ellis",
+      accuracyCertification: true,
+      authorityCertification: true,
+      vendorReviewCertification: true,
+    })
+    const filingFee = createServiceFeeOrder("contractor_01", {
+      entityId: lienCase.id,
+      kind: "florida_lien_filing",
+    })
+
+    expect(lienCase.status).toBe("fee_due")
+    expect(signed.status).toBe("attorney_vendor_review")
+    expect(signed.contractorSignedAt).toBeDefined()
+    expect(filingFee.clientBureauFeeCents).toBe(29900)
+    expect(filingFee.passThroughFeeCents).toBeGreaterThan(0)
+  })
+
   it("creates private contract signing links and records client signatures", () => {
     const seeded = getContractPacketByShareToken("new-intake-client-roof-repair-agreement-link-02")
 
@@ -897,6 +974,104 @@ describe("platform expansion schemas", () => {
         summary: "Agreement includes scope, payment timing, and change-order controls.",
       }).success,
     ).toBe(false)
+  })
+
+  it("validates managed recovery and Florida lien service inputs", () => {
+    expect(
+      managedRecoveryCaseSchema.safeParse({
+        clientName: "John Smith",
+        clientEmail: "john@example.com",
+        city: "Orlando",
+        state: "FL",
+        amountDue: 4200,
+        invoiceAgeDays: 42,
+        preferredChannel: "email",
+        evidenceVaultItemIds: "vault_01, vault_02",
+        summary: "Final invoice is unpaid after documented completion, invoice delivery, and contractor follow-up records.",
+        factualCertification: true,
+        serviceTermsCertification: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      serviceFeeCheckoutSchema.safeParse({
+        entityId: "managed_recovery_01",
+        kind: "managed_recovery",
+      }).success,
+    ).toBe(true)
+
+    expect(
+      floridaLienCaseSchema.safeParse({
+        workflowType: "claim_of_lien_filing",
+        clientName: "John Smith",
+        ownerName: "John Smith",
+        propertyCounty: "Orange",
+        propertyCity: "Orlando",
+        state: "FL",
+        contractorRole: "direct_contractor",
+        projectType: "Kitchen remodel",
+        contractAmount: 18400,
+        amountDue: 4200,
+        firstWorkDate: "2026-03-10",
+        lastWorkDate: "2026-04-06",
+        noticeHistory: "Signed contract, completion record, final invoice, and payment follow-up are documented.",
+        privateSummary: "Private Florida lien case prepared for attorney/vendor review with documents on file.",
+        accuracyCertification: true,
+        filingTermsCertification: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      floridaLienCaseSchema.safeParse({
+        workflowType: "claim_of_lien_filing",
+        clientName: "John Smith",
+        ownerName: "John Smith",
+        propertyCounty: "Orange",
+        propertyCity: "Orlando",
+        state: "GA",
+        contractorRole: "direct_contractor",
+        projectType: "Kitchen remodel",
+        contractAmount: 18400,
+        amountDue: 4200,
+        lastWorkDate: "2026-04-06",
+        noticeHistory: "This should fail because the service is Florida-only.",
+        privateSummary: "Private case summary long enough for validation but wrong state.",
+        accuracyCertification: true,
+        filingTermsCertification: true,
+      }).success,
+    ).toBe(false)
+
+    expect(
+      floridaLienCaseSchema.safeParse({
+        workflowType: "claim_of_lien_filing",
+        clientName: "John Smith",
+        ownerName: "John Smith",
+        propertyCounty: "Orange",
+        propertyCity: "Orlando",
+        state: "FL",
+        contractorRole: "direct_contractor",
+        projectType: "Kitchen remodel",
+        contractAmount: 1000,
+        amountDue: 4200,
+        lastWorkDate: "2026-04-06",
+        noticeHistory: "This should fail because amount due exceeds contract value.",
+        privateSummary: "Private case summary long enough for validation but amount is invalid.",
+        accuracyCertification: true,
+        filingTermsCertification: true,
+      }).success,
+    ).toBe(false)
+
+    expect(
+      lienFilingAuthorizationSchema.safeParse({
+        caseId: "florida_lien_01",
+        signerName: "Morgan Ellis",
+        authorityTitle: "Owner",
+        signatureName: "Morgan Ellis",
+        accuracyCertification: true,
+        authorityCertification: true,
+        vendorReviewCertification: true,
+      }).success,
+    ).toBe(true)
   })
 
   it("validates contractor ops workspace inputs", () => {

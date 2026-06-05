@@ -334,7 +334,7 @@ function getLandingSections(page: SeoLandingPage) {
       points: [
         "Search before scheduling labor, buying materials, extending terms, or starting custom work.",
         "Document your own project timeline and submit updates if a payment or dispute is resolved.",
-        "Use private workflow tools for recovery, lien readiness, and contract tracking without exposing private files publicly.",
+        "Use private workflow tools for managed recovery, Florida lien service records, and contract tracking without exposing private files publicly.",
       ],
     },
   ]

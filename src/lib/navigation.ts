@@ -24,8 +24,8 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard/reports", label: "Reports", description: "Draft, submit, and track client reports." },
   { href: "/dashboard/watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Signing links, agreement packets, change orders, and client invites." },
-  { href: "/dashboard/recovery", label: "Payment Recovery", description: "Invoice timelines, call logs, payment plans, and resolution tracking." },
-  { href: "/dashboard/lien-readiness", label: "Lien Readiness", description: "Private notice packets, deadline trackers, and document checklists." },
+  { href: "/dashboard/recovery", label: "Payment Recovery", description: "Get help recovering payment, track Resolution Desk cases, and document invoice follow-up." },
+  { href: "/dashboard/lien-readiness", label: "Florida Lien Service", description: "Private Florida notice, filing, recording proof, and release workflows." },
   { href: "/dashboard/evidence", label: "Evidence Vault", description: "Private invoices, screenshots, contracts, photos, PDFs, and review status." },
   { href: "/dashboard/watchlist", label: "Alerts", description: "Watchlist changes, dispute updates, and score movement." },
   { href: "/dashboard/billing", label: "Billing", description: "Plan, usage, invoices, and payment settings." },
@@ -41,7 +41,7 @@ export const contractorDashboardGroups: NavigationGroup[] = [
       { href: "/submit-report", label: "Submit a Report", description: "Document a client experience for review." },
       contractorDashboardNav.find((item) => item.label === "Contracts"),
       contractorDashboardNav.find((item) => item.label === "Payment Recovery"),
-      contractorDashboardNav.find((item) => item.label === "Lien Readiness"),
+      contractorDashboardNav.find((item) => item.label === "Florida Lien Service"),
     ].filter(Boolean) as NavigationItem[],
   },
   {
@@ -65,13 +65,13 @@ export const contractorDashboardGroups: NavigationGroup[] = [
   {
     title: "Payments",
     links: contractorDashboardNav.filter((item) =>
-      ["Payment Recovery", "Lien Readiness"].includes(item.label),
+      ["Payment Recovery", "Florida Lien Service"].includes(item.label),
     ),
   },
   {
     title: "Protection Tools",
     links: contractorDashboardNav.filter((item) =>
-      ["Watchlist", "Alerts", "Lien Readiness"].includes(item.label),
+      ["Watchlist", "Alerts", "Florida Lien Service"].includes(item.label),
     ),
   },
   {
@@ -134,7 +134,9 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/submit-report", label: "Submit Report" },
       { href: "/dashboard/contracts", label: "Contracts" },
       { href: "/dashboard/recovery", label: "Payment Recovery" },
-      { href: "/dashboard/lien-readiness", label: "Lien Readiness" },
+      { href: "/dashboard/lien-readiness", label: "Florida Lien Service" },
+      { href: "/payment-recovery-service", label: "Recovery Service" },
+      { href: "/florida-lien-filing-service", label: "Florida Lien Filing" },
       { href: "/dashboard/evidence", label: "Evidence Vault" },
       { href: "/dashboard/billing", label: "Billing" },
     ],

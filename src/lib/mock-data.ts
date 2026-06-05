@@ -3,6 +3,8 @@ import type {
   AdminModerationCrmData,
   AuditLogEntry,
   BulkImportBatch,
+  CaseAuditEvent,
+  CaseStaffAssignment,
   AdminQueueAssignment,
   AdminSavedView,
   ClientIntakeAssessment,
@@ -20,15 +22,23 @@ import type {
   ContractorProfile,
   EvidenceVaultItem,
   EvidenceReviewSummary,
+  FloridaLienCase,
   LienNoticeDraft,
+  LienFilingRecord,
+  LienNoticeDelivery,
+  LienReleaseRecord,
+  ManagedRecoveryCase,
   ModerationCase,
   PaymentPlan,
   PaymentRecoveryCase,
   PaymentRecoveryAttempt,
+  RecoveryCommunication,
   RecoveryComplianceReview,
+  RecoveryResolutionOffer,
   ReportDraft,
   ReportEvidence,
   SavedSearch,
+  ServiceFeeOrder,
   Subscription,
   User,
   WatchlistAlert,
@@ -827,6 +837,96 @@ export const paymentPlans: PaymentPlan[] = [
   },
 ]
 
+export const serviceFeeOrders: ServiceFeeOrder[] = [
+  {
+    id: "service_fee_recovery_01",
+    contractorId: "contractor_01",
+    kind: "managed_recovery",
+    entityId: "managed_recovery_01",
+    status: "paid",
+    clientBureauFeeCents: 14900,
+    passThroughFeeCents: 0,
+    currency: "usd",
+    paidAt: "2026-06-01T14:20:00.000Z",
+    createdAt: "2026-06-01T14:05:00.000Z",
+    updatedAt: "2026-06-01T14:20:00.000Z",
+  },
+  {
+    id: "service_fee_lien_01",
+    contractorId: "contractor_01",
+    kind: "florida_lien_filing",
+    entityId: "florida_lien_01",
+    status: "paid",
+    clientBureauFeeCents: 29900,
+    passThroughFeeCents: 6800,
+    currency: "usd",
+    paidAt: "2026-06-02T10:15:00.000Z",
+    createdAt: "2026-06-02T09:50:00.000Z",
+    updatedAt: "2026-06-02T10:15:00.000Z",
+  },
+]
+
+export const managedRecoveryCases: ManagedRecoveryCase[] = [
+  {
+    id: "managed_recovery_01",
+    contractorId: "contractor_01",
+    clientName: "John Smith",
+    clientEmailMasked: "jo***@p***.com",
+    city: "Orlando",
+    state: "FL",
+    amountDue: 4200,
+    invoiceAgeDays: 42,
+    preferredChannel: "email",
+    status: "contact_in_progress",
+    priority: "high",
+    serviceFeeOrderId: "service_fee_recovery_01",
+    evidenceVaultItemIds: ["vault_01", "vault_02"],
+    assignedToName: "Resolution Desk",
+    nextAction: "Continue factual outreach and document the client's response window.",
+    summary:
+      "Contractor requested managed help for a documented final invoice balance. Client Bureau staff is using private invoice and completion records to seek a contractor-direct resolution.",
+    contractorDirectPayment: true,
+    complianceFlags: [
+      "Payment is made directly to the contractor.",
+      "Use documented invoice facts and neutral language.",
+      "Route disputes back through moderation before any public update.",
+    ],
+    createdAt: "2026-06-01T14:05:00.000Z",
+    updatedAt: "2026-06-03T16:30:00.000Z",
+  },
+]
+
+export const recoveryCommunications: RecoveryCommunication[] = [
+  {
+    id: "recovery_comm_01",
+    managedRecoveryCaseId: "managed_recovery_01",
+    contractorId: "contractor_01",
+    channel: "email",
+    direction: "outbound",
+    subject: "Documented invoice follow-up",
+    note:
+      "Resolution Desk sent a factual payment follow-up referencing the invoice date, completion documentation, balance, and contractor-direct payment instructions.",
+    outcome: "needs_follow_up",
+    contactedAt: "2026-06-03T16:30:00.000Z",
+    loggedByName: "Resolution Desk",
+    createdAt: "2026-06-03T16:31:00.000Z",
+  },
+]
+
+export const recoveryResolutionOffers: RecoveryResolutionOffer[] = [
+  {
+    id: "recovery_offer_01",
+    managedRecoveryCaseId: "managed_recovery_01",
+    contractorId: "contractor_01",
+    amountOffered: 4200,
+    paymentDueDate: "2026-06-17",
+    termsSummary: "Full balance payable directly to the contractor within 14 days, or staff will document unresolved status.",
+    status: "offered",
+    createdAt: "2026-06-03T16:40:00.000Z",
+    updatedAt: "2026-06-03T16:40:00.000Z",
+  },
+]
+
 export const lienNoticeDrafts: LienNoticeDraft[] = [
   {
     id: "lien_notice_01",
@@ -862,6 +962,131 @@ export const lienNoticeDrafts: LienNoticeDraft[] = [
       "Draft notices are kept private and should be reviewed against the signed agreement and local requirements.",
     createdAt: "2026-05-30T10:25:00.000Z",
     updatedAt: "2026-05-30T10:25:00.000Z",
+  },
+]
+
+export const floridaLienCases: FloridaLienCase[] = [
+  {
+    id: "florida_lien_01",
+    contractorId: "contractor_01",
+    workflowType: "claim_of_lien_filing",
+    clientName: "John Smith",
+    ownerName: "John Smith",
+    propertyCounty: "Orange",
+    propertyCity: "Orlando",
+    state: "FL",
+    parcelNumber: "25-22-29-0000-00-001",
+    legalDescription: "Private legal description on file for attorney/vendor review.",
+    contractorRole: "direct_contractor",
+    projectType: "Kitchen remodel",
+    contractAmount: 18400,
+    amountDue: 4200,
+    firstWorkDate: "2026-03-10",
+    lastWorkDate: "2026-04-06",
+    noticeHistory:
+      "Contractor reports signed agreement, completion documentation, final invoice, and documented payment reminder history. Notice and filing requirements require attorney/vendor review.",
+    filingDeadline: "2026-07-05",
+    targetSendDate: "2026-06-07",
+    status: "attorney_vendor_review",
+    deliveryMethod: "certified_mail",
+    filingMethod: "attorney_vendor",
+    recordingVendor: "Attorney/vendor queue",
+    serviceFeeOrderId: "service_fee_lien_01",
+    contractorSignedAt: "2026-06-02T10:18:00.000Z",
+    contractorSignatureName: "Morgan Ellis",
+    attorneyVendorStatus: "in_review",
+    nextAction: "Attorney/vendor review is checking eligibility, recipient list, deadline risk, and recording requirements.",
+    privateSummary:
+      "Florida claim-of-lien filing case for a documented unpaid final invoice. Raw contract, invoice, property, and filing documents stay private.",
+    createdAt: "2026-06-02T09:45:00.000Z",
+    updatedAt: "2026-06-03T11:15:00.000Z",
+  },
+]
+
+export const lienNoticeDeliveries: LienNoticeDelivery[] = [
+  {
+    id: "lien_delivery_01",
+    floridaLienCaseId: "florida_lien_01",
+    contractorId: "contractor_01",
+    deliveryMethod: "certified_mail",
+    recipientName: "John Smith",
+    deliveryStatus: "queued",
+    proofSummary: "Delivery packet is queued pending attorney/vendor review.",
+    createdAt: "2026-06-03T11:20:00.000Z",
+    updatedAt: "2026-06-03T11:20:00.000Z",
+  },
+]
+
+export const lienFilingRecords: LienFilingRecord[] = [
+  {
+    id: "lien_filing_01",
+    floridaLienCaseId: "florida_lien_01",
+    contractorId: "contractor_01",
+    filingMethod: "attorney_vendor",
+    recordingVendor: "Attorney/vendor queue",
+    clerkCounty: "Orange",
+    status: "queued",
+    createdAt: "2026-06-03T11:25:00.000Z",
+    updatedAt: "2026-06-03T11:25:00.000Z",
+  },
+]
+
+export const lienReleaseRecords: LienReleaseRecord[] = [
+  {
+    id: "lien_release_01",
+    floridaLienCaseId: "florida_lien_01",
+    contractorId: "contractor_01",
+    releaseReason: "paid",
+    releaseStatus: "draft",
+    notes: "Release record is prepared only if payment, settlement, withdrawal, or correction requires a release/satisfaction workflow.",
+    createdAt: "2026-06-03T11:28:00.000Z",
+    updatedAt: "2026-06-03T11:28:00.000Z",
+  },
+]
+
+export const caseStaffAssignments: CaseStaffAssignment[] = [
+  {
+    id: "case_assignment_01",
+    entityType: "managed_recovery",
+    entityId: "managed_recovery_01",
+    assignedToName: "Resolution Desk",
+    priority: "high",
+    dueAt: "2026-06-05T17:00:00.000Z",
+    status: "in_review",
+    createdAt: "2026-06-01T14:12:00.000Z",
+    updatedAt: "2026-06-03T16:30:00.000Z",
+  },
+  {
+    id: "case_assignment_02",
+    entityType: "florida_lien",
+    entityId: "florida_lien_01",
+    assignedToName: "Lien Filing Desk",
+    priority: "urgent",
+    dueAt: "2026-06-06T17:00:00.000Z",
+    status: "in_review",
+    createdAt: "2026-06-02T10:18:00.000Z",
+    updatedAt: "2026-06-03T11:15:00.000Z",
+  },
+]
+
+export const caseAuditEvents: CaseAuditEvent[] = [
+  {
+    id: "case_audit_01",
+    entityType: "managed_recovery",
+    entityId: "managed_recovery_01",
+    actorName: "Morgan Ellis",
+    action: "submitted",
+    summary: "Managed recovery case submitted with invoice and completion evidence on file.",
+    createdAt: "2026-06-01T14:05:00.000Z",
+  },
+  {
+    id: "case_audit_02",
+    entityType: "florida_lien",
+    entityId: "florida_lien_01",
+    actorName: "Morgan Ellis",
+    action: "contractor_authorized",
+    summary: "Contractor certified accuracy and authorized attorney/vendor review for Florida lien filing.",
+    createdAt: "2026-06-02T10:18:00.000Z",
   },
 ]
 
@@ -1279,6 +1504,16 @@ export const contractorRiskOps: ContractorRiskOpsData = {
   paymentRecoveryAttempts,
   paymentPlans,
   lienNoticeDrafts,
+  managedRecoveryCases,
+  recoveryCommunications,
+  recoveryResolutionOffers,
+  floridaLienCases,
+  lienNoticeDeliveries,
+  lienFilingRecords,
+  lienReleaseRecords,
+  serviceFeeOrders,
+  caseStaffAssignments,
+  caseAuditEvents,
   contractDocuments: contractWorkspaceItems,
   contractPackets,
   activity: contractorActivity,

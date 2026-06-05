@@ -118,9 +118,12 @@ export default async function DashboardPage({
   }
   const activeWatchlist = riskOps.watchlist.filter((item) => item.status === "active").length
   const unreadAlerts = riskOps.watchlistAlerts.filter((item) => !item.readAt).length
-  const openRecoveryCases = riskOps.paymentRecoveryCases.filter(
+  const openRecoveryCases = [
+    ...riskOps.paymentRecoveryCases.filter(
     (item) => !["resolved", "paused"].includes(item.status),
-  )
+    ),
+    ...riskOps.managedRecoveryCases.filter((item) => !["resolved", "closed", "paused"].includes(item.status)),
+  ]
   const openBalance = openRecoveryCases.reduce((total, item) => total + item.amountDue, 0)
   const signedContracts = riskOps.contractPackets.filter(
     (item) => item.status === "signed" || item.signatureStatus === "fully_signed",
@@ -248,7 +251,7 @@ export default async function DashboardPage({
           icon={DollarSign}
           label="Open balances"
           value={formatCurrency(openBalance)}
-          helper={`${openRecoveryCases.length} open recovery cases`}
+          helper={`${openRecoveryCases.length} managed or tracked recovery cases`}
           tone={openRecoveryCases.length > 0 ? "rose" : "emerald"}
         />
       </div>
@@ -282,14 +285,14 @@ export default async function DashboardPage({
           <QuickActionCard
             href="/dashboard/recovery"
             icon={PhoneCall}
-            title="Payment recovery"
-            description="Track invoices, follow-ups, payment plans, and resolution."
+            title="Get help recovering payment"
+            description="Open a private Resolution Desk case for staff-assisted follow-up."
           />
           <QuickActionCard
             href="/dashboard/lien-readiness"
             icon={Landmark}
-            title="Lien readiness"
-            description="Keep a private deadline and document checklist."
+            title="Florida lien service"
+            description="Start a notice or claim-of-lien filing workflow."
           />
         </div>
       </DashboardSection>
