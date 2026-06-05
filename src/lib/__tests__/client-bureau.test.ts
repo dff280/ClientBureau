@@ -230,15 +230,16 @@ describe("product positioning", () => {
       "Evidence Vault",
       "Alerts",
       "Billing",
+      "Activity",
     ])
     expect(contractorPrimaryNav.find((item) => item.label === "Contracts")?.href).toBe(
       "/dashboard/contracts",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Lien Readiness")?.href).toBe(
-      "/dashboard?workspace=lien-readiness",
+      "/dashboard/lien-readiness",
     )
     expect(contractorDashboardNav.find((item) => item.label === "Billing")?.href).toBe(
-      "/dashboard?workspace=billing",
+      "/dashboard/billing",
     )
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
       "Start Here",

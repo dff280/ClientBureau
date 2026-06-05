@@ -36,7 +36,7 @@ const contractorHeaderNav = [
   { href: "/dashboard", label: "Dashboard", description: "Daily work queue and business tools." },
   { href: "/search", label: "Search", description: "Check a client before accepting work." },
   { href: "/submit-report", label: "Submit Report", description: "Document a client experience for review." },
-  { href: "/dashboard?workspace=contracts", label: "Contracts", description: "Agreement packets and signing links." },
+  { href: "/dashboard/contracts", label: "Contracts", description: "Agreement packets and signing links." },
 ]
 
 export function SiteHeader() {

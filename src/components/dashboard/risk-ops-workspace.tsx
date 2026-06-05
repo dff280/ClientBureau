@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useEffect, useMemo } from "react"
+import { useActionState, useEffect, useMemo, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import {
   AlertTriangle,
@@ -112,7 +112,7 @@ const paymentPlanState: ActionResult<PaymentPlan> = { ok: false, message: "" }
 const contractPacketState: ActionResult<ContractPacket> = { ok: false, message: "" }
 const contractShareState: ActionResult<ContractPacket> = { ok: false, message: "" }
 const evidenceVaultState: ActionResult<EvidenceVaultItem> = { ok: false, message: "" }
-const workspaceTabs = new Set([
+const workspaceTabValues = [
   "overview",
   "pipeline",
   "watchlist",
@@ -125,7 +125,26 @@ const workspaceTabs = new Set([
   "billing",
   "account",
   "activity",
-])
+] as const
+
+export type DashboardWorkspaceTab = (typeof workspaceTabValues)[number]
+
+const workspaceTabs = new Set<string>(workspaceTabValues)
+
+const workspaceRoutes: Record<DashboardWorkspaceTab, string> = {
+  overview: "/dashboard",
+  pipeline: "/dashboard/activity",
+  watchlist: "/dashboard/watchlist",
+  alerts: "/dashboard/watchlist",
+  reports: "/dashboard/reports",
+  evidence: "/dashboard/evidence",
+  recovery: "/dashboard/recovery",
+  "lien-readiness": "/dashboard/lien-readiness",
+  contracts: "/dashboard/contracts",
+  billing: "/dashboard/billing",
+  account: "/dashboard/billing",
+  activity: "/dashboard/activity",
+}
 
 const workspaceNavigationGroups: {
   title: string
@@ -164,21 +183,21 @@ const workspaceNavigationGroups: {
     text: "Agreements and private records.",
     items: [
       { value: "contracts", label: "Contracts", icon: Signature },
-      { value: "evidence", label: "Evidence", icon: Vault },
+      { value: "evidence", label: "Evidence Vault", icon: Vault },
     ],
   },
   {
     title: "Payments",
     text: "Follow-up and readiness tracking.",
     items: [
-      { value: "recovery", label: "Recovery", icon: PhoneCall },
+      { value: "recovery", label: "Payment Recovery", icon: PhoneCall },
     ],
   },
   {
     title: "Protection Tools",
     text: "Private safeguards before escalation.",
     items: [
-      { value: "lien-readiness", label: "Lien Packets", icon: Landmark },
+      { value: "lien-readiness", label: "Lien Readiness", icon: Landmark },
       { value: "account", label: "Verification", icon: ShieldCheck },
     ],
   },
@@ -187,7 +206,7 @@ const workspaceNavigationGroups: {
     text: "Plan, settings, and history.",
     items: [
       { value: "billing", label: "Billing", icon: CreditCard },
-      { value: "activity", label: "Timeline", icon: FileText },
+      { value: "activity", label: "Activity", icon: FileText },
     ],
   },
 ]
@@ -201,14 +220,16 @@ function normalizeWorkspaceTab(value: string | null) {
   }
   const normalized = value ? aliases[value] ?? value : null
 
-  return normalized && workspaceTabs.has(normalized) ? normalized : "overview"
+  return normalized && workspaceTabs.has(normalized) ? (normalized as DashboardWorkspaceTab) : "overview"
 }
 
 export function RiskOpsWorkspace({
+  focusTab,
   riskOps,
   clients,
   subscription,
 }: {
+  focusTab?: DashboardWorkspaceTab
   riskOps: ContractorRiskOpsData
   clients: ClientProfile[]
   subscription?: Subscription
@@ -216,8 +237,13 @@ export function RiskOpsWorkspace({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const activeTab = normalizeWorkspaceTab(searchParams.get("workspace"))
+  const activeTab = focusTab ?? normalizeWorkspaceTab(searchParams.get("workspace"))
   const updateWorkspaceTab = (tab: string) => {
+    if (focusTab) {
+      router.push(workspaceRoutes[normalizeWorkspaceTab(tab)] ?? "/dashboard")
+      return
+    }
+
     const params = new URLSearchParams(searchParams.toString())
 
     if (tab === "overview") {
@@ -313,16 +339,18 @@ export function RiskOpsWorkspace({
 
   return (
     <div className="space-y-6">
-      <ContractorWorkspaceGuidance onOpenTab={updateWorkspaceTab} />
+      {!focusTab ? <ContractorWorkspaceGuidance onOpenTab={updateWorkspaceTab} /> : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {summaryMetrics.map((metric) => (
-          <RiskMetric key={metric.label} {...metric} />
-        ))}
-      </div>
+      {!focusTab ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {summaryMetrics.map((metric) => (
+            <RiskMetric key={metric.label} {...metric} />
+          ))}
+        </div>
+      ) : null}
 
       <Tabs value={activeTab} onValueChange={updateWorkspaceTab} className="space-y-5">
-        <WorkspaceTabNavigation />
+        {!focusTab ? <WorkspaceTabNavigation /> : null}
 
         <TabsContent value="overview" className="space-y-5">
           <WorkspaceIntro
@@ -424,7 +452,12 @@ export function RiskOpsWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-5">
-            <WatchlistCreateForm clients={clients} />
+            <CreatePanel
+              title="Add a watched client"
+              text="Use this when you want alerts before accepting more work, approving changes, or scheduling crews."
+            >
+              <WatchlistCreateForm clients={clients} />
+            </CreatePanel>
             <div className="grid gap-3">
               {rankedWatchlist.map((item) => (
                 <WatchlistCard key={item.id} item={item} client={clients.find((client) => client.id === item.clientId)} />
@@ -447,7 +480,12 @@ export function RiskOpsWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-5 p-5">
-            <IntakeAssessmentForm />
+            <CreatePanel
+              title="Create intake assessment"
+              text="Use this before you decide deposit, contract, schedule, and milestone controls."
+            >
+              <IntakeAssessmentForm />
+            </CreatePanel>
             <div className="space-y-3">
               {riskOps.intakeAssessments.map((assessment) => (
                 <div key={assessment.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -518,7 +556,12 @@ export function RiskOpsWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <PaymentRecoveryForm />
+            <CreatePanel
+              title="Open payment recovery case"
+              text="Create a private invoice follow-up record with factual next steps."
+            >
+              <PaymentRecoveryForm />
+            </CreatePanel>
             <div className="space-y-3">
               {riskOps.paymentRecoveryCases.map((item) => (
                 <PaymentRecoveryCard key={item.id} item={item} />
@@ -541,7 +584,12 @@ export function RiskOpsWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <RecoveryAttemptForm cases={riskOps.paymentRecoveryCases} />
+            <CreatePanel
+              title="Log contact attempt"
+              text="Record calls, emails, letters, and portal messages with outcome and follow-up date."
+            >
+              <RecoveryAttemptForm cases={riskOps.paymentRecoveryCases} />
+            </CreatePanel>
             <div className="space-y-3">
               {riskOps.paymentRecoveryAttempts.map((item) => (
                 <RecoveryAttemptCard key={item.id} item={item} />
@@ -564,7 +612,12 @@ export function RiskOpsWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
-            <PaymentPlanForm cases={riskOps.paymentRecoveryCases} />
+            <CreatePanel
+              title="Create payment plan"
+              text="Track proposed or accepted payment timing privately."
+            >
+              <PaymentPlanForm cases={riskOps.paymentRecoveryCases} />
+            </CreatePanel>
             <div className="space-y-3">
               {riskOps.paymentPlans.map((item) => (
                 <PaymentPlanCard key={item.id} item={item} />
@@ -608,7 +661,12 @@ export function RiskOpsWorkspace({
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
-              <LienNoticeDraftForm />
+              <CreatePanel
+                title="Create lien readiness packet"
+                text="Build a private review checklist for deadlines, contract context, invoices, and supporting records."
+              >
+                <LienNoticeDraftForm />
+              </CreatePanel>
               <div className="space-y-3">
                 {riskOps.lienNoticeDrafts.map((item) => (
                   <LienNoticeCard key={item.id} item={item} />
@@ -654,7 +712,12 @@ export function RiskOpsWorkspace({
           </p>
         </CardHeader>
         <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
-          <ContractWorkspaceForm />
+          <CreatePanel
+            title="Create agreement template"
+            text="Prepare reusable agreement controls before generating a signing packet."
+          >
+            <ContractWorkspaceForm />
+          </CreatePanel>
           <div className="grid gap-3 md:grid-cols-2">
             {riskOps.contractDocuments.map((item) => (
               <ContractDocumentCard key={item.id} item={item} />
@@ -680,7 +743,12 @@ export function RiskOpsWorkspace({
               </p>
             </CardHeader>
             <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
-              <ContractPacketForm />
+              <CreatePanel
+                title="Create agreement packet"
+                text="Prepare the private signing packet before sending it to a client."
+              >
+                <ContractPacketForm />
+              </CreatePanel>
               <div className="grid gap-3 md:grid-cols-2">
                 {riskOps.contractPackets.map((item) => (
                   <ContractPacketCard key={item.id} item={item} />
@@ -711,7 +779,12 @@ export function RiskOpsWorkspace({
             </CardTitle>
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.95fr_1.05fr]">
-            <ReportDraftForm clients={clients} />
+            <CreatePanel
+              title="Save report draft"
+              text="Start a draft when you need time to gather invoices, access records, or communication history."
+            >
+              <ReportDraftForm clients={clients} />
+            </CreatePanel>
             <div className="space-y-3">
               {riskOps.reportDrafts.map((draft) => (
                 <DraftCard key={draft.id} draft={draft} />
@@ -1010,6 +1083,32 @@ function ToolExplainer({ title, text }: { title: string; text: string }) {
       <p className="text-xs font-semibold uppercase text-amber-700">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
     </div>
+  )
+}
+
+function CreatePanel({
+  children,
+  text,
+  title,
+}: {
+  children: ReactNode
+  text: string
+  title: string
+}) {
+  return (
+    <details className="rounded-md border border-slate-200 bg-white shadow-sm">
+      <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
+        <span>
+          <span className="block font-semibold text-slate-950">{title}</span>
+          <span className="mt-1 block text-sm leading-5 text-slate-600">{text}</span>
+        </span>
+        <span className="inline-flex w-fit items-center gap-2 rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
+          <PlusCircle className="size-4" aria-hidden="true" />
+          Create new
+        </span>
+      </summary>
+      <div className="border-t border-slate-200 bg-slate-50/50 p-4">{children}</div>
+    </details>
   )
 }
 

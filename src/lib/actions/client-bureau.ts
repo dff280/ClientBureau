@@ -641,6 +641,7 @@ export async function createWatchlistItemAction(
     if (!item) return fail("Watchlist feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/watchlist")
     return ok(item, "Client added to the contractor watchlist.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Watchlist item could not be created."))
@@ -664,6 +665,7 @@ export async function updateWatchlistItemAction(
     if (!item) return fail("Watchlist feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/watchlist")
     return ok(item, parsed.data.status === "cleared" ? "Watchlist alert cleared." : "Watchlist alert restored.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Watchlist item could not be updated."))
@@ -687,6 +689,7 @@ export async function saveReportDraftAction(
     if (!draft) return fail("Report draft feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/reports")
     return ok(draft, "Report draft saved.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Report draft could not be saved."))
@@ -710,6 +713,7 @@ export async function deleteReportDraftAction(
     if (!result) return fail("Report draft feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/reports")
     return ok(result, "Report draft deleted.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Report draft could not be deleted."))
@@ -738,6 +742,7 @@ export async function createIntakeAssessmentAction(
     if (!assessment) return fail("Intake assessment feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/watchlist")
     return ok(assessment, `Intake assessment created. Recommendation: ${assessment.recommendation}.`)
   } catch (error) {
     return fail(actionErrorMessage(error, "Intake assessment could not be created."))
@@ -764,6 +769,7 @@ export async function createPaymentRecoveryCaseAction(
     if (!recoveryCase) return fail("Recovery case feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
     return ok(recoveryCase, "Recovery case created with compliance safeguards.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Recovery case could not be created."))
@@ -790,6 +796,7 @@ export async function createLienNoticeDraftAction(
     if (!noticeDraft) return fail("Lien packet feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/lien-readiness")
     return ok(noticeDraft, "Lien packet created for state-specific review.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Lien packet could not be created."))
@@ -816,6 +823,7 @@ export async function createContractWorkspaceItemAction(
     if (!contractItem) return fail("Contract workspace feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/contracts")
     return ok(contractItem, "Agreement draft created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Agreement draft could not be created."))
@@ -842,6 +850,7 @@ export async function createClientPipelineItemAction(
     if (!item) return fail("Client pipeline feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/activity")
     return ok(item, "Client pipeline item created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Client pipeline item could not be created."))
@@ -865,6 +874,7 @@ export async function updateClientPipelineStageAction(
     if (!item) return fail("Client pipeline feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/activity")
     return ok(item, `Pipeline stage updated to ${parsed.data.stage.replaceAll("_", " ")}.`)
   } catch (error) {
     return fail(actionErrorMessage(error, "Pipeline stage could not be updated."))
@@ -888,6 +898,7 @@ export async function createRiskRoomAction(
     if (!room) return fail("Client work file feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/activity")
     return ok(room, "Private client work file created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Client work file could not be created."))
@@ -911,6 +922,7 @@ export async function logPaymentRecoveryAttemptAction(
     if (!attempt) return fail("Recovery attempt feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
     return ok(attempt, "Recovery case attempt logged.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Recovery attempt could not be logged."))
@@ -934,6 +946,7 @@ export async function createPaymentPlanAction(
     if (!plan) return fail("Payment plan feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
     return ok(plan, "Payment plan created for private recovery tracking.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Payment plan could not be created."))
@@ -1074,6 +1087,7 @@ export async function updateEvidenceVaultStatusAction(
     if (!evidence) return fail("Evidence Vault feature data is not available yet.")
 
     revalidatePath("/dashboard")
+    revalidatePath("/dashboard/evidence")
     return ok(evidence, `Evidence marked ${evidence.status.replaceAll("_", " ")}.`)
   } catch (error) {
     return fail(actionErrorMessage(error, "Evidence status could not be updated."))
