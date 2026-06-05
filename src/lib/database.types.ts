@@ -37,6 +37,7 @@ import type {
   ReportResolutionStatus,
   ServiceFeeKind,
   ServiceFeeStatus,
+  ServiceReadinessStatus,
   WatchlistAlertEventType,
   WatchlistStatus,
 } from "@/lib/types"
@@ -968,6 +969,11 @@ export interface Database {
         status: ManagedRecoveryStatus
         priority: ModerationPriority
         service_fee_order_id: string | null
+        readiness_status: ServiceReadinessStatus | null
+        readiness_score: number | null
+        readiness_checked_at: string | null
+        fee_paid_at: string | null
+        submitted_for_review_at: string | null
         evidence_vault_item_ids: string[]
         assigned_to_name: string | null
         next_action: string
@@ -990,6 +996,11 @@ export interface Database {
         status?: ManagedRecoveryStatus
         priority?: ModerationPriority
         service_fee_order_id?: string | null
+        readiness_status?: ServiceReadinessStatus | null
+        readiness_score?: number | null
+        readiness_checked_at?: string | null
+        fee_paid_at?: string | null
+        submitted_for_review_at?: string | null
         evidence_vault_item_ids?: string[]
         assigned_to_name?: string | null
         next_action: string
@@ -1070,6 +1081,11 @@ export interface Database {
         filing_method: LienFilingMethod | null
         recording_vendor: string | null
         service_fee_order_id: string | null
+        readiness_status: ServiceReadinessStatus | null
+        readiness_score: number | null
+        readiness_checked_at: string | null
+        fee_paid_at: string | null
+        submitted_for_review_at: string | null
         contractor_signed_at: string | null
         contractor_signature_name: string | null
         attorney_vendor_status: "not_started" | "queued" | "in_review" | "approved" | "rejected"
@@ -1102,6 +1118,11 @@ export interface Database {
         filing_method?: LienFilingMethod | null
         recording_vendor?: string | null
         service_fee_order_id?: string | null
+        readiness_status?: ServiceReadinessStatus | null
+        readiness_score?: number | null
+        readiness_checked_at?: string | null
+        fee_paid_at?: string | null
+        submitted_for_review_at?: string | null
         contractor_signed_at?: string | null
         contractor_signature_name?: string | null
         attorney_vendor_status?: "not_started" | "queued" | "in_review" | "approved" | "rejected"
@@ -1235,6 +1256,27 @@ export interface Database {
         summary: string
         created_at?: string
       }>
+      case_document_links: DbTable<{
+        id: string
+        contractor_id: string
+        entity_type: "managed_recovery" | "florida_lien"
+        entity_id: string
+        evidence_vault_item_id: string
+        document_label: string
+        document_category: "invoice" | "screenshot" | "contract" | "photo" | "pdf" | "other"
+        public_summary: string
+        created_at: string
+      }, {
+        id?: string
+        contractor_id: string
+        entity_type: "managed_recovery" | "florida_lien"
+        entity_id: string
+        evidence_vault_item_id: string
+        document_label: string
+        document_category: "invoice" | "screenshot" | "contract" | "photo" | "pdf" | "other"
+        public_summary: string
+        created_at?: string
+      }>
     }
     Views: {
       client_bureau_required_tables: {
@@ -1287,6 +1329,7 @@ export interface Database {
       lien_filing_method: LienFilingMethod
       service_fee_kind: ServiceFeeKind
       service_fee_status: ServiceFeeStatus
+      service_readiness_status: ServiceReadinessStatus
     }
   }
 }

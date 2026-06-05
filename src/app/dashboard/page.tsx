@@ -32,9 +32,9 @@ import { buildEnterpriseDashboardSummary } from "@/lib/enterprise-dashboard"
 import { buildTodaysWorkItems } from "@/lib/platform-features"
 
 export const metadata: Metadata = {
-  title: "Client Reputation Dashboard",
+  title: "Business Protection Dashboard",
   description:
-    "Client Bureau dashboard for client search activity, contractor reviews, client reputation metrics, public profiles, watchlists, and pending actions.",
+    "Client Bureau dashboard for checking clients, tracking reviews, managing contracts, organizing evidence, monitoring watchlists, and handling payment recovery.",
   robots: {
     index: false,
     follow: false,
@@ -163,10 +163,10 @@ export default async function DashboardPage({
     <ClientDashboardShell
       activeHref="/dashboard"
       badge={`${subscriptionTier.replace("_", " ")} plan`}
-      description="A simple private command center for checking clients, leaving contractor reviews, monitoring reputation signals, and handling the next action before a job turns risky."
+      description="A private command center for checking clients, leaving documented reviews, managing contracts, organizing evidence, and handling payment follow-up before a project becomes harder to control."
       primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
       secondaryAction={{ href: "/submit-report", label: "Leave a review", icon: FilePlus2 }}
-      title={`${dashboard.contractor.businessName} Reputation Command Center`}
+      title={`${dashboard.contractor.businessName} Command Center`}
     >
       <EnterpriseDashboardOverview summary={enterpriseSummary} />
 

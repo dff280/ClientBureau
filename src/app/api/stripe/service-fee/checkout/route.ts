@@ -2,6 +2,10 @@ import { NextResponse } from "next/server"
 
 import { getCurrentUser } from "@/lib/auth"
 import { getSiteUrl } from "@/lib/env"
+import {
+  runFloridaLienPrecheckService,
+  runRecoveryPrecheckService,
+} from "@/lib/repositories/client-bureau-service"
 import { getStripe, hasStripeConfig } from "@/lib/stripe/server"
 import type { ServiceFeeKind } from "@/lib/types"
 
@@ -59,6 +63,14 @@ export async function GET(request: Request) {
 
   const config = feeConfig(kind)
   const totalAmount = config.clientBureauFeeCents + config.passThroughFeeCents
+  const readiness =
+    kind === "managed_recovery"
+      ? await runRecoveryPrecheckService(user.id, { caseId: entityId })
+      : await runFloridaLienPrecheckService(user.id, { caseId: entityId })
+
+  if (!readiness.readyForCheckout) {
+    return NextResponse.redirect(`${siteUrl}${config.cancelPath}&reason=precheck_required`, 303)
+  }
 
   if (!hasStripeConfig()) {
     return NextResponse.redirect(`${siteUrl}${config.cancelPath}&reason=unavailable`, 303)

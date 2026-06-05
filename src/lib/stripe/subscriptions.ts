@@ -32,6 +32,65 @@ function isMissingServiceFeeTable(error: { code?: string; message?: string } | n
   return error?.code === "42P01" || error?.message?.toLowerCase().includes("service_fee_orders")
 }
 
+function isMissingRevenueWorkflowColumn(error: { code?: string; message?: string } | null) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return error?.code === "42703" || message.includes("readiness_status") || message.includes("fee_paid_at")
+}
+
+async function syncPaidServiceCase({
+  contractorId,
+  entityId,
+  kind,
+  paidAt,
+}: {
+  contractorId: string
+  entityId: string
+  kind: ServiceFeeKind
+  paidAt: string
+}) {
+  const supabase = createServiceClient()
+
+  if (kind === "managed_recovery") {
+    const { error } = await supabase
+      .from("managed_recovery_cases")
+      .update({
+        status: "submitted",
+        fee_paid_at: paidAt,
+        submitted_for_review_at: paidAt,
+        readiness_status: "submitted",
+        next_action: "Service fee is paid. Resolution Desk can begin private document review and factual outreach.",
+      })
+      .eq("id", entityId)
+      .eq("contractor_id", contractorId)
+
+    if (!isMissingRevenueWorkflowColumn(error) && error) throw new Error(error.message)
+    return
+  }
+
+  const { data: lienCase } = await supabase
+    .from("florida_lien_cases")
+    .select("contractor_signed_at")
+    .eq("id", entityId)
+    .eq("contractor_id", contractorId)
+    .maybeSingle()
+  const { error } = await supabase
+    .from("florida_lien_cases")
+    .update({
+      status: lienCase?.contractor_signed_at ? "attorney_vendor_review" : "contractor_signature_required",
+      fee_paid_at: paidAt,
+      submitted_for_review_at: paidAt,
+      readiness_status: "submitted",
+      next_action: lienCase?.contractor_signed_at
+        ? "Service fee is paid. Attorney/vendor review can verify documents, deadlines, and recording requirements."
+        : "Service fee is paid. Contractor signature and authorization are required before attorney/vendor review.",
+    })
+    .eq("id", entityId)
+    .eq("contractor_id", contractorId)
+
+  if (!isMissingRevenueWorkflowColumn(error) && error) throw new Error(error.message)
+}
+
 export async function syncCheckoutSessionSubscription(session: Stripe.Checkout.Session) {
   if (isServiceFeeKind(session.metadata?.kind)) {
     await syncCheckoutSessionServiceFee(session)
@@ -76,11 +135,21 @@ export async function syncCheckoutSessionServiceFee(session: Stripe.Checkout.Ses
     })
     .eq("kind", kind)
     .eq("entity_id", entityId)
-    .select("id")
+    .select("id, contractor_id")
 
   if (isMissingServiceFeeTable(updateError)) return
   if (updateError) throw new Error(updateError.message)
-  if (updated?.length) return
+  if (updated?.length) {
+    if (paidAt) {
+      await syncPaidServiceCase({
+        contractorId: updated[0].contractor_id,
+        entityId,
+        kind,
+        paidAt,
+      })
+    }
+    return
+  }
 
   const userId = session.metadata?.userId
   if (!userId) return
@@ -108,6 +177,15 @@ export async function syncCheckoutSessionServiceFee(session: Stripe.Checkout.Ses
 
   if (isMissingServiceFeeTable(insertError)) return
   if (insertError) throw new Error(insertError.message)
+
+  if (paidAt) {
+    await syncPaidServiceCase({
+      contractorId: contractor.id,
+      entityId,
+      kind,
+      paidAt,
+    })
+  }
 }
 
 export async function syncStripeSubscription(subscription: Stripe.Subscription) {

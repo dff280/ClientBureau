@@ -17,7 +17,7 @@ The platform already has the right product shape for mobile:
 Current mobile readiness status:
 
 - Components: dashboard shell and search are ready; dense operations modules need native adapters.
-- APIs: health is app-safe; session, checkout, reports, search, dashboard, contracts, evidence, recovery, and lien service need mobile BFF endpoints.
+- APIs: the first mobile BFF endpoints now exist for account, dashboard, managed recovery, and Florida lien service; search, reports, contracts, evidence, client response, and native checkout handoff remain in the backlog.
 - Responsive layout: public profile, search, and dashboard entry are ready; submission and contract signing should become native step flows.
 - Workflows: all core customer workflows are mapped, but most need mobile-specific JSON contracts before native build.
 
@@ -32,18 +32,21 @@ Use this split:
 
 Do not expose raw Supabase table shapes directly to mobile apps. The app should receive product-level payloads, such as dashboard summaries, report status cards, contract packet summaries, evidence status records, and payment recovery case progress.
 
-## Mobile API Backlog
+## Mobile API Backlog And Foundation
 
-Build these endpoints before starting native screens:
+Implemented first:
 
-- `/api/mobile/me`: current account, role, business profile, plan, verification, feature flags.
-- `/api/mobile/dashboard`: plan, verification, alerts, recent activity, quick actions, counts.
+- `/api/mobile/me`: current account, role, and identity payload.
+- `/api/mobile/dashboard`: contractor profile, verification, report/search counts, subscription, and private ops summaries.
+- `/api/mobile/recovery`: managed recovery cases, fee state, Resolution Desk progress, and service readiness.
+- `/api/mobile/lien-service`: Florida lien cases, authorization state, vendor/attorney review status, and service readiness.
+
+Remaining backlog before starting full native screens:
+
 - `/api/mobile/search`: predictive search, saved searches, result previews, private-match messaging.
 - `/api/mobile/reports`: draft, submit, status tracking, positive reports, evidence attachment mapping.
 - `/api/mobile/contracts`: agreement packets, signing links, share status, signature status.
 - `/api/mobile/evidence`: private evidence vault summaries and signed upload handoff.
-- `/api/mobile/recovery`: managed recovery cases, fee state, Resolution Desk progress, notes visible to contractor.
-- `/api/mobile/lien-service`: Florida lien cases, authorization state, vendor/attorney review status, recording proof summary.
 - `/api/mobile/client-response`: public response, dispute, correction, resolution update submissions.
 
 Each endpoint should:
@@ -122,4 +125,3 @@ The following components should guide the native build:
 - Add app-safe feature flags and remote config.
 - Add privacy regression tests against mobile payloads.
 - Add rate limits for search, report submission, response/dispute submission, and uploads.
-

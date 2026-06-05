@@ -4,6 +4,7 @@ import type {
   AuditLogEntry,
   BulkImportBatch,
   CaseAuditEvent,
+  CaseDocumentLink,
   CaseStaffAssignment,
   AdminQueueAssignment,
   AdminSavedView,
@@ -43,6 +44,7 @@ import type {
   User,
   WatchlistAlert,
 } from "@/lib/types"
+import { buildServiceReadinessSummaries } from "@/lib/service-readiness"
 
 export const users: User[] = [
   {
@@ -1090,6 +1092,42 @@ export const caseAuditEvents: CaseAuditEvent[] = [
   },
 ]
 
+export const caseDocumentLinks: CaseDocumentLink[] = [
+  {
+    id: "case_doc_recovery_01",
+    contractorId: "contractor_01",
+    entityType: "managed_recovery",
+    entityId: "managed_recovery_01",
+    evidenceVaultItemId: "vault_01",
+    documentLabel: "Final invoice",
+    documentCategory: "invoice",
+    publicSummary: "Invoice reviewed privately.",
+    createdAt: "2026-06-01T14:08:00.000Z",
+  },
+  {
+    id: "case_doc_recovery_02",
+    contractorId: "contractor_01",
+    entityType: "managed_recovery",
+    entityId: "managed_recovery_01",
+    evidenceVaultItemId: "vault_02",
+    documentLabel: "Signed completion record",
+    documentCategory: "contract",
+    publicSummary: "Completion document reviewed privately.",
+    createdAt: "2026-06-01T14:09:00.000Z",
+  },
+  {
+    id: "case_doc_lien_01",
+    contractorId: "contractor_01",
+    entityType: "florida_lien",
+    entityId: "florida_lien_01",
+    evidenceVaultItemId: "vault_02",
+    documentLabel: "Signed agreement and completion packet",
+    documentCategory: "contract",
+    publicSummary: "Agreement and completion packet reviewed privately.",
+    createdAt: "2026-06-02T10:05:00.000Z",
+  },
+]
+
 export const contractWorkspaceItems: ContractWorkspaceItem[] = [
   {
     id: "contract_01",
@@ -1491,6 +1529,14 @@ export const recoveryComplianceReviews: RecoveryComplianceReview[] = [
   },
 ]
 
+export const serviceReadinessSummaries = buildServiceReadinessSummaries({
+  managedRecoveryCases,
+  floridaLienCases,
+  evidenceVault: evidenceVaultItems,
+  serviceFeeOrders,
+  documentLinks: caseDocumentLinks,
+})
+
 export const contractorRiskOps: ContractorRiskOpsData = {
   clientPipeline: clientPipelineItems,
   riskRooms: clientRiskRooms,
@@ -1512,6 +1558,8 @@ export const contractorRiskOps: ContractorRiskOpsData = {
   lienFilingRecords,
   lienReleaseRecords,
   serviceFeeOrders,
+  serviceReadiness: serviceReadinessSummaries,
+  caseDocumentLinks,
   caseStaffAssignments,
   caseAuditEvents,
   contractDocuments: contractWorkspaceItems,

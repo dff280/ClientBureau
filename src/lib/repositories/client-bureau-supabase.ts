@@ -25,6 +25,11 @@ import {
   intakeRiskRecommendation,
   paymentRecoveryPriority,
 } from "@/lib/platform-features"
+import {
+  buildFloridaLienReadinessSummary,
+  buildRecoveryReadinessSummary,
+  buildServiceReadinessSummaries,
+} from "@/lib/service-readiness"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
 import type {
@@ -41,6 +46,8 @@ import type {
   IntakeAssessmentInput,
   LienFilingAuthorizationInput,
   LienNoticeDraftInput,
+  LinkEvidenceToServiceCaseInput,
+  MarkServiceFeePaidInput,
   AdminLienCaseActionInput,
   AdminRecordLienFiledInput,
   AdminRecordLienReleaseInput,
@@ -54,6 +61,7 @@ import type {
   ResolutionDeskContactInput,
   ReportDraftInput,
   ServiceFeeCheckoutInput,
+  ServicePrecheckInput,
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
@@ -66,6 +74,7 @@ import type {
   AdminSavedView,
   BulkImportBatch,
   CaseAuditEvent,
+  CaseDocumentLink,
   CaseStaffAssignment,
   AdminWorkspaceData,
   ClientIntakeAssessment,
@@ -115,6 +124,7 @@ import type {
   User,
   WatchlistAlert,
   WatchlistStatus,
+  ServiceReadinessSummary,
 } from "@/lib/types"
 
 type Tables = Database["public"]["Tables"]
@@ -157,6 +167,7 @@ type LienFilingRecordRow = Tables["lien_filing_records"]["Row"]
 type LienReleaseRecordRow = Tables["lien_release_records"]["Row"]
 type CaseStaffAssignmentRow = Tables["case_staff_assignments"]["Row"]
 type CaseAuditEventRow = Tables["case_audit_events"]["Row"]
+type CaseDocumentLinkRow = Tables["case_document_links"]["Row"]
 
 const emptyHash = "sha256:empty-private"
 
@@ -532,6 +543,11 @@ function mapManagedRecoveryCase(row: ManagedRecoveryCaseRow): ManagedRecoveryCas
     status: row.status,
     priority: row.priority,
     serviceFeeOrderId: row.service_fee_order_id ?? undefined,
+    readinessStatus: row.readiness_status ?? undefined,
+    readinessScore: row.readiness_score ?? undefined,
+    readinessCheckedAt: row.readiness_checked_at ?? undefined,
+    feePaidAt: row.fee_paid_at ?? undefined,
+    submittedForReviewAt: row.submitted_for_review_at ?? undefined,
     evidenceVaultItemIds: row.evidence_vault_item_ids,
     assignedToName: row.assigned_to_name ?? undefined,
     nextAction: row.next_action,
@@ -599,6 +615,11 @@ function mapFloridaLienCase(row: FloridaLienCaseRow): FloridaLienCase {
     filingMethod: row.filing_method ?? undefined,
     recordingVendor: row.recording_vendor ?? undefined,
     serviceFeeOrderId: row.service_fee_order_id ?? undefined,
+    readinessStatus: row.readiness_status ?? undefined,
+    readinessScore: row.readiness_score ?? undefined,
+    readinessCheckedAt: row.readiness_checked_at ?? undefined,
+    feePaidAt: row.fee_paid_at ?? undefined,
+    submittedForReviewAt: row.submitted_for_review_at ?? undefined,
     contractorSignedAt: row.contractor_signed_at ?? undefined,
     contractorSignatureName: row.contractor_signature_name ?? undefined,
     attorneyVendorStatus: row.attorney_vendor_status,
@@ -683,6 +704,20 @@ function mapCaseAuditEvent(row: CaseAuditEventRow): CaseAuditEvent {
     actorName: row.actor_name,
     action: row.action,
     summary: row.summary,
+    createdAt: row.created_at,
+  }
+}
+
+function mapCaseDocumentLink(row: CaseDocumentLinkRow): CaseDocumentLink {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    evidenceVaultItemId: row.evidence_vault_item_id,
+    documentLabel: row.document_label,
+    documentCategory: row.document_category,
+    publicSummary: row.public_summary,
     createdAt: row.created_at,
   }
 }
@@ -2190,6 +2225,7 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
     serviceFeeOrders,
     caseStaffAssignments,
     caseAuditEvents,
+    caseDocumentLinks,
     contractDocuments,
     contractPackets,
   ] = await Promise.all([
@@ -2215,6 +2251,7 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
     supabase.from("service_fee_orders").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
     supabase.from("case_staff_assignments").select("*").order("due_at", { ascending: true }),
     supabase.from("case_audit_events").select("*").order("created_at", { ascending: false }),
+    supabase.from("case_document_links").select("*").eq("contractor_id", contractorId).order("created_at", { ascending: false }),
     supabase.from("contract_workspace_items").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
     supabase.from("contract_packets").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
   ])
@@ -2241,12 +2278,15 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
   platformTableError("service_fee_orders", serviceFeeOrders.error)
   platformTableError("case_staff_assignments", caseStaffAssignments.error)
   platformTableError("case_audit_events", caseAuditEvents.error)
+  platformTableError("case_document_links", caseDocumentLinks.error)
   platformTableError("contract_workspace_items", contractDocuments.error)
   platformTableError("contract_packets", contractPackets.error)
 
   const mappedManagedRecoveryCases = (managedRecoveryCases.data ?? []).map(mapManagedRecoveryCase)
   const mappedFloridaLienCases = (floridaLienCases.data ?? []).map(mapFloridaLienCase)
   const mappedServiceFeeOrders = (serviceFeeOrders.data ?? []).map(mapServiceFeeOrder)
+  const mappedEvidenceVault = (evidenceVault.data ?? []).map(mapEvidenceVaultItem)
+  const mappedCaseDocumentLinks = (caseDocumentLinks.data ?? []).map(mapCaseDocumentLink)
   const contractorCaseIds = new Set([
     ...mappedManagedRecoveryCases.map((item) => item.id),
     ...mappedFloridaLienCases.map((item) => item.id),
@@ -2261,7 +2301,7 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
     reportDrafts: (drafts.data ?? []).map(mapReportDraft),
     intakeAssessments: (assessments.data ?? []).map(mapIntakeAssessment),
     evidenceSummaries: (evidenceSummaries.data ?? []).map(mapEvidenceReviewSummary),
-    evidenceVault: (evidenceVault.data ?? []).map(mapEvidenceVaultItem),
+    evidenceVault: mappedEvidenceVault,
     paymentRecoveryCases: (recoveryCases.data ?? []).map(mapPaymentRecoveryCase),
     paymentRecoveryAttempts: (recoveryAttempts.data ?? []).map(mapPaymentRecoveryAttempt),
     paymentPlans: (paymentPlans.data ?? []).map(mapPaymentPlan),
@@ -2274,6 +2314,14 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
     lienFilingRecords: (lienFilingRecords.data ?? []).map(mapLienFilingRecord),
     lienReleaseRecords: (lienReleaseRecords.data ?? []).map(mapLienReleaseRecord),
     serviceFeeOrders: mappedServiceFeeOrders,
+    serviceReadiness: buildServiceReadinessSummaries({
+      managedRecoveryCases: mappedManagedRecoveryCases,
+      floridaLienCases: mappedFloridaLienCases,
+      evidenceVault: mappedEvidenceVault,
+      serviceFeeOrders: mappedServiceFeeOrders,
+      documentLinks: mappedCaseDocumentLinks,
+    }),
+    caseDocumentLinks: mappedCaseDocumentLinks,
     caseStaffAssignments: (caseStaffAssignments.data ?? [])
       .map(mapCaseStaffAssignment)
       .filter((item) => contractorCaseIds.has(item.entityId)),
@@ -2574,6 +2622,230 @@ export async function createServiceFeeOrderSupabase(userId: string, input: Servi
     actorName: "Contractor workspace",
     action: "checkout_created",
     summary: "Service fee checkout created with pass-through fees tracked separately.",
+  })
+
+  return order
+}
+
+async function getRevenueReadinessContext(contractorId: string) {
+  const supabase = createServiceClient()
+  const [evidenceVault, serviceFeeOrders, documentLinks] = await Promise.all([
+    supabase.from("evidence_vault_items").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("service_fee_orders").select("*").eq("contractor_id", contractorId).order("updated_at", { ascending: false }),
+    supabase.from("case_document_links").select("*").eq("contractor_id", contractorId).order("created_at", { ascending: false }),
+  ])
+
+  platformTableError("evidence_vault_items", evidenceVault.error)
+  platformTableError("service_fee_orders", serviceFeeOrders.error)
+  platformTableError("case_document_links", documentLinks.error)
+
+  return {
+    evidenceVault: (evidenceVault.data ?? []).map(mapEvidenceVaultItem),
+    serviceFeeOrders: (serviceFeeOrders.data ?? []).map(mapServiceFeeOrder),
+    documentLinks: (documentLinks.data ?? []).map(mapCaseDocumentLink),
+  }
+}
+
+export async function runRecoveryPrecheckSupabase(
+  userId: string,
+  input: ServicePrecheckInput,
+): Promise<ServiceReadinessSummary> {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("managed_recovery_cases")
+    .select("*")
+    .eq("id", input.caseId)
+    .eq("contractor_id", contractorId)
+    .single()
+
+  platformTableError("managed_recovery_cases", error)
+
+  const recoveryCase = mapManagedRecoveryCase(requirePlatformRow("managed_recovery_cases", data))
+  const context = await getRevenueReadinessContext(contractorId)
+  const summary = buildRecoveryReadinessSummary({
+    recoveryCase,
+    evidenceVault: context.evidenceVault,
+    serviceFeeOrders: context.serviceFeeOrders,
+    documentLinks: context.documentLinks,
+  })
+  const checkedAt = new Date().toISOString()
+
+  const { error: updateError } = await supabase
+    .from("managed_recovery_cases")
+    .update({
+      readiness_status: summary.status,
+      readiness_score: summary.score,
+      readiness_checked_at: checkedAt,
+      submitted_for_review_at: summary.feePaid ? checkedAt : data?.submitted_for_review_at ?? null,
+    })
+    .eq("id", recoveryCase.id)
+    .eq("contractor_id", contractorId)
+
+  platformTableError("managed_recovery_cases", updateError)
+
+  await logCaseAudit({
+    entityType: "managed_recovery",
+    entityId: recoveryCase.id,
+    actorId: userId,
+    actorName: "Contractor workspace",
+    action: "precheck_completed",
+    summary: `Recovery precheck completed with readiness score ${summary.score}.`,
+  })
+
+  return { ...summary, status: summary.status }
+}
+
+export async function runFloridaLienPrecheckSupabase(
+  userId: string,
+  input: ServicePrecheckInput,
+): Promise<ServiceReadinessSummary> {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("florida_lien_cases")
+    .select("*")
+    .eq("id", input.caseId)
+    .eq("contractor_id", contractorId)
+    .single()
+
+  platformTableError("florida_lien_cases", error)
+
+  const lienCase = mapFloridaLienCase(requirePlatformRow("florida_lien_cases", data))
+  const context = await getRevenueReadinessContext(contractorId)
+  const summary = buildFloridaLienReadinessSummary({
+    lienCase,
+    evidenceVault: context.evidenceVault,
+    serviceFeeOrders: context.serviceFeeOrders,
+    documentLinks: context.documentLinks,
+  })
+  const checkedAt = new Date().toISOString()
+
+  const { error: updateError } = await supabase
+    .from("florida_lien_cases")
+    .update({
+      readiness_status: summary.status,
+      readiness_score: summary.score,
+      readiness_checked_at: checkedAt,
+      submitted_for_review_at: summary.feePaid ? checkedAt : data?.submitted_for_review_at ?? null,
+    })
+    .eq("id", lienCase.id)
+    .eq("contractor_id", contractorId)
+
+  platformTableError("florida_lien_cases", updateError)
+
+  await logCaseAudit({
+    entityType: "florida_lien",
+    entityId: lienCase.id,
+    actorId: userId,
+    actorName: "Contractor workspace",
+    action: "precheck_completed",
+    summary: `Florida lien service precheck completed with readiness score ${summary.score}.`,
+  })
+
+  return summary
+}
+
+export async function linkEvidenceToServiceCaseSupabase(
+  userId: string,
+  input: LinkEvidenceToServiceCaseInput,
+): Promise<CaseDocumentLink> {
+  const contractorId = await requireContractorIdForUser(userId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("case_document_links")
+    .insert({
+      contractor_id: contractorId,
+      entity_type: input.entityType,
+      entity_id: input.entityId,
+      evidence_vault_item_id: input.evidenceVaultItemId,
+      document_label: input.documentLabel,
+      document_category: input.documentCategory,
+      public_summary: input.publicSummary || "Document reviewed privately.",
+    })
+    .select("*")
+    .single()
+
+  platformTableError("case_document_links", error)
+
+  await logCaseAudit({
+    entityType: input.entityType,
+    entityId: input.entityId,
+    actorId: userId,
+    actorName: "Contractor workspace",
+    action: "linked_private_document",
+    summary: "Private evidence linked to service case.",
+  })
+
+  return mapCaseDocumentLink(requirePlatformRow("case_document_links", data))
+}
+
+export async function markServiceFeePaidSupabase(
+  admin: User,
+  input: MarkServiceFeePaidInput,
+): Promise<ServiceFeeOrder> {
+  const now = new Date().toISOString()
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("service_fee_orders")
+    .update({
+      status: "paid",
+      paid_at: now,
+    })
+    .eq("id", input.orderId)
+    .select("*")
+    .single()
+
+  platformTableError("service_fee_orders", error)
+  const order = mapServiceFeeOrder(requirePlatformRow("service_fee_orders", data))
+
+  if (order.kind === "managed_recovery") {
+    const { error: caseError } = await supabase
+      .from("managed_recovery_cases")
+      .update({
+        status: "submitted",
+        service_fee_order_id: order.id,
+        fee_paid_at: now,
+        submitted_for_review_at: now,
+        readiness_status: "submitted",
+        next_action: "Service fee is paid. Resolution Desk can begin private document review and factual outreach.",
+      })
+      .eq("id", order.entityId)
+      .eq("contractor_id", order.contractorId)
+
+    platformTableError("managed_recovery_cases", caseError)
+  } else {
+    const { data: lienData } = await supabase
+      .from("florida_lien_cases")
+      .select("contractor_signed_at")
+      .eq("id", order.entityId)
+      .eq("contractor_id", order.contractorId)
+      .maybeSingle()
+    const { error: caseError } = await supabase
+      .from("florida_lien_cases")
+      .update({
+        status: lienData?.contractor_signed_at ? "attorney_vendor_review" : "contractor_signature_required",
+        service_fee_order_id: order.id,
+        fee_paid_at: now,
+        submitted_for_review_at: now,
+        readiness_status: "submitted",
+        next_action: lienData?.contractor_signed_at
+          ? "Service fee is paid. Attorney/vendor review can verify documents, deadlines, and recording requirements."
+          : "Service fee is paid. Contractor signature and authorization are required before attorney/vendor review.",
+      })
+      .eq("id", order.entityId)
+      .eq("contractor_id", order.contractorId)
+
+    platformTableError("florida_lien_cases", caseError)
+  }
+
+  await logCaseAudit({
+    entityType: "service_fee",
+    entityId: order.id,
+    actorId: admin.id,
+    actorName: admin.fullName,
+    action: "fee_paid",
+    summary: "Service fee marked paid and related service case moved forward.",
   })
 
   return order

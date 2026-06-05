@@ -20,6 +20,7 @@ import {
   adminRequestLienMoreInfoAction,
   adminUploadRecordingProofAction,
   logResolutionDeskContactAction,
+  markServiceFeePaidAction,
   markRecoveryResolvedAction,
   reviewRecoveryComplianceAction,
   saveAdminQueueViewAction,
@@ -35,12 +36,15 @@ import type {
   ManagedRecoveryCase,
   RecoveryComplianceReview,
   RecoveryCommunication,
+  ServiceFeeOrder,
+  ServiceReadinessSummary,
 } from "@/lib/types"
 
 const savedViewState: ActionResult<AdminSavedView> = { ok: false, message: "" }
 const complianceState: ActionResult<RecoveryComplianceReview> = { ok: false, message: "" }
 const resolutionContactState: ActionResult<RecoveryCommunication> = { ok: false, message: "" }
 const managedRecoveryState: ActionResult<ManagedRecoveryCase> = { ok: false, message: "" }
+const serviceFeeState: ActionResult<ServiceFeeOrder> = { ok: false, message: "" }
 const floridaLienState: ActionResult<FloridaLienCase> = { ok: false, message: "" }
 const lienFilingState: ActionResult<LienFilingRecord> = { ok: false, message: "" }
 const lienReleaseState: ActionResult<LienReleaseRecord> = { ok: false, message: "" }
@@ -48,70 +52,83 @@ const lienReleaseState: ActionResult<LienReleaseRecord> = { ok: false, message: 
 export function AdminOpsExpansion({
   moderationCrm,
   riskOps,
+  focus = "all",
 }: {
   moderationCrm: AdminModerationCrmData
   riskOps?: ContractorRiskOpsData
+  focus?: "all" | "recovery" | "contracts"
 }) {
+  const showSavedViews = focus === "all"
+  const showRecovery = focus === "all" || focus === "recovery"
+  const showContracts = focus === "all" || focus === "contracts"
+  const showCompliance = focus === "all" || focus === "recovery" || focus === "contracts"
+  const showAssignments = focus === "all" || focus === "recovery" || focus === "contracts"
+
   return (
     <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-        <CardHeader className="border-b border-slate-100">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Filter className="size-5 text-amber-700" aria-hidden="true" />
-            Saved queue views
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-5 p-5 lg:grid-cols-[320px_1fr]">
-          <SavedViewForm />
-          <div className="grid gap-3">
-            {moderationCrm.savedViews.map((view) => (
-              <div key={view.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="rounded-md capitalize">{view.scope}</Badge>
-                  {view.isDefault ? <Badge className="rounded-md bg-slate-950 text-white">Default</Badge> : null}
+      {showSavedViews ? (
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <Filter className="size-5 text-amber-700" aria-hidden="true" />
+              Saved queue views
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[320px_1fr]">
+            <SavedViewForm />
+            <div className="grid gap-3">
+              {moderationCrm.savedViews.map((view) => (
+                <div key={view.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="rounded-md capitalize">{view.scope}</Badge>
+                    {view.isDefault ? <Badge className="rounded-md bg-slate-950 text-white">Default</Badge> : null}
+                  </div>
+                  <h3 className="mt-3 font-semibold text-slate-950">{view.name}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {Object.entries(view.filters).map(([key, value]) => `${key}: ${value}`).join(" / ")}
+                  </p>
                 </div>
-                <h3 className="mt-3 font-semibold text-slate-950">{view.name}</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {Object.entries(view.filters).map(([key, value]) => `${key}: ${value}`).join(" / ")}
-                </p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
-      <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-        <CardHeader className="border-b border-slate-100">
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
-            Recovery case and contract compliance
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-5 p-5 lg:grid-cols-[320px_1fr]">
-          <ComplianceReviewForm riskOps={riskOps} />
-          <div className="grid gap-3">
-            {moderationCrm.recoveryComplianceReviews.map((review) => (
-              <div key={review.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="rounded-md capitalize">{review.status.replaceAll("_", " ")}</Badge>
-                  <Badge variant="secondary" className="rounded-md">
-                    {review.publicVisibilityAllowed ? "Public allowed" : "Private only"}
-                  </Badge>
+      {showCompliance ? (
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
+              Recovery case and contract compliance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-5 p-5 lg:grid-cols-[320px_1fr]">
+            <ComplianceReviewForm riskOps={riskOps} />
+            <div className="grid gap-3">
+              {moderationCrm.recoveryComplianceReviews.map((review) => (
+                <div key={review.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="rounded-md capitalize">{review.status.replaceAll("_", " ")}</Badge>
+                    <Badge variant="secondary" className="rounded-md">
+                      {review.publicVisibilityAllowed ? "Public allowed" : "Private only"}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-slate-950">{review.decisionReason}</p>
+                  {review.requiredChanges.length > 0 ? (
+                    <ul className="mt-2 grid gap-1 text-xs leading-5 text-slate-600">
+                      {review.requiredChanges.map((item) => (
+                        <li key={item}>- {item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
                 </div>
-                <p className="mt-3 text-sm font-semibold text-slate-950">{review.decisionReason}</p>
-                {review.requiredChanges.length > 0 ? (
-                  <ul className="mt-2 grid gap-1 text-xs leading-5 text-slate-600">
-                    {review.requiredChanges.map((item) => (
-                      <li key={item}>- {item}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
+      {showRecovery ? (
       <Card className="rounded-md border-slate-200 bg-white shadow-sm xl:col-span-2">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -125,20 +142,29 @@ export function AdminOpsExpansion({
         <CardContent className="grid gap-5 p-5 lg:grid-cols-[360px_1fr]">
           <ResolutionDeskContactForm cases={riskOps?.managedRecoveryCases ?? []} />
           <div className="grid gap-3 md:grid-cols-2">
-            {riskOps?.managedRecoveryCases.map((item) => (
-              <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="rounded-md capitalize">{item.status.replaceAll("_", " ")}</Badge>
-                  <Badge variant="secondary" className="rounded-md capitalize">{item.priority}</Badge>
+            {riskOps?.managedRecoveryCases.map((item) => {
+              const readiness = riskOps.serviceReadiness.find(
+                (summary) => summary.entityType === "managed_recovery" && summary.entityId === item.id
+              )
+              const feeOrder = riskOps.serviceFeeOrders.find((order) => order.entityId === item.id)
+
+              return (
+                <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="rounded-md capitalize">{item.status.replaceAll("_", " ")}</Badge>
+                    <Badge variant="secondary" className="rounded-md capitalize">{item.priority}</Badge>
+                  </div>
+                  <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+                  <p className="mt-1 text-sm text-slate-600">
+                    ${item.amountDue.toLocaleString()} / {item.invoiceAgeDays} days / {item.city}, {item.state}
+                  </p>
+                  <AdminRevenueStatus readiness={readiness} feeOrder={feeOrder} />
+                  <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
+                  {feeOrder ? <AdminMarkFeePaidForm order={feeOrder} /> : null}
+                  <ResolveRecoveryForm caseId={item.id} amountDue={item.amountDue} />
                 </div>
-                <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
-                <p className="mt-1 text-sm text-slate-600">
-                  ${item.amountDue.toLocaleString()} / {item.invoiceAgeDays} days / {item.city}, {item.state}
-                </p>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
-                <ResolveRecoveryForm caseId={item.id} amountDue={item.amountDue} />
-              </div>
-            ))}
+              )
+            })}
             {!riskOps?.managedRecoveryCases.length ? (
               <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
                 Managed recovery cases will appear here after contractors submit Resolution Desk requests.
@@ -147,7 +173,9 @@ export function AdminOpsExpansion({
           </div>
         </CardContent>
       </Card>
+      ) : null}
 
+      {showRecovery ? (
       <Card className="rounded-md border-slate-200 bg-white shadow-sm xl:col-span-2">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -161,23 +189,32 @@ export function AdminOpsExpansion({
         <CardContent className="grid gap-5 p-5 lg:grid-cols-[360px_1fr]">
           <FloridaLienAdminActionForm cases={riskOps?.floridaLienCases ?? []} filingRecords={riskOps?.lienFilingRecords ?? []} />
           <div className="grid gap-3 md:grid-cols-2">
-            {riskOps?.floridaLienCases.map((item) => (
-              <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="rounded-md capitalize">{item.workflowType.replaceAll("_", " ")}</Badge>
-                  <Badge className="rounded-md bg-slate-950 text-white capitalize">{item.status.replaceAll("_", " ")}</Badge>
-                  <Badge variant="secondary" className="rounded-md">{item.propertyCounty} County</Badge>
+            {riskOps?.floridaLienCases.map((item) => {
+              const readiness = riskOps.serviceReadiness.find(
+                (summary) => summary.entityType === "florida_lien" && summary.entityId === item.id
+              )
+              const feeOrder = riskOps.serviceFeeOrders.find((order) => order.entityId === item.id)
+
+              return (
+                <div key={item.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline" className="rounded-md capitalize">{item.workflowType.replaceAll("_", " ")}</Badge>
+                    <Badge className="rounded-md bg-slate-950 text-white capitalize">{item.status.replaceAll("_", " ")}</Badge>
+                    <Badge variant="secondary" className="rounded-md">{item.propertyCounty} County</Badge>
+                  </div>
+                  <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
+                  <div className="mt-2 grid gap-1 text-xs leading-5 text-slate-600">
+                    <span>Amount due: ${item.amountDue.toLocaleString()}</span>
+                    <span>Deadline: {item.filingDeadline ?? "review required"}</span>
+                    <span>Contractor signature: {item.contractorSignedAt ? "received" : "required"}</span>
+                    <span>Vendor status: {item.attorneyVendorStatus.replaceAll("_", " ")}</span>
+                  </div>
+                  <AdminRevenueStatus readiness={readiness} feeOrder={feeOrder} />
+                  <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
+                  {feeOrder ? <AdminMarkFeePaidForm order={feeOrder} /> : null}
                 </div>
-                <h3 className="mt-3 font-semibold text-slate-950">{item.clientName}</h3>
-                <div className="mt-2 grid gap-1 text-xs leading-5 text-slate-600">
-                  <span>Amount due: ${item.amountDue.toLocaleString()}</span>
-                  <span>Deadline: {item.filingDeadline ?? "review required"}</span>
-                  <span>Contractor signature: {item.contractorSignedAt ? "received" : "required"}</span>
-                  <span>Vendor status: {item.attorneyVendorStatus.replaceAll("_", " ")}</span>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{item.nextAction}</p>
-              </div>
-            ))}
+              )
+            })}
             {!riskOps?.floridaLienCases.length ? (
               <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-600">
                 Florida lien service cases will appear here after contractors submit notice or filing requests.
@@ -186,7 +223,9 @@ export function AdminOpsExpansion({
           </div>
         </CardContent>
       </Card>
+      ) : null}
 
+      {showContracts ? (
       <Card className="rounded-md border-slate-200 bg-white shadow-sm xl:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -225,7 +264,9 @@ export function AdminOpsExpansion({
           ) : null}
         </CardContent>
       </Card>
+      ) : null}
 
+      {showAssignments ? (
       <Card className="rounded-md border-slate-200 bg-white shadow-sm xl:col-span-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -248,7 +289,70 @@ export function AdminOpsExpansion({
           ))}
         </CardContent>
       </Card>
+      ) : null}
     </div>
+  )
+}
+
+function adminReadinessClass(status?: ServiceReadinessSummary["status"]) {
+  if (status === "submitted" || status === "under_review") return "bg-emerald-700 text-white"
+  if (status === "ready_for_checkout" || status === "fee_due") return "bg-amber-700 text-white"
+  if (status === "blocked" || status === "needs_more_info") return "bg-rose-700 text-white"
+
+  return "bg-slate-950 text-white"
+}
+
+function AdminRevenueStatus({
+  readiness,
+  feeOrder,
+}: {
+  readiness?: ServiceReadinessSummary
+  feeOrder?: ServiceFeeOrder
+}) {
+  return (
+    <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
+      <div className="flex flex-wrap items-center gap-2">
+        {readiness ? (
+          <Badge className={`rounded-md capitalize ${adminReadinessClass(readiness.status)}`}>
+            {readiness.status.replaceAll("_", " ")}
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="rounded-md">Precheck not run</Badge>
+        )}
+        <Badge variant={feeOrder?.status === "paid" ? "default" : "outline"} className="rounded-md capitalize">
+          {feeOrder ? feeOrder.status.replaceAll("_", " ") : "No fee order"}
+        </Badge>
+      </div>
+      <span>Readiness: {readiness ? `${readiness.score}%` : "pending"}</span>
+      <span>Next: {readiness?.nextAction ?? "Ask contractor to complete the case precheck."}</span>
+      {feeOrder ? (
+        <span>
+          Fee: ${(feeOrder.clientBureauFeeCents / 100).toLocaleString()}
+          {feeOrder.passThroughFeeCents > 0 ? ` + $${(feeOrder.passThroughFeeCents / 100).toLocaleString()} pass-through` : ""}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
+function AdminMarkFeePaidForm({ order }: { order: ServiceFeeOrder }) {
+  const [state, action] = useActionState(markServiceFeePaidAction, serviceFeeState)
+
+  useToastState(state)
+
+  if (order.status === "paid") {
+    return <Badge className="mt-3 rounded-md bg-emerald-700 text-white">Service fee paid</Badge>
+  }
+
+  return (
+    <form action={action} className="mt-3">
+      <AdminActionTokenInput />
+      <input type="hidden" name="orderId" value={order.id} />
+      <PendingSubmitButton size="sm" variant="outline" pendingText="Confirming...">
+        <ClipboardCheck aria-hidden="true" />
+        Confirm fee paid
+      </PendingSubmitButton>
+    </form>
   )
 }
 
@@ -442,7 +546,7 @@ function SavedViewForm() {
         <option value="discussions">Discussions</option>
         <option value="uploads">Uploads / CSV Intake</option>
         <option value="recovery">Recovery Cases</option>
-        <option value="contracts">Contracts / Templates</option>
+        <option value="contracts">Contracts</option>
         <option value="audit">Audit Log</option>
       </select>
       <Textarea name="filterSummary" placeholder="Example: priority=high, status=queued" className="min-h-20" />

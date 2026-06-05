@@ -16,7 +16,7 @@ export type MobileApiAudit = {
   route: string
   method: "GET" | "POST"
   category: "api"
-  auth: "public" | "session" | "admin" | "webhook"
+  auth: "public" | "session" | "bearer" | "admin" | "webhook"
   mobileUse: string
   status: MobileReadinessStatus
   notes: string
@@ -116,6 +116,66 @@ export const mobileApiAudit: MobileApiAudit[] = [
     mobileUse: "Current account, role, plan, and route-entry state.",
     status: "needs-adapter",
     notes: "Add a mobile BFF variant with stable JSON and token-based Supabase session handling.",
+  },
+  {
+    id: "mobile-me",
+    route: "/api/mobile/me",
+    method: "GET",
+    category: "api",
+    auth: "bearer",
+    mobileUse: "Current mobile account, role, and identity payload.",
+    status: "ready",
+    notes: "Uses Supabase bearer-token auth with a cookie fallback for local browser QA.",
+  },
+  {
+    id: "mobile-dashboard",
+    route: "/api/mobile/dashboard",
+    method: "GET",
+    category: "api",
+    auth: "bearer",
+    mobileUse: "Contractor dashboard summary, counts, report statuses, and private ops summaries.",
+    status: "ready",
+    notes: "Returns product-shaped payloads and strips private evidence storage paths.",
+  },
+  {
+    id: "mobile-recovery-list",
+    route: "/api/mobile/recovery",
+    method: "GET",
+    category: "api",
+    auth: "bearer",
+    mobileUse: "Managed recovery cases, readiness, and service-fee status.",
+    status: "ready",
+    notes: "No internal staff notes or private evidence paths are exposed.",
+  },
+  {
+    id: "mobile-recovery-create",
+    route: "/api/mobile/recovery",
+    method: "POST",
+    category: "api",
+    auth: "bearer",
+    mobileUse: "Create a managed recovery case using the same validation as web.",
+    status: "ready",
+    notes: "Uses the shared managed recovery schema and repository service.",
+  },
+  {
+    id: "mobile-lien-list",
+    route: "/api/mobile/lien-service",
+    method: "GET",
+    category: "api",
+    auth: "bearer",
+    mobileUse: "Florida lien service cases, readiness, authorization, and service-fee state.",
+    status: "ready",
+    notes: "Returns status summaries without raw filings, receipts, or private evidence files.",
+  },
+  {
+    id: "mobile-lien-create",
+    route: "/api/mobile/lien-service",
+    method: "POST",
+    category: "api",
+    auth: "bearer",
+    mobileUse: "Create a Florida lien service case using shared validation.",
+    status: "ready",
+    notes: "Florida-only case creation remains routed through attorney/vendor review language.",
   },
   {
     id: "auth-login",
@@ -366,4 +426,3 @@ export function getMobileFirstWorkflows() {
 export function getMobileAppApiBacklog() {
   return mobileApiAudit.filter((item) => item.status === "needs-adapter")
 }
-

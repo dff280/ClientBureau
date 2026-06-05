@@ -317,6 +317,23 @@ export const serviceFeeCheckoutSchema = z.object({
   kind: z.enum(["managed_recovery", "florida_lien_notice", "florida_lien_filing"]),
 })
 
+export const servicePrecheckSchema = z.object({
+  caseId: requiredText("Case ID"),
+})
+
+export const linkEvidenceToServiceCaseSchema = z.object({
+  entityType: z.enum(["managed_recovery", "florida_lien"]),
+  entityId: requiredText("Case ID"),
+  evidenceVaultItemId: requiredText("Evidence item ID"),
+  documentLabel: requiredText("Document label", 3).max(140, "Keep the document label under 140 characters."),
+  documentCategory: z.enum(["invoice", "screenshot", "contract", "photo", "pdf", "other"]),
+  publicSummary: z.string().trim().max(240, "Keep the evidence summary under 240 characters.").optional(),
+})
+
+export const markServiceFeePaidSchema = z.object({
+  orderId: requiredText("Service fee order ID"),
+})
+
 export const resolutionDeskContactSchema = z.object({
   caseId: requiredText("Managed recovery case ID"),
   channel: z.enum(["email", "phone", "letter", "client_portal"]),
@@ -683,6 +700,9 @@ export type IntakeAssessmentInput = z.infer<typeof intakeAssessmentSchema>
 export type PaymentRecoveryCaseInput = z.infer<typeof paymentRecoveryCaseSchema>
 export type ManagedRecoveryCaseInput = z.infer<typeof managedRecoveryCaseSchema>
 export type ServiceFeeCheckoutInput = z.infer<typeof serviceFeeCheckoutSchema>
+export type ServicePrecheckInput = z.infer<typeof servicePrecheckSchema>
+export type LinkEvidenceToServiceCaseInput = z.infer<typeof linkEvidenceToServiceCaseSchema>
+export type MarkServiceFeePaidInput = z.infer<typeof markServiceFeePaidSchema>
 export type ResolutionDeskContactInput = z.infer<typeof resolutionDeskContactSchema>
 export type MarkRecoveryResolvedInput = z.infer<typeof markRecoveryResolvedSchema>
 export type LienNoticeDraftInput = z.infer<typeof lienNoticeDraftSchema>

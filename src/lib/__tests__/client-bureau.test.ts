@@ -17,6 +17,7 @@ import {
   platformLaunchTables,
   requiredContractPacketColumns,
   requiredLaunchTables,
+  requiredRevenueWorkflowColumns,
   summarizeLaunchHealth,
 } from "@/lib/launch-health"
 import type { Database } from "@/lib/database.types"
@@ -122,6 +123,9 @@ import {
   evidenceVaultItems,
   lienNoticeDrafts,
   managedRecoveryCases,
+  floridaLienCases,
+  caseDocumentLinks,
+  serviceFeeOrders,
   moderationCases,
   paymentPlans,
   paymentRecoveryAttempts,
@@ -157,6 +161,10 @@ import {
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
 import type { ClientReport } from "@/lib/types"
+import {
+  buildFloridaLienReadinessSummary,
+  buildRecoveryReadinessSummary,
+} from "@/lib/service-readiness"
 
 const baseReport: ClientReport = {
   id: "report_test",
@@ -281,13 +289,11 @@ describe("product positioning", () => {
       "/dashboard/billing",
     )
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
-      "Start Here",
+      "Start",
       "Find Clients",
-      "Growth",
       "Reviews",
       "Documents",
-      "Payments",
-      "Protection Tools",
+      "Services",
       "Account",
     ])
     expect(resourceNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
@@ -313,12 +319,12 @@ describe("product positioning", () => {
       "All Reports",
       "CSV Intake",
       "Recovery Cases",
-      "Contracts / Templates",
+      "Contracts",
       "Audit Log",
       "Settings",
     ])
     expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
-      "/admin?workspace=recovery",
+      "/admin/recovery",
     )
   })
 })
@@ -397,11 +403,18 @@ describe("launch health gates", () => {
   }
 
   function columnStatuses(missing: string[] = []) {
-    return requiredContractPacketColumns.map((name) => ({
+    const contractColumns = requiredContractPacketColumns.map((name) => ({
       table: "contract_packets" as const,
       name,
       exists: !missing.includes(`contract_packets.${name}`),
     }))
+    const revenueColumns = requiredRevenueWorkflowColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: !missing.includes(`${column.table}.${column.name}`),
+    }))
+
+    return [...contractColumns, ...revenueColumns]
   }
 
   it("keeps core and platform launch table groups distinct", () => {
@@ -479,7 +492,28 @@ describe("launch health gates", () => {
     expect(summary.platformTablesReady).toBe(true)
     expect(summary.platformSchemaReady).toBe(false)
     expect(summary.platformCanUseSupabase).toBe(false)
-    expect(summary.readinessLabel).toBe("Contract signing migration needed")
+    expect(summary.readinessLabel).toBe("Platform schema migration needed")
+    expect(summary.missingPlatformColumns).toContain("contract_packets.signed_snapshot")
+    expect(summary.recommendedPlatformFeatureDataMode).toBe("mock")
+  })
+
+  it("keeps live revenue workflows gated until readiness columns exist", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(["managed_recovery_cases.readiness_status"]),
+    })
+
+    expect(summary.platformTablesReady).toBe(true)
+    expect(summary.platformSchemaReady).toBe(false)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.readinessLabel).toBe("Platform schema migration needed")
+    expect(summary.missingPlatformColumns).toContain("managed_recovery_cases.readiness_status")
     expect(summary.recommendedPlatformFeatureDataMode).toBe("mock")
   })
 })
@@ -501,11 +535,16 @@ describe("mobile app readiness", () => {
   it("keeps web-only and app-facing API boundaries explicit", () => {
     const webhook = mobileApiAudit.find((item) => item.route === "/api/stripe/webhook")
     const health = mobileApiAudit.find((item) => item.route === "/api/health")
+    const mobileDashboard = mobileApiAudit.find((item) => item.route === "/api/mobile/dashboard")
+    const mobileRecovery = mobileApiAudit.find((item) => item.route === "/api/mobile/recovery" && item.method === "GET")
     const backlog = getMobileAppApiBacklog()
 
     expect(webhook?.status).toBe("web-only")
     expect(webhook?.auth).toBe("webhook")
     expect(health?.status).toBe("ready")
+    expect(mobileDashboard?.status).toBe("ready")
+    expect(mobileDashboard?.auth).toBe("bearer")
+    expect(mobileRecovery?.status).toBe("ready")
     expect(backlog.map((item) => item.route)).toContain("/api/session")
     expect(backlog.every((item) => item.status === "needs-adapter")).toBe(true)
   })
@@ -1313,6 +1352,41 @@ describe("platform expansion schemas", () => {
         vendorReviewCertification: true,
       }).success,
     ).toBe(true)
+  })
+
+  it("calculates service readiness and blocks checkout until documents are linked", () => {
+    const recoverySummary = buildRecoveryReadinessSummary({
+      recoveryCase: managedRecoveryCases[0],
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders,
+      documentLinks: caseDocumentLinks,
+    })
+    const lienSummary = buildFloridaLienReadinessSummary({
+      lienCase: floridaLienCases[0],
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders,
+      documentLinks: caseDocumentLinks,
+    })
+    const incompleteRecovery = buildRecoveryReadinessSummary({
+      recoveryCase: {
+        ...managedRecoveryCases[0],
+        id: "managed_recovery_incomplete",
+        serviceFeeOrderId: undefined,
+        evidenceVaultItemIds: [],
+      },
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders: [],
+      documentLinks: [],
+    })
+
+    expect(recoverySummary.readyForCheckout).toBe(true)
+    expect(recoverySummary.feePaid).toBe(true)
+    expect(recoverySummary.status).toBe("submitted")
+    expect(lienSummary.readyForCheckout).toBe(true)
+    expect(lienSummary.feePaid).toBe(true)
+    expect(lienSummary.checks.find((item) => item.id === "authorization")?.complete).toBe(true)
+    expect(incompleteRecovery.readyForCheckout).toBe(false)
+    expect(incompleteRecovery.checks.find((item) => item.id === "documents")?.complete).toBe(false)
   })
 
   it("validates contractor ops workspace inputs", () => {

@@ -14,6 +14,7 @@ import {
   createServiceFeeOrder,
   createWatchlistItem,
   deleteReportDraft,
+  linkEvidenceToServiceCase,
   getContractorDashboard,
   getAdminWorkspaceData,
   getAdminModerationCrmData,
@@ -27,10 +28,13 @@ import {
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
   logResolutionDeskContact,
+  markServiceFeePaid,
   markRecoveryResolved,
   reviewRecoveryCompliance,
   reviewReport,
   reviewReportsBulk,
+  runFloridaLienPrecheck,
+  runRecoveryPrecheck,
   reviewCommunityDiscussion,
   saveAdminQueueView,
   saveReportDraft,
@@ -82,13 +86,17 @@ import {
   getPublicClientProfilesSupabase,
   getPublicBusinessProfileSupabase,
   getPublicBusinessProfilesSupabase,
+  linkEvidenceToServiceCaseSupabase,
   logPaymentRecoveryAttemptSupabase,
   logResolutionDeskContactSupabase,
+  markServiceFeePaidSupabase,
   markRecoveryResolvedSupabase,
   reviewCommunityDiscussionSupabase,
   reviewRecoveryComplianceSupabase,
   reviewReportSupabase,
   reviewReportsBulkSupabase,
+  runFloridaLienPrecheckSupabase,
+  runRecoveryPrecheckSupabase,
   saveAdminQueueViewSupabase,
   saveReportDraftSupabase,
   searchClientsSupabase,
@@ -133,6 +141,8 @@ import type {
   AdminRecordLienReleaseInput,
   AdminUploadRecordingProofInput,
   ManagedRecoveryCaseInput,
+  LinkEvidenceToServiceCaseInput,
+  MarkServiceFeePaidInput,
   MarkRecoveryResolvedInput,
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
@@ -141,6 +151,7 @@ import type {
   ResolutionDeskContactInput,
   ReportDraftInput,
   ServiceFeeCheckoutInput,
+  ServicePrecheckInput,
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
@@ -451,6 +462,33 @@ export async function createServiceFeeOrderService(userId: string, input: Servic
   return createServiceFeeOrder(dashboard.contractor.id, input)
 }
 
+export async function runRecoveryPrecheckService(userId: string, input: ServicePrecheckInput) {
+  if (shouldUsePlatformSupabase()) return runRecoveryPrecheckSupabase(userId, input)
+
+  return runRecoveryPrecheck(input)
+}
+
+export async function runFloridaLienPrecheckService(userId: string, input: ServicePrecheckInput) {
+  if (shouldUsePlatformSupabase()) return runFloridaLienPrecheckSupabase(userId, input)
+
+  return runFloridaLienPrecheck(input)
+}
+
+export async function linkEvidenceToServiceCaseService(userId: string, input: LinkEvidenceToServiceCaseInput) {
+  if (shouldUsePlatformSupabase()) return linkEvidenceToServiceCaseSupabase(userId, input)
+
+  const dashboard = await getContractorDashboardForPlatformFeatures(userId)
+  if (!dashboard) throw new Error("Contractor workspace was not found.")
+
+  return linkEvidenceToServiceCase(dashboard.contractor.id, input)
+}
+
+export async function markServiceFeePaidService(admin: User, input: MarkServiceFeePaidInput) {
+  if (shouldUsePlatformSupabase()) return markServiceFeePaidSupabase(admin, input)
+
+  return markServiceFeePaid(input)
+}
+
 export async function logResolutionDeskContactService(admin: User, input: ResolutionDeskContactInput) {
   if (shouldUsePlatformSupabase()) return logResolutionDeskContactSupabase(admin, input)
 
@@ -687,6 +725,8 @@ function createDefaultRiskOpsData(contractorId: string): ContractorRiskOpsData {
     lienFilingRecords: [],
     lienReleaseRecords: [],
     serviceFeeOrders: [],
+    serviceReadiness: [],
+    caseDocumentLinks: [],
     caseStaffAssignments: [],
     caseAuditEvents: [],
     contractDocuments: [],

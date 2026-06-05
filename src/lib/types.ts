@@ -115,6 +115,15 @@ export type LienDeliveryMethod = "certified_mail" | "process_server" | "e_record
 export type LienFilingMethod = "attorney_vendor" | "e_recording_vendor" | "county_clerk_manual"
 export type ServiceFeeKind = "managed_recovery" | "florida_lien_notice" | "florida_lien_filing"
 export type ServiceFeeStatus = "draft" | "checkout_ready" | "paid" | "failed" | "refunded" | "waived"
+export type ServiceReadinessStatus =
+  | "incomplete"
+  | "ready_for_checkout"
+  | "fee_due"
+  | "submitted"
+  | "under_review"
+  | "needs_more_info"
+  | "blocked"
+  | "closed"
 export type ContractTemplateType =
   | "service_agreement"
   | "change_order"
@@ -384,6 +393,11 @@ export interface ManagedRecoveryCase {
   status: ManagedRecoveryStatus
   priority: ModerationPriority
   serviceFeeOrderId?: string
+  readinessStatus?: ServiceReadinessStatus
+  readinessScore?: number
+  readinessCheckedAt?: string
+  feePaidAt?: string
+  submittedForReviewAt?: string
   evidenceVaultItemIds: string[]
   assignedToName?: string
   nextAction: string
@@ -463,6 +477,11 @@ export interface FloridaLienCase {
   filingMethod?: LienFilingMethod
   recordingVendor?: string
   serviceFeeOrderId?: string
+  readinessStatus?: ServiceReadinessStatus
+  readinessScore?: number
+  readinessCheckedAt?: string
+  feePaidAt?: string
+  submittedForReviewAt?: string
   contractorSignedAt?: string
   contractorSignatureName?: string
   attorneyVendorStatus: "not_started" | "queued" | "in_review" | "approved" | "rejected"
@@ -532,6 +551,38 @@ export interface ServiceFeeOrder {
   paidAt?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface ServiceReadinessCheck {
+  id: string
+  label: string
+  complete: boolean
+  detail: string
+}
+
+export interface ServiceReadinessSummary {
+  entityType: "managed_recovery" | "florida_lien"
+  entityId: string
+  status: ServiceReadinessStatus
+  score: number
+  readyForCheckout: boolean
+  feePaid: boolean
+  feeOrderId?: string
+  nextAction: string
+  checks: ServiceReadinessCheck[]
+  publicSafeSummary: string
+}
+
+export interface CaseDocumentLink {
+  id: string
+  contractorId: string
+  entityType: "managed_recovery" | "florida_lien"
+  entityId: string
+  evidenceVaultItemId: string
+  documentLabel: string
+  documentCategory: EvidenceVaultItem["fileCategory"]
+  publicSummary: string
+  createdAt: string
 }
 
 export interface CaseStaffAssignment {
@@ -761,6 +812,8 @@ export interface ContractorRiskOpsData {
   lienFilingRecords: LienFilingRecord[]
   lienReleaseRecords: LienReleaseRecord[]
   serviceFeeOrders: ServiceFeeOrder[]
+  serviceReadiness: ServiceReadinessSummary[]
+  caseDocumentLinks: CaseDocumentLink[]
   caseStaffAssignments: CaseStaffAssignment[]
   caseAuditEvents: CaseAuditEvent[]
   contractDocuments: ContractWorkspaceItem[]

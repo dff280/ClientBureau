@@ -25,6 +25,7 @@ import {
   deleteReportDraftSchema,
   floridaLienCaseSchema,
   intakeAssessmentSchema,
+  linkEvidenceToServiceCaseSchema,
   lienFilingAuthorizationSchema,
   lienNoticeDraftSchema,
   adminLienCaseActionSchema,
@@ -32,6 +33,7 @@ import {
   adminRecordLienReleaseSchema,
   adminUploadRecordingProofSchema,
   managedRecoveryCaseSchema,
+  markServiceFeePaidSchema,
   markRecoveryResolvedSchema,
   signupSchema,
   moderationCaseAssignmentSchema,
@@ -44,6 +46,7 @@ import {
   reportDraftSchema,
   recoveryComplianceReviewSchema,
   serviceFeeCheckoutSchema,
+  servicePrecheckSchema,
   updateClientPipelineStageSchema,
   updateContractPacketStatusSchema,
   updateEvidenceVaultStatusSchema,
@@ -55,6 +58,7 @@ import type {
   AdminReview,
   AdminSavedView,
   AuditLogEntry,
+  CaseDocumentLink,
   ClientIntakeAssessment,
   ClientPipelineItem,
   ClientProfile,
@@ -80,6 +84,7 @@ import type {
   RecoveryCommunication,
   ReportDraft,
   ServiceFeeOrder,
+  ServiceReadinessSummary,
   User,
 } from "@/lib/types"
 import { isPositiveReportCategory, reportCategories } from "@/lib/types"
@@ -107,8 +112,10 @@ import {
   createWatchlistItemService,
   deleteReportDraftService,
   getPublicClientProfileService,
+  linkEvidenceToServiceCaseService,
   logPaymentRecoveryAttemptService,
   logResolutionDeskContactService,
+  markServiceFeePaidService,
   markRecoveryResolvedService,
   signContractShareService,
   signLienFilingAuthorizationService,
@@ -116,6 +123,8 @@ import {
   reviewCommunityDiscussionService,
   reviewReportService,
   reviewReportsBulkService,
+  runFloridaLienPrecheckService,
+  runRecoveryPrecheckService,
   saveAdminQueueViewService,
   saveReportDraftService,
   setModerationDecisionReasonService,
@@ -150,7 +159,7 @@ function evidenceFilesFromForm(formData: FormData) {
 function actionErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     if (error.message.includes("Missing platform table")) {
-      return `${fallback} Live Ops is not ready for Supabase persistence yet. Apply migrations 0003, 0004, 0005, 0006, 0007, and 0008, or roll PLATFORM_FEATURE_DATA_MODE back to mock, then try again.`
+      return `${fallback} This advanced workspace is temporarily in safe mode. Core account, reporting, search, and public profile tools remain available.`
     }
 
     if (
@@ -158,7 +167,7 @@ function actionErrorMessage(error: unknown, fallback: string) {
       error.message.includes("milestone_schedule") ||
       error.message.includes("signed_snapshot")
     ) {
-      return `${fallback} Contract signing fields are not ready in Supabase yet. Apply migration 0007_contract_signing_packets.sql, or keep PLATFORM_FEATURE_DATA_MODE=mock, then try again.`
+      return `${fallback} Contract signing is temporarily unavailable while this workspace is being prepared.`
     }
 
     return `${fallback} ${error.message}`
@@ -684,7 +693,7 @@ export async function createWatchlistItemAction(
 
   try {
     const item = await createWatchlistItemService(user.id, parsed.data)
-    if (!item) return fail("Watchlist feature data is not available yet.")
+    if (!item) return fail("Watchlist is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/watchlist")
@@ -708,7 +717,7 @@ export async function updateWatchlistItemAction(
 
   try {
     const item = await updateWatchlistItemService(user.id, parsed.data.itemId, parsed.data.status)
-    if (!item) return fail("Watchlist feature data is not available yet.")
+    if (!item) return fail("Watchlist is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/watchlist")
@@ -732,7 +741,7 @@ export async function saveReportDraftAction(
 
   try {
     const draft = await saveReportDraftService(user.id, parsed.data)
-    if (!draft) return fail("Report draft feature data is not available yet.")
+    if (!draft) return fail("Report drafts are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/reports")
@@ -756,7 +765,7 @@ export async function deleteReportDraftAction(
 
   try {
     const result = await deleteReportDraftService(user.id, parsed.data.draftId)
-    if (!result) return fail("Report draft feature data is not available yet.")
+    if (!result) return fail("Report drafts are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/reports")
@@ -785,7 +794,7 @@ export async function createIntakeAssessmentAction(
 
   try {
     const assessment = await createIntakeAssessmentService(user.id, parsed.data)
-    if (!assessment) return fail("Intake assessment feature data is not available yet.")
+    if (!assessment) return fail("Client intake assessments are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/watchlist")
@@ -812,7 +821,7 @@ export async function createPaymentRecoveryCaseAction(
 
   try {
     const recoveryCase = await createPaymentRecoveryCaseService(user.id, parsed.data)
-    if (!recoveryCase) return fail("Recovery case feature data is not available yet.")
+    if (!recoveryCase) return fail("Payment recovery cases are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
@@ -840,7 +849,7 @@ export async function submitManagedRecoveryCaseAction(
 
   try {
     const recoveryCase = await submitManagedRecoveryCaseService(user.id, parsed.data)
-    if (!recoveryCase) return fail("Managed recovery feature data is not available yet.")
+    if (!recoveryCase) return fail("Managed recovery cases are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
@@ -868,14 +877,117 @@ export async function createRecoveryServiceFeeCheckoutAction(
   const user = await requireContractorAccess()
 
   try {
+    const readiness = await runRecoveryPrecheckService(user.id, { caseId: parsed.data.entityId })
+    if (!readiness.readyForCheckout) {
+      return fail("Complete the recovery precheck before starting checkout.")
+    }
+
     const order = await createServiceFeeOrderService(user.id, parsed.data)
-    if (!order) return fail("Service fee checkout is not available yet.")
+    if (!order) return fail("Service fee checkout is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
     return ok(order, "Service fee checkout is ready. Client payments remain contractor-direct.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Service fee checkout could not be created."))
+  }
+}
+
+export async function runRecoveryPrecheckAction(
+  _previousState: ActionResult<ServiceReadinessSummary>,
+  formData: FormData,
+): Promise<ActionResult<ServiceReadinessSummary>> {
+  const parsed = servicePrecheckSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a managed recovery case before running precheck.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const summary = await runRecoveryPrecheckService(user.id, parsed.data)
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
+    revalidatePath("/admin")
+    return ok(summary, summary.readyForCheckout ? "Recovery precheck passed. Checkout can begin." : "Recovery precheck needs more information.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Recovery precheck could not be completed."))
+  }
+}
+
+export async function runFloridaLienPrecheckAction(
+  _previousState: ActionResult<ServiceReadinessSummary>,
+  formData: FormData,
+): Promise<ActionResult<ServiceReadinessSummary>> {
+  const parsed = servicePrecheckSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a Florida lien service case before running precheck.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const summary = await runFloridaLienPrecheckService(user.id, parsed.data)
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/lien-readiness")
+    revalidatePath("/admin")
+    return ok(summary, summary.readyForCheckout ? "Florida lien precheck passed. Checkout can begin." : "Florida lien precheck needs more information.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Florida lien precheck could not be completed."))
+  }
+}
+
+export async function linkEvidenceToServiceCaseAction(
+  _previousState: ActionResult<CaseDocumentLink>,
+  formData: FormData,
+): Promise<ActionResult<CaseDocumentLink>> {
+  const parsed = linkEvidenceToServiceCaseSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the evidence link fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const link = await linkEvidenceToServiceCaseService(user.id, parsed.data)
+
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/recovery")
+    revalidatePath("/dashboard/lien-readiness")
+    revalidatePath("/admin")
+    return ok(link, "Private evidence linked to the service case.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Private evidence could not be linked."))
+  }
+}
+
+export async function markServiceFeePaidAction(
+  _previousState: ActionResult<ServiceFeeOrder>,
+  formData: FormData,
+): Promise<ActionResult<ServiceFeeOrder>> {
+  const parsed = markServiceFeePaidSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a service fee order before marking it paid.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("service fee payment", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const order = await markServiceFeePaidService(adminResult.admin, parsed.data)
+
+    revalidatePath("/admin")
+    revalidatePath("/dashboard/recovery")
+    revalidatePath("/dashboard/lien-readiness")
+    return ok(order, "Service fee marked paid and case moved forward.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Service fee could not be marked paid."))
   }
 }
 
@@ -894,7 +1006,7 @@ export async function logResolutionDeskContactAction(
 
   try {
     const contact = await logResolutionDeskContactService(adminResult.admin, parsed.data)
-    if (!contact) return fail("Resolution Desk contact logging is not available yet.")
+    if (!contact) return fail("Resolution Desk contact logging is temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/settings")
@@ -920,7 +1032,7 @@ export async function markRecoveryResolvedAction(
 
   try {
     const recoveryCase = await markRecoveryResolvedService(adminResult.admin, parsed.data)
-    if (!recoveryCase) return fail("Managed recovery case data is not available yet.")
+    if (!recoveryCase) return fail("Managed recovery cases are temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/settings")
@@ -948,7 +1060,7 @@ export async function createLienNoticeDraftAction(
 
   try {
     const noticeDraft = await createLienNoticeDraftService(user.id, parsed.data)
-    if (!noticeDraft) return fail("Lien packet feature data is not available yet.")
+    if (!noticeDraft) return fail("Lien readiness packets are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
@@ -976,7 +1088,7 @@ export async function submitFloridaLienCaseAction(
 
   try {
     const lienCase = await submitFloridaLienCaseService(user.id, parsed.data)
-    if (!lienCase) return fail("Florida lien service data is not available yet.")
+    if (!lienCase) return fail("Florida lien service is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
@@ -1004,8 +1116,13 @@ export async function createLienServiceFeeCheckoutAction(
   const user = await requireContractorAccess()
 
   try {
+    const readiness = await runFloridaLienPrecheckService(user.id, { caseId: parsed.data.entityId })
+    if (!readiness.readyForCheckout) {
+      return fail("Complete the Florida lien precheck before starting checkout.")
+    }
+
     const order = await createServiceFeeOrderService(user.id, parsed.data)
-    if (!order) return fail("Florida lien service fee checkout is not available yet.")
+    if (!order) return fail("Florida lien service checkout is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
@@ -1034,7 +1151,7 @@ export async function signLienFilingAuthorizationAction(
 
   try {
     const lienCase = await signLienFilingAuthorizationService(user.id, parsed.data)
-    if (!lienCase) return fail("Florida lien service data is not available yet.")
+    if (!lienCase) return fail("Florida lien service is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
@@ -1207,7 +1324,7 @@ export async function createContractWorkspaceItemAction(
 
   try {
     const contractItem = await createContractWorkspaceItemService(user.id, parsed.data)
-    if (!contractItem) return fail("Contract workspace feature data is not available yet.")
+    if (!contractItem) return fail("Contract workspace is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
@@ -1234,7 +1351,7 @@ export async function createClientPipelineItemAction(
 
   try {
     const item = await createClientPipelineItemService(user.id, parsed.data)
-    if (!item) return fail("Client pipeline feature data is not available yet.")
+    if (!item) return fail("Client pipeline is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/activity")
@@ -1258,7 +1375,7 @@ export async function updateClientPipelineStageAction(
 
   try {
     const item = await updateClientPipelineStageService(user.id, parsed.data)
-    if (!item) return fail("Client pipeline feature data is not available yet.")
+    if (!item) return fail("Client pipeline is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/activity")
@@ -1282,7 +1399,7 @@ export async function createRiskRoomAction(
 
   try {
     const room = await createClientRiskRoomService(user.id, parsed.data)
-    if (!room) return fail("Client work file feature data is not available yet.")
+    if (!room) return fail("Client work files are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/activity")
@@ -1306,7 +1423,7 @@ export async function logPaymentRecoveryAttemptAction(
 
   try {
     const attempt = await logPaymentRecoveryAttemptService(user.id, parsed.data)
-    if (!attempt) return fail("Recovery attempt feature data is not available yet.")
+    if (!attempt) return fail("Payment recovery attempts are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
@@ -1330,7 +1447,7 @@ export async function createPaymentPlanAction(
 
   try {
     const plan = await createPaymentPlanService(user.id, parsed.data)
-    if (!plan) return fail("Payment plan feature data is not available yet.")
+    if (!plan) return fail("Payment plans are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
@@ -1357,7 +1474,7 @@ export async function createContractPacketAction(
 
   try {
     const packet = await createContractPacketService(user.id, parsed.data)
-    if (!packet) return fail("Contract link feature data is not available yet.")
+    if (!packet) return fail("Contract links are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
@@ -1381,7 +1498,7 @@ export async function updateContractPacketStatusAction(
 
   try {
     const packet = await updateContractPacketStatusService(user.id, parsed.data)
-    if (!packet) return fail("Contract link feature data is not available yet.")
+    if (!packet) return fail("Contract links are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
@@ -1408,7 +1525,7 @@ export async function createContractShareLinkAction(
 
   try {
     const packet = await createContractShareLinkService(user.id, parsed.data)
-    if (!packet) return fail("Contract signing link feature data is not available yet.")
+    if (!packet) return fail("Contract signing links are temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
@@ -1443,7 +1560,7 @@ export async function signContractShareAction(
     const ipAddress = forwardedFor || headerList.get("x-real-ip") || undefined
     const userAgent = headerList.get("user-agent") || undefined
     const packet = await signContractShareService(parsed.data, { ipAddress, userAgent })
-    if (!packet) return fail("Contract signing link feature data is not available yet.")
+    if (!packet) return fail("Contract signing links are temporarily unavailable.")
 
     revalidatePath(`/contract/${parsed.data.shareToken}`)
     revalidatePath("/dashboard")
@@ -1471,7 +1588,7 @@ export async function updateEvidenceVaultStatusAction(
 
   try {
     const evidence = await updateEvidenceVaultStatusService(user.id, parsed.data)
-    if (!evidence) return fail("Evidence Vault feature data is not available yet.")
+    if (!evidence) return fail("Evidence Vault is temporarily unavailable.")
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/evidence")
@@ -1496,7 +1613,7 @@ export async function assignModerationCaseAction(
 
   try {
     const caseItem = await assignModerationCaseService(parsed.data.caseId, adminResult.admin, parsed.data.assignedTo)
-    if (!caseItem) return fail("Moderation case feature data is not available yet.")
+    if (!caseItem) return fail("Moderation cases are temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/reports")
@@ -1527,7 +1644,7 @@ export async function updateModerationCaseAction(
       parsed.data.status,
       parsed.data.escalationNote,
     )
-    if (!caseItem) return fail("Moderation case feature data is not available yet.")
+    if (!caseItem) return fail("Moderation cases are temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/reports")
@@ -1557,7 +1674,7 @@ export async function setModerationDecisionReasonAction(
       parsed.data.decisionReason,
       parsed.data.moderatorNote,
     )
-    if (!caseItem) return fail("Moderation case feature data is not available yet.")
+    if (!caseItem) return fail("Moderation cases are temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/reports")
@@ -1585,7 +1702,7 @@ export async function saveAdminQueueViewAction(
 
   try {
     const view = await saveAdminQueueViewService(adminResult.admin, parsed.data)
-    if (!view) return fail("Admin saved view feature data is not available yet.")
+    if (!view) return fail("Admin saved views are temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/reports")
@@ -1613,7 +1730,7 @@ export async function reviewRecoveryComplianceAction(
 
   try {
     const review = await reviewRecoveryComplianceService(adminResult.admin, parsed.data)
-    if (!review) return fail("Recovery compliance feature data is not available yet.")
+    if (!review) return fail("Recovery compliance reviews are temporarily unavailable.")
 
     revalidatePath("/admin")
     revalidatePath("/admin/settings")

@@ -53,7 +53,10 @@ import {
   createRiskRoomAction,
   createWatchlistItemAction,
   deleteReportDraftAction,
+  linkEvidenceToServiceCaseAction,
   logPaymentRecoveryAttemptAction,
+  runFloridaLienPrecheckAction,
+  runRecoveryPrecheckAction,
   saveReportDraftAction,
   signLienFilingAuthorizationAction,
   submitFloridaLienCaseAction,
@@ -83,6 +86,7 @@ import {
 import type {
   ActionResult,
   AuditLogEntry,
+  CaseDocumentLink,
   ClientIntakeAssessment,
   ClientPipelineItem,
   ClientProfile,
@@ -99,6 +103,7 @@ import type {
   PaymentRecoveryCase,
   PaymentRecoveryAttempt,
   ReportDraft,
+  ServiceReadinessSummary,
   ServiceFeeOrder,
   Subscription,
   WatchlistAlert,
@@ -113,6 +118,8 @@ const intakeState: ActionResult<ClientIntakeAssessment> = { ok: false, message: 
 const recoveryState: ActionResult<PaymentRecoveryCase> = { ok: false, message: "" }
 const managedRecoveryState: ActionResult<ManagedRecoveryCase> = { ok: false, message: "" }
 const serviceFeeState: ActionResult<ServiceFeeOrder> = { ok: false, message: "" }
+const serviceReadinessState: ActionResult<ServiceReadinessSummary> = { ok: false, message: "" }
+const caseDocumentLinkState: ActionResult<CaseDocumentLink> = { ok: false, message: "" }
 const lienNoticeState: ActionResult<LienNoticeDraft> = { ok: false, message: "" }
 const floridaLienState: ActionResult<FloridaLienCase> = { ok: false, message: "" }
 const contractState: ActionResult<ContractWorkspaceItem> = { ok: false, message: "" }
@@ -205,8 +212,8 @@ const workspaceNavigationGroups: {
     ],
   },
   {
-    title: "Protection Tools",
-    text: "Private safeguards before filing.",
+    title: "Project Protection",
+    text: "Private safeguards before staff action.",
     items: [
       { value: "lien-readiness", label: "Florida Lien Service", icon: Landmark },
       { value: "account", label: "Verification", icon: ShieldCheck },
@@ -599,6 +606,13 @@ export function RiskOpsWorkspace({
                     key={item.id}
                     item={item}
                     feeOrder={riskOps.serviceFeeOrders.find((order) => order.entityId === item.id)}
+                    readiness={riskOps.serviceReadiness.find(
+                      (summary) => summary.entityType === "managed_recovery" && summary.entityId === item.id
+                    )}
+                    documentLinks={riskOps.caseDocumentLinks.filter(
+                      (link) => link.entityType === "managed_recovery" && link.entityId === item.id
+                    )}
+                    evidenceVault={riskOps.evidenceVault}
                   />
                 ))}
                 {riskOps.managedRecoveryCases.length === 0 ? (
@@ -740,6 +754,13 @@ export function RiskOpsWorkspace({
                     key={item.id}
                     item={item}
                     feeOrder={riskOps.serviceFeeOrders.find((order) => order.entityId === item.id)}
+                    readiness={riskOps.serviceReadiness.find(
+                      (summary) => summary.entityType === "florida_lien" && summary.entityId === item.id
+                    )}
+                    documentLinks={riskOps.caseDocumentLinks.filter(
+                      (link) => link.entityType === "florida_lien" && link.entityId === item.id
+                    )}
+                    evidenceVault={riskOps.evidenceVault}
                   />
                 ))}
                 {riskOps.floridaLienCases.length === 0 ? (
@@ -1608,7 +1629,7 @@ function ManagedRecoveryCaseForm() {
   )
 }
 
-function RecoveryFeeCheckoutForm({ entityId }: { entityId: string }) {
+function RecoveryFeeCheckoutForm({ entityId, disabled = false }: { entityId: string; disabled?: boolean }) {
   const [state, action] = useActionState(createRecoveryServiceFeeCheckoutAction, serviceFeeState)
   const router = useRouter()
 
@@ -1620,7 +1641,7 @@ function RecoveryFeeCheckoutForm({ entityId }: { entityId: string }) {
   return (
     <form action={action}>
       <input type="hidden" name="entityId" value={entityId} />
-      <PendingSubmitButton size="sm" variant="outline" pendingText="Preparing...">
+      <PendingSubmitButton size="sm" variant="outline" pendingText="Preparing..." disabled={disabled}>
         <CreditCard aria-hidden="true" />
         Pay service fee
       </PendingSubmitButton>
@@ -1628,7 +1649,15 @@ function RecoveryFeeCheckoutForm({ entityId }: { entityId: string }) {
   )
 }
 
-function LienFeeCheckoutForm({ entityId, kind }: { entityId: string; kind: "florida_lien_notice" | "florida_lien_filing" }) {
+function LienFeeCheckoutForm({
+  entityId,
+  kind,
+  disabled = false,
+}: {
+  entityId: string
+  kind: "florida_lien_notice" | "florida_lien_filing"
+  disabled?: boolean
+}) {
   const [state, action] = useActionState(createLienServiceFeeCheckoutAction, serviceFeeState)
   const router = useRouter()
 
@@ -1641,7 +1670,7 @@ function LienFeeCheckoutForm({ entityId, kind }: { entityId: string; kind: "flor
     <form action={action}>
       <input type="hidden" name="entityId" value={entityId} />
       <input type="hidden" name="kind" value={kind} />
-      <PendingSubmitButton size="sm" variant="outline" pendingText="Preparing...">
+      <PendingSubmitButton size="sm" variant="outline" pendingText="Preparing..." disabled={disabled}>
         <CreditCard aria-hidden="true" />
         Pay service fee
       </PendingSubmitButton>
@@ -1659,7 +1688,194 @@ function serviceFeeSummary(order?: ServiceFeeOrder) {
   return `$${platformFee.toLocaleString()} Client Bureau fee${extra} / ${order.status.replaceAll("_", " ")}`
 }
 
-function ManagedRecoveryCaseCard({ item, feeOrder }: { item: ManagedRecoveryCase; feeOrder?: ServiceFeeOrder }) {
+function readinessBadgeClass(status?: ServiceReadinessSummary["status"]) {
+  if (status === "submitted" || status === "under_review") return "bg-emerald-700 text-white"
+  if (status === "ready_for_checkout" || status === "fee_due") return "bg-amber-700 text-white"
+  if (status === "blocked" || status === "needs_more_info") return "bg-rose-700 text-white"
+
+  return "bg-slate-950 text-white"
+}
+
+function RevenueReadinessPanel({
+  caseId,
+  entityType,
+  readiness,
+  feeOrder,
+  lienKind,
+}: {
+  caseId: string
+  entityType: "managed_recovery" | "florida_lien"
+  readiness?: ServiceReadinessSummary
+  feeOrder?: ServiceFeeOrder
+  lienKind?: "florida_lien_notice" | "florida_lien_filing"
+}) {
+  const [state, action] = useActionState(
+    entityType === "managed_recovery" ? runRecoveryPrecheckAction : runFloridaLienPrecheckAction,
+    serviceReadinessState
+  )
+  const current = state.ok && state.data.entityId === caseId ? state.data : readiness
+
+  useToastState(state)
+
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Service readiness</p>
+          <p className="mt-1 text-sm font-semibold text-slate-950">
+            {current ? current.nextAction : "Run a precheck before paying the service fee."}
+          </p>
+        </div>
+        {current ? (
+          <Badge className={cn("rounded-md capitalize", readinessBadgeClass(current.status))}>
+            {current.status.replaceAll("_", " ")}
+          </Badge>
+        ) : null}
+      </div>
+      {current ? (
+        <>
+          <Progress value={current.score} className="mt-3" />
+          <p className="mt-2 text-xs text-slate-500">{current.score}% complete before staff review</p>
+          <div className="mt-3 grid gap-2">
+            {current.checks.map((item) => (
+              <div key={item.id} className="flex items-start gap-2 text-xs leading-5 text-slate-600">
+                <span
+                  className={cn(
+                    "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full text-[10px] font-bold",
+                    item.complete ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
+                  )}
+                  aria-hidden="true"
+                >
+                  {item.complete ? "OK" : "!"}
+                </span>
+                <span>
+                  <strong className="text-slate-900">{item.label}:</strong> {item.detail}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        <form action={action}>
+          <input type="hidden" name="caseId" value={caseId} />
+          <PendingSubmitButton size="sm" variant="outline" pendingText="Checking...">
+            <ClipboardCheck aria-hidden="true" />
+            Run precheck
+          </PendingSubmitButton>
+        </form>
+        {feeOrder?.status === "paid" ? (
+          <Badge className="rounded-md bg-emerald-700 text-white">Fee paid</Badge>
+        ) : entityType === "managed_recovery" ? (
+          <RecoveryFeeCheckoutForm entityId={caseId} disabled={current ? !current.readyForCheckout : true} />
+        ) : (
+          <LienFeeCheckoutForm
+            entityId={caseId}
+            kind={lienKind ?? "florida_lien_filing"}
+            disabled={current ? !current.readyForCheckout : true}
+          />
+        )}
+      </div>
+      {!current?.readyForCheckout ? (
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          Checkout opens after the required identity, timeline, document, and authorization checks pass.
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function CaseDocumentLinks({ links }: { links: CaseDocumentLink[] }) {
+  if (links.length === 0) {
+    return (
+      <p className="mt-3 rounded-md border border-dashed border-slate-300 bg-white p-3 text-xs leading-5 text-slate-500">
+        No private evidence has been linked to this service case yet.
+      </p>
+    )
+  }
+
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-white p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Linked private evidence</p>
+      <div className="mt-2 grid gap-2">
+        {links.map((link) => (
+          <div key={link.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+            <span className="font-medium text-slate-900">{link.documentLabel}</span>
+            <Badge variant="outline" className="rounded-md capitalize">
+              {link.documentCategory}
+            </Badge>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function LinkEvidenceToCaseForm({
+  entityType,
+  entityId,
+  evidenceVault,
+}: {
+  entityType: "managed_recovery" | "florida_lien"
+  entityId: string
+  evidenceVault: EvidenceVaultItem[]
+}) {
+  const [state, action] = useActionState(linkEvidenceToServiceCaseAction, caseDocumentLinkState)
+
+  useToastState(state)
+
+  return (
+    <form action={action} className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3">
+      <input type="hidden" name="entityType" value={entityType} />
+      <input type="hidden" name="entityId" value={entityId} />
+      <select
+        name="evidenceVaultItemId"
+        className="h-9 rounded-md border border-input bg-white px-3 text-xs"
+        disabled={evidenceVault.length === 0}
+      >
+        {evidenceVault.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.label} / {item.fileCategory.replaceAll("_", " ")}
+          </option>
+        ))}
+      </select>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <Input name="documentLabel" placeholder="Document label" className="h-9 text-xs" />
+        <select name="documentCategory" defaultValue="invoice" className="h-9 rounded-md border border-input bg-white px-3 text-xs">
+          <option value="invoice">Invoice</option>
+          <option value="contract">Contract</option>
+          <option value="screenshot">Screenshot</option>
+          <option value="photo">Photo</option>
+          <option value="pdf">PDF</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <Input name="publicSummary" placeholder="Private/public-safe summary, optional" className="h-9 text-xs" />
+      <PendingSubmitButton size="sm" variant="outline" pendingText="Linking..." disabled={evidenceVault.length === 0}>
+        <Link2 aria-hidden="true" />
+        Link private evidence
+      </PendingSubmitButton>
+      <FieldError name="documentLabel" errors={state.ok ? undefined : state.fieldErrors} />
+      {evidenceVault.length === 0 ? (
+        <p className="text-xs leading-5 text-slate-500">Upload evidence in the Evidence Vault before linking documents here.</p>
+      ) : null}
+    </form>
+  )
+}
+
+function ManagedRecoveryCaseCard({
+  item,
+  feeOrder,
+  readiness,
+  documentLinks,
+  evidenceVault,
+}: {
+  item: ManagedRecoveryCase
+  feeOrder?: ServiceFeeOrder
+  readiness?: ServiceReadinessSummary
+  documentLinks: CaseDocumentLink[]
+  evidenceVault: EvidenceVaultItem[]
+}) {
   return (
     <div className="rounded-md border border-slate-200 p-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -1677,13 +1893,14 @@ function ManagedRecoveryCaseCard({ item, feeOrder }: { item: ManagedRecoveryCase
         <span>Payment recovery remains contractor-direct. Client Bureau does not hold recovered funds.</span>
         <span>Next: {item.nextAction}</span>
       </div>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {feeOrder?.status === "paid" ? (
-          <Badge className="rounded-md bg-emerald-700 text-white">Fee paid</Badge>
-        ) : (
-          <RecoveryFeeCheckoutForm entityId={item.id} />
-        )}
-      </div>
+      <RevenueReadinessPanel
+        caseId={item.id}
+        entityType="managed_recovery"
+        readiness={readiness}
+        feeOrder={feeOrder}
+      />
+      <CaseDocumentLinks links={documentLinks} />
+      <LinkEvidenceToCaseForm entityType="managed_recovery" entityId={item.id} evidenceVault={evidenceVault} />
     </div>
   )
 }
@@ -1974,7 +2191,19 @@ function LienAuthorizationForm({ caseId }: { caseId: string }) {
   )
 }
 
-function FloridaLienCaseCard({ item, feeOrder }: { item: FloridaLienCase; feeOrder?: ServiceFeeOrder }) {
+function FloridaLienCaseCard({
+  item,
+  feeOrder,
+  readiness,
+  documentLinks,
+  evidenceVault,
+}: {
+  item: FloridaLienCase
+  feeOrder?: ServiceFeeOrder
+  readiness?: ServiceReadinessSummary
+  documentLinks: CaseDocumentLink[]
+  evidenceVault: EvidenceVaultItem[]
+}) {
   const kind = item.workflowType === "notice_packet" ? "florida_lien_notice" : "florida_lien_filing"
 
   return (
@@ -1995,16 +2224,18 @@ function FloridaLienCaseCard({ item, feeOrder }: { item: FloridaLienCase; feeOrd
         <span>Next: {item.nextAction}</span>
       </div>
       <p className="mt-3 text-sm leading-6 text-slate-700">{item.privateSummary}</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {feeOrder?.status === "paid" ? (
-          <Badge className="rounded-md bg-emerald-700 text-white">Fee paid</Badge>
-        ) : (
-          <LienFeeCheckoutForm entityId={item.id} kind={kind} />
-        )}
-        {item.contractorSignedAt ? (
-          <Badge variant="outline" className="rounded-md">Authorized by {item.contractorSignatureName ?? "contractor"}</Badge>
-        ) : null}
-      </div>
+      <RevenueReadinessPanel
+        caseId={item.id}
+        entityType="florida_lien"
+        readiness={readiness}
+        feeOrder={feeOrder}
+        lienKind={kind}
+      />
+      <CaseDocumentLinks links={documentLinks} />
+      <LinkEvidenceToCaseForm entityType="florida_lien" entityId={item.id} evidenceVault={evidenceVault} />
+      {item.contractorSignedAt ? (
+        <Badge variant="outline" className="mt-3 rounded-md">Authorized by {item.contractorSignatureName ?? "contractor"}</Badge>
+      ) : null}
       {!item.contractorSignedAt ? <LienAuthorizationForm caseId={item.id} /> : null}
     </div>
   )

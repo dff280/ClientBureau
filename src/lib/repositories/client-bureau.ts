@@ -56,6 +56,8 @@ import type {
   AdminRecordLienReleaseInput,
   AdminUploadRecordingProofInput,
   ManagedRecoveryCaseInput,
+  LinkEvidenceToServiceCaseInput,
+  MarkServiceFeePaidInput,
   MarkRecoveryResolvedInput,
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
@@ -63,6 +65,7 @@ import type {
   RecoveryComplianceReviewInput,
   ResolutionDeskContactInput,
   ServiceFeeCheckoutInput,
+  ServicePrecheckInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
 } from "@/lib/schemas/client-bureau"
@@ -71,6 +74,7 @@ import type {
   AdminReview,
   AdminWorkspaceData,
   AuditLogEntry,
+  CaseDocumentLink,
   ClientPipelineItem,
   ClientProfile,
   ClientReport,
@@ -99,6 +103,7 @@ import type {
   RecoveryComplianceReview,
   RecoveryCommunication,
   ServiceFeeOrder,
+  ServiceReadinessSummary,
   PublicClientProfile,
   PublicBusinessProfile,
   ReportEvidence,
@@ -110,6 +115,10 @@ import type {
   SearchFilters,
   Subscription,
 } from "@/lib/types"
+import {
+  buildFloridaLienReadinessSummary,
+  buildRecoveryReadinessSummary,
+} from "@/lib/service-readiness"
 
 function reviewableReportsForClient(clientId: string) {
   return clientReports.filter((report) =>
@@ -469,6 +478,11 @@ export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData 
     lienFilingRecords: contractorRiskOps.lienFilingRecords.filter((item) => item.contractorId === contractor.id),
     lienReleaseRecords: contractorRiskOps.lienReleaseRecords.filter((item) => item.contractorId === contractor.id),
     serviceFeeOrders: contractorRiskOps.serviceFeeOrders.filter((item) => item.contractorId === contractor.id),
+    serviceReadiness: contractorRiskOps.serviceReadiness.filter((item) =>
+      contractorRiskOps.managedRecoveryCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId) ||
+      contractorRiskOps.floridaLienCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId),
+    ),
+    caseDocumentLinks: contractorRiskOps.caseDocumentLinks.filter((item) => item.contractorId === contractor.id),
     caseStaffAssignments: contractorRiskOps.caseStaffAssignments.filter((item) =>
       contractorRiskOps.managedRecoveryCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId) ||
       contractorRiskOps.floridaLienCases.some((caseItem) => caseItem.contractorId === contractor.id && caseItem.id === item.entityId),
@@ -720,6 +734,70 @@ export function createServiceFeeOrder(
     currency: "usd",
     stripeCheckoutUrl: `/api/stripe/service-fee/checkout?kind=${input.kind}&entity=${encodeURIComponent(input.entityId)}`,
     createdAt: now,
+    updatedAt: now,
+  }
+}
+
+export function runRecoveryPrecheck(input: ServicePrecheckInput): ServiceReadinessSummary {
+  const recoveryCase =
+    contractorRiskOps.managedRecoveryCases.find((item) => item.id === input.caseId) ??
+    contractorRiskOps.managedRecoveryCases[0]
+
+  return buildRecoveryReadinessSummary({
+    recoveryCase: {
+      ...recoveryCase,
+      readinessCheckedAt: new Date().toISOString(),
+    },
+    evidenceVault: contractorRiskOps.evidenceVault,
+    serviceFeeOrders: contractorRiskOps.serviceFeeOrders,
+    documentLinks: contractorRiskOps.caseDocumentLinks,
+  })
+}
+
+export function runFloridaLienPrecheck(input: ServicePrecheckInput): ServiceReadinessSummary {
+  const lienCase =
+    contractorRiskOps.floridaLienCases.find((item) => item.id === input.caseId) ??
+    contractorRiskOps.floridaLienCases[0]
+
+  return buildFloridaLienReadinessSummary({
+    lienCase: {
+      ...lienCase,
+      readinessCheckedAt: new Date().toISOString(),
+    },
+    evidenceVault: contractorRiskOps.evidenceVault,
+    serviceFeeOrders: contractorRiskOps.serviceFeeOrders,
+    documentLinks: contractorRiskOps.caseDocumentLinks,
+  })
+}
+
+export function linkEvidenceToServiceCase(
+  contractorId: string,
+  input: LinkEvidenceToServiceCaseInput,
+): CaseDocumentLink {
+  const now = new Date().toISOString()
+
+  return {
+    id: `case_doc_${Date.now()}`,
+    contractorId,
+    entityType: input.entityType,
+    entityId: input.entityId,
+    evidenceVaultItemId: input.evidenceVaultItemId,
+    documentLabel: input.documentLabel,
+    documentCategory: input.documentCategory,
+    publicSummary: input.publicSummary || "Document reviewed privately.",
+    createdAt: now,
+  }
+}
+
+export function markServiceFeePaid(input: MarkServiceFeePaidInput): ServiceFeeOrder {
+  const now = new Date().toISOString()
+  const existing = contractorRiskOps.serviceFeeOrders.find((item) => item.id === input.orderId)
+
+  return {
+    ...(existing ?? contractorRiskOps.serviceFeeOrders[0]),
+    id: input.orderId,
+    status: "paid",
+    paidAt: now,
     updatedAt: now,
   }
 }

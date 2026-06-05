@@ -122,7 +122,7 @@ export function ClientDashboardShell({
               <p className="text-sm text-slate-600">Jump to the task you need now.</p>
             </div>
             <Badge variant="outline" className="rounded-md border-slate-200 bg-slate-50 text-slate-700">
-              Mobile
+              Private
             </Badge>
           </div>
           <nav

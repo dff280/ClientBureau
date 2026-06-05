@@ -35,16 +35,8 @@ export const contractorDashboardNav: NavigationItem[] = [
 
 export const contractorDashboardGroups: NavigationGroup[] = [
   {
-    title: "Start Here",
-    links: [
-      contractorDashboardNav.find((item) => item.label === "Overview"),
-      { href: "/search", label: "Search a Client", description: "Check a client before accepting the job." },
-      { href: "/submit-report", label: "Leave a Review", description: "Document a client experience for review." },
-      contractorDashboardNav.find((item) => item.label === "Growth"),
-      contractorDashboardNav.find((item) => item.label === "Contracts"),
-      contractorDashboardNav.find((item) => item.label === "Payment Recovery"),
-      contractorDashboardNav.find((item) => item.label === "Florida Lien Service"),
-    ].filter(Boolean) as NavigationItem[],
+    title: "Start",
+    links: contractorDashboardNav.filter((item) => ["Overview"].includes(item.label)),
   },
   {
     title: "Find Clients",
@@ -53,14 +45,11 @@ export const contractorDashboardGroups: NavigationGroup[] = [
     ),
   },
   {
-    title: "Growth",
-    links: contractorDashboardNav.filter((item) => ["Growth"].includes(item.label)),
-  },
-  {
     title: "Reviews",
-    links: contractorDashboardNav.filter((item) =>
-      ["Reviews"].includes(item.label),
-    ),
+    links: [
+      ...contractorDashboardNav.filter((item) => ["Reviews"].includes(item.label)),
+      { href: "/submit-report", label: "Leave a Review", description: "Document a client experience for review." },
+    ],
   },
   {
     title: "Documents",
@@ -69,20 +58,14 @@ export const contractorDashboardGroups: NavigationGroup[] = [
     ),
   },
   {
-    title: "Payments",
+    title: "Services",
     links: contractorDashboardNav.filter((item) =>
       ["Payment Recovery", "Florida Lien Service"].includes(item.label),
     ),
   },
   {
-    title: "Protection Tools",
-    links: contractorDashboardNav.filter((item) =>
-      ["Watchlist", "Alerts", "Florida Lien Service"].includes(item.label),
-    ),
-  },
-  {
     title: "Account",
-    links: contractorDashboardNav.filter((item) => ["Billing", "Activity"].includes(item.label)),
+    links: contractorDashboardNav.filter((item) => ["Growth", "Billing", "Activity"].includes(item.label)),
   },
 ]
 
@@ -206,8 +189,8 @@ export const adminNavigationGroups: NavigationGroup[] = [
     title: "Tools",
     links: [
       { href: "/admin/uploads", label: "CSV Intake", description: "Review CSV batches, duplicate signals, validation errors, and staged imports." },
-      { href: "/admin?workspace=recovery", label: "Recovery Cases", description: "Review payment follow-up cases, call logs, and lien packets." },
-      { href: "/admin?workspace=contracts", label: "Contracts / Templates", description: "Oversee templates, signing links, client invites, and contract workflow rules." },
+      { href: "/admin/recovery", label: "Recovery Cases", description: "Review payment follow-up cases, call logs, and lien packets." },
+      { href: "/admin/contracts", label: "Contracts", description: "Oversee agreement packets, signing links, client invites, and contract workflow rules." },
     ],
   },
   {

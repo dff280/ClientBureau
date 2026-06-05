@@ -49,6 +49,7 @@ export const platformLaunchTables = [
   "service_fee_orders",
   "case_staff_assignments",
   "case_audit_events",
+  "case_document_links",
 ] as const satisfies RequiredTable[]
 
 export const requiredLaunchTables = [
@@ -74,9 +75,22 @@ export const requiredContractPacketColumns = [
   "signed_recorded_at",
 ] as const
 
+export const requiredRevenueWorkflowColumns = [
+  { table: "managed_recovery_cases", name: "readiness_status" },
+  { table: "managed_recovery_cases", name: "readiness_score" },
+  { table: "managed_recovery_cases", name: "readiness_checked_at" },
+  { table: "managed_recovery_cases", name: "fee_paid_at" },
+  { table: "managed_recovery_cases", name: "submitted_for_review_at" },
+  { table: "florida_lien_cases", name: "readiness_status" },
+  { table: "florida_lien_cases", name: "readiness_score" },
+  { table: "florida_lien_cases", name: "readiness_checked_at" },
+  { table: "florida_lien_cases", name: "fee_paid_at" },
+  { table: "florida_lien_cases", name: "submitted_for_review_at" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
 type LaunchColumnStatus = {
   table: RequiredTable
-  name: (typeof requiredContractPacketColumns)[number]
+  name: string
   exists: boolean
   message?: string
 }
@@ -147,22 +161,36 @@ async function checkRequiredTables() {
 
 async function checkRequiredColumns() {
   if (!hasSupabaseServiceConfig()) {
-    return requiredContractPacketColumns.map((name) => ({
+    const contractColumns: LaunchColumnStatus[] = requiredContractPacketColumns.map((name) => ({
       table: "contract_packets" as const,
       name,
       exists: false,
       message: "Supabase service role is not configured.",
     }))
+    const revenueColumns: LaunchColumnStatus[] = requiredRevenueWorkflowColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+
+    return [...contractColumns, ...revenueColumns]
   }
 
   const supabase = createServiceClient()
 
+  const contractChecks = requiredContractPacketColumns.map((name) => ({
+    table: "contract_packets" as const,
+    name,
+  }))
+  const requiredColumns = [...contractChecks, ...requiredRevenueWorkflowColumns]
+
   return Promise.all(
-    requiredContractPacketColumns.map(async (name) => {
-      const { error } = await supabase.from("contract_packets").select(name, { head: true }).limit(1)
+    requiredColumns.map(async ({ table, name }) => {
+      const { error } = await supabase.from(table).select(name, { head: true }).limit(1)
 
       return {
-        table: "contract_packets" as const,
+        table,
         name,
         exists: !error,
         message: error?.message,
@@ -211,11 +239,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Keep advanced tools mocked"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003, 0004, 0005, 0006, 0007, and 0008 before flipping advanced tools."
+      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0009 before flipping advanced tools."
   } else if (!platformSchemaReady) {
-    readinessLabel = "Contract signing migration needed"
+    readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing packet columns are missing. Apply migration 0007 before using Supabase-backed contract workflows."
+      "Platform tables exist, but contract signing or revenue workflow columns are missing. Apply migrations through 0009 before using Supabase-backed advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin ops are configured for Supabase-backed persistence."
@@ -242,8 +270,8 @@ export function summarizeLaunchHealth(input: {
       total: platformLaunchTables.length,
     },
     platformColumnCount: {
-      ready: requiredContractPacketColumns.length - missingPlatformColumns.length,
-      total: requiredContractPacketColumns.length,
+      ready: requiredContractPacketColumns.length + requiredRevenueWorkflowColumns.length - missingPlatformColumns.length,
+      total: requiredContractPacketColumns.length + requiredRevenueWorkflowColumns.length,
     },
   }
 }

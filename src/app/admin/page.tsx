@@ -157,8 +157,8 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
     { label: "Pending discussions", value: pendingDiscussions, helper: "Community entries not public yet", icon: MessageSquareText, tone: pendingDiscussions > 0 ? "amber" as const : "slate" as const, href: "/admin/discussions" },
     { label: "Pending disputes", value: pendingDisputes + pendingResponses, helper: "Responses, corrections, and dispute context", icon: FileText, tone: pendingDisputes + pendingResponses > 0 ? "rose" as const : "slate" as const, href: "/admin/discussions" },
     { label: "Evidence review", value: evidenceAwaitingReview, helper: "Report records with private evidence attached", icon: UploadCloud, tone: evidenceAwaitingReview > 0 ? "blue" as const : "slate" as const, href: "/admin/reports" },
-    { label: "Resolution Desk", value: recoveryCases, helper: "Managed recovery and private follow-up records", icon: PhoneCall, tone: recoveryCases > 0 ? "amber" as const : "slate" as const, href: "/admin?workspace=recovery" },
-    { label: "Florida liens", value: lienPackets, helper: "Notice, filing, recording proof, and release queues", icon: Landmark, tone: lienPackets > 0 ? "rose" as const : "slate" as const, href: "/admin?workspace=recovery" },
+    { label: "Resolution Desk", value: recoveryCases, helper: "Managed recovery and private follow-up records", icon: PhoneCall, tone: recoveryCases > 0 ? "amber" as const : "slate" as const, href: "/admin/recovery" },
+    { label: "Florida liens", value: lienPackets, helper: "Notice, filing, recording proof, and release queues", icon: Landmark, tone: lienPackets > 0 ? "rose" as const : "slate" as const, href: "/admin/recovery" },
     { label: "Public profiles", value: publicClients, helper: "Approved SEO-visible client records", icon: UserRound, tone: "emerald" as const, href: "/admin/clients" },
     { label: "Audit events", value: data.auditLog.length, helper: "Admin actions and system changes", icon: History, tone: "slate" as const, href: "/admin/audit-log" },
     { label: "Recent users", value: recentUsers, helper: "Latest account records loaded", icon: UsersRound, tone: "blue" as const, href: "/admin/contractors" },
@@ -235,7 +235,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
                 badge={`${publicClients} public`}
               />
                 <QuickActionCard
-                href="/admin/settings"
+                href="/admin/recovery"
                   icon={Settings}
                 title="Settings"
                   description="Review recovery cases, lien packets, evidence privacy, and audit defaults."
@@ -333,14 +333,14 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
             />
             <div className="grid gap-4 lg:grid-cols-3">
               <QuickLink
-                href="/admin/settings"
+                href="/admin/recovery"
                 icon={<PhoneCall className="size-5" />}
                 title="Recovery Cases"
                 text="Monitor documented outreach, call logging, response windows, and resolution status."
                 badge={`${recoveryCases} open`}
               />
               <QuickLink
-                href="/admin/settings"
+                href="/admin/contracts"
                 icon={<Landmark className="size-5" />}
                 title="Lien packets"
                 text="Keep lien packets private until deadlines, recipients, and documents are reviewed."
@@ -355,22 +355,22 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Ad
               />
             </div>
             {moderationCrm ? (
-              <AdminPrivateOpsDetails moderationCrm={moderationCrm} riskOps={riskOps} />
+              <AdminPrivateOpsDetails moderationCrm={moderationCrm} riskOps={riskOps} focus="recovery" />
             ) : null}
           </TabsContent>
 
           <TabsContent value="contracts" className="space-y-5">
             <AdminModuleIntro
-              title="Contracts / Templates"
+              title="Contracts"
               text="Track agreement templates, private signing links, client invites, payment coordination, and contracts required before scheduling."
             />
             <div className="grid gap-4 lg:grid-cols-3">
-              <QuickLink href="/admin/settings" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults, client invite rules, and contract language." badge={`${contractLinks} active`} />
-              <QuickLink href="/dashboard/contracts" icon={<ClipboardCheck className="size-5" />} title="Contracts / Templates" text="Preview contractor-side templates, signing links, and status tracking." badge="Ops" />
+              <QuickLink href="/admin/contracts" icon={<Signature className="size-5" />} title="Contract controls" text="Review signing-link defaults, client invite rules, and contract language." badge={`${contractLinks} active`} />
+              <QuickLink href="/dashboard/contracts" icon={<ClipboardCheck className="size-5" />} title="Contract workspace" text="Preview contractor-side agreement packets, signing links, and status tracking." badge="Ops" />
               <QuickLink href="/admin/audit-log" icon={<History className="size-5" />} title="Contract audit" text="Track agreement status, reviewer actions, and settings changes." badge="Audit" />
             </div>
             {moderationCrm ? (
-              <AdminPrivateOpsDetails moderationCrm={moderationCrm} riskOps={riskOps} />
+              <AdminPrivateOpsDetails moderationCrm={moderationCrm} riskOps={riskOps} focus="contracts" />
             ) : null}
           </TabsContent>
 
@@ -606,9 +606,11 @@ function AdminModuleIntro({ title, text }: { title: string; text: string }) {
 function AdminPrivateOpsDetails({
   moderationCrm,
   riskOps,
+  focus = "all",
 }: {
   moderationCrm: NonNullable<Awaited<ReturnType<typeof getAdminModerationCrmDataService>>>
   riskOps: Awaited<ReturnType<typeof getContractorRiskOpsDataService>>
+  focus?: "all" | "recovery" | "contracts"
 }) {
   return (
     <details className="rounded-md border border-slate-200 bg-white shadow-sm">
@@ -626,7 +628,7 @@ function AdminPrivateOpsDetails({
         </span>
       </summary>
       <div className="border-t border-slate-200 p-4">
-        <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} />
+        <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} focus={focus} />
       </div>
     </details>
   )
