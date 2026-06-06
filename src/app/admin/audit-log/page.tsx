@@ -77,7 +77,7 @@ export default async function AdminAuditLogPage({ searchParams }: { searchParams
             </Button>
           </form>
         </DataTableToolbar>
-        <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-md border border-slate-200 bg-white shadow-sm">
           <table className="w-full min-w-[760px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
               <tr>

@@ -211,7 +211,7 @@ export function SeoLandingPageView({
                     <Link href="/search">Check a Client</Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/submit-report">Submit a report</Link>
+                    <Link href="/submit-report">Report a Client Experience</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -245,7 +245,7 @@ export function SeoLandingPageView({
                   <h3 className="text-2xl font-semibold text-slate-950">No approved report summaries are listed yet.</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Client Bureau keeps this page available for public research while moderation builds the approved record set.
-                    Contractors can still search privately, create a watchlist item, or submit a documented report for review.
+                    Contractors can still search privately, create a watchlist item, or report a documented client experience for review.
                   </p>
                 </div>
                 <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">

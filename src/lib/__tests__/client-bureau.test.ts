@@ -756,7 +756,7 @@ describe("enterprise dashboard summary", () => {
     expect(summary.trends.at(-1)?.label).toBe("Jun")
     expect(summary.activityFeed.length).toBeGreaterThan(3)
     expect(summary.reportSummaries.map((item) => item.label)).toEqual([
-      "Reviews",
+      "Reports",
       "Documents",
       "Watchlist",
       "Saved searches",

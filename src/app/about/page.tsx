@@ -83,7 +83,7 @@ export default function AboutPage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/search">Search a client</Link>
+              <Link href="/search">Check a Client</Link>
             </Button>
             <Button asChild variant="outline">
               <Link href="/score-methodology">Review score methodology</Link>

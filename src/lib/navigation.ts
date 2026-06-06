@@ -23,7 +23,7 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/search", label: "Check a Client", description: "Check a client before taking the job." },
   { href: "/dashboard/reports", label: "Reports", description: "Draft, submit, and track client experience reports." },
   { href: "/dashboard/watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
-  { href: "/dashboard/growth", label: "Growth", description: "Invite contractors, earn credits, claim your profile, and request reviews." },
+  { href: "/dashboard/growth", label: "Growth", description: "Invite contractors, earn credits, claim your profile, and request client feedback." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Signing links, agreement packets, change orders, and client invites." },
   { href: "/dashboard/recovery", label: "Payment Recovery", description: "Get help recovering payment, track Resolution Desk cases, and document invoice follow-up." },
   { href: "/dashboard/lien-readiness", label: "Florida Lien Service", description: "Private Florida notice, filing, recording proof, and release workflows." },

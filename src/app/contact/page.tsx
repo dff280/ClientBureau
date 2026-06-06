@@ -39,7 +39,7 @@ export default function ContactPage() {
             {[
               {
                 title: "Contractor accounts",
-                text: "Create an account, search clients, submit documented reports, and track moderation status.",
+                text: "Create an account, check clients, report documented client experiences, and track moderation status.",
                 href: "/signup",
                 cta: "Create account",
               },

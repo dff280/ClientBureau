@@ -226,7 +226,7 @@ export function getMockGrowthEngineData(contractor: ContractorProfile, siteUrl: 
         {
           id: "claim_step_05",
           label: "Review request loop",
-          description: "Send review requests after completed jobs to build useful reputation context.",
+          description: "Send reference requests after completed jobs to build useful reputation context.",
           complete: false,
         },
       ],
@@ -261,7 +261,7 @@ export function getMockGrowthEngineData(contractor: ContractorProfile, siteUrl: 
         metric: "1 joined referral",
       },
       {
-        title: "Request reviews after jobs",
+        title: "Request references after jobs",
         description: "Positive, resolved, and documented experiences make the network useful without becoming a complaint wall.",
         metric: "2 active requests",
       },

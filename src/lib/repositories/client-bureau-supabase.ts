@@ -2332,7 +2332,7 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
     contractPackets: (contractPackets.data ?? []).map(mapContractPacket),
     activity: [],
     recommendedActions: [
-      "Search a client before scheduling new work.",
+      "Check a client before scheduling new work.",
       "Use contracts before committing materials or crew time.",
       "Keep recovery, Florida lien service, and evidence records private unless reviewed.",
     ],

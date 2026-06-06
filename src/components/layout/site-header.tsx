@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
 import { ChevronDown, FilePlus2, LogIn, LogOut, Menu, UserCircle } from "lucide-react"
 
@@ -40,6 +41,7 @@ const contractorHeaderNav = [
 ]
 
 export function SiteHeader() {
+  const pathname = usePathname()
   const [session, setSession] = useState<SessionState>({
     authenticated: false,
     role: null,
@@ -49,7 +51,7 @@ export function SiteHeader() {
   useEffect(() => {
     let active = true
 
-    fetch("/api/session", { credentials: "include" })
+    fetch("/api/session", { cache: "no-store", credentials: "include" })
       .then((response) => (response.ok ? response.json() : undefined))
       .then((data: Partial<SessionState> | undefined) => {
         if (!active || !data) return
@@ -64,7 +66,7 @@ export function SiteHeader() {
     return () => {
       active = false
     }
-  }, [])
+  }, [pathname])
 
   const authNav = session.authenticated
     ? [...contractorHeaderNav, ...contractorPrimaryNav.slice(2).filter((item) => item.label !== "Contracts")]

@@ -148,7 +148,7 @@ function TrendPanel({ trends }: { trends: DashboardTrendPoint[] }) {
           Trends
         </CardTitle>
         <p className="text-sm leading-6 text-slate-600">
-          Six-month view of client checks, reviews, agreements, and balance at risk.
+          Six-month view of client checks, reports, agreements, and balance at risk.
         </p>
       </CardHeader>
       <CardContent className="grid gap-4 p-5">
@@ -165,7 +165,7 @@ function TrendPanel({ trends }: { trends: DashboardTrendPoint[] }) {
                 </div>
                 <Progress value={(activity / maxActivity) * 100} className="mt-2" />
                 <p className="mt-1 text-xs text-slate-500">
-                  {point.searches} searches / {point.reviews} reviews / {point.agreements} agreements
+                  {point.searches} searches / {point.reviews} reports / {point.agreements} agreements
                 </p>
               </div>
               <div>
@@ -226,7 +226,7 @@ function ReportCenter({ summaries }: { summaries: DashboardReportSummary[] }) {
           Reports center
         </CardTitle>
         <p className="text-sm leading-6 text-slate-600">
-          QuickBooks-style rollups for reviews, documents, watchlists, and searches.
+          QuickBooks-style rollups for reports, documents, watchlists, and searches.
         </p>
       </CardHeader>
       <CardContent className="grid gap-3 p-5 sm:grid-cols-2">
@@ -262,7 +262,7 @@ function ActivityFeed({ items }: { items: DashboardActivityFeedItem[] }) {
           Activity feed
         </CardTitle>
         <p className="text-sm leading-6 text-slate-600">
-          The latest reviews, agreements, recovery tasks, and workspace events.
+          The latest reports, agreements, recovery tasks, and workspace events.
         </p>
       </CardHeader>
       <CardContent className="grid gap-3 p-5">

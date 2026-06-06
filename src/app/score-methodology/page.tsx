@@ -113,7 +113,7 @@ export default function ScoreMethodologyPage() {
                 contractor experiences and relevant profile context.
               </p>
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                <Link href="/search">Search a client</Link>
+                <Link href="/search">Check a Client</Link>
               </Button>
             </CardContent>
           </Card>

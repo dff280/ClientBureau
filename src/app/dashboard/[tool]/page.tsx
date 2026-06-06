@@ -73,7 +73,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
         text: "Client work files, notes, and pipeline context do not appear on public client profile pages.",
       },
     ],
-    primaryAction: { href: "/search", icon: Search, label: "Search a client" },
+    primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
     tab: "activity",
     title: "Activity",
   },
@@ -147,11 +147,11 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
   growth: {
     activeHref: "/dashboard/growth",
     badge: "Growth",
-    description: "Invite trusted contractors, earn platform credits, claim your business profile, and request reviews after real jobs.",
+    description: "Invite trusted contractors, earn platform credits, claim your business profile, and request client feedback after real jobs.",
     explanations: [
       {
         title: "What this does",
-        text: "Turns referrals, business profile claiming, and review requests into one simple growth loop.",
+        text: "Turns referrals, business profile claiming, and client feedback requests into one simple growth loop.",
       },
       {
         title: "When to use it",
@@ -213,26 +213,26 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
   },
   reports: {
     activeHref: "/dashboard/reports",
-    badge: "Reviews",
+    badge: "Reports",
     description: "Track draft, pending, approved, published, disputed, rejected, and needs-info client experience reports.",
     explanations: [
       {
         title: "What this does",
-        text: "Shows submitted reviews, saved drafts, moderation status, evidence readiness, and next documentation steps.",
+        text: "Shows submitted reports, saved drafts, moderation status, evidence readiness, and next documentation steps.",
       },
       {
         title: "When to use it",
-        text: "Use Reviews when you need to finish a draft, respond to moderation, or review what is published.",
+        text: "Use Reports when you need to finish a draft, respond to moderation, or review what is published.",
       },
       {
         title: "What stays private",
-        text: "Pending, rejected, and needs-info reviews stay private and do not appear publicly.",
+        text: "Pending, rejected, and needs-info reports stay private and do not appear publicly.",
       },
     ],
     primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Report a Client Experience" },
     secondaryAction: { href: "/dashboard/evidence", icon: Vault, label: "Evidence vault" },
     tab: "reports",
-    title: "Reviews",
+    title: "Reports",
   },
   watchlist: {
     activeHref: "/dashboard/watchlist",
@@ -252,7 +252,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
         text: "Private-match signals and your watchlist choices are never exposed on public profile pages.",
       },
     ],
-    primaryAction: { href: "/search", icon: Search, label: "Search a client" },
+    primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
     tab: "watchlist",
     title: "Watchlist and Alerts",
   },
@@ -300,8 +300,8 @@ export default async function DashboardToolPage({
       <ClientDashboardShell
         activeHref={config.activeHref}
         badge={config.badge}
-        description="Your workspace is being prepared. You can still search clients or leave reviews while this tool finishes loading."
-        primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
+        description="Your workspace is being prepared. You can still check clients or submit client experience reports while this tool finishes loading."
+        primaryAction={{ href: "/search", label: "Check a Client", icon: Search }}
         secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
         title={config.title}
       >
@@ -310,7 +310,7 @@ export default async function DashboardToolPage({
             <AlertCircle className="size-8 text-amber-700" aria-hidden="true" />
             <h2 className="text-xl font-semibold text-slate-950">This tool is getting ready.</h2>
             <p className="text-sm leading-6 text-slate-600">
-              Refresh the page after account setup completes. Your core search and review tools are still available.
+              Refresh the page after account setup completes. Your core client-check and report tools are still available.
             </p>
           </CardContent>
         </Card>
@@ -363,13 +363,13 @@ export default async function DashboardToolPage({
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
                 <Link href="/search">
                   <Search aria-hidden="true" />
-                  Search a client
+                  Check a Client
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Submit a report
+                  Report a Client Experience
                 </Link>
               </Button>
             </div>

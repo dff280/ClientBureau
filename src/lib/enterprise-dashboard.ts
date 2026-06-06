@@ -160,7 +160,7 @@ export function buildEnterpriseDashboardSummary(input: {
       },
       {
         id: "public-reviews",
-        label: "Published reviews",
+        label: "Published reports",
         value: String(publishedReports.length),
         helper: `${pendingReports.length} in review, ${resolvedReports.length} resolved`,
         href: "/dashboard/reports",
@@ -173,7 +173,7 @@ export function buildEnterpriseDashboardSummary(input: {
     reportSummaries: [
       {
         id: "reports",
-        label: "Reviews",
+        label: "Reports",
         value: String(dashboard.reports.length),
         helper: `${publishedReports.length} published / ${pendingReports.length} pending`,
         href: "/dashboard/reports",
@@ -272,7 +272,7 @@ function buildActivityFeed(input: {
 }): DashboardActivityFeedItem[] {
   const reportItems = input.dashboard.reports.map((report) => ({
     id: `report-${report.id}`,
-    label: "Review",
+    label: "Report",
     title: report.reportCategory,
     detail: report.reportSummary,
     href: "/dashboard/reports",
@@ -371,7 +371,7 @@ function buildBusinessInsights(input: {
     insights.push({
       id: "verification",
       title: "Finish business verification",
-      description: "A verified business profile improves trust signals before review requests, contracts, and profile sharing.",
+      description: "A verified business profile improves trust signals before client feedback requests, contracts, and profile sharing.",
       actionLabel: "Open account",
       href: "/dashboard/billing",
       tone: "blue",

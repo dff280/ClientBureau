@@ -300,7 +300,7 @@ export const responsiveAudit: ResponsiveAudit[] = [
 export const mobileWorkflows: MobileWorkflow[] = [
   {
     id: "search-client",
-    label: "Search a client",
+    label: "Check a Client",
     category: "workflow",
     entryRoute: "/search",
     primaryAction: "Search by name, business, city, state, phone, or email.",
@@ -322,7 +322,7 @@ export const mobileWorkflows: MobileWorkflow[] = [
   },
   {
     id: "submit-report",
-    label: "Submit a report",
+    label: "Report a Client Experience",
     category: "workflow",
     entryRoute: "/submit-report",
     primaryAction: "Create a documented contractor-submitted report with private evidence.",

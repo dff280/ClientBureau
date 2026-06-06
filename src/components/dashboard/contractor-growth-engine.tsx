@@ -110,7 +110,7 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
     }
 
     setReviewRequests((current) => [nextRequest, ...current])
-    setCopied("Review request drafted")
+    setCopied("Reference request drafted")
   }
 
   return (
@@ -141,7 +141,7 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
           icon={Network}
           label="Network score"
           value={growthScore}
-          helper="Referral, review, profile, and traffic loop health"
+          helper="Referral, profile, request, and traffic loop health"
         />
       </div>
 
@@ -286,7 +286,7 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
       </div>
 
       <DashboardSection
-        eyebrow="Review request loop"
+        eyebrow="Reference request loop"
         title="Ask for positive references and resolution updates"
         description="Send clear request links after completed jobs. Positive, resolved, and supporting-context submissions still go through moderation before public display."
       >
@@ -308,7 +308,7 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => copyText("Review request copied", request.requestUrl)}
+                      onClick={() => copyText("Request link copied", request.requestUrl)}
                     >
                       <Link2 aria-hidden="true" />
                       Copy request link
@@ -326,7 +326,7 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
           ) : (
             <EmptyState
               icon={Star}
-              title="No review requests yet"
+              title="No reference requests yet"
               description="Create a request after a completed job, resolution, or would-work-with-again experience."
             />
           )}
@@ -335,7 +335,7 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
             <CardContent className="p-4">
               <form action={addReviewRequest} className="grid gap-3">
                 <div>
-                  <p className="font-semibold text-slate-950">Create review request</p>
+                  <p className="font-semibold text-slate-950">Create reference request</p>
                   <p className="mt-1 text-sm leading-6 text-slate-600">
                     Draft a request link you can send after a job wraps or a payment issue is resolved.
                   </p>

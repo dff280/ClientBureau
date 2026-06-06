@@ -61,7 +61,7 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
             <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
               <Link href="/search">
                 <Search aria-hidden="true" />
-                Search a Client
+                Check a Client
               </Link>
             </Button>
           </CardContent>
@@ -161,7 +161,7 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
         <ProfileGrid title={`Approved ${state.name} profiles`} profiles={state.profiles} />
         <DirectoryEducation
           title={`Using ${state.name} public profile context responsibly`}
-          description={`Client Bureau organizes ${state.name} profiles for contractors who want a pre-client review step before they commit labor, materials, delivery capacity, or payment terms.`}
+          description={`Client Bureau organizes ${state.name} profiles for contractors who want a pre-job client check before they commit labor, materials, delivery capacity, or payment terms.`}
         />
       </div>
     </section>
@@ -208,7 +208,7 @@ export function ClientDirectoryCityView({
               </p>
             </div>
             <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/submit-report">Submit documented report</Link>
+              <Link href="/submit-report">Report a Client Experience</Link>
             </Button>
           </CardContent>
         </Card>
@@ -249,7 +249,7 @@ function DirectoryHero({
             <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
               <Link href="/search">
                 <Search aria-hidden="true" />
-                Search a Client
+                Check a Client
               </Link>
             </Button>
             <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
@@ -440,14 +440,14 @@ function EmptyDirectoryState() {
         <h2 className="text-2xl font-semibold text-slate-950">No approved public profiles are listed yet.</h2>
         <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-slate-600">
           Client Bureau publishes public profile links only after admin moderation. Contractors can
-          still search privately or submit a documented report for review.
+          still search privately or report a documented client experience for review.
         </p>
         <div className="mt-5 flex flex-wrap justify-center gap-3">
           <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-            <Link href="/search">Search a client</Link>
+            <Link href="/search">Check a Client</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href="/submit-report">Submit a report</Link>
+            <Link href="/submit-report">Report a Client Experience</Link>
           </Button>
         </div>
       </CardContent>

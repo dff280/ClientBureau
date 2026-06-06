@@ -70,7 +70,7 @@ export default function ResourcesPage() {
             <div className="flex flex-wrap gap-3">
               <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
                 <Link href="/search">
-                  Search a client
+                  Check a Client
                   <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>

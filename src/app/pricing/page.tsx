@@ -126,7 +126,7 @@ export default function PricingPage() {
               <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>
               {[
-                ["Can I submit reports on Free?", "Yes. Reports still go through moderation before any public summary appears."],
+                ["Can I report client experiences on Free?", "Yes. Reports still go through moderation before any public summary appears."],
                 ["Are phone numbers or emails public?", "No. They are used for private matching and are not displayed on public profile pages."],
                 ["Can a client respond?", "Yes. Every public profile includes a response, dispute, correction, or resolution-update path."],
               ].map(([question, answer]) => (

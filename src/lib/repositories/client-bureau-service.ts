@@ -742,7 +742,7 @@ function createDefaultRiskOpsData(contractorId: string): ContractorRiskOpsData {
       },
     ],
     recommendedActions: [
-      "Search a client before accepting the next job.",
+      "Check a client before accepting the next job.",
       "Create an intake assessment for any client that requires materials, deposits, or scheduling.",
       "Submit documented reports with evidence so moderation has the right context.",
     ],

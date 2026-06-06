@@ -34,7 +34,7 @@ import { buildTodaysWorkItems } from "@/lib/platform-features"
 export const metadata: Metadata = {
   title: "Business Protection Dashboard",
   description:
-    "Client Bureau dashboard for checking clients, tracking reviews, managing contracts, organizing evidence, monitoring watchlists, and handling payment recovery.",
+    "Client Bureau dashboard for checking clients, tracking reports, managing contracts, organizing evidence, monitoring watchlists, and handling payment recovery.",
   robots: {
     index: false,
     follow: false,
@@ -117,7 +117,7 @@ export default async function DashboardPage({
       icon: Search,
     },
     {
-      label: "Submit report",
+      label: "Report client experience",
       complete: dashboard.reports.length > 0,
       href: "/submit-report",
       icon: FilePlus2,
@@ -163,8 +163,8 @@ export default async function DashboardPage({
     <ClientDashboardShell
       activeHref="/dashboard"
       badge={`${subscriptionTier.replace("_", " ")} plan`}
-      description="A private command center for checking clients, leaving documented reviews, managing contracts, organizing evidence, and handling payment follow-up before a project becomes harder to control."
-      primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
+      description="A private command center for checking clients, documenting experiences, managing contracts, organizing evidence, and handling payment follow-up before a project becomes harder to control."
+      primaryAction={{ href: "/search", label: "Check a Client", icon: Search }}
       secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
       title={`${dashboard.contractor.businessName} Command Center`}
     >
@@ -172,14 +172,14 @@ export default async function DashboardPage({
 
       <DashboardSection
         eyebrow="Start here"
-        title="Search first. Review when you have experience."
-        description="Client Bureau is built around client reputation. Start with a search before taking the job, then leave a documented review after a real client experience."
+        title="Check first. Document when you have experience."
+        description="Client Bureau is built around practical client intelligence. Start with a search before taking the job, then submit a documented report after a real client experience."
       >
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <QuickActionCard
             href="/search"
             icon={Search}
-            title="Search a client"
+            title="Check a Client"
             description="Check a client before taking the job."
             badge="Daily tool"
             primary
@@ -194,7 +194,7 @@ export default async function DashboardPage({
             href="/dashboard/growth"
             icon={Gift}
             title="Grow your network"
-            description="Invite contractors, claim your profile, and request reviews after completed jobs."
+            description="Invite contractors, claim your profile, and request client feedback after completed jobs."
           />
           <QuickActionCard
             href="/dashboard/contracts"
@@ -303,13 +303,13 @@ export default async function DashboardPage({
       <DashboardSection
         eyebrow="Recent"
         title="Recent reputation activity"
-        description="A short snapshot of recent reviews, agreements, and payment items that may affect client decisions."
+        description="A short snapshot of recent reports, agreements, and payment items that may affect client decisions."
       >
         <div className="grid gap-4 lg:grid-cols-3">
           <RecentList
             emptyText="No reports yet."
             href="/dashboard/reports"
-            title="Reviews"
+            title="Reports"
             items={recentReports.map((report) => ({
               id: report.id,
               label: report.reportCategory,
@@ -426,13 +426,13 @@ function DashboardSetupState({ title, message }: { title: string; message: strin
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
                 <Link href="/search">
                   <Search aria-hidden="true" />
-                  Search a client
+                  Check a Client
                 </Link>
               </Button>
               <Button asChild variant="outline">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Leave review
+                  Report a Client Experience
                 </Link>
               </Button>
               <Button asChild variant="ghost">
