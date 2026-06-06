@@ -10,9 +10,9 @@ export type NavigationGroup = {
 }
 
 export const publicPrimaryNav: NavigationItem[] = [
-  { href: "/search", label: "Search", description: "Check clients before accepting work." },
+  { href: "/search", label: "Check a Client", description: "Search client history before accepting work." },
   { href: "/how-it-works", label: "How It Works", description: "See the protection workflow." },
-  { href: "/pricing", label: "Pricing", description: "Choose a contractor protection plan." },
+  { href: "/pricing", label: "Pricing", description: "Choose a business protection plan." },
   { href: "/resources", label: "Resources", description: "Policies, methodology, and contractor guides." },
   { href: "/about", label: "About", description: "Learn how Client Bureau works." },
   { href: "/contact", label: "Contact", description: "Reach Client Bureau support and policy teams." },
@@ -20,8 +20,8 @@ export const publicPrimaryNav: NavigationItem[] = [
 
 export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard", label: "Overview", description: "Daily work queue, account health, and next actions." },
-  { href: "/search", label: "Search Clients", description: "Check a client before taking the job." },
-  { href: "/dashboard/reports", label: "Reviews", description: "Draft, submit, and track contractor reviews." },
+  { href: "/search", label: "Check a Client", description: "Check a client before taking the job." },
+  { href: "/dashboard/reports", label: "Reports", description: "Draft, submit, and track client experience reports." },
   { href: "/dashboard/watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
   { href: "/dashboard/growth", label: "Growth", description: "Invite contractors, earn credits, claim your profile, and request reviews." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Signing links, agreement packets, change orders, and client invites." },
@@ -41,14 +41,14 @@ export const contractorDashboardGroups: NavigationGroup[] = [
   {
     title: "Find Clients",
     links: contractorDashboardNav.filter((item) =>
-      ["Search Clients", "Watchlist", "Alerts"].includes(item.label),
+      ["Check a Client", "Watchlist", "Alerts"].includes(item.label),
     ),
   },
   {
-    title: "Reviews",
+    title: "Reports",
     links: [
-      ...contractorDashboardNav.filter((item) => ["Reviews"].includes(item.label)),
-      { href: "/submit-report", label: "Leave a Review", description: "Document a client experience for review." },
+      ...contractorDashboardNav.filter((item) => ["Reports"].includes(item.label)),
+      { href: "/submit-report", label: "Report a Client Experience", description: "Document a client experience for moderation." },
     ],
   },
   {
@@ -77,8 +77,8 @@ export const resourceNavigationGroups: NavigationGroup[] = [
     links: [
       { href: "/how-it-works", label: "How It Works", description: "Search, decide, document, and resolve." },
       { href: "/score-methodology", label: "Score Methodology", description: "How scores, risk levels, and confidence are presented." },
-      { href: "/business-rating-methodology", label: "Business Rating", description: "How public contractor and business-owner ratings are calculated." },
-      { href: "/pricing", label: "Pricing", description: "Plans for contractors, teams, and enterprise review." },
+      { href: "/business-rating-methodology", label: "Business Rating", description: "How public contractor and service-business ratings are calculated." },
+      { href: "/pricing", label: "Pricing", description: "Plans for contractors, service businesses, teams, and enterprise review." },
       { href: "/enterprise", label: "Enterprise", description: "Team workflows, moderation controls, and account support." },
     ],
   },
@@ -108,7 +108,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
   {
     title: "Platform",
     links: [
-      { href: "/search", label: "Search Clients" },
+      { href: "/search", label: "Check a Client" },
       { href: "/how-it-works", label: "How It Works" },
       { href: "/pricing", label: "Pricing" },
       { href: "/resources", label: "Resources" },
@@ -122,7 +122,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Contractor Tools",
     links: [
       { href: "/businesses", label: "Business Profiles" },
-      { href: "/submit-report", label: "Submit Report" },
+      { href: "/submit-report", label: "Report a Client Experience" },
       { href: "/dashboard/contracts", label: "Contracts" },
       { href: "/dashboard/growth", label: "Growth Engine" },
       { href: "/dashboard/recovery", label: "Payment Recovery" },

@@ -24,9 +24,9 @@ import { cn } from "@/lib/utils"
 
 const navIcons: Record<string, LucideIcon> = {
   Overview: LayoutDashboard,
-  "Search Clients": Search,
+  "Check a Client": Search,
   "Search a Client": Search,
-  "Leave a Review": FilePlus2,
+  "Report a Client Experience": FilePlus2,
   Reviews: ClipboardCheck,
   Watchlist: BellRing,
   Growth: Gift,

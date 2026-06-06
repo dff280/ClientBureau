@@ -57,7 +57,7 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
               )}
               variant={tier.featured ? "default" : "outline"}
             >
-              {tier.id === "free" ? "Create free account" : "Choose plan"}
+              {tier.id === "free" ? "Create free account" : tier.featured ? "Start Pro Contractor" : "Choose plan"}
             </Button>
           </form>
         )}

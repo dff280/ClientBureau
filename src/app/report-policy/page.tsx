@@ -36,12 +36,12 @@ export default function ReportPolicyPage() {
       <JsonLd data={getFaqSchema(faqs)} />
       <PolicyPage
         eyebrow="Report policy"
-        title="Contractor Report Policy"
-        description="Client Bureau reports should be documented, specific, relevant, and written for fair moderation. The goal is useful client-risk intelligence, not public shaming."
+        title="Client Experience Report Policy"
+        description="Client Bureau reports should be documented, specific, relevant, and written for fair moderation. The goal is useful client intelligence for contractors and service businesses, not unsupported pressure."
         sections={[
           {
             title: "Required report standard",
-            body: "Reports should describe a real contractor-client or service-business relationship and include enough detail for moderation to understand what happened.",
+            body: "Reports should describe a real contractor-client or service-business relationship with a homeowner, customer, property owner, lead, or project client and include enough detail for moderation to understand what happened.",
             bullets: [
               "Include project type, project city and state, contract amount when relevant, amount unpaid when applicable, payment status, and report category.",
               "Use a clear timeline: estimate, deposit, work start, change order, completion, invoice, payment request, response, dispute, and resolution if any.",
@@ -63,7 +63,7 @@ export default function ReportPolicyPage() {
             body: "Client Bureau may reject, edit, or hold reports that create privacy risk, moderation risk, or poor public quality.",
             bullets: [
               "Do not include threats, insults, harassment, private addresses, full phone numbers, raw emails, family details, medical details, or unrelated personal information.",
-              "Do not use inflammatory labels such as scammer, guilty, deadbeat, criminal, blacklist, or similar terms.",
+              "Do not use inflammatory labels, criminal accusations, identity-based insults, or similar unsupported wording.",
               "Do not submit duplicate reports to inflate profile risk or reports that primarily pressure payment outside the moderated process.",
               "Do not publish internal notes, settlement terms, confidential files, or evidence details that should stay private.",
             ],
@@ -72,7 +72,7 @@ export default function ReportPolicyPage() {
             title: "Positive reports and resolved outcomes",
             body: "Client Bureau supports balanced reporting. Positive experiences, paid-as-agreed work, respectful communication, and would-work-with-again reports are valuable client intelligence.",
             bullets: [
-              "Positive reports may improve profile context and help contractors identify reliable clients.",
+              "Positive reports may improve profile context and help contractors and service businesses identify reliable clients.",
               "Resolution updates can show that a reported issue was paid, settled, corrected, withdrawn, or otherwise addressed.",
               "A profile with both favorable and concerning reports should present that mixed context clearly.",
             ],

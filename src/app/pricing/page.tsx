@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
 export const metadata: Metadata = {
-  title: "Pricing for Client Risk Intelligence",
+  title: "Pricing for Contractors and Service Businesses",
   description:
-    "Client Bureau pricing for business owners and teams that need moderated client-risk intelligence, watchlists, alerts, evidence workflows, and team controls.",
+    "Client Bureau pricing for contractors and service businesses that need client checks, documented reports, evidence workflows, watchlists, recovery support, and team controls.",
   alternates: {
     canonical: "/pricing",
   },
@@ -21,11 +21,11 @@ export default function PricingPage() {
   const comparisonRows = [
     ["Client profile search", "Limited", "Unlimited", "Team shared", "Custom"],
     ["Positive client reports", "Included", "Included", "Included", "Included"],
-    ["Documented report submission", "Included", "Included", "Included", "Included"],
-    ["Evidence Vault", "Basic", "Expanded", "Team library", "Custom retention"],
+    ["Documented report submission", "One included", "Unlimited", "Team managed", "Custom"],
+    ["Evidence Vault", "Basic", "Expanded", "Shared team vault", "Custom retention"],
     ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
     ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
-    ["Managed payment recovery", "-", "Service fee per case", "Team workflow", "Specialist workflow"],
+    ["Payment recovery workflow", "-", "Service fee per case", "Team workflow", "Specialist workflow"],
     ["Contract signing links", "-", "Client review, e-signature, and change-order tracking", "Shared link controls", "Custom templates"],
     ["Client invite portal", "-", "Private agreement link", "Team-managed invites", "Custom onboarding"],
     ["Florida lien service", "-", "Notice and filing service fees", "Team review", "Specialist workflow"],
@@ -39,12 +39,15 @@ export default function PricingPage() {
         <div className="mx-auto max-w-3xl space-y-4 text-center">
           <p className="text-sm font-semibold uppercase text-amber-700">Pricing</p>
           <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-            Choose the level of client-risk intelligence your business needs.
+            Choose the client-check workflow your business needs.
           </h1>
           <p className="leading-7 text-slate-600">
-            Start with basic search and report submission. Upgrade when client checks become part
-            of intake: watchlists, monitoring alerts, intake assessments, evidence workflows, team
-            visibility, and faster moderation.
+            Start with basic search and one documented report. Upgrade when client checks become part
+            of every estimate: unlimited searches, watchlists, evidence workflows, payment follow-up,
+            client response tracking, and faster moderation.
+          </p>
+          <p className="mx-auto max-w-2xl text-sm font-semibold text-slate-800">
+            One avoided bad job can pay for the year. Client Bureau helps reduce surprises without guaranteeing outcomes.
           </p>
           <div className="inline-flex rounded-md border border-slate-200 bg-white p-1 text-sm font-semibold text-slate-600">
             <span className="rounded-sm bg-slate-950 px-4 py-2 text-white">Monthly</span>
@@ -65,7 +68,7 @@ export default function PricingPage() {
             <div className="border-b border-slate-200 p-6">
               <h2 className="text-2xl font-semibold text-slate-950">Feature comparison</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Plans are designed around search volume, monitoring, report workflow depth, and team controls.
+                Plans are designed around search volume, loss-prevention workflow depth, moderation speed, and team controls.
               </p>
             </div>
             <div className="overflow-x-auto">
@@ -117,8 +120,8 @@ export default function PricingPage() {
               <Radar className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">Client intake tools are built into Pro.</h2>
               <p className="text-sm leading-6 text-slate-600">
-                Pro Contractor adds watchlists, draft reports, saved searches, intake assessments,
-                managed recovery cases, Florida lien service workflows, contract signing links, evidence review, and client invite controls for repeat client review.
+                Pro Contractor adds unlimited client checks, watchlists, saved searches, intake assessments,
+                managed recovery cases, Florida lien service workflows, contract signing links, evidence review, and client response tracking.
               </p>
               <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
               <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>

@@ -11,9 +11,15 @@ import {
 import type { LucideIcon } from "lucide-react"
 
 export const businessProtectionPromise =
-  "Check the client. Set the terms. Document the job. Protect payment. Resolve issues."
+  "Search before the job. Document during the job. Protect payment after the job."
 
 export const corePositioning = "Check the client before you take the job."
+
+export const primaryHook = "One search could save thousands."
+
+export const primarySearchCta = "Check a Client"
+
+export const reportExperienceCta = "Report a Client Experience"
 
 export type ProtectionWorkflowStep = {
   id: "check" | "terms" | "document" | "payment" | "resolve"
@@ -30,11 +36,11 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
   {
     id: "check",
     phase: "Before the estimate",
-    title: "Check the client",
-    text: "Search public profiles, private-match signals, positive reports, payment context, and watchlist alerts before accepting work.",
+    title: "Search before the job",
+    text: "Search public profiles, private-match signals, positive reports, payment context, and watchlist alerts before accepting work from a homeowner, customer, or project client.",
     tools: ["Client search", "Private matching", "Watchlists"],
     href: "/search",
-    cta: "Search a client",
+    cta: primarySearchCta,
     icon: Search,
   },
   {
@@ -50,7 +56,7 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
   {
     id: "document",
     phase: "During the job",
-    title: "Document the job",
+    title: "Document during the job",
     text: "Keep project notes, evidence, invoices, screenshots, photos, approvals, and completion records organized privately.",
     tools: ["Evidence Vault", "Work files", "Draft reports"],
     href: "/dashboard",
@@ -60,7 +66,7 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
   {
     id: "payment",
     phase: "After invoicing",
-    title: "Protect payment",
+    title: "Protect payment after the job",
     text: "Track invoice timing, payment promises, follow-up attempts, payment plans, and lien packet checkpoints.",
     tools: ["Payment follow-up", "Plans", "Lien packets"],
     href: "/dashboard",
@@ -87,7 +93,7 @@ export const protectionGuardrails = [
   },
   {
     title: "Contracts and templates stay controlled",
-    text: "Agreement links help contractors and clients review terms, signatures, deposits, milestones, and change orders in one record.",
+    text: "Agreement links help contractors, service businesses, and their clients review terms, signatures, deposits, milestones, and change orders in one record.",
     icon: Handshake,
   },
   {

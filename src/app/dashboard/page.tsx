@@ -165,7 +165,7 @@ export default async function DashboardPage({
       badge={`${subscriptionTier.replace("_", " ")} plan`}
       description="A private command center for checking clients, leaving documented reviews, managing contracts, organizing evidence, and handling payment follow-up before a project becomes harder to control."
       primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
-      secondaryAction={{ href: "/submit-report", label: "Leave a review", icon: FilePlus2 }}
+      secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
       title={`${dashboard.contractor.businessName} Command Center`}
     >
       <EnterpriseDashboardOverview summary={enterpriseSummary} />
@@ -187,7 +187,7 @@ export default async function DashboardPage({
           <QuickActionCard
             href="/submit-report"
             icon={FilePlus2}
-            title="Leave a review"
+            title="Report a Client Experience"
             description="Document a positive, resolved, or concerning client experience for moderation."
           />
           <QuickActionCard

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Login to Client Bureau for contractor client search, documented reports, and account management.",
+  description: "Login to Client Bureau for client checks, documented reports, evidence records, and business account management.",
   robots: {
     index: false,
     follow: false,
@@ -34,7 +34,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             <LockKeyhole className="size-8 text-slate-950" aria-hidden="true" />
             <CardTitle className="text-2xl">Login to Client Bureau</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
-              Access your contractor dashboard, saved searches, submitted reports, and review status.
+              Access your business dashboard, saved searches, submitted client reports, contract records, and moderation status.
             </p>
           </CardHeader>
           <CardContent>

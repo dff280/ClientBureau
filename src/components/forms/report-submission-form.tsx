@@ -151,7 +151,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
       <WorkflowStep
         step="3"
         title="Experience type and payment timeline"
-        text="Choose whether this is a concern report or a positive client recommendation. Both paths require moderation and documentation."
+        text="Choose whether this is a concern report or a positive client recommendation. Both paths require a real business relationship, moderation, and documentation."
       >
         <div className="grid gap-3 md:grid-cols-2">
           <ReportIntentCard
@@ -292,7 +292,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         className="bg-slate-950 text-white hover:bg-slate-800"
       >
         <ShieldCheck aria-hidden="true" />
-        Submit report for review
+        Report a Client Experience
       </PendingSubmitButton>
     </form>
   )

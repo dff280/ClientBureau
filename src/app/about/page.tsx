@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 export const metadata: Metadata = {
   title: "About Client Bureau",
   description:
-    "Client Bureau is a moderated client-risk intelligence platform helping contractors search, review, and submit documented client reports.",
+    "Client Bureau is a moderated client intelligence platform helping contractors and service businesses check clients, document jobs, and submit client reports.",
   alternates: {
     canonical: "/about",
   },
@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 const principles = [
   {
     icon: FileSearch,
-    title: "Contractor-first intelligence",
-    text: "Contractors need better pre-job information before accepting work, assigning crews, ordering materials, and extending credit-like trust.",
+    title: "Business-owner client intelligence",
+    text: "Contractors and service businesses need better pre-job information before accepting work, assigning crews, ordering materials, and extending credit-like trust.",
   },
   {
     icon: Scale,
@@ -40,12 +40,13 @@ export default function AboutPage() {
           <div className="space-y-4">
             <p className="text-sm font-semibold uppercase text-amber-700">About Client Bureau</p>
             <h1 className="max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-              A trust platform for contractors who need to know more before the job starts.
+              A trust platform for contractors and service businesses who need to know more before the job starts.
             </h1>
             <p className="max-w-3xl leading-7 text-slate-600">
-              Client Bureau helps contractors search client profiles, review moderated
-              contractor-submitted reports, submit documented experiences, and understand response
-              or dispute context before accepting work.
+              Client Bureau helps contractors and service businesses search client profiles,
+              review moderated contractor-submitted reports, submit documented experiences, and
+              understand response or dispute context before accepting work from a homeowner, customer,
+              property owner, lead, or project client.
             </p>
           </div>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">

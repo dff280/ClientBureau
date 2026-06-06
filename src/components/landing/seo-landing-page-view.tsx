@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getClientDirectory } from "@/lib/client-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import type { SeoLandingPage } from "@/lib/seo-landing-pages"
-import type { PublicClientProfile } from "@/lib/types"
+import { isPositiveReportCategory, type PublicClientProfile } from "@/lib/types"
 
 export function SeoLandingPageView({
   page,
@@ -187,7 +187,7 @@ export function SeoLandingPageView({
                     <div className="grid gap-3 sm:grid-cols-3">
                       <ProfileFact label="Score" value={`${profile.clientBureauScore}/100`} />
                       <ProfileFact label="Reports" value={String(profile.reports.length)} />
-                      <ProfileFact label="Reported unpaid" value={formatCurrency(profile.balanceSummary.totalReportedUnpaid)} />
+                      <ProfileFact label="Payment issue context" value={formatPaymentContext(profile.balanceSummary.totalReportedUnpaid)} />
                     </div>
                     <Button asChild variant="outline">
                       <Link href={`/client/${profile.publicSlug}`}>
@@ -208,7 +208,7 @@ export function SeoLandingPageView({
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                    <Link href="/search">Search a client</Link>
+                    <Link href="/search">Check a Client</Link>
                   </Button>
                   <Button asChild variant="outline">
                     <Link href="/submit-report">Submit a report</Link>
@@ -232,7 +232,7 @@ export function SeoLandingPageView({
                     </h3>
                     <p className="text-sm leading-6 text-slate-600">{report.publicSummary}</p>
                     <p className="text-sm font-semibold text-slate-950">
-                      Reported unpaid: {formatCurrency(report.amountUnpaid)}
+                      {formatReportPaymentLine(report)}
                     </p>
                   </CardContent>
                 </Card>
@@ -250,7 +250,7 @@ export function SeoLandingPageView({
                 </div>
                 <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
                   <Link href="/submit-report">
-                    Submit report context
+                    Report a Client Experience
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </Button>
@@ -304,6 +304,17 @@ function formatCurrency(value: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function formatPaymentContext(value: number) {
+  return value > 0 ? formatCurrency(value) : "No issue reported"
+}
+
+function formatReportPaymentLine(report: PublicClientProfile["reports"][number]) {
+  if (isPositiveReportCategory(report.reportCategory)) return "Client experience: Positive"
+  if (report.amountUnpaid <= 0) return "Payment issue: None reported"
+
+  return `Reported unpaid balance: ${formatCurrency(report.amountUnpaid)}`
 }
 
 function getLandingContext(page: SeoLandingPage) {

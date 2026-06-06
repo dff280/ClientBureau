@@ -63,7 +63,9 @@ export function ReportCard({ report }: { report: ClientReport }) {
             <p className="font-medium text-slate-900">{report.paymentStatus}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase text-slate-500">Reported unpaid</p>
+            <p className="text-xs font-semibold uppercase text-slate-500">
+              {isPositive ? "Payment issue" : "Reported unpaid balance"}
+            </p>
             <p className="font-medium text-slate-900">
               {isPositive ? "None reported" : formatCurrency(report.amountUnpaid)}
             </p>

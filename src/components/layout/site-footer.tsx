@@ -16,8 +16,8 @@ export function SiteFooter() {
         <div className="space-y-4">
           <BrandMark />
           <p className="max-w-xl text-sm leading-6 text-slate-600">
-            {corePositioning} Client Bureau combines client risk intelligence, moderated public
-            reports, contract workflows, evidence records, payment tracking, and response paths.
+            {corePositioning} Client Bureau helps contractors and service businesses search client
+            history, document jobs, organize evidence, track payment issues, and support fair response paths.
           </p>
           {socialLinks.length > 0 ? (
             <div className="flex flex-wrap gap-2 text-sm">

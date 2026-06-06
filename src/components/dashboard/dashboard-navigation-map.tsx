@@ -19,7 +19,7 @@ import { contractorDashboardGroups } from "@/lib/navigation"
 
 const sectionIcons = {
   Overview: LayoutDashboard,
-  "Search Clients": Search,
+  "Check a Client": Search,
   "Search a Client": Search,
   "Submit a Report": FilePlus2,
   Reports: ClipboardCheck,
@@ -51,13 +51,13 @@ export function DashboardNavigationMap() {
           <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
             <Link href="/search">
               <Search aria-hidden="true" />
-              Search Clients
+              Check a Client
             </Link>
           </Button>
           <Button asChild variant="outline">
             <Link href="/submit-report">
               <FilePlus2 aria-hidden="true" />
-              Submit Report
+              Report a Client Experience
             </Link>
           </Button>
         </div>

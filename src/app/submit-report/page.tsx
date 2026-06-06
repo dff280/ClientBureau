@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { requireContractorAccess } from "@/lib/auth"
 
 export const metadata: Metadata = {
-  title: "Submit Client Report",
+  title: "Report a Client Experience",
   description:
-    "Submit a documented Client Bureau report, including positive client experiences, payment context, and private evidence for moderation.",
+    "Report a documented client experience to Client Bureau, including positive client context, payment status, job details, and private evidence for moderation.",
   alternates: {
     canonical: "/submit-report",
   },
@@ -37,14 +37,15 @@ export default async function SubmitReportPage({
       <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="space-y-6">
           <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-700">Submit report</p>
+            <p className="text-sm font-semibold uppercase text-amber-700">Report a Client Experience</p>
             <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
               Document a client experience for admin review.
             </h1>
             <p className="max-w-3xl leading-7 text-slate-600">
-              Submit concern reports or positive client recommendations. Every report stays pending
-              until reviewed, and public summaries must describe verifiable project facts without
-              private details or claims about intent.
+              Contractors and service businesses can submit concern reports or positive client
+              recommendations involving homeowners, customers, property owners, leads, or project clients.
+              Every report stays pending until reviewed, and public summaries must describe project facts
+              without private details or claims about intent.
             </p>
           </div>
 
@@ -71,7 +72,7 @@ export default async function SubmitReportPage({
               <p>Use project facts, dates, invoices, and completion records.</p>
               <p>Positive reports are supported for paid-on-time, cooperative, or would-work-with-again client experiences.</p>
               <p>Avoid personal attacks or claims about motive.</p>
-              <p>Approved reports can create an SEO-friendly public client profile.</p>
+              <p>Approved reports can create or update an SEO-friendly public client profile.</p>
             </CardContent>
           </Card>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">

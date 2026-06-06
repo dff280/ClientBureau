@@ -34,8 +34,8 @@ type SessionState = {
 
 const contractorHeaderNav = [
   { href: "/dashboard", label: "Dashboard", description: "Daily work queue and business tools." },
-  { href: "/search", label: "Search", description: "Check a client before accepting work." },
-  { href: "/submit-report", label: "Submit Report", description: "Document a client experience for review." },
+  { href: "/search", label: "Check a Client", description: "Check a client before accepting work." },
+  { href: "/submit-report", label: "Report Experience", description: "Document a client experience for moderation." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Agreement packets and signing links." },
 ]
 
@@ -203,7 +203,7 @@ export function SiteHeader() {
                     <Link href="/dashboard">Overview</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/submit-report">Submit new report</Link>
+                    <Link href="/submit-report">Report a Client Experience</Link>
                   </DropdownMenuItem>
                   {contractorPrimaryNav.slice(1).filter((item) => item.label !== "Reports").map((item) => (
                     <DropdownMenuItem key={item.href} asChild>

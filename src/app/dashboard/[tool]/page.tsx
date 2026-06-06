@@ -214,7 +214,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
   reports: {
     activeHref: "/dashboard/reports",
     badge: "Reviews",
-    description: "Track draft, pending, approved, published, disputed, rejected, and needs-info contractor reviews.",
+    description: "Track draft, pending, approved, published, disputed, rejected, and needs-info client experience reports.",
     explanations: [
       {
         title: "What this does",
@@ -229,7 +229,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
         text: "Pending, rejected, and needs-info reviews stay private and do not appear publicly.",
       },
     ],
-    primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Leave a review" },
+    primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Report a Client Experience" },
     secondaryAction: { href: "/dashboard/evidence", icon: Vault, label: "Evidence vault" },
     tab: "reports",
     title: "Reviews",
@@ -302,7 +302,7 @@ export default async function DashboardToolPage({
         badge={config.badge}
         description="Your workspace is being prepared. You can still search clients or leave reviews while this tool finishes loading."
         primaryAction={{ href: "/search", label: "Search a client", icon: Search }}
-        secondaryAction={{ href: "/submit-report", label: "Leave a review", icon: FilePlus2 }}
+        secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
         title={config.title}
       >
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">

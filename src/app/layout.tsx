@@ -22,11 +22,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(getSiteUrl()),
   title: {
-    default: "Client Bureau | Business Client Intelligence",
+    default: "Client Bureau | Check Clients Before You Take the Job",
     template: "%s | Client Bureau",
   },
   description:
-    "Client Bureau helps business owners check clients, set terms, document jobs, track payment issues, and resolve disputes before risk grows.",
+    "Client Bureau helps contractors and service businesses check clients, document jobs, track payment issues, and resolve disputes before risk grows.",
   keywords: [
     "Client Bureau",
     "contractor client reports",

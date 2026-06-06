@@ -137,7 +137,7 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
               <p className="text-sm font-semibold uppercase text-amber-700">Responsible research</p>
               <h2 className="text-2xl font-semibold text-slate-950">Use this as one intake signal.</h2>
               <p className="text-sm leading-6 text-slate-600">
-                Client Bureau public pages are not blacklists. They organize approved summaries,
+                Client Bureau public pages are not accusation lists. They organize approved summaries,
                 reported experience context, score factors, response paths, and evidence-on-file
                 labels to support better business decisions.
               </p>

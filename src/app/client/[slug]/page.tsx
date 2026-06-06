@@ -43,8 +43,8 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
 
   const name = `${profile.firstName} ${profile.lastName}`
   const location = `${profile.city}, ${profile.state}`
-  const title = `${name} ${profile.city} ${profile.state} Client Reputation Profile`
-  const description = `${name} in ${location}: moderated contractor-submitted reviews, public response context, evidence-on-file summary, and Client Bureau score.`
+  const title = `${name} ${profile.city} ${profile.state} Client Bureau Profile`
+  const description = `${name} in ${location}: moderated contractor-submitted reports, response context, evidence-on-file summary, and Client Bureau score.`
   const profileUrl = `${siteUrl}/client/${profile.publicSlug}`
   const imageUrl = `${profileUrl}/opengraph-image`
 
@@ -135,11 +135,11 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </h1>
               <p className="mt-3 text-lg text-slate-300">
                 {profile.businessName ? `${profile.businessName} | ` : ""}
-                {profile.city}, {profile.state} / Contractor reviews, client rating, positive references, public responses, and moderated reputation context.
+                {profile.city}, {profile.state} / Contractor-submitted reports, score context, positive references, public responses, and moderated profile context.
               </p>
             </div>
             <p className="max-w-3xl leading-7 text-slate-300">
-              This Client Bureau profile is built from contractor-submitted reviews, approved
+              This Client Bureau profile is built from contractor-submitted reports, approved
               public summaries, client response information, and reputation indicators. Private
               phone numbers, emails, addresses, raw evidence, and internal notes are not displayed.
             </p>
@@ -150,7 +150,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-amber-300">Public record type</p>
-                <p className="mt-1">Moderated contractor-submitted reviews</p>
+                <p className="mt-1">Moderated contractor-submitted reports</p>
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase text-amber-300">Fairness layer</p>
@@ -161,7 +161,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Add a report
+                  Report a Client Experience
                 </Link>
               </Button>
               <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
@@ -174,7 +174,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   intent: "positive",
                 }).toString()}`}>
                   <ShieldCheck aria-hidden="true" />
-                  Recommend this client
+                  Add Positive Experience
                 </Link>
               </Button>
               <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
@@ -190,7 +190,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <div className="flex items-center justify-between gap-4">
                 <Badge className="rounded-md bg-slate-950 text-white">
                   <Star className="size-3" aria-hidden="true" />
-                  Overall rating
+                  Client Bureau Score
                 </Badge>
                 <span className="text-xs font-semibold uppercase text-slate-500">Client Bureau</span>
               </div>
@@ -217,8 +217,8 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   <span className="font-semibold text-slate-950">{profile.reportCount}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Reported unpaid</span>
-                  <span className="font-semibold text-slate-950">{formatCurrency(profile.balanceSummary.totalReportedUnpaid)}</span>
+                  <span className="text-slate-500">Payment issue context</span>
+                  <span className="font-semibold text-slate-950">{formatPaymentContext(profile.balanceSummary.totalReportedUnpaid)}</span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Open disputes</span>
@@ -264,7 +264,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
             <div className="grid gap-3 md:grid-cols-4">
-              <TrustMetric label="Contractor reviews" value={String(profile.reports.length)} />
+              <TrustMetric label="Client experience reports" value={String(profile.reports.length)} />
               <TrustMetric label="Positive references" value={String(profile.positiveReports.length)} />
               <TrustMetric label="Open disputes" value={String(openDisputes)} />
               <TrustMetric label="Resolved reports" value={String(resolvedReports)} />
@@ -280,7 +280,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-3">
-                <BalanceFact label="Overall rating" value={`${profile.clientBureauScore}/100`} />
+                <BalanceFact label="Client Bureau Score" value={`${profile.clientBureauScore}/100`} />
                 <BalanceFact label="Risk level" value={profile.riskLevel} />
                 <BalanceFact label="Evidence status" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private review"} />
                 <BalanceFact label="Payment reliability" value={profile.paymentReliability} />
@@ -350,9 +350,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             </Card>
 
             <div className="space-y-3">
-              <h2 className="text-3xl font-semibold text-slate-950">Contractor reviews</h2>
+              <h2 className="text-3xl font-semibold text-slate-950">Client experience reports</h2>
               <p className="max-w-3xl text-sm leading-6 text-slate-600">
-                These contractor-submitted reviews are published after moderation and are presented
+                These contractor-submitted reports are published after moderation and are presented
                 as reported experiences, not legal findings or unsupported accusations.
               </p>
             </div>
@@ -374,7 +374,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <div>
                 <h2 className="text-2xl font-semibold text-slate-950">Positive references</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Approved positive references help show paid, cooperative, or would-work-with-again contractor experiences.
+                  Approved positive references help show paid-as-agreed, cooperative, or would-work-with-again client experiences.
                 </p>
               </div>
               {profile.positiveReports.length > 0 ? (
@@ -528,7 +528,7 @@ function ProfileSearchSummary({
         <div>
           <p className="text-xs font-semibold uppercase text-amber-900">Profile summary for searchers</p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-            {name} in {location}: public reputation context for contractors
+            {name} in {location}: public client context for contractors
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-700">
             This public page summarizes moderated contractor-submitted experiences, approved report
@@ -590,4 +590,8 @@ function formatCurrency(value: number) {
     currency: "USD",
     maximumFractionDigits: 0,
   }).format(value)
+}
+
+function formatPaymentContext(value: number) {
+  return value > 0 ? formatCurrency(value) : "No issue reported"
 }

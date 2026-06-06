@@ -54,6 +54,7 @@ interface SearchCommandCenterProps {
   category?: ReportCategory
   profiles: SearchPreviewProfile[]
   initialSavedSearches?: InitialSavedSearch[]
+  isAuthenticated?: boolean
 }
 
 const savedSearchStorageKey = "client-bureau.saved-searches"
@@ -140,6 +141,7 @@ export function SearchCommandCenter({
   category,
   profiles,
   initialSavedSearches = [],
+  isAuthenticated = false,
 }: SearchCommandCenterProps) {
   const [liveQuery, setLiveQuery] = useState(query ?? "")
   const [stateValue, setStateValue] = useState(state ?? "")
@@ -341,7 +343,7 @@ export function SearchCommandCenter({
                     ))}
                   </select>
                   <Button className="h-11 bg-slate-950 px-6 text-white hover:bg-slate-800" type="submit">
-                    Search
+                    Check
                     <ArrowRight aria-hidden="true" />
                   </Button>
                 </div>
@@ -361,7 +363,7 @@ export function SearchCommandCenter({
 
                   {privateIdentifierIntent ? (
                     <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">
-                      Phone and email checks run securely after you press Search. Public previews never reveal
+                      Phone and email checks require a secure account workflow. Public previews never reveal
                       private identifiers.
                     </div>
                   ) : null}
@@ -395,7 +397,7 @@ export function SearchCommandCenter({
                           </div>
                         </div>
                         <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
-                          {profile.latestSummary ?? "Approved public profile with moderated contractor reviews."}
+                          {profile.latestSummary ?? "Approved public profile with moderated contractor-submitted reports."}
                         </p>
                         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                           <span>{profile.reportCount} approved signals</span>
@@ -407,8 +409,8 @@ export function SearchCommandCenter({
 
                     {instantProfiles.length === 0 ? (
                       <div className="rounded-md border border-dashed border-slate-300 bg-white p-4 text-sm leading-6 text-slate-600">
-                        No public previews match yet. Press Search to run the full private check or create a
-                        documented report if this client should be reviewed.
+                        No public previews match yet. Create a free account to save this search, create a
+                        private client file, or report a documented client experience for moderation.
                       </div>
                     ) : null}
                   </div>
@@ -494,14 +496,23 @@ export function SearchCommandCenter({
                 <p className="mt-2 text-sm leading-6 text-slate-300">
                   Save searches you run often, then use the watchlist for alerts when a profile changes.
                 </p>
-                <Button
-                  type="button"
-                  onClick={handleSaveSearch}
-                  className="mt-4 w-full bg-amber-500 text-slate-950 hover:bg-amber-400"
-                >
-                  <Save aria-hidden="true" />
-                  Save current search
-                </Button>
+                {isAuthenticated ? (
+                  <Button
+                    type="button"
+                    onClick={handleSaveSearch}
+                    className="mt-4 w-full bg-amber-500 text-slate-950 hover:bg-amber-400"
+                  >
+                    <Save aria-hidden="true" />
+                    Save current search
+                  </Button>
+                ) : (
+                  <Button asChild className="mt-4 w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
+                    <Link href={`/signup?next=${encodeURIComponent(currentHref)}`}>
+                      <LockKeyhole aria-hidden="true" />
+                      Create account to save
+                    </Link>
+                  </Button>
+                )}
                 {savedMessage ? <p className="mt-2 text-xs font-medium text-amber-200">{savedMessage}</p> : null}
 
                 <div className="mt-4 grid gap-2">
@@ -518,7 +529,7 @@ export function SearchCommandCenter({
                       >
                         <span className="block truncate font-semibold">{search.query}</span>
                         <span className="block truncate text-xs text-slate-300">
-                          {[search.city, search.state, search.riskLevel, search.category].filter(Boolean).join(" · ") ||
+                          {[search.city, search.state, search.riskLevel, search.category].filter(Boolean).join(" / ") ||
                             "All filters"}
                         </span>
                       </Link>
@@ -588,14 +599,14 @@ export function SearchCommandCenter({
           <div>
             <p className="font-semibold text-slate-950">Need to document a new experience?</p>
             <p className="text-sm leading-6 text-slate-600">
-              If search does not find an approved profile, submit a documented contractor review for moderation.
+              If search does not find an approved profile, submit a documented client experience for moderation.
             </p>
           </div>
         </div>
         <Button asChild variant="outline">
           <Link href="/submit-report">
             <FilePlus2 aria-hidden="true" />
-            Leave a review
+            Report a Client Experience
           </Link>
         </Button>
       </div>

@@ -33,6 +33,8 @@ import {
   getPublicClientProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { pricingTiers } from "@/lib/stripe/pricing"
+import { corePositioning, primaryHook, primarySearchCta, reportExperienceCta } from "@/lib/product-positioning"
+import { isPositiveReportCategory } from "@/lib/types"
 import {
   getFaqSchema,
   getLocalBusinessSchema,
@@ -43,9 +45,9 @@ import {
 } from "@/lib/seo"
 
 export const metadata: Metadata = {
-  title: "Client Bureau | Search Client Ratings Before the Job",
+  title: "Client Bureau | Check Clients Before You Take the Job",
   description:
-    "Search client ratings, contractor reviews, public profiles, payment-risk context, positive references, and client responses before the job.",
+    "Client Bureau helps contractors and service businesses check clients, review moderated reports, document jobs, and protect payment before work starts.",
   alternates: {
     canonical: "/",
   },
@@ -55,39 +57,39 @@ export const dynamic = "force-dynamic"
 
 type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
 
-const heroHeadline = "One Search Could Save Thousands."
+const heroHeadline = corePositioning
 
 const heroTrustSignals = [
-  "Contractor-powered client reputation",
+  "Contractor-powered client intelligence",
   "Moderated public client profiles",
-  "Positive and concerning reviews",
+  "Positive and concerning reports",
   "Private matching, public-safe summaries",
 ]
 
 const decisionStats = [
   { label: "Cause", value: "Businesses lose money when they accept the wrong clients." },
   { label: "Effect", value: "Unpaid invoices, wasted labor, missed payroll, and stressed cash flow." },
-  { label: "Prevention", value: "Search reputation, reviews, ratings, and response context before you commit." },
+  { label: "Prevention", value: "Search reports, payment-risk indicators, and response context before you commit." },
 ]
 
 const painWorkflows = [
   {
     icon: Search,
     title: "Search the client before you risk labor, materials, or calendar space.",
-    text: "Look up client reputation by name, business, phone, city, state, or address before you quote, hold dates, order supplies, or rush scheduling.",
+    text: "Look up client history by name, business, phone, email, city, state, or job address before you quote, hold dates, order supplies, or rush scheduling.",
     href: "/search",
-    cta: "Search clients",
+    cta: primarySearchCta,
   },
   {
     icon: ClipboardCheck,
-    title: "Read contractor-submitted reviews with moderated public summaries.",
-    text: "Client Bureau organizes documented payment issues, disputes, chargebacks, positive references, resolved reports, and client response context.",
+    title: "Read contractor-submitted experiences with moderated public summaries.",
+    text: "Client Bureau organizes documented payment issues, disputes, chargebacks, positive client experiences, resolved reports, and client response context.",
     href: "/reports/recent",
-    cta: "View reviews",
+    cta: "View reports",
   },
   {
     icon: BadgeCheck,
-    title: "Check the client rating and reputation indicators before saying yes.",
+    title: "Review payment-risk indicators before saying yes.",
     text: "Review score context, report count, positive references, open disputes, resolved issues, and evidence-on-file summaries without exposing private data.",
     href: "/score-methodology",
     cta: "Score method",
@@ -145,6 +147,17 @@ const moderationStandards = [
   ["Right of response", "Clients can submit a response, dispute, correction request, or resolution update for review."],
 ]
 
+const categoryComparison = [
+  {
+    title: "Before Client Bureau",
+    items: ["Take the job", "Buy materials", "Schedule the crew", "Hope the client pays"],
+  },
+  {
+    title: "After Client Bureau",
+    items: ["Check the client", "Set clear terms", "Document the job", "Protect payment", "Resolve disputes fairly"],
+  },
+]
+
 const businessTypes = [
   "General contractors",
   "Roofers",
@@ -175,7 +188,7 @@ const faqs = [
   {
     question: "What is Client Bureau?",
     answer:
-      "Client Bureau is a contractor-powered client reputation platform. Business owners use it to search client ratings, contractor reviews, public profiles, payment-risk context, positive references, and response history before accepting work.",
+      "Client Bureau is a contractor-powered client intelligence platform. Contractors and service business owners use it to search client reports, public profiles, payment-risk indicators, positive references, and response history before accepting work from a homeowner, customer, or project client.",
   },
   {
     question: "What is Client Bureau not?",
@@ -210,9 +223,7 @@ export default async function Home() {
     )
     .slice(0, 3)
   const allReports = profiles.flatMap((profile) => profile.reports)
-  const positiveReports = allReports.filter((report) =>
-    ["Positive experience", "Would work with again"].includes(report.reportCategory),
-  ).length
+  const positiveReports = allReports.filter((report) => isPositiveReportCategory(report.reportCategory)).length
   const openResponses = profiles.reduce((total, profile) => total + profile.clientResponses.length, 0)
   const reviewedEvidence = profiles.reduce((total, profile) => total + profile.evidence.length, 0)
   const totalReportedUnpaid = profiles.reduce(
@@ -221,7 +232,7 @@ export default async function Home() {
   )
   const stats = [
     { label: "Public profiles", value: profiles.length.toLocaleString(), text: "Approved client reputation pages indexed for careful public research." },
-    { label: "Contractor reviews", value: allReports.length.toLocaleString(), text: "Documented experiences reviewed before display." },
+    { label: "Client experience reports", value: allReports.length.toLocaleString(), text: "Documented experiences reviewed before display." },
     { label: "Positive reports", value: positiveReports.toLocaleString(), text: "Good client history belongs in the record too." },
     { label: "Evidence files", value: reviewedEvidence.toLocaleString(), text: "Evidence reviewed privately, summarized publicly." },
   ]
@@ -259,10 +270,10 @@ export default async function Home() {
                 {heroHeadline}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                Research clients before risking labor, materials, deposits, crew time, and profit.
-                Search contractor reviews, client ratings, public profiles, and response context
-                before you take the job.
+                Search contractor-submitted client reports, payment-risk indicators, response context,
+                and documented experiences before risking labor, materials, deposits, crew time, and profit.
               </p>
+              <p className="text-base font-semibold text-amber-200">{primaryHook}</p>
             </div>
 
             <form action="/search" className="grid max-w-4xl gap-3 rounded-md border border-white/15 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_auto]">
@@ -274,16 +285,16 @@ export default async function Home() {
                 <Input
                   id="homepage-client-search"
                   name="q"
-                  placeholder="Search by name, phone, business, or address"
+                  placeholder="Search by name, business, phone, email, city, or job address"
                   className="h-12 border-0 pl-10 text-slate-950 shadow-none focus-visible:ring-0"
                 />
               </div>
               <Button className="h-12 bg-amber-500 px-6 font-semibold text-slate-950 hover:bg-amber-400">
-                Search Clients
+                {primarySearchCta}
               </Button>
             </form>
             <div className="flex max-w-4xl flex-wrap gap-2 text-xs font-semibold uppercase text-slate-300">
-              {["Name", "Phone", "Business", "Address"].map((label) => (
+              {["Name", "Business", "Phone", "Email", "City", "Job address"].map((label) => (
                 <span key={label} className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5">
                   {label}
                 </span>
@@ -294,7 +305,7 @@ export default async function Home() {
               <Button asChild variant="outline" className="border-white/25 bg-white/10 text-white hover:bg-white/15">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
-                  Leave a Review
+                  {reportExperienceCta}
                 </Link>
               </Button>
               <Button asChild className="bg-white text-slate-950 hover:bg-slate-100">
@@ -333,6 +344,31 @@ export default async function Home() {
       </section>
 
       <section className="bureau-section bg-white">
+        <div className="bureau-container grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <SectionIntro
+            eyebrow="A category contractors were missing"
+            title="Customers have had review platforms for years. Contractors finally have one too."
+            text="Homeowners can check reviews, licensing, complaints, and contractor history before hiring. But contractors and service businesses are often expected to risk labor, materials, deposits, and crew time with no shared client history. Client Bureau gives business owners a safer way to check, document, and respond."
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            {categoryComparison.map((group) => (
+              <div key={group.title} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm font-semibold uppercase text-amber-700">{group.title}</p>
+                <div className="mt-4 grid gap-3">
+                  {group.items.map((item) => (
+                    <div key={item} className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-800">
+                      <CheckCircle2 className="size-4 text-amber-700" aria-hidden="true" />
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bureau-section bg-slate-100">
         <div className="bureau-container grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
           <SectionIntro
             eyebrow="Real business-owner pain"
@@ -352,7 +388,7 @@ export default async function Home() {
           <SectionIntro
             eyebrow="Where the money leaks"
             title="Turn painful client moments into checkpoints before they become losses."
-            text="Client Bureau turns client reputation into a practical intake checkpoint: search first, review ratings, read contractor experiences, check public responses, then decide how much risk to accept."
+            text="Client Bureau turns client history into a practical intake checkpoint: search before the job, document during the job, protect payment after the job, then resolve disputes with fair response context."
           />
           <div className="overflow-hidden rounded-md border border-slate-200 bg-white shadow-sm">
             {painWorkflows.map((workflow, index) => (
@@ -502,21 +538,21 @@ export default async function Home() {
               Before you schedule the crew, order materials, or accept the job, search the client.
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-300">
-              Search public profiles, review client ratings, read contractor experiences, and build
-              a fairer reputation record for business owners and clients who resolve issues responsibly.
+              Search public profiles, review payment-risk indicators, read contractor-submitted experiences, and build
+              a fairer record for business owners and clients who resolve issues responsibly.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
             <Button asChild className="h-12 bg-amber-500 text-slate-950 hover:bg-amber-400">
               <Link href="/search">
                 <Search aria-hidden="true" />
-                Search Clients
+                {primarySearchCta}
               </Link>
             </Button>
             <Button asChild variant="outline" className="h-12 border-white/20 bg-transparent text-white hover:bg-white/10">
               <Link href="/submit-report">
                 <FilePlus2 aria-hidden="true" />
-                Leave a Review
+                {reportExperienceCta}
               </Link>
             </Button>
           </div>
@@ -659,6 +695,7 @@ function HeroProfilePreview({
   }
 
   const { profile, report } = item
+  const paymentFact = getReportPaymentFact(report)
 
   return (
     <Card className="rounded-md border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur">
@@ -679,7 +716,7 @@ function HeroProfilePreview({
         <div className="grid gap-3 sm:grid-cols-3">
           <DarkFact label="Score" value={`${profile.clientBureauScore}/100`} />
           <DarkFact label="Reports" value={profile.reports.length.toLocaleString()} />
-          <DarkFact label="Reported unpaid" value={formatCurrency(report.amountUnpaid)} />
+          <DarkFact label={paymentFact.label} value={paymentFact.value} />
         </div>
 
         <div className="rounded-md border border-white/10 bg-slate-950/35 p-4">
@@ -716,6 +753,8 @@ function PublicReportPreview({
   profile: HomepageProfile
   report: HomepageProfile["reports"][number]
 }) {
+  const paymentFact = getReportPaymentFact(report)
+
   return (
     <Card className="rounded-md border-white/10 bg-white/[0.06] text-white shadow-sm">
       <CardContent className="space-y-5 p-5">
@@ -739,7 +778,7 @@ function PublicReportPreview({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <DarkFact label="Category" value={report.reportCategory} />
-          <DarkFact label="Reported unpaid" value={formatCurrency(report.amountUnpaid)} />
+          <DarkFact label={paymentFact.label} value={paymentFact.value} />
           <DarkFact label="Client score" value={`${profile.clientBureauScore}/100`} />
         </div>
 
@@ -782,6 +821,27 @@ function DarkFact({ label, value }: { label: string; value: string }) {
       <p className="mt-1 font-semibold text-white">{value}</p>
     </div>
   )
+}
+
+function getReportPaymentFact(report: HomepageProfile["reports"][number]) {
+  if (isPositiveReportCategory(report.reportCategory)) {
+    return {
+      label: "Client experience",
+      value: "Positive",
+    }
+  }
+
+  if (report.amountUnpaid <= 0) {
+    return {
+      label: "Payment issue",
+      value: "None reported",
+    }
+  }
+
+  return {
+    label: "Reported unpaid balance",
+    value: formatCurrency(report.amountUnpaid),
+  }
 }
 
 function formatCurrency(value: number) {

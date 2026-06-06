@@ -258,7 +258,7 @@ describe("product positioning", () => {
 
   it("exposes platform modules in public and contractor navigation", () => {
     expect(publicPrimaryNav.map((item) => item.label)).toEqual([
-      "Search",
+      "Check a Client",
       "How It Works",
       "Pricing",
       "Resources",
@@ -267,8 +267,8 @@ describe("product positioning", () => {
     ])
     expect(contractorDashboardNav.map((item) => item.label)).toEqual([
       "Overview",
-      "Search Clients",
-      "Reviews",
+      "Check a Client",
+      "Reports",
       "Watchlist",
       "Growth",
       "Contracts",
@@ -291,7 +291,7 @@ describe("product positioning", () => {
     expect(contractorDashboardGroups.map((group) => group.title)).toEqual([
       "Start",
       "Find Clients",
-      "Reviews",
+      "Reports",
       "Documents",
       "Services",
       "Account",
@@ -804,7 +804,7 @@ describe("public SEO landing pages", () => {
     })
 
     expect(String(metadata.title)).toContain("John Smith")
-    expect(String(metadata.title)).toContain("Client Reputation Profile")
+    expect(String(metadata.title)).toContain("Client Bureau Profile")
     expect(String(metadata.description)).toContain("moderated contractor-submitted")
     expect(JSON.stringify(metadata.openGraph)).toContain("/client/john-smith-orlando-fl/opengraph-image")
   })

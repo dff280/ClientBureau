@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 export const metadata: Metadata = {
   title: "How It Works",
   description:
-    "How contractors use Client Bureau to search client profiles, review contractor-submitted reports, submit documented experiences, and protect future jobs.",
+    "How contractors and service businesses use Client Bureau to check clients, review contractor-submitted reports, document jobs, and protect future work.",
   alternates: {
     canonical: "/how-it-works",
   },
@@ -18,22 +18,22 @@ export const metadata: Metadata = {
 const workflow = [
   {
     icon: Search,
-    title: "Search",
+    title: "Search before the job",
     text: "Look up a client using name, business, city, state, phone, or email. Sensitive identifiers are matched privately.",
   },
   {
     icon: ClipboardCheck,
-    title: "Review",
+    title: "Review report context",
     text: "Evaluate Client Bureau Score, risk level, report count, payment reliability, dispute history, and approved summaries.",
   },
   {
     icon: FilePlus2,
-    title: "Report",
+    title: "Report a client experience",
     text: "Submit project facts, payment status, category, public summary, detailed experience, and supporting evidence.",
   },
   {
     icon: ShieldCheck,
-    title: "Protect",
+    title: "Protect payment",
     text: "Approved summaries can help other contractors make more informed decisions while preserving moderation and response rights.",
   },
 ]
@@ -45,11 +45,12 @@ export default function HowItWorksPage() {
         <div className="max-w-3xl space-y-4">
           <p className="text-sm font-semibold uppercase text-amber-700">How it works</p>
           <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-            A review workflow built around documentation and fairness.
+            Search before the job. Document during the job. Protect payment after the job.
           </h1>
           <p className="leading-7 text-slate-600">
-            Client Bureau is designed for contractors who need a clear pre-job intake check and
-            a responsible way to report documented client experiences.
+            Client Bureau is designed for contractors and service businesses who need a clear pre-job
+            intake check and a responsible way to report documented client experiences involving homeowners,
+            customers, property owners, leads, or project clients.
           </p>
         </div>
 
@@ -78,7 +79,7 @@ export default function HowItWorksPage() {
               and a neutral response path for the client.
             </p>
             <Button asChild className="mt-5 bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/submit-report">Submit a report</Link>
+              <Link href="/submit-report">Report a Client Experience</Link>
             </Button>
           </div>
         </div>
