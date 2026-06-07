@@ -56,6 +56,25 @@ const noticeSteps = [
   },
 ]
 
+const noticeReadiness = [
+  {
+    title: "Information to gather before review",
+    points: [
+      "Property county, project city, owner/client name, role on the job, first furnishing date, and the work or materials provided.",
+      "Contract, invoice, payment record, communications, delivery address context, and any prior notice or deadline history.",
+      "A short explanation of why the notice workflow is needed and whether the balance is disputed, partially paid, or unresolved.",
+    ],
+  },
+  {
+    title: "What the dashboard tracks privately",
+    points: [
+      "Service fee status, pass-through delivery/vendor cost status, authorization status, vendor review, and delivery method.",
+      "Tracking number, delivery proof summary, staff review notes, attorney/vendor comments, and next action deadlines.",
+      "Whether a later claim-of-lien filing review, release, correction, or closure step may be needed.",
+    ],
+  },
+]
+
 export default function FloridaLienNoticeServicePage() {
   return (
     <section className="bg-slate-100">
@@ -125,8 +144,31 @@ export default function FloridaLienNoticeServicePage() {
               advice and does not guarantee lien rights, priority, enforceability, delivery result,
               payment, or outcome.
             </p>
+            <p className="leading-7 text-slate-600">
+              The goal is to make deadline risk visible early, keep contractor authorization
+              clear, and preserve a clean private record of what was prepared, reviewed, sent, and
+              confirmed.
+            </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="bureau-container grid gap-4 pb-14 lg:grid-cols-2">
+        {noticeReadiness.map((section) => (
+          <Card key={section.title} className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="space-y-4 p-6">
+              <h2 className="text-2xl font-semibold tracking-normal text-slate-950">{section.title}</h2>
+              <ul className="grid gap-3">
+                {section.points.map((point) => (
+                  <li key={point} className="flex gap-3 text-sm leading-6 text-slate-600">
+                    <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   )

@@ -254,6 +254,7 @@ export const adminReviewSchema = z.object({
     700,
     "Keep the edited public summary under 700 characters.",
   ),
+  moderatorNote: z.string().trim().max(700, "Keep the moderator note under 700 characters.").optional(),
   checklistEvidence: z.coerce.boolean().optional(),
   checklistNeutral: z.coerce.boolean().optional(),
   checklistPrivate: z.coerce.boolean().optional(),

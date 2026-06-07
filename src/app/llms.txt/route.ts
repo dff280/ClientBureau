@@ -1,4 +1,5 @@
 import { getSiteUrl } from "@/lib/env"
+import { acquisitionPages } from "@/lib/acquisition-pages"
 import {
   getPublicBusinessProfilesService,
   getPublicClientProfilesService,
@@ -35,6 +36,9 @@ export async function GET() {
   const landingLinks = allSeoLandingPages
     .map((page) => `- [${page.title}](${siteUrl}${page.canonicalPath})`)
     .join("\n")
+  const acquisitionLinks = acquisitionPages
+    .map((page) => `- [${page.title}](${siteUrl}${page.path}) - ${page.description}`)
+    .join("\n")
 
   const body = `# Client Bureau
 
@@ -56,6 +60,7 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 - [Payment Recovery Service](${siteUrl}/payment-recovery-service)
 - [Florida Lien Notice Service](${siteUrl}/florida-lien-notice-service)
 - [Florida Lien Filing Service](${siteUrl}/florida-lien-filing-service)
+- [AI Index](${siteUrl}/ai-index.json)
 - [Report Policy](${siteUrl}/report-policy)
 - [Dispute and Response Policy](${siteUrl}/dispute-policy)
 - [Content Moderation Policy](${siteUrl}/moderation-policy)
@@ -65,6 +70,10 @@ Client Bureau is a moderated client-risk intelligence platform for contractors. 
 ## Public Landing Pages
 
 ${landingLinks}
+
+## High-Intent Contractor Acquisition Pages
+
+${acquisitionLinks}
 
 ## Client Directory Pages
 

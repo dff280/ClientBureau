@@ -4,8 +4,9 @@ import { useActionState, useCallback, useEffect, useMemo, useState } from "react
 import { CheckCircle2, ShieldCheck, Trash2, XCircle } from "lucide-react"
 import { toast } from "sonner"
 
+import { AdminFilterBar } from "@/components/admin/admin-crm-ui"
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
-import { DataTableToolbar, EmptyState, StatusBadge } from "@/components/dashboard/dashboard-ui"
+import { EmptyState, StatusBadge } from "@/components/dashboard/dashboard-ui"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Textarea } from "@/components/ui/textarea"
 import { adminDiscussionReviewAction } from "@/lib/actions/client-bureau"
@@ -45,7 +46,7 @@ export function DiscussionModerationPanel({
 
   return (
     <div className="space-y-4">
-      <DataTableToolbar
+      <AdminFilterBar
         title="Discussion queue"
         description="Pending entries stay private until an admin approves them."
       >
@@ -66,7 +67,7 @@ export function DiscussionModerationPanel({
             </button>
           ))}
         </div>
-      </DataTableToolbar>
+      </AdminFilterBar>
       <div className="grid gap-4">
         {items.map((discussion) => (
           <DiscussionCard

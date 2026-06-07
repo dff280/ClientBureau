@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 
+import { AdminDecisionPanel } from "@/components/admin/admin-crm-ui"
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
@@ -84,6 +85,23 @@ function filterReview(item: AdminReviewItem, filter: ReviewFilter) {
 function clientName(item: AdminReviewItem) {
   if (!item.client) return "Client review"
   return `${item.client.firstName} ${item.client.lastName}`
+}
+
+function money(value?: number) {
+  if (value === undefined) return "Not provided"
+  return `$${value.toLocaleString()}`
+}
+
+function yesNo(value?: boolean) {
+  if (value === true) return "Yes"
+  if (value === false) return "No"
+  return "Not provided"
+}
+
+function dateRange(start?: string, end?: string) {
+  if (!start && !end) return "Not provided"
+  if (start && end) return `${new Date(start).toLocaleDateString()} to ${new Date(end).toLocaleDateString()}`
+  return start ? `Started ${new Date(start).toLocaleDateString()}` : `Completed ${new Date(end ?? "").toLocaleDateString()}`
 }
 
 export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
@@ -400,6 +418,9 @@ function ModerationWorkspace({
       : undefined
   const amountUnpaid = report?.amountUnpaid ?? 0
   const contractAmount = report?.contractAmount ?? 0
+  const [moderatorNote, setModeratorNote] = useState(item.review.notes ?? "")
+  const needsInfoNote =
+    "Needs more information: request clearer identity, evidence, payment timeline, contract terms, or dispute context before this report can be published."
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
@@ -478,6 +499,12 @@ function ModerationWorkspace({
               <Fact label="Project location" value={report ? `${report.projectCity}, ${report.projectState}` : "Unknown"} />
               <Fact label="Contract amount" value={`$${contractAmount.toLocaleString()}`} />
               <Fact label="Amount unpaid" value={`$${amountUnpaid.toLocaleString()}`} />
+              <Fact label="Client type" value={report?.clientType ?? "Not provided"} />
+              <Fact label="Trade / service" value={report?.tradeCategory ?? "Not provided"} />
+              <Fact label="Job type" value={report?.jobType ?? "Not provided"} />
+              <Fact label="Job status" value={report?.jobStatus ?? "Not provided"} />
+              <Fact label="Project dates" value={dateRange(report?.jobStartDate, report?.jobCompletionDate)} />
+              <Fact label="Private job address" value={report?.clientJobAddressPrivate ? "Captured privately" : "Not provided"} />
             </div>
           </WorkflowSection>
 
@@ -499,6 +526,34 @@ function ModerationWorkspace({
                   {report?.detailedExperience ?? "No detailed experience available."}
                 </p>
               </div>
+              {report?.detailedTimelinePrivate ? (
+                <div className="rounded-md border border-slate-200 bg-white p-4">
+                  <p className="text-xs font-semibold uppercase text-slate-500">Structured private timeline</p>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
+                    {report.detailedTimelinePrivate}
+                  </p>
+                </div>
+              ) : null}
+              <div className="grid gap-3 md:grid-cols-3">
+                <Fact label="Signed contract" value={yesNo(report?.signedContract)} />
+                <Fact label="Written change order" value={yesNo(report?.writtenChangeOrder)} />
+                <Fact label="Deposit requested" value={money(report?.depositRequested)} />
+                <Fact label="Deposit paid" value={money(report?.depositPaid)} />
+                <Fact label="Final invoice" value={money(report?.finalInvoiceAmount)} />
+                <Fact label="Materials purchased" value={money(report?.materialsPurchasedAmount)} />
+                <Fact label="Dispute status" value={report?.disputeStatus ?? "Not provided"} />
+                <Fact label="Amount disputed" value={money(report?.amountDisputed)} />
+                <Fact label="Days overdue" value={report?.daysOverdue === undefined ? "Not provided" : String(report.daysOverdue)} />
+                <Fact label="Client responded" value={yesNo(report?.clientResponded)} />
+                <Fact label="Issue resolved" value={yesNo(report?.issueResolved)} />
+                <Fact label="Evidence confidence" value={report?.evidenceConfidence ?? "Limited"} />
+              </div>
+              {report?.resolutionSummary ? (
+                <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="text-xs font-semibold uppercase text-emerald-900">Resolution context</p>
+                  <p className="mt-2 text-sm leading-6 text-emerald-950">{report.resolutionSummary}</p>
+                </div>
+              ) : null}
             </div>
           </WorkflowSection>
 
@@ -550,9 +605,7 @@ function ModerationWorkspace({
               </div>
             </WorkflowSection>
 
-            <WorkflowSection
-              compact
-              step="5"
+            <AdminDecisionPanel
               title="Safety checklist and decision"
               description="Approve only when the public summary is neutral, supportable, and private-data safe."
             >
@@ -570,6 +623,21 @@ function ModerationWorkspace({
                   <span>Phone and email are not visible publicly</span>
                 </label>
                 <FieldError name="checklist" errors={state.ok ? undefined : state.fieldErrors} />
+                <Textarea
+                  name="moderatorNote"
+                  value={moderatorNote}
+                  onChange={(event) => setModeratorNote(event.target.value)}
+                  placeholder="Moderator note or information request"
+                  className="min-h-24 bg-white"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setModeratorNote(needsInfoNote)}
+                >
+                  <AlertTriangle aria-hidden="true" />
+                  Use needs-more-info note
+                </Button>
                 <Separator />
                 <div className="grid gap-2">
                   <PendingSubmitButton
@@ -590,7 +658,7 @@ function ModerationWorkspace({
                     disabled={currentStatus === "rejected"}
                   >
                     <XCircle aria-hidden="true" />
-                    Reject and keep private
+                    Reject / needs more information
                   </Button>
                 </div>
                 {state.ok ? (
@@ -599,7 +667,7 @@ function ModerationWorkspace({
                   <p className="text-xs leading-5 text-slate-500">{item.review.notes}</p>
                 ) : null}
               </div>
-            </WorkflowSection>
+            </AdminDecisionPanel>
           </div>
         </aside>
       </form>

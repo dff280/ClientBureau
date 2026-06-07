@@ -2258,6 +2258,7 @@ export async function reviewReportSupabase(
   decision: "approved" | "rejected",
   editedPublicSummary?: string,
   reviewerId?: string,
+  moderatorNote?: string,
 ) {
   const supabase = createServiceClient()
   const now = new Date().toISOString()
@@ -2269,9 +2270,10 @@ export async function reviewReportSupabase(
       public_summary: editedPublicSummary ?? "",
       approved_at: decision === "approved" ? now : null,
       moderation_note:
-        decision === "approved"
+        moderatorNote ||
+        (decision === "approved"
           ? "Approved public summary after admin review."
-          : "Rejected during Client Bureau moderation.",
+          : "Rejected during Client Bureau moderation."),
     })
     .eq("id", reportId)
     .select("*")
@@ -2318,9 +2320,10 @@ export async function reviewReportSupabase(
     status: decision,
     edited_public_summary: editedPublicSummary ?? null,
     notes:
-      decision === "approved" && publishedProfile
+      moderatorNote ||
+      (decision === "approved" && publishedProfile
         ? `Approved report published at /client/${publishedProfile.publicSlug}.`
-        : "Rejected report remains private.",
+        : "Rejected report remains private."),
     updated_at: now,
   }
 

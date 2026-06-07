@@ -347,10 +347,11 @@ export async function reviewReportService(
   decision: "approved" | "rejected",
   editedPublicSummary: string,
   reviewerId?: string,
+  moderatorNote?: string,
 ) {
-  if (shouldUseSupabase()) return reviewReportSupabase(reportId, decision, editedPublicSummary, reviewerId)
+  if (shouldUseSupabase()) return reviewReportSupabase(reportId, decision, editedPublicSummary, reviewerId, moderatorNote)
 
-  return reviewReport(reportId, decision, editedPublicSummary)
+  return reviewReport(reportId, decision, editedPublicSummary, moderatorNote)
 }
 
 export async function reviewReportsBulkService(

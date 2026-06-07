@@ -104,7 +104,7 @@ export default async function AdminRecoveryPage() {
           <div className="grid gap-3 text-sm leading-6 text-slate-600 md:grid-cols-3">
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
               <p className="font-semibold text-slate-950">1. Verify the case</p>
-              <p className="mt-1">Check fee status, invoice age, documentation, and the contractor’s signed authorization before any managed service step.</p>
+              <p className="mt-1">Check fee status, invoice age, documentation, and signed contractor authorization before any managed service step.</p>
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
               <p className="font-semibold text-slate-950">2. Record factual activity</p>

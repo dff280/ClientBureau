@@ -21,29 +21,66 @@ export default async function AdminSettingsPage() {
   const missingTables = health.requiredTables.filter((table) => !table.exists)
   const settingsGroups = [
     {
-      title: "Safety defaults",
+      title: "Moderation Rules",
       items: [
-        ["Public visibility", "Client profiles stay private until an admin approves a report or explicitly marks the profile public."],
         ["Discussions", "Discussion entries default to pending and require approval before public display."],
         ["Decision reasons", "Moderation cases require a decision reason before final closure in the CRM workflow."],
         ["Resolution path", "Disputes, corrections, partial payments, and resolved reports should be reflected in moderation notes and public summaries only after review."],
+        ["Needs more information", "Use the needs-more-info preset when identity, timeline, payment context, evidence, or summary wording is not ready for publication."],
       ],
     },
     {
-      title: "Evidence privacy",
+      title: "Rating Display",
+      items: [
+        ["Client Bureau Rating", "Ratings should be described as contractor-submitted platform indicators, not a credit score, background check, legal finding, or guarantee."],
+        ["Rating factors", "Public rating context may include report count, payment context, resolution status, response status, evidence confidence, and recency."],
+        ["Positive reports", "Positive client reports should display as positive history, paid as agreed, clear communication, or no payment issue reported."],
+        ["Risk language", "Use careful labels such as moderate caution, elevated caution, reported payment risk, and response context."],
+      ],
+    },
+    {
+      title: "Evidence Privacy",
       items: [
         ["Evidence privacy", "Uploaded evidence is private by default. Public profiles show only evidence summaries such as invoices reviewed or photos reviewed."],
         ["Route protection", "Admin routes require the admin role. Normal users cannot access internal sections."],
         ["Feature data mode", `Platform expansion workflows currently read from ${platformFeatureMode} feature data.`],
+        ["Public evidence labels", "Public pages should show evidence-on-file summaries only, never raw filenames, storage paths, invoices, photos, screenshots, contracts, or PDFs."],
       ],
     },
     {
-      title: "Private workflow controls",
+      title: "Public Visibility",
+      items: [
+        ["Public profiles", "Client profiles stay private until an admin approves a report or explicitly marks the profile public."],
+        ["Directories and sitemap", "Only approved public client profiles and public-safe marketing/policy pages should appear in indexable surfaces."],
+        ["Private identifiers", "Phone numbers, emails, street addresses, private notes, evidence files, and pending or rejected submissions must not appear publicly."],
+        ["Right of response", "Client response, correction, dispute, and resolution updates require moderation before display."],
+      ],
+    },
+    {
+      title: "Recovery/Lien Safeguards",
       items: [
         ["Recovery cases", "Recovery actions require factual invoice context, documented contact attempts, response windows, and respectful communication language."],
         ["Phone outreach", "Call workflows are logged as documented outreach. The platform does not place automated payment calls."],
         ["Lien packets", "Lien packet tools create private review packets only. State-specific deadlines, recipients, delivery methods, and contract terms must be reviewed before sending."],
+        ["Filing workflow", "Florida lien service steps require contractor authorization, staff review, vendor/attorney workflow readiness, and private recording proof."],
+      ],
+    },
+    {
+      title: "Contract Defaults",
+      items: [
         ["Contract signing links", "Contract workspace records track scope, deposit, milestone billing, change orders, payment plans, client invite status, and signed-document status."],
+        ["No legal advice", "Agreement packets are private workflow records and should not imply legal advice, escrow, automatic payment enforcement, or guaranteed collection."],
+        ["Signature records", "Signed snapshots, signature status, client invite state, and audit history remain private."],
+        ["Payment terms", "Contracts document payment terms only unless a future payment product is explicitly enabled."],
+      ],
+    },
+    {
+      title: "SEO/Public Profiles",
+      items: [
+        ["Profile SEO", "Profile titles, descriptions, H1 text, schema, directories, and sitemap entries should remain cautious and non-defamatory."],
+        ["Structured data", "Use compliant profile/page schema. Do not mark Client Bureau Rating as fake review stars or AggregateRating rich results."],
+        ["Directories", "State, city, recent reports, and client profile directories should link only to approved public profiles."],
+        ["LLM and crawler assets", "Keep sitemap, robots, and llms.txt aligned with approved public surfaces."],
       ],
     },
   ]

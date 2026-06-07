@@ -83,6 +83,15 @@ npm run build
 npm run seo:check
 ```
 
+## Version History
+
+Release notes are tracked in `CHANGELOG.md`.
+
+Current release audit:
+
+- `docs/RELEASE_AUDIT_2026-06-07.md`
+- `docs/KEYWORD_ACQUISITION_STRATEGY.md`
+
 ## Audit Note
 
 `npm audit` may report advisories through bundled framework dependencies. Review available patches before forcing dependency changes that alter the Next.js runtime path.

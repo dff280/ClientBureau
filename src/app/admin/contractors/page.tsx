@@ -1,18 +1,16 @@
 import type { Metadata } from "next"
-import Link from "next/link"
-import { ExternalLink, Search, ShieldCheck, UserCheck, UsersRound } from "lucide-react"
+import { Search, ShieldCheck, UserCheck, UsersRound } from "lucide-react"
 
+import { AdminFilterBar } from "@/components/admin/admin-crm-ui"
 import { AdminContractorEditor } from "@/components/admin/admin-record-forms"
 import {
   AdminPageHeader,
-  DataTableToolbar,
   EmptyState,
   StatCard,
   StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { buildBusinessSlug } from "@/lib/business-rating"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
@@ -64,7 +62,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
           <StatCard label="Pending verification" value={pending} helper="Accounts needing review" icon={ShieldCheck} tone={pending > 0 ? "amber" : "slate"} />
         </div>
 
-        <DataTableToolbar
+        <AdminFilterBar
           title="Find an account"
           description="Search by business, owner, email, trade, city, state, or license number."
         >
@@ -81,7 +79,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
               Filter
             </Button>
           </form>
-        </DataTableToolbar>
+        </AdminFilterBar>
 
         <div className="grid gap-4 md:grid-cols-3">
           {filteredUsers.map((user) => (
@@ -90,6 +88,9 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
               <p className="mt-1 text-slate-600">{user.email}</p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
                 <StatusBadge tone={user.role === "admin" ? "amber" : "slate"}>{user.role}</StatusBadge>
+                <StatusBadge tone={user.accountType === "client" ? "blue" : "slate"}>
+                  {user.accountType === "client" ? "Client account" : "Business owner"}
+                </StatusBadge>
                 <StatusBadge tone="emerald">Account active</StatusBadge>
               </div>
             </div>
@@ -105,30 +106,18 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
           ) : null}
         </div>
 
-        <div className="grid gap-4">
+        <div className="grid gap-4 xl:grid-cols-2">
           {filteredContractors.map((contractor) => (
-            <div key={contractor.id} className="grid gap-3">
-              <div className="flex flex-col justify-between gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-slate-500">Public business profile</p>
-                  <p className="mt-1 font-semibold text-slate-950">{contractor.businessName}</p>
-                </div>
-                <Button asChild variant="outline">
-                  <Link href={`/business/${buildBusinessSlug(contractor)}`}>
-                    <ExternalLink aria-hidden="true" />
-                    Public profile
-                  </Link>
-                </Button>
-              </div>
-              <AdminContractorEditor contractor={contractor} />
-            </div>
+            <AdminContractorEditor key={contractor.id} contractor={contractor} />
           ))}
           {filteredContractors.length === 0 ? (
-            <EmptyState
-              icon={ShieldCheck}
-              title="No business profiles match"
-              description="Try another business name, trade, location, license number, or verification status."
-            />
+            <div className="xl:col-span-2">
+              <EmptyState
+                icon={ShieldCheck}
+                title="No business profiles match"
+                description="Try another business name, trade, location, license number, or verification status."
+              />
+            </div>
           ) : null}
         </div>
       </div>

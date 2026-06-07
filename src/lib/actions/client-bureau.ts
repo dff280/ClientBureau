@@ -677,6 +677,7 @@ export async function reviewReportAction(
       parsed.data.decision,
       parsed.data.editedPublicSummary,
       admin.id,
+      parsed.data.moderatorNote,
     )
   } catch (error) {
     return fail(actionErrorMessage(error, "Moderation could not be saved."))

@@ -6,6 +6,7 @@ import {
   getPublicClientProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { getClientDirectory } from "@/lib/client-directory"
+import { acquisitionPages } from "@/lib/acquisition-pages"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 const siteUrl = getSiteUrl()
@@ -69,6 +70,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly",
       priority: 0.65,
     },
+    ...acquisitionPages.map((page) => ({
+      url: `${siteUrl}${page.path}`,
+      lastModified: now,
+      changeFrequency: "monthly" as const,
+      priority: page.kind === "guide" ? 0.66 : 0.72,
+    })),
     {
       url: `${siteUrl}/about`,
       lastModified: now,

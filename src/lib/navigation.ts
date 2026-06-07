@@ -80,6 +80,9 @@ export const resourceNavigationGroups: NavigationGroup[] = [
       { href: "/business-rating-methodology", label: "Business Rating", description: "How public contractor and service-business ratings are calculated." },
       { href: "/pricing", label: "Pricing", description: "Plans for contractors, service businesses, teams, and enterprise review." },
       { href: "/enterprise", label: "Enterprise", description: "Team workflows, moderation controls, and account support." },
+      { href: "/client-screening-for-contractors", label: "Client Screening", description: "Check clients before scheduling labor, materials, or deposits." },
+      { href: "/contractor-contract-template", label: "Contract Templates", description: "Create agreement packets and e-signature workflows." },
+      { href: "/change-order-template", label: "Change Orders", description: "Document scope changes before extra work starts." },
     ],
   },
   {
@@ -100,6 +103,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
       { href: "/clients/florida", label: "Florida Profiles", description: "SEO-visible public profiles by market." },
       { href: "/businesses", label: "Business Profiles", description: "Public contractor and service-business trust profiles." },
       { href: "/industries/contractors", label: "Contractors", description: "Client Bureau for contractor workflows." },
+      { href: "/homeowner-wont-pay-contractor", label: "Homeowner Won't Pay Guide", description: "Private documentation and recovery steps for overdue invoices." },
     ],
   },
 ]
@@ -129,6 +133,9 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/dashboard/lien-readiness", label: "Florida Lien Service" },
       { href: "/payment-recovery-service", label: "Recovery Service" },
       { href: "/florida-lien-filing-service", label: "Florida Lien Filing" },
+      { href: "/florida-lien-notice-service", label: "Florida Notice to Owner" },
+      { href: "/contractor-contract-template", label: "Contract Templates" },
+      { href: "/change-order-template", label: "Change Orders" },
       { href: "/dashboard/evidence", label: "Evidence Vault" },
       { href: "/dashboard/billing", label: "Billing" },
     ],
@@ -141,6 +148,8 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/reports/recent", label: "Recent Reports" },
       { href: "/clients/florida", label: "Florida Profiles" },
       { href: "/industries/contractors", label: "Contractors" },
+      { href: "/client-screening-for-contractors", label: "Client Screening" },
+      { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide" },
     ],
   },
   {

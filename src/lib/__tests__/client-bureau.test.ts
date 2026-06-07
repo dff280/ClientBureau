@@ -143,6 +143,7 @@ import {
   reportDrafts,
   watchlistAlerts,
 } from "@/lib/mock-data"
+import { acquisitionPages, getAcquisitionPage } from "@/lib/acquisition-pages"
 import { allSeoLandingPages, getSeoLandingPage } from "@/lib/seo-landing-pages"
 import {
   intakeAssessmentSchema,
@@ -848,6 +849,23 @@ describe("public SEO landing pages", () => {
     expect(urls).toContain("https://clientbureau.com/clients/florida/orlando")
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
     expect(urls).toContain("https://clientbureau.com/industries/contractors")
+    expect(urls).toContain("https://clientbureau.com/contractor-contract-template")
+    expect(urls).toContain("https://clientbureau.com/change-order-template")
+    expect(urls).toContain("https://clientbureau.com/homeowner-wont-pay-contractor")
+    expect(urls).toContain("https://clientbureau.com/client-screening-for-contractors")
+  })
+
+  it("defines high-intent acquisition pages with careful conversion copy", () => {
+    expect(acquisitionPages.map((page) => page.slug)).toEqual([
+      "contractor-contract-template",
+      "change-order-template",
+      "homeowner-wont-pay-contractor",
+      "client-screening-for-contractors",
+    ])
+    expect(getAcquisitionPage("homeowner-wont-pay-contractor")?.trustPoints.join(" ")).toContain(
+      "does not guarantee collection",
+    )
+    expect(JSON.stringify(acquisitionPages)).not.toContain("blacklist")
   })
 
   it("generates careful metadata for public client profiles", async () => {

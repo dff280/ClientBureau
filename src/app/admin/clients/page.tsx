@@ -1,15 +1,13 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { Eye, Search, ShieldCheck, UserRound } from "lucide-react"
 
+import { AdminFilterBar } from "@/components/admin/admin-crm-ui"
 import { AdminClientEditor } from "@/components/admin/admin-record-forms"
 import {
   AdminPageHeader,
-  DataTableToolbar,
   EmptyState,
   HeaderActionButton,
   StatCard,
-  StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -76,7 +74,7 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
           <StatCard label="Private" value={privateCount} helper="Not visible on public pages" icon={ShieldCheck} tone="blue" />
           <StatCard label="Elevated or high" value={elevatedCount} helper="Profiles needing extra care" icon={ShieldCheck} tone={elevatedCount > 0 ? "amber" : "slate"} />
         </div>
-        <DataTableToolbar
+        <AdminFilterBar
           title="Find a profile"
           description="Search by name, business, city, state, or slug. Filter to the records you need to review."
         >
@@ -99,36 +97,13 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
               Filter
             </Button>
           </form>
-        </DataTableToolbar>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {filteredClients.slice(0, 6).map((client) => (
-            <div key={client.id} className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-slate-500">Profile health</p>
-                  <h2 className="mt-2 font-semibold text-slate-950">
-                    {client.firstName} {client.lastName}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-600">{client.city}, {client.state}</p>
-                </div>
-                <StatusBadge tone={client.isPublic ? "emerald" : "slate"}>
-                  {client.isPublic ? "Public" : "Private"}
-                </StatusBadge>
-              </div>
-              <div className="mt-4 grid gap-2 text-xs text-slate-600">
-                <p>SEO slug: <span className="font-semibold text-slate-950">{client.publicSlug}</span></p>
-                <p>Reports: <span className="font-semibold text-slate-950">{client.reportCount}</span></p>
-                <p>Private identifiers: <span className="font-semibold text-slate-950">hashed</span></p>
-              </div>
-              {client.isPublic ? (
-                <Link href={`/client/${client.publicSlug}`} className="mt-4 inline-flex text-sm font-semibold text-amber-700">
-                  Public SEO preview
-                </Link>
-              ) : null}
-            </div>
+        </AdminFilterBar>
+        <div className="grid gap-4 xl:grid-cols-2">
+          {filteredClients.map((client) => (
+            <AdminClientEditor key={client.id} client={client} />
           ))}
           {filteredClients.length === 0 ? (
-            <div className="lg:col-span-3">
+            <div className="xl:col-span-2">
               <EmptyState
                 icon={Search}
                 title="No client profiles match"
@@ -136,11 +111,6 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
               />
             </div>
           ) : null}
-        </div>
-        <div className="grid gap-4">
-          {filteredClients.map((client) => (
-            <AdminClientEditor key={client.id} client={client} />
-          ))}
         </div>
       </div>
     </section>

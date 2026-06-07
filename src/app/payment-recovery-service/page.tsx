@@ -58,6 +58,25 @@ const highlights = [
   },
 ]
 
+const caseFileSections = [
+  {
+    title: "What the case file should include",
+    points: [
+      "The signed agreement or accepted estimate, final invoice, deposit records, change orders, and completion notes.",
+      "Photos, screenshots, delivery confirmations, message history, and a short timeline of what happened.",
+      "Any client response, dispute reason, partial payment, payment-plan request, or resolution offer already received.",
+    ],
+  },
+  {
+    title: "How Client Bureau keeps it professional",
+    points: [
+      "Outreach should describe the reported facts, amount due, invoice history, and available resolution path without threats or public pressure.",
+      "Staff notes, raw evidence, phone numbers, emails, documents, and payment discussions remain private workflow records.",
+      "The case can support later internal review, attorney review, lien service evaluation, or a moderated public report if appropriate.",
+    ],
+  },
+]
+
 export default function PaymentRecoveryServicePage() {
   return (
     <section className="bg-slate-100">
@@ -139,6 +158,24 @@ export default function PaymentRecoveryServicePage() {
           </Card>
           )
         })}
+      </div>
+
+      <div className="bureau-container grid gap-4 pb-14 lg:grid-cols-2">
+        {caseFileSections.map((section) => (
+          <Card key={section.title} className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="space-y-4 p-6">
+              <h2 className="text-2xl font-semibold tracking-normal text-slate-950">{section.title}</h2>
+              <ul className="grid gap-3">
+                {section.points.map((point) => (
+                  <li key={point} className="flex gap-3 text-sm leading-6 text-slate-600">
+                    <CheckCircle2 className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   )

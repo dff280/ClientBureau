@@ -9,6 +9,7 @@ import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Textarea } from "@/components/ui/textarea"
 import { bulkUploadImportAction } from "@/lib/actions/client-bureau"
+import { isValidStateCode, normalizeStateCode } from "@/lib/locations"
 import type { ActionResult, BulkUploadPreviewRow } from "@/lib/types"
 
 const initialState: ActionResult<{ imported: number }> = { ok: false, message: "" }
@@ -151,10 +152,12 @@ function parseCsv(input: string): BulkUploadPreviewRow[] {
   return rows.map((line, index) => {
     const columns = line.split(",").map((item) => item.trim())
     const [clientName, city, state, reportType, amount, date, summary, status, notes] = columns
+    const stateCode = normalizeStateCode(state ?? "")
     const errors = [
       !clientName ? "client name required" : "",
       !city ? "city required" : "",
-      !state ? "state required" : "",
+      !stateCode ? "state required" : "",
+      stateCode && !isValidStateCode(stateCode) ? "state must be a valid 2-letter code" : "",
       !reportType ? "report type required" : "",
       Number.isNaN(Number(amount)) ? "amount must be numeric" : "",
       !summary ? "summary required" : "",
@@ -167,7 +170,7 @@ function parseCsv(input: string): BulkUploadPreviewRow[] {
       rowNumber: index + 2,
       clientName: clientName ?? "",
       city: city ?? "",
-      state: (state ?? "").toUpperCase(),
+      state: stateCode,
       reportType: reportType ?? "",
       amount: Number(amount || 0),
       date: date ?? "",

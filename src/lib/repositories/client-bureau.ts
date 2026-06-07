@@ -1685,6 +1685,7 @@ export function reviewReport(
   reportId: string,
   decision: "approved" | "rejected",
   editedPublicSummary?: string,
+  moderatorNote?: string,
 ): AdminReview {
   const audit = decision === "approved" ? simulateApprovalPublication(reportId, editedPublicSummary) : undefined
 
@@ -1695,9 +1696,10 @@ export function reviewReport(
     status: decision,
     editedPublicSummary,
     notes:
-      decision === "approved"
+      moderatorNote ||
+      (decision === "approved"
         ? `Approval publishes /client/${audit?.generatedSlug ?? "generated-slug"} and recalculates score to ${audit?.recalculatedScore ?? "N/A"}.`
-        : "Rejection keeps this report private.",
+        : "Rejection keeps this report private."),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }

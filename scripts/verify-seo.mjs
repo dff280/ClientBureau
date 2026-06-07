@@ -70,7 +70,7 @@ for (const type of ["Organization", "WebSite", "SoftwareApplication", "FAQPage"]
   }
 }
 
-for (const path of ["/llms.txt", "/robots.txt", "/sitemap.xml"]) {
+for (const path of ["/llms.txt", "/robots.txt", "/sitemap.xml", "/ai-index.json", "/.well-known/security.txt"]) {
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
   else fail(`${path} returns 200`, String(result.response.status))
@@ -87,6 +87,13 @@ const publicContentPages = [
   "/clients/florida/orlando",
   "/reports/non-payment",
   "/industries/contractors",
+  "/payment-recovery-service",
+  "/florida-lien-notice-service",
+  "/florida-lien-filing-service",
+  "/contractor-contract-template",
+  "/change-order-template",
+  "/homeowner-wont-pay-contractor",
+  "/client-screening-for-contractors",
 ]
 
 for (const path of publicContentPages) {

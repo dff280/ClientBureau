@@ -58,6 +58,25 @@ const filingHighlights = [
   },
 ]
 
+const filingReadiness = [
+  {
+    title: "Before a filing can move forward",
+    points: [
+      "The contractor should provide the agreement, invoice, payment history, work dates, property county, owner details, and notice history.",
+      "The unpaid amount, contract amount, work performed, role on the project, and required property description should be reviewed before vendor action.",
+      "The contractor must certify accuracy and authorize the workflow before attorney/vendor filing review proceeds.",
+    ],
+  },
+  {
+    title: "After recording or case closure",
+    points: [
+      "Recording confirmation, receipt details, official record references, instrument number, and clerk/county notes are stored privately.",
+      "If the balance resolves, the case can track release or satisfaction needs without exposing private filing drafts on public profiles.",
+      "If a case is blocked or disputed, Client Bureau keeps the reason, staff note, and next recommended review step in the private record.",
+    ],
+  },
+]
+
 export default function FloridaLienFilingServicePage() {
   return (
     <section className="bg-slate-100">
@@ -134,6 +153,24 @@ export default function FloridaLienFilingServicePage() {
           </Card>
           )
         })}
+      </div>
+
+      <div className="bureau-container grid gap-4 pb-14 lg:grid-cols-2">
+        {filingReadiness.map((section) => (
+          <Card key={section.title} className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="space-y-4 p-6">
+              <h2 className="text-2xl font-semibold tracking-normal text-slate-950">{section.title}</h2>
+              <ul className="grid gap-3">
+                {section.points.map((point) => (
+                  <li key={point} className="flex gap-3 text-sm leading-6 text-slate-600">
+                    <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   )
