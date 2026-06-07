@@ -82,6 +82,13 @@ export interface Database {
           user_id: string
           business_name: string
           trade: string
+          business_type: string | null
+          business_phone: string | null
+          website_url: string | null
+          service_area: string | null
+          company_size: string | null
+          years_in_business: string | null
+          primary_goal: string | null
           city: string
           state: string
           license_number: string | null
@@ -93,6 +100,13 @@ export interface Database {
           user_id: string
           business_name: string
           trade: string
+          business_type?: string | null
+          business_phone?: string | null
+          website_url?: string | null
+          service_area?: string | null
+          company_size?: string | null
+          years_in_business?: string | null
+          primary_goal?: string | null
           city: string
           state: string
           license_number?: string | null
@@ -254,6 +268,39 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["subscriptions"]["Insert"]>
         Relationships: []
       }
+      saved_client_searches: DbTable<{
+        id: string
+        contractor_id: string | null
+        query: string
+        city: string | null
+        state: string | null
+        risk_level: RiskLevel | null
+        category: ReportCategory | null
+        result_count: number
+        source: string
+        created_at: string
+        last_run_at: string | null
+      }>
+      search_analytics_events: DbTable<{
+        id: string
+        contractor_id: string | null
+        query: string | null
+        state: string | null
+        risk_level: RiskLevel | null
+        category: ReportCategory | null
+        result_count: number | null
+        event_type: string
+        source: string
+        created_at: string
+      }>
+      profile_share_events: DbTable<{
+        id: string
+        contractor_id: string | null
+        profile_slug: string
+        channel: string
+        source: string
+        created_at: string
+      }>
       admin_reviews: {
         Row: {
           id: string

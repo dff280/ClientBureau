@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
+import { StateSelect } from "@/components/forms/state-select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -59,7 +60,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
       <WorkflowStep
         step="1"
         title="Client identity"
-        text="Use the identity details from the contract, invoice, or written project record. Email and phone are used only for private matching."
+        text="Use details from the contract, invoice, estimate, or written project record. More complete identity data improves private matching, but raw email and phone are never shown publicly."
       >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -85,7 +86,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <Label htmlFor="phone">Client phone for private matching</Label>
             <Input id="phone" name="phone" placeholder="Not shown publicly" />
           </div>
-          <div className="grid grid-cols-[1fr_100px] gap-3 md:col-span-2">
+          <div className="grid gap-3 md:col-span-2 md:grid-cols-[1fr_180px_120px]">
             <div className="space-y-2">
               <Label htmlFor="city">Client city</Label>
               <Input id="city" name="city" defaultValue={defaults.city} placeholder="Orlando" />
@@ -93,8 +94,13 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             </div>
             <div className="space-y-2">
               <Label htmlFor="state">State</Label>
-              <Input id="state" name="state" defaultValue={defaults.state} placeholder="FL" />
+              <StateSelect id="state" name="state" defaultValue={defaults.state} />
               <FieldError name="state" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="zip">ZIP optional</Label>
+              <Input id="zip" name="zip" inputMode="numeric" placeholder="32801" />
+              <FieldError name="zip" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
           </div>
         </div>
@@ -107,7 +113,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <Input id="projectType" name="projectType" placeholder="Kitchen remodel" />
             <FieldError name="projectType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
-          <div className="grid grid-cols-[1fr_100px] gap-3">
+          <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
             <div className="space-y-2">
               <Label htmlFor="projectCity">Project city</Label>
               <Input id="projectCity" name="projectCity" defaultValue={defaults.city} placeholder="Orlando" />
@@ -115,7 +121,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             </div>
             <div className="space-y-2">
               <Label htmlFor="projectState">State</Label>
-              <Input id="projectState" name="projectState" defaultValue={defaults.state} placeholder="FL" />
+              <StateSelect id="projectState" name="projectState" defaultValue={defaults.state} />
               <FieldError name="projectState" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
           </div>

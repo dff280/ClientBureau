@@ -30,6 +30,7 @@ import { toast } from "sonner"
 import { ContractorWorkspaceGuidance } from "@/components/dashboard/contractor-workspace-guidance"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
+import { StateSelect } from "@/components/forms/state-select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -1247,9 +1248,9 @@ function PipelineCreateForm({ clients }: { clients: ClientProfile[] }) {
         ))}
       </select>
       <Input name="clientName" placeholder="Client name" />
-      <div className="grid gap-3 sm:grid-cols-[1fr_80px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
         <Input name="city" placeholder="City" />
-        <Input name="state" placeholder="FL" className="uppercase" />
+        <StateSelect id="pipelineState" name="state" ariaLabel="Pipeline item state" />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <select name="stage" defaultValue="screening" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
@@ -1336,9 +1337,9 @@ function RiskRoomForm({ clients }: { clients: ClientProfile[] }) {
         ))}
       </select>
       <Input name="clientName" placeholder="Client name" />
-      <div className="grid gap-3 sm:grid-cols-[1fr_80px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
         <Input name="city" placeholder="City" />
-        <Input name="state" placeholder="FL" className="uppercase" />
+        <StateSelect id="riskRoomState" name="state" ariaLabel="Client work file state" />
       </div>
       <Input name="headline" placeholder="Client work file headline" />
       <Textarea name="summary" placeholder="Search notes, contract controls, evidence, payment follow-up, and next decision" className="min-h-24" />
@@ -1475,10 +1476,10 @@ function IntakeAssessmentForm() {
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_110px_90px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_110px_160px]">
         <Input name="clientName" placeholder="Client name" />
         <Input name="city" placeholder="City" />
-        <Input name="state" placeholder="FL" className="uppercase" />
+        <StateSelect id="intakeState" name="state" ariaLabel="Intake state" />
       </div>
       <Input name="projectValue" type="number" placeholder="Project value" />
       <Textarea name="notes" placeholder="Intake notes for your team" className="min-h-20" />
@@ -1588,10 +1589,10 @@ function ManagedRecoveryCaseForm() {
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_100px_80px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_100px_160px]">
         <Input name="clientName" placeholder="Client name" />
         <Input name="city" placeholder="City" />
-        <Input name="state" placeholder="FL" className="uppercase" />
+        <StateSelect id="managedRecoveryState" name="state" ariaLabel="Managed recovery state" />
       </div>
       <Input name="clientEmail" type="email" placeholder="Client email for private matching (optional)" />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -1912,10 +1913,10 @@ function PaymentRecoveryForm() {
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
-      <div className="grid gap-3 sm:grid-cols-[1fr_100px_80px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_100px_160px]">
         <Input name="clientName" placeholder="Client name" />
         <Input name="city" placeholder="City" />
-        <Input name="state" placeholder="FL" className="uppercase" />
+        <StateSelect id="paymentRecoveryState" name="state" ariaLabel="Payment recovery state" />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="amountDue" type="number" placeholder="Amount due" />
@@ -2111,10 +2112,10 @@ function FloridaLienCaseForm() {
         <Input name="clientName" placeholder="Client name" />
         <Input name="ownerName" placeholder="Property owner name" />
       </div>
-      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_70px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_160px]">
         <Input name="propertyCounty" placeholder="Florida county" />
         <Input name="propertyCity" placeholder="Property city" />
-        <Input name="state" defaultValue="FL" className="uppercase" aria-label="State" />
+        <StateSelect id="floridaLienState" name="state" defaultValue="FL" ariaLabel="Florida lien state" />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="parcelNumber" placeholder="Parcel number (optional)" />
@@ -2250,9 +2251,9 @@ function LienNoticeDraftForm() {
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
       <Input name="clientName" placeholder="Client name" />
       <Input name="projectType" placeholder="Project type" />
-      <div className="grid gap-3 sm:grid-cols-[1fr_80px]">
+      <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
         <Input name="propertyCity" placeholder="Property city" />
-        <Input name="state" placeholder="FL" className="uppercase" />
+        <StateSelect id="lienNoticeState" name="state" defaultValue="FL" ariaLabel="Lien notice state" />
       </div>
       <Input name="amountDue" type="number" placeholder="Amount due" />
       <div className="grid gap-3 sm:grid-cols-2">

@@ -64,8 +64,11 @@ import type {
   PaymentPlanInput,
   RecoveryComplianceReviewInput,
   ResolutionDeskContactInput,
+  SavedClientSearchInput,
+  SearchAnalyticsEventInput,
   ServiceFeeCheckoutInput,
   ServicePrecheckInput,
+  ProfileShareEventInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
 } from "@/lib/schemas/client-bureau"
@@ -113,6 +116,9 @@ import type {
   ReviewChecklistItem,
   ReviewChecklistStatus,
   SearchFilters,
+  SavedClientSearch,
+  SearchAnalyticsEvent,
+  ProfileShareEvent,
   Subscription,
 } from "@/lib/types"
 import {
@@ -125,6 +131,10 @@ function reviewableReportsForClient(clientId: string) {
     report.clientId === clientId && ["approved", "disputed"].includes(report.status),
   )
 }
+
+const savedClientSearchRecords: SavedClientSearch[] = []
+const searchAnalyticsEvents: SearchAnalyticsEvent[] = []
+const profileShareEvents: ProfileShareEvent[] = []
 
 function reportTimeline(report: ClientReport): ReportTimelineEvent[] {
   const events: ReportTimelineEvent[] = [
@@ -340,6 +350,13 @@ export function searchClients(query = "", filters: SearchFilters = {}): ClientSe
     .map((client) => {
       const reports = reviewableReportsForClient(client.id)
       const latestReport = reports.at(-1)
+      const balanceSummary = getReportedBalanceSummary(reports)
+      const positiveSignalCount = reports.filter((report) => isPositiveReportCategory(report.reportCategory)).length
+      const openDisputeCount = reports.filter((report) => report.status === "disputed").length
+      const resolvedReportCount = reports.filter((report) =>
+        ["Resolved", "Paid in full", "Settled", "Admin verified"].includes(report.resolutionStatus ?? ""),
+      ).length
+      const evidenceOnFile = reports.some((report) => report.evidenceAttached)
       const nameLocation = [client.firstName, client.lastName, client.businessName, client.city, client.state, client.zip]
         .filter(Boolean)
         .join(" ")
@@ -372,6 +389,14 @@ export function searchClients(query = "", filters: SearchFilters = {}): ClientSe
         matchScore,
         latestCategory: latestReport?.reportCategory,
         latestSummary: latestReport?.publicSummary,
+        positiveSignalCount,
+        openDisputeCount,
+        resolvedReportCount,
+        evidenceOnFile,
+        paymentContextLabel:
+          balanceSummary.totalReportedUnpaid > 0
+            ? `${formatRepositoryCurrency(balanceSummary.totalReportedUnpaid)} reported unpaid`
+            : "No payment issue reported",
         searchable,
         reports,
       }
@@ -395,6 +420,91 @@ export function searchClients(query = "", filters: SearchFilters = {}): ClientSe
 
       return result
     })
+}
+
+export function saveClientSearch(userId: string | undefined, input: SavedClientSearchInput): SavedClientSearch {
+  const query = input.query?.trim() || "All public profiles"
+  const now = new Date().toISOString()
+  const existingIndex = savedClientSearchRecords.findIndex((search) =>
+    search.contractorId === userId &&
+    search.query.toLowerCase() === query.toLowerCase() &&
+    search.state === input.state?.toUpperCase() &&
+    search.riskLevel === input.riskLevel &&
+    search.category === input.category,
+  )
+  const record: SavedClientSearch = {
+    id: existingIndex >= 0 ? savedClientSearchRecords[existingIndex].id : `saved_client_search_${Date.now()}`,
+    contractorId: userId,
+    query,
+    city: input.city,
+    state: input.state?.toUpperCase(),
+    riskLevel: input.riskLevel,
+    category: input.category,
+    resultCount: input.resultCount,
+    source: "mock",
+    createdAt: existingIndex >= 0 ? savedClientSearchRecords[existingIndex].createdAt : now,
+    lastRunAt: now,
+  }
+
+  if (existingIndex >= 0) {
+    savedClientSearchRecords.splice(existingIndex, 1, record)
+  } else {
+    savedClientSearchRecords.unshift(record)
+  }
+
+  return record
+}
+
+export function deleteSavedClientSearch(userId: string | undefined, searchId: string) {
+  const index = savedClientSearchRecords.findIndex((search) =>
+    search.id === searchId && (!userId || search.contractorId === userId),
+  )
+
+  if (index >= 0) savedClientSearchRecords.splice(index, 1)
+
+  return true
+}
+
+export function recordSearchEvent(userId: string | undefined, input: SearchAnalyticsEventInput): SearchAnalyticsEvent {
+  const event: SearchAnalyticsEvent = {
+    id: `search_event_${Date.now()}_${searchAnalyticsEvents.length + 1}`,
+    contractorId: userId,
+    query: input.query,
+    state: input.state?.toUpperCase(),
+    riskLevel: input.riskLevel,
+    category: input.category,
+    resultCount: input.resultCount,
+    eventType: input.eventType,
+    source: input.source,
+    createdAt: new Date().toISOString(),
+  }
+
+  searchAnalyticsEvents.unshift(event)
+
+  return event
+}
+
+export function recordProfileShareEvent(userId: string | undefined, input: ProfileShareEventInput): ProfileShareEvent {
+  const event: ProfileShareEvent = {
+    id: `profile_share_${Date.now()}_${profileShareEvents.length + 1}`,
+    contractorId: userId,
+    profileSlug: input.profileSlug,
+    channel: input.channel,
+    source: input.source,
+    createdAt: new Date().toISOString(),
+  }
+
+  profileShareEvents.unshift(event)
+
+  return event
+}
+
+function formatRepositoryCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value)
 }
 
 export function simulateSubmittedClientReport(input: ClientReportInput): ClientReport {

@@ -19,7 +19,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { Badge } from "@/components/ui/badge"
@@ -27,12 +27,30 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
+  deleteSavedSearchAction,
+  recordSearchEventAction,
+  saveClientSearchAction,
+} from "@/lib/actions/client-bureau"
+import {
+  buildSearchHref,
   buildSearchExperienceStats,
+  buildSearchSuggestions,
   formatClientName,
   getPreviewSearchText,
+  isPrivateIdentifierSearch,
+  rankSearchPreviewProfiles,
   type SearchPreviewProfile,
 } from "@/lib/search-experience"
-import { reportCategories, riskLevels, type ReportCategory, type RiskLevel } from "@/lib/types"
+import { usStates } from "@/lib/locations"
+import {
+  reportCategories,
+  riskLevels,
+  type ActionResult,
+  type ReportCategory,
+  type RiskLevel,
+  type SavedClientSearch,
+  type SearchAnalyticsEvent,
+} from "@/lib/types"
 
 interface InitialSavedSearch {
   id: string
@@ -44,6 +62,7 @@ interface InitialSavedSearch {
 interface SavedSearchRecord extends InitialSavedSearch {
   riskLevel?: RiskLevel
   category?: ReportCategory
+  resultCount?: number
   createdAt: string
 }
 
@@ -59,37 +78,6 @@ interface SearchCommandCenterProps {
 
 const savedSearchStorageKey = "client-bureau.saved-searches"
 
-function normalize(value?: string) {
-  return value?.trim().toLowerCase() ?? ""
-}
-
-function isPrivateIdentifierIntent(value: string) {
-  const digits = value.replace(/\D/g, "")
-
-  return value.includes("@") || digits.length >= 7
-}
-
-function buildSearchHref({
-  query,
-  state,
-  riskLevel,
-  category,
-}: {
-  query?: string
-  state?: string
-  riskLevel?: RiskLevel
-  category?: ReportCategory
-}) {
-  const params = new URLSearchParams()
-
-  if (query?.trim()) params.set("q", query.trim())
-  if (state?.trim()) params.set("state", state.trim().toUpperCase())
-  if (riskLevel) params.set("risk", riskLevel)
-  if (category) params.set("category", category)
-
-  return `/search${params.size ? `?${params.toString()}` : ""}`
-}
-
 function savedSearchKey(search: Pick<SavedSearchRecord, "query" | "state" | "riskLevel" | "category">) {
   return [
     search.query.trim().toLowerCase(),
@@ -97,28 +85,6 @@ function savedSearchKey(search: Pick<SavedSearchRecord, "query" | "state" | "ris
     search.riskLevel ?? "",
     search.category ?? "",
   ].join("|")
-}
-
-function profilePreviewScore(profile: SearchPreviewProfile, query: string) {
-  const value = normalize(query)
-  const fullName = normalize(formatClientName(profile))
-  const businessName = normalize(profile.businessName)
-  const cityState = normalize(`${profile.city} ${profile.state}`)
-  const latestCategory = normalize(profile.latestCategory)
-  const text = getPreviewSearchText(profile)
-
-  if (!value) return profile.reportCount * 5 + profile.clientBureauScore
-
-  return (
-    (fullName.startsWith(value) ? 80 : 0) +
-    (fullName.includes(value) ? 45 : 0) +
-    (businessName.includes(value) ? 35 : 0) +
-    (cityState.includes(value) ? 20 : 0) +
-    (latestCategory.includes(value) ? 16 : 0) +
-    (text.includes(value) ? 10 : 0) +
-    profile.reportCount * 4 +
-    profile.matchScore
-  )
 }
 
 function uniqueSavedSearches(searches: SavedSearchRecord[]) {
@@ -133,6 +99,10 @@ function uniqueSavedSearches(searches: SavedSearchRecord[]) {
     return true
   })
 }
+
+const savedSearchInitialState: ActionResult<SavedClientSearch> = { ok: false, message: "" }
+const deleteSavedSearchInitialState: ActionResult<boolean> = { ok: false, message: "" }
+const searchEventInitialState: ActionResult<SearchAnalyticsEvent> = { ok: false, message: "" }
 
 export function SearchCommandCenter({
   query,
@@ -159,6 +129,8 @@ export function SearchCommandCenter({
     uniqueSavedSearches(initialSavedRecords).slice(0, 8),
   )
   const [savedMessage, setSavedMessage] = useState("")
+  const [isSavingSearch, startSaveSearchTransition] = useTransition()
+  const [, startEventTransition] = useTransition()
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -174,13 +146,13 @@ export function SearchCommandCenter({
   }, [initialSavedRecords])
 
   const stats = useMemo(() => buildSearchExperienceStats(profiles), [profiles])
-  const privateIdentifierIntent = isPrivateIdentifierIntent(liveQuery)
+  const privateIdentifierIntent = isPrivateIdentifierSearch(liveQuery)
   const stateFilter = stateValue.trim().toUpperCase()
   const riskFilter = riskValue || undefined
   const categoryFilter = categoryValue || undefined
 
   const filteredProfiles = useMemo(() => {
-    return profiles
+    return rankSearchPreviewProfiles(profiles, liveQuery)
       .filter((profile) => {
         const matchesState = !stateFilter || profile.state === stateFilter
         const matchesRisk = !riskFilter || profile.riskLevel === riskFilter
@@ -188,13 +160,12 @@ export function SearchCommandCenter({
 
         return matchesState && matchesRisk && matchesCategory
       })
-      .sort((a, b) => profilePreviewScore(b, liveQuery) - profilePreviewScore(a, liveQuery))
   }, [categoryFilter, liveQuery, profiles, riskFilter, stateFilter])
 
   const instantProfiles = useMemo(() => {
     if (privateIdentifierIntent) return filteredProfiles.slice(0, 3)
 
-    const value = normalize(liveQuery)
+    const value = liveQuery.trim().toLowerCase()
     const matches = value
       ? filteredProfiles.filter((profile) => getPreviewSearchText(profile).includes(value))
       : filteredProfiles
@@ -202,35 +173,35 @@ export function SearchCommandCenter({
     return matches.slice(0, 4)
   }, [filteredProfiles, liveQuery, privateIdentifierIntent])
 
-  const marketSuggestions = useMemo(() => {
-    const seen = new Set<string>()
-    const value = normalize(liveQuery)
+  const suggestions = useMemo(
+    () => buildSearchSuggestions(profiles, liveQuery, stateFilter || undefined),
+    [liveQuery, profiles, stateFilter],
+  )
 
-    return profiles
-      .map((profile) => ({
-        label: `${profile.city}, ${profile.state}`,
-        query: profile.city,
-        state: profile.state,
-      }))
-      .filter((market) => {
-        const key = market.label.toLowerCase()
-        const matches = !value || key.includes(value)
+  function buildSearchEventFormData(
+    eventType: "search_submitted" | "suggestion_clicked" | "result_viewed" | "save_search" | "private_identifier_check" | "no_result",
+    resultCount = filteredProfiles.length,
+  ) {
+    const formData = new FormData()
+    if (liveQuery.trim()) formData.set("query", liveQuery.trim())
+    if (stateFilter) formData.set("state", stateFilter)
+    if (riskFilter) formData.set("riskLevel", riskFilter)
+    if (categoryFilter) formData.set("category", categoryFilter)
+    formData.set("resultCount", String(resultCount))
+    formData.set("eventType", eventType)
+    formData.set("source", "search_page")
 
-        if (!matches || seen.has(key)) return false
-        seen.add(key)
+    return formData
+  }
 
-        return true
-      })
-      .slice(0, 4)
-  }, [liveQuery, profiles])
-
-  const categorySuggestions = useMemo(() => {
-    const value = normalize(liveQuery)
-
-    return reportCategories
-      .filter((item) => !value || normalize(item).includes(value))
-      .slice(0, 4)
-  }, [liveQuery])
+  function trackSearchEvent(
+    eventType: "search_submitted" | "suggestion_clicked" | "result_viewed" | "save_search" | "private_identifier_check" | "no_result",
+    resultCount = filteredProfiles.length,
+  ) {
+    startEventTransition(() => {
+      void recordSearchEventAction(searchEventInitialState, buildSearchEventFormData(eventType, resultCount)).catch(() => undefined)
+    })
+  }
 
   function handleSaveSearch() {
     const nextSearch: SavedSearchRecord = {
@@ -239,6 +210,7 @@ export function SearchCommandCenter({
       state: stateFilter || undefined,
       riskLevel: riskFilter,
       category: categoryFilter,
+      resultCount: filteredProfiles.length,
       createdAt: new Date().toISOString(),
     }
 
@@ -252,6 +224,52 @@ export function SearchCommandCenter({
     } catch {
       setSavedMessage("Search saved for this session.")
     }
+
+    if (!isAuthenticated) return
+
+    const formData = new FormData()
+    formData.set("searchId", nextSearch.id)
+    formData.set("query", nextSearch.query)
+    if (nextSearch.state) formData.set("state", nextSearch.state)
+    if (nextSearch.riskLevel) formData.set("riskLevel", nextSearch.riskLevel)
+    if (nextSearch.category) formData.set("category", nextSearch.category)
+    formData.set("resultCount", String(nextSearch.resultCount ?? 0))
+
+    startSaveSearchTransition(() => {
+      void (async () => {
+        try {
+          const result = await saveClientSearchAction(savedSearchInitialState, formData)
+          trackSearchEvent("save_search", nextSearch.resultCount ?? 0)
+
+          if (!result.ok) {
+            setSavedMessage("Search saved in this browser.")
+            return
+          }
+
+          const serverSearch: SavedSearchRecord = {
+            id: result.data.id,
+            query: result.data.query,
+            city: result.data.city,
+            state: result.data.state,
+            riskLevel: result.data.riskLevel,
+            category: result.data.category,
+            resultCount: result.data.resultCount,
+            createdAt: result.data.createdAt,
+          }
+          const updated = uniqueSavedSearches([serverSearch, ...next]).slice(0, 8)
+          setSavedSearches(updated)
+          setSavedMessage(result.message)
+
+          try {
+            window.localStorage.setItem(savedSearchStorageKey, JSON.stringify(updated))
+          } catch {
+            // Local persistence can be blocked; the server action already completed.
+          }
+        } catch {
+          setSavedMessage("Search saved in this browser.")
+        }
+      })()
+    })
   }
 
   function handleRemoveSavedSearch(id: string) {
@@ -263,6 +281,14 @@ export function SearchCommandCenter({
     } catch {
       // Browser storage can be disabled; the in-memory list still updates.
     }
+
+    if (!isAuthenticated) return
+
+    const formData = new FormData()
+    formData.set("searchId", id)
+    startSaveSearchTransition(() => {
+      void deleteSavedSearchAction(deleteSavedSearchInitialState, formData).catch(() => undefined)
+    })
   }
 
   const currentHref = buildSearchHref({
@@ -289,7 +315,11 @@ export function SearchCommandCenter({
                 </Badge>
               </div>
 
-              <form action="/search" className="grid gap-3">
+              <form
+                action="/search"
+                className="grid gap-3"
+                onSubmit={() => trackSearchEvent(privateIdentifierIntent ? "private_identifier_check" : filteredProfiles.length > 0 ? "search_submitted" : "no_result")}
+              >
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -306,14 +336,20 @@ export function SearchCommandCenter({
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto]">
-                  <Input
+                  <select
                     name="state"
                     value={stateValue}
                     onChange={(event) => setStateValue(event.target.value.toUpperCase())}
-                    placeholder="State"
-                    className="h-11 uppercase"
+                    className="h-11 rounded-md border border-input bg-background px-3 text-sm text-slate-700 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     aria-label="Filter by state"
-                  />
+                  >
+                    <option value="">All states</option>
+                    {usStates.map((item) => (
+                      <option key={item.code} value={item.code}>
+                        {item.code}
+                      </option>
+                    ))}
+                  </select>
                   <select
                     name="risk"
                     value={riskValue}
@@ -373,6 +409,7 @@ export function SearchCommandCenter({
                       <Link
                         key={profile.id}
                         href={`/client/${profile.publicSlug}`}
+                        onClick={() => trackSearchEvent("result_viewed", instantProfiles.length)}
                         className="group rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md"
                       >
                         <div className="flex items-start justify-between gap-3">
@@ -401,6 +438,9 @@ export function SearchCommandCenter({
                         </p>
                         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                           <span>{profile.reportCount} approved signals</span>
+                          {profile.positiveSignalCount ? <span>{profile.positiveSignalCount} positive</span> : null}
+                          {profile.openDisputeCount ? <span>{profile.openDisputeCount} open dispute</span> : null}
+                          {profile.evidenceOnFile ? <span>Evidence on file</span> : null}
                           {profile.latestCategory ? <span>{profile.latestCategory}</span> : null}
                           <span className="text-amber-700 group-hover:text-amber-800">Open profile</span>
                         </div>
@@ -438,25 +478,15 @@ export function SearchCommandCenter({
                       </Link>
                     ) : null}
 
-                    {marketSuggestions.map((market) => (
+                    {suggestions.map((suggestion) => (
                       <Link
-                        key={market.label}
-                        href={buildSearchHref({ query: liveQuery || market.query, state: market.state })}
+                        key={suggestion.id}
+                        href={suggestion.href}
+                        onClick={() => trackSearchEvent("suggestion_clicked")}
                         className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm transition hover:border-amber-300 hover:bg-white"
                       >
-                        <span className="font-semibold text-slate-950">Search {market.label}</span>
-                        <span className="mt-1 block text-xs text-slate-500">City and state filter</span>
-                      </Link>
-                    ))}
-
-                    {categorySuggestions.map((item) => (
-                      <Link
-                        key={item}
-                        href={buildSearchHref({ query: liveQuery, state: stateValue, category: item })}
-                        className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm transition hover:border-amber-300 hover:bg-white"
-                      >
-                        <span className="font-semibold text-slate-950">{item}</span>
-                        <span className="mt-1 block text-xs text-slate-500">Filter by report type</span>
+                        <span className="font-semibold text-slate-950">{suggestion.label}</span>
+                        <span className="mt-1 block text-xs text-slate-500">{suggestion.description}</span>
                       </Link>
                     ))}
                   </div>
@@ -500,10 +530,11 @@ export function SearchCommandCenter({
                   <Button
                     type="button"
                     onClick={handleSaveSearch}
+                    disabled={isSavingSearch}
                     className="mt-4 w-full bg-amber-500 text-slate-950 hover:bg-amber-400"
                   >
                     <Save aria-hidden="true" />
-                    Save current search
+                    {isSavingSearch ? "Saving search..." : "Save current search"}
                   </Button>
                 ) : (
                   <Button asChild className="mt-4 w-full bg-amber-500 text-slate-950 hover:bg-amber-400">

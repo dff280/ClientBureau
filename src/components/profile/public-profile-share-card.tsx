@@ -2,17 +2,19 @@
 
 import Link from "next/link"
 import { Check, Copy, ExternalLink, Share2 } from "lucide-react"
-import { useState } from "react"
+import { useState, useTransition } from "react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { RiskLevel } from "@/lib/types"
+import { recordProfileShareAction } from "@/lib/actions/client-bureau"
+import type { ActionResult, ProfileShareEvent, RiskLevel } from "@/lib/types"
 
 interface PublicProfileShareCardProps {
   name: string
   location: string
   profileUrl: string
+  profileSlug: string
   imageUrl: string
   score: number
   riskLevel: RiskLevel
@@ -23,20 +25,48 @@ export function PublicProfileShareCard({
   name,
   location,
   profileUrl,
+  profileSlug,
   imageUrl,
   score,
   riskLevel,
   reportCount,
 }: PublicProfileShareCardProps) {
   const [copied, setCopied] = useState(false)
+  const [badgeCopied, setBadgeCopied] = useState(false)
+  const [, startShareTransition] = useTransition()
+
+  function recordShare(channel: ProfileShareEvent["channel"]) {
+    const formData = new FormData()
+    formData.set("profileSlug", profileSlug)
+    formData.set("channel", channel)
+    formData.set("source", "profile_page")
+
+    startShareTransition(() => {
+      void recordProfileShareAction(profileShareInitialState, formData).catch(() => undefined)
+    })
+  }
 
   async function copyProfileUrl() {
     try {
       await navigator.clipboard.writeText(profileUrl)
       setCopied(true)
+      recordShare("copy_link")
       window.setTimeout(() => setCopied(false), 2200)
     } catch {
       setCopied(false)
+    }
+  }
+
+  async function copyBadgeSnippet() {
+    const snippet = `<a href="${profileUrl}" rel="noopener" target="_blank">View this Client Bureau public profile</a>`
+
+    try {
+      await navigator.clipboard.writeText(snippet)
+      setBadgeCopied(true)
+      recordShare("referral_badge")
+      window.setTimeout(() => setBadgeCopied(false), 2200)
+    } catch {
+      setBadgeCopied(false)
     }
   }
 
@@ -89,16 +119,22 @@ export function PublicProfileShareCard({
           {copied ? "Copied profile link" : "Copy profile link"}
         </Button>
         <Button asChild variant="outline">
-          <Link href={imageUrl} target="_blank" rel="noreferrer">
+          <Link href={imageUrl} target="_blank" rel="noreferrer" onClick={() => recordShare("profile_card")}>
             <ExternalLink aria-hidden="true" />
             Open share image
           </Link>
         </Button>
+        <Button type="button" variant="outline" onClick={copyBadgeSnippet}>
+          {badgeCopied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
+          {badgeCopied ? "Badge link copied" : "Copy branded badge link"}
+        </Button>
       </div>
       <p className="mt-3 text-xs leading-5 text-slate-500">
         Share only the public Client Bureau profile link. Private identifiers, raw evidence, and internal
-        moderation notes are never included on this card.
+        moderation notes are never included on this card. Badge links use branded anchor text only.
       </p>
     </section>
   )
 }
+
+const profileShareInitialState: ActionResult<ProfileShareEvent> = { ok: false, message: "" }

@@ -35,6 +35,10 @@ import {
   managedRecoveryCaseSchema,
   markServiceFeePaidSchema,
   markRecoveryResolvedSchema,
+  deleteSavedClientSearchSchema,
+  profileShareEventSchema,
+  savedClientSearchSchema,
+  searchAnalyticsEventSchema,
   signupSchema,
   moderationCaseAssignmentSchema,
   moderationCaseUpdateSchema,
@@ -85,6 +89,9 @@ import type {
   ReportDraft,
   ServiceFeeOrder,
   ServiceReadinessSummary,
+  ProfileShareEvent,
+  SavedClientSearch,
+  SearchAnalyticsEvent,
   User,
 } from "@/lib/types"
 import { isPositiveReportCategory, reportCategories } from "@/lib/types"
@@ -110,6 +117,7 @@ import {
   createPaymentRecoveryCaseService,
   createServiceFeeOrderService,
   createWatchlistItemService,
+  deleteSavedClientSearchService,
   deleteReportDraftService,
   getPublicClientProfileService,
   linkEvidenceToServiceCaseService,
@@ -125,7 +133,10 @@ import {
   reviewReportsBulkService,
   runFloridaLienPrecheckService,
   runRecoveryPrecheckService,
+  recordProfileShareEventService,
+  recordSearchEventService,
   saveAdminQueueViewService,
+  saveClientSearchService,
   saveReportDraftService,
   setModerationDecisionReasonService,
   submitFloridaLienCaseService,
@@ -174,6 +185,21 @@ function actionErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback
+}
+
+function isMissingOnboardingColumn(error: { code?: string; message?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return (
+    error?.code === "42703" ||
+    message.includes("business_type") ||
+    message.includes("business_phone") ||
+    message.includes("website_url") ||
+    message.includes("service_area") ||
+    message.includes("company_size") ||
+    message.includes("years_in_business") ||
+    message.includes("primary_goal")
+  )
 }
 
 function revalidatePublicProfileDirectories(profile?: Pick<ClientProfile, "city" | "state">) {
@@ -259,6 +285,127 @@ export async function submitClientResponseAction(
   return ok(response, "Response received. It is queued for moderation and contact verification.")
 }
 
+export async function saveClientSearchAction(
+  _previousState: ActionResult<SavedClientSearch>,
+  formData: FormData,
+): Promise<ActionResult<SavedClientSearch>> {
+  const parsed = savedClientSearchSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the saved search fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+  const saved = await saveClientSearchService(user.id, parsed.data)
+
+  revalidatePath("/dashboard")
+  revalidatePath("/dashboard/watchlist")
+
+  if (!saved) {
+    return ok(
+      {
+        id: parsed.data.searchId ?? `local_saved_${Date.now()}`,
+        contractorId: user.id,
+        query: parsed.data.query || "All public profiles",
+        city: parsed.data.city,
+        state: parsed.data.state?.toUpperCase(),
+        riskLevel: parsed.data.riskLevel,
+        category: parsed.data.category,
+        resultCount: parsed.data.resultCount,
+        source: "local",
+        createdAt: new Date().toISOString(),
+        lastRunAt: new Date().toISOString(),
+      },
+      "Search saved for this browser. Apply the optional search activation migration for account-level saved searches.",
+    )
+  }
+
+  return ok(saved, "Search saved to your account.")
+}
+
+export async function deleteSavedSearchAction(
+  _previousState: ActionResult<boolean>,
+  formData: FormData,
+): Promise<ActionResult<boolean>> {
+  const parsed = deleteSavedClientSearchSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a saved search to remove.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+  const deleted = await deleteSavedClientSearchService(user.id, parsed.data.searchId)
+
+  revalidatePath("/dashboard")
+  revalidatePath("/dashboard/watchlist")
+
+  return ok(deleted, deleted ? "Saved search removed." : "Saved search removed from this browser.")
+}
+
+export async function recordSearchEventAction(
+  _previousState: ActionResult<SearchAnalyticsEvent>,
+  formData: FormData,
+): Promise<ActionResult<SearchAnalyticsEvent>> {
+  const parsed = searchAnalyticsEventSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Search event could not be recorded.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await getCurrentUser().catch(() => undefined)
+  const event = await recordSearchEventService(user?.id, parsed.data)
+
+  if (!event) {
+    return ok(
+      {
+        id: `local_search_event_${Date.now()}`,
+        contractorId: user?.id,
+        query: parsed.data.query,
+        state: parsed.data.state?.toUpperCase(),
+        riskLevel: parsed.data.riskLevel,
+        category: parsed.data.category,
+        resultCount: parsed.data.resultCount,
+        eventType: parsed.data.eventType,
+        source: parsed.data.source,
+        createdAt: new Date().toISOString(),
+      },
+      "Search event tracked locally.",
+    )
+  }
+
+  return ok(event, "Search event recorded.")
+}
+
+export async function recordProfileShareAction(
+  _previousState: ActionResult<ProfileShareEvent>,
+  formData: FormData,
+): Promise<ActionResult<ProfileShareEvent>> {
+  const parsed = profileShareEventSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Profile share could not be recorded.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await getCurrentUser().catch(() => undefined)
+  const event = await recordProfileShareEventService(user?.id, parsed.data)
+
+  if (!event) {
+    return ok(
+      {
+        id: `local_profile_share_${Date.now()}`,
+        contractorId: user?.id,
+        profileSlug: parsed.data.profileSlug,
+        channel: parsed.data.channel,
+        source: parsed.data.source,
+        createdAt: new Date().toISOString(),
+      },
+      "Profile share tracked locally.",
+    )
+  }
+
+  return ok(event, "Profile share recorded.")
+}
+
 export async function signupAction(
   _previousState: ActionResult<User>,
   formData: FormData,
@@ -304,12 +451,35 @@ export async function signupAction(
           trade: parsed.data.trade,
           city: parsed.data.city,
           state: parsed.data.state.toUpperCase(),
+          license_number: parsed.data.licenseNumber ?? null,
           verification_status: "pending",
         },
         { onConflict: "user_id" },
       )
 
       if (contractorError) return fail(contractorError.message)
+
+      const optionalProfileFields = {
+        business_type: parsed.data.businessType ?? null,
+        business_phone: parsed.data.businessPhone ?? null,
+        website_url: parsed.data.websiteUrl || null,
+        service_area: parsed.data.serviceArea || null,
+        company_size: parsed.data.companySize ?? null,
+        years_in_business: parsed.data.yearsInBusiness ?? null,
+        primary_goal: parsed.data.primaryGoal ?? null,
+      }
+      const hasOptionalProfileFields = Object.values(optionalProfileFields).some(Boolean)
+
+      if (hasOptionalProfileFields) {
+        const { error: optionalProfileError } = await service
+          .from("contractor_profiles")
+          .update(optionalProfileFields)
+          .eq("user_id", data.user.id)
+
+        if (optionalProfileError && !isMissingOnboardingColumn(optionalProfileError)) {
+          return fail(optionalProfileError.message)
+        }
+      }
     }
 
     return ok(

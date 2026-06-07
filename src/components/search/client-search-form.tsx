@@ -2,6 +2,7 @@ import { Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { usStates } from "@/lib/locations"
 import { reportCategories, riskLevels, type ReportCategory, type RiskLevel } from "@/lib/types"
 
 interface ClientSearchFormProps {
@@ -23,7 +24,19 @@ export function ClientSearchForm({ query, state, riskLevel, category }: ClientSe
           className="h-11 pl-9"
         />
       </div>
-      <Input name="state" defaultValue={state} placeholder="State" className="h-11 uppercase" />
+      <select
+        name="state"
+        defaultValue={state ?? ""}
+        aria-label="Filter by state"
+        className="h-11 rounded-md border border-input bg-background px-3 text-sm text-slate-700 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <option value="">All states</option>
+        {usStates.map((item) => (
+          <option key={item.code} value={item.code}>
+            {item.code}
+          </option>
+        ))}
+      </select>
       <select
         name="risk"
         defaultValue={riskLevel ?? ""}

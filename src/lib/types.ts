@@ -233,6 +233,13 @@ export interface ContractorProfile {
   userId: string
   businessName: string
   trade: string
+  businessType?: string
+  businessPhone?: string
+  websiteUrl?: string
+  serviceArea?: string
+  companySize?: string
+  yearsInBusiness?: string
+  primaryGoal?: string
   city: string
   state: string
   licenseNumber?: string
@@ -1093,6 +1100,74 @@ export interface SavedSearch {
   createdAt: string
 }
 
+export type SearchSuggestionKind =
+  | "client"
+  | "business"
+  | "market"
+  | "category"
+  | "private_identifier"
+  | "report_context"
+  | "no_result"
+
+export interface SearchSuggestion {
+  id: string
+  kind: SearchSuggestionKind
+  label: string
+  description: string
+  href: string
+  query?: string
+  state?: string
+  riskLevel?: RiskLevel
+  category?: ReportCategory
+  score?: number
+}
+
+export interface SavedClientSearch {
+  id: string
+  contractorId?: string
+  query: string
+  city?: string
+  state?: string
+  riskLevel?: RiskLevel
+  category?: ReportCategory
+  resultCount: number
+  source: "local" | "mock" | "supabase"
+  createdAt: string
+  lastRunAt?: string
+}
+
+export type SearchAnalyticsEventType =
+  | "search_submitted"
+  | "suggestion_clicked"
+  | "result_viewed"
+  | "save_search"
+  | "private_identifier_check"
+  | "no_result"
+
+export interface SearchAnalyticsEvent {
+  id: string
+  contractorId?: string
+  query?: string
+  state?: string
+  riskLevel?: RiskLevel
+  category?: ReportCategory
+  resultCount?: number
+  eventType: SearchAnalyticsEventType
+  source: "search_page" | "profile_page" | "directory" | "dashboard"
+  createdAt: string
+}
+
+export type ProfileShareChannel = "copy_link" | "profile_card" | "referral_badge" | "social"
+
+export interface ProfileShareEvent {
+  id: string
+  contractorId?: string
+  profileSlug: string
+  channel: ProfileShareChannel
+  source: "profile_page" | "directory" | "dashboard"
+  createdAt: string
+}
+
 export interface PublicClientProfile extends ClientProfile {
   reports: ClientReport[]
   positiveReports: ClientReport[]
@@ -1118,6 +1193,11 @@ export interface ClientSearchResult extends ClientProfile {
   matchScore: number
   latestCategory?: ReportCategory
   latestSummary?: string
+  positiveSignalCount?: number
+  openDisputeCount?: number
+  resolvedReportCount?: number
+  evidenceOnFile?: boolean
+  paymentContextLabel?: string
 }
 
 export type ActionResult<T> =

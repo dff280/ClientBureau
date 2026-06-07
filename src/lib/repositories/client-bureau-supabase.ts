@@ -60,8 +60,11 @@ import type {
   RecoveryComplianceReviewInput,
   ResolutionDeskContactInput,
   ReportDraftInput,
+  SavedClientSearchInput,
+  SearchAnalyticsEventInput,
   ServiceFeeCheckoutInput,
   ServicePrecheckInput,
+  ProfileShareEventInput,
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
@@ -112,12 +115,15 @@ import type {
   ContractorProfile,
   PublicClientProfile,
   PublicBusinessProfile,
+  ProfileShareEvent,
   ReportEvidence,
   ReportDraft,
   ReportTimelineEvent,
   ReviewChecklistItem,
   ReviewChecklistStatus,
+  SavedClientSearch,
   SavedSearch,
+  SearchAnalyticsEvent,
   SearchFilters,
   Subscription,
   ServiceFeeOrder,
@@ -168,6 +174,9 @@ type LienReleaseRecordRow = Tables["lien_release_records"]["Row"]
 type CaseStaffAssignmentRow = Tables["case_staff_assignments"]["Row"]
 type CaseAuditEventRow = Tables["case_audit_events"]["Row"]
 type CaseDocumentLinkRow = Tables["case_document_links"]["Row"]
+type SavedClientSearchRow = Tables["saved_client_searches"]["Row"]
+type SearchAnalyticsEventRow = Tables["search_analytics_events"]["Row"]
+type ProfileShareEventRow = Tables["profile_share_events"]["Row"]
 
 const emptyHash = "sha256:empty-private"
 
@@ -186,6 +195,14 @@ function isMissingContractPacketColumnError(error: { message?: string; code?: st
   )
 }
 
+function formatSupabaseCurrency(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
 function mapUser(row: UserRow): User {
   return {
     id: row.id,
@@ -196,12 +213,61 @@ function mapUser(row: UserRow): User {
   }
 }
 
+function mapSavedClientSearch(row: SavedClientSearchRow): SavedClientSearch {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id ?? undefined,
+    query: row.query,
+    city: row.city ?? undefined,
+    state: row.state ?? undefined,
+    riskLevel: row.risk_level ?? undefined,
+    category: row.category ?? undefined,
+    resultCount: row.result_count,
+    source: row.source === "local" || row.source === "mock" ? row.source : "supabase",
+    createdAt: row.created_at,
+    lastRunAt: row.last_run_at ?? undefined,
+  }
+}
+
+function mapSearchAnalyticsEvent(row: SearchAnalyticsEventRow): SearchAnalyticsEvent {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id ?? undefined,
+    query: row.query ?? undefined,
+    state: row.state ?? undefined,
+    riskLevel: row.risk_level ?? undefined,
+    category: row.category ?? undefined,
+    resultCount: row.result_count ?? undefined,
+    eventType: row.event_type as SearchAnalyticsEvent["eventType"],
+    source: row.source as SearchAnalyticsEvent["source"],
+    createdAt: row.created_at,
+  }
+}
+
+function mapProfileShareEvent(row: ProfileShareEventRow): ProfileShareEvent {
+  return {
+    id: row.id,
+    contractorId: row.contractor_id ?? undefined,
+    profileSlug: row.profile_slug,
+    channel: row.channel as ProfileShareEvent["channel"],
+    source: row.source as ProfileShareEvent["source"],
+    createdAt: row.created_at,
+  }
+}
+
 function mapContractorProfile(row: ContractorProfileRow): ContractorProfile {
   return {
     id: row.id,
     userId: row.user_id,
     businessName: row.business_name,
     trade: row.trade,
+    businessType: row.business_type ?? undefined,
+    businessPhone: row.business_phone ?? undefined,
+    websiteUrl: row.website_url ?? undefined,
+    serviceArea: row.service_area ?? undefined,
+    companySize: row.company_size ?? undefined,
+    yearsInBusiness: row.years_in_business ?? undefined,
+    primaryGoal: row.primary_goal ?? undefined,
     city: row.city,
     state: row.state,
     licenseNumber: row.license_number ?? undefined,
@@ -1254,6 +1320,7 @@ async function findOrCreateClientProfile(input: ClientReportInput) {
       business_name: input.businessName ?? null,
       city: input.city,
       state: input.state.toUpperCase(),
+      zip: input.zip || null,
       phone_hash: phoneHash,
       email_hash: emailHash,
       public_slug: publicSlug,
@@ -1469,6 +1536,13 @@ export async function searchClientsSupabase(
     profiles.map(async (client) => {
       const reports = await getApprovedReportsForClient(client.id)
       const latestReport = reports[0]
+      const balanceSummary = getReportedBalanceSummary(reports)
+      const positiveSignalCount = reports.filter((report) => isPositiveReportCategory(report.reportCategory)).length
+      const openDisputeCount = reports.filter((report) => report.status === "disputed").length
+      const resolvedReportCount = reports.filter((report) =>
+        ["Resolved", "Paid in full", "Settled", "Admin verified"].includes(report.resolutionStatus ?? ""),
+      ).length
+      const evidenceOnFile = reports.some((report) => report.evidenceAttached)
       const nameLocation = [
         client.firstName,
         client.lastName,
@@ -1509,6 +1583,14 @@ export async function searchClientsSupabase(
         matchScore,
         latestCategory: latestReport?.reportCategory,
         latestSummary: latestReport?.publicSummary,
+        positiveSignalCount,
+        openDisputeCount,
+        resolvedReportCount,
+        evidenceOnFile,
+        paymentContextLabel:
+          balanceSummary.totalReportedUnpaid > 0
+            ? `${formatSupabaseCurrency(balanceSummary.totalReportedUnpaid)} reported unpaid`
+            : "No payment issue reported",
         privateMatch,
         searchable,
         reports,
@@ -1540,6 +1622,140 @@ export async function searchClientsSupabase(
     })
 }
 
+export async function saveClientSearchSupabase(
+  userId: string,
+  input: SavedClientSearchInput,
+): Promise<SavedClientSearch | undefined> {
+  const supabase = createServiceClient()
+  const contractor = await getOrCreateContractorProfileForUser(userId)
+  const query = input.query?.trim() || "All public profiles"
+  const state = input.state?.toUpperCase() ?? null
+  const now = new Date().toISOString()
+  const existingQuery = supabase
+    .from("saved_client_searches")
+    .select("*")
+    .eq("contractor_id", contractor.id)
+    .eq("query", query)
+    .limit(1)
+
+  const { data: existingRows, error: existingError } = await existingQuery
+  if (isMissingRelationError(existingError)) return undefined
+  if (existingError) throw new Error(existingError.message)
+
+  const existing = (existingRows ?? []).find((row) =>
+    (row.state ?? null) === state &&
+    (row.risk_level ?? null) === (input.riskLevel ?? null) &&
+    (row.category ?? null) === (input.category ?? null),
+  )
+
+  if (existing) {
+    const { data, error } = await supabase
+      .from("saved_client_searches")
+      .update({
+        city: input.city ?? null,
+        state,
+        risk_level: input.riskLevel ?? null,
+        category: input.category ?? null,
+        result_count: input.resultCount,
+        last_run_at: now,
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .single()
+
+    if (isMissingRelationError(error)) return undefined
+    if (error) throw new Error(error.message)
+
+    return mapSavedClientSearch(data)
+  }
+
+  const { data, error } = await supabase
+    .from("saved_client_searches")
+    .insert({
+      contractor_id: contractor.id,
+      query,
+      city: input.city ?? null,
+      state,
+      risk_level: input.riskLevel ?? null,
+      category: input.category ?? null,
+      result_count: input.resultCount,
+      source: "supabase",
+      last_run_at: now,
+    })
+    .select("*")
+    .single()
+
+  if (isMissingRelationError(error)) return undefined
+  if (error) throw new Error(error.message)
+
+  return mapSavedClientSearch(data)
+}
+
+export async function deleteSavedClientSearchSupabase(userId: string, searchId: string) {
+  const supabase = createServiceClient()
+  const contractor = await getOrCreateContractorProfileForUser(userId)
+  const { error } = await supabase
+    .from("saved_client_searches")
+    .delete()
+    .eq("id", searchId)
+    .eq("contractor_id", contractor.id)
+
+  if (isMissingRelationError(error)) return false
+  if (error) throw new Error(error.message)
+
+  return true
+}
+
+export async function recordSearchEventSupabase(
+  userId: string | undefined,
+  input: SearchAnalyticsEventInput,
+): Promise<SearchAnalyticsEvent | undefined> {
+  const supabase = createServiceClient()
+  const contractor = userId ? await getOrCreateContractorProfileForUser(userId).catch(() => undefined) : undefined
+  const { data, error } = await supabase
+    .from("search_analytics_events")
+    .insert({
+      contractor_id: contractor?.id ?? null,
+      query: input.query ?? null,
+      state: input.state?.toUpperCase() ?? null,
+      risk_level: input.riskLevel ?? null,
+      category: input.category ?? null,
+      result_count: input.resultCount ?? null,
+      event_type: input.eventType,
+      source: input.source,
+    })
+    .select("*")
+    .single()
+
+  if (isMissingRelationError(error)) return undefined
+  if (error) throw new Error(error.message)
+
+  return mapSearchAnalyticsEvent(data)
+}
+
+export async function recordProfileShareEventSupabase(
+  userId: string | undefined,
+  input: ProfileShareEventInput,
+): Promise<ProfileShareEvent | undefined> {
+  const supabase = createServiceClient()
+  const contractor = userId ? await getOrCreateContractorProfileForUser(userId).catch(() => undefined) : undefined
+  const { data, error } = await supabase
+    .from("profile_share_events")
+    .insert({
+      contractor_id: contractor?.id ?? null,
+      profile_slug: input.profileSlug,
+      channel: input.channel,
+      source: input.source,
+    })
+    .select("*")
+    .single()
+
+  if (isMissingRelationError(error)) return undefined
+  if (error) throw new Error(error.message)
+
+  return mapProfileShareEvent(data)
+}
+
 export async function getContractorDashboardSupabase(userId: string) {
   const supabase = createServiceClient()
   const { data: userRow, error: userError } = await supabase
@@ -1562,7 +1778,11 @@ export async function getContractorDashboardSupabase(userId: string) {
 
   const reports = (reportRows ?? []).map(mapClientReport)
   const reportIds = reports.map((report) => report.id)
-  const [{ data: evidenceRows, error: evidenceError }, { data: subscriptionRow, error: subscriptionError }] =
+  const [
+    { data: evidenceRows, error: evidenceError },
+    { data: subscriptionRow, error: subscriptionError },
+    savedSearchResult,
+  ] =
     await Promise.all([
       reportIds.length > 0
         ? supabase.from("report_evidence").select("*").in("report_id", reportIds)
@@ -1572,17 +1792,35 @@ export async function getContractorDashboardSupabase(userId: string) {
         .select("*")
         .eq("contractor_id", contractorRow.id)
         .maybeSingle(),
+      supabase
+        .from("saved_client_searches")
+        .select("*")
+        .eq("contractor_id", contractorRow.id)
+        .order("created_at", { ascending: false })
+        .limit(12),
     ])
 
   if (evidenceError) throw new Error(evidenceError.message)
   if (subscriptionError) throw new Error(subscriptionError.message)
+  if (savedSearchResult.error && !isMissingRelationError(savedSearchResult.error)) {
+    throw new Error(savedSearchResult.error.message)
+  }
 
   return {
     user: mapUser(userRow),
     contractor: mapContractorProfile(contractorRow),
     reports,
     evidence: (evidenceRows ?? []).map(mapEvidence),
-    savedSearches: [] satisfies SavedSearch[],
+    savedSearches: savedSearchResult.error
+      ? ([] satisfies SavedSearch[])
+      : (savedSearchResult.data ?? []).map((search) => ({
+          id: search.id,
+          contractorId: contractorRow.id,
+          query: search.query,
+          city: search.city ?? undefined,
+          state: search.state ?? undefined,
+          createdAt: search.created_at,
+        })),
     subscription: subscriptionRow ? mapSubscription(subscriptionRow) : undefined,
   }
 }

@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 
 import { JsonLd, getFaqSchema } from "@/lib/seo"
+import { StateSelect } from "@/components/forms/state-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -166,7 +167,7 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
                     <Input aria-label="Business name" name="businessName" placeholder="Business name" />
                     <Input aria-label="Trade or service type" name="trade" placeholder="Trade or service type" />
                     <Input aria-label="City" name="city" placeholder="City" />
-                    <Input aria-label="State" name="state" placeholder="State" />
+                    <StateSelect id="claimProfileState" name="state" ariaLabel="State" />
                     <Input
                       aria-label="Business email"
                       className="md:col-span-2"

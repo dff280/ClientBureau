@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, MapPin, ShieldCheck } from "lucide-react"
+import { ArrowRight, FileCheck2, MapPin, MessageSquareWarning, ShieldCheck, Star, type LucideIcon } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
@@ -9,6 +9,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import type { ClientSearchResult } from "@/lib/types"
 
 export function SearchResultCard({ result }: { result: ClientSearchResult }) {
+  const evidenceLabel = result.evidenceOnFile ? "Evidence on file" : "No public evidence label"
+  const paymentLabel = result.paymentContextLabel ?? "Payment context reviewed"
+
   return (
     <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm transition hover:border-amber-300 hover:shadow-md">
       <CardContent className="grid gap-6 p-5 lg:grid-cols-[190px_1fr_180px] lg:items-center">
@@ -36,10 +39,15 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
           <p className="text-sm leading-6 text-slate-700">
             {result.latestSummary ?? "Approved profile with moderated contractor-submitted reports."}
           </p>
+          <div className="grid gap-2 text-xs font-medium text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
+            <SearchFact icon={ShieldCheck} label={`${result.reportCount} approved signals`} />
+            <SearchFact icon={FileCheck2} label={evidenceLabel} />
+            <SearchFact icon={MessageSquareWarning} label={`${result.openDisputeCount ?? 0} open disputes`} />
+            <SearchFact icon={Star} label={`${result.positiveSignalCount ?? 0} positive signals`} />
+          </div>
           <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-500">
-            <span>{result.reportCount} approved reputation signals</span>
             <span>{result.matchedBy}</span>
-            <span>Relevance {result.matchScore}</span>
+            <span>{paymentLabel}</span>
             {result.latestCategory ? <span>Latest: {result.latestCategory}</span> : null}
           </div>
         </div>
@@ -57,5 +65,20 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function SearchFact({
+  icon: Icon,
+  label,
+}: {
+  icon: LucideIcon
+  label: string
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2">
+      <Icon className="size-3.5 text-amber-700" aria-hidden="true" />
+      {label}
+    </span>
   )
 }

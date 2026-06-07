@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
+import { StateSelect } from "@/components/forms/state-select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -43,7 +44,7 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
         <LabeledInput label="First name" name="firstName" defaultValue={client.firstName} errors={state.ok ? undefined : state.fieldErrors} />
         <LabeledInput label="Last name" name="lastName" defaultValue={client.lastName} errors={state.ok ? undefined : state.fieldErrors} />
         <LabeledInput label="City" name="city" defaultValue={client.city} errors={state.ok ? undefined : state.fieldErrors} />
-        <LabeledInput label="State" name="state" defaultValue={client.state} errors={state.ok ? undefined : state.fieldErrors} />
+        <LabeledState label="State" id={`${client.id}-state`} name="state" defaultValue={client.state} errors={state.ok ? undefined : state.fieldErrors} />
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${client.id}-risk`}>
             Risk
@@ -108,7 +109,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
         <LabeledInput label="Business" name="businessName" defaultValue={contractor.businessName} errors={state.ok ? undefined : state.fieldErrors} />
         <LabeledInput label="Trade" name="trade" defaultValue={contractor.trade} errors={state.ok ? undefined : state.fieldErrors} />
         <LabeledInput label="City" name="city" defaultValue={contractor.city} errors={state.ok ? undefined : state.fieldErrors} />
-        <LabeledInput label="State" name="state" defaultValue={contractor.state} errors={state.ok ? undefined : state.fieldErrors} />
+        <LabeledState label="State" id={`${contractor.id}-state`} name="state" defaultValue={contractor.state} errors={state.ok ? undefined : state.fieldErrors} />
         <div className="space-y-2">
           <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${contractor.id}-verification`}>
             Verification
@@ -163,6 +164,30 @@ function LabeledInput({
         {label}
       </label>
       <Input id={`${name}-${defaultValue}`} name={name} defaultValue={defaultValue} type={type} />
+      <FieldError name={name} errors={errors} />
+    </div>
+  )
+}
+
+function LabeledState({
+  label,
+  id,
+  name,
+  defaultValue,
+  errors,
+}: {
+  label: string
+  id: string
+  name: string
+  defaultValue?: string
+  errors?: Record<string, string[]>
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={id}>
+        {label}
+      </label>
+      <StateSelect id={id} name={name} defaultValue={defaultValue} />
       <FieldError name={name} errors={errors} />
     </div>
   )

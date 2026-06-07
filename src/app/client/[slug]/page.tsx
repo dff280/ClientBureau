@@ -157,7 +157,16 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 <p className="mt-1">Client response and dispute path included</p>
               </div>
             </div>
+            <div className="grid gap-3 rounded-md border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-slate-100 md:grid-cols-4">
+              <HeroFact label="Approved reports" value={String(profile.reports.length)} />
+              <HeroFact label="Positive references" value={String(profile.positiveReports.length)} />
+              <HeroFact label="Evidence review" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private only"} />
+              <HeroFact label="Response status" value={profile.clientResponses.length > 0 ? "Response published" : "Response available"} />
+            </div>
             <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
+                <Link href="/search">Check another client</Link>
+              </Button>
               <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
@@ -182,6 +191,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   <MessageSquareText aria-hidden="true" />
                   Respond or dispute
                 </Link>
+              </Button>
+              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
+                <Link href={`/dashboard/watchlist?client=${profile.id}`}>Watch this client</Link>
               </Button>
             </div>
           </div>
@@ -428,6 +440,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               name={name}
               location={location}
               profileUrl={profileUrl}
+              profileSlug={profile.publicSlug}
               imageUrl={profileImageUrl}
               score={profile.clientBureauScore}
               riskLevel={profile.riskLevel}
@@ -503,6 +516,15 @@ function TrustMetric({ label, value }: { label: string; value: string }) {
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
+    </div>
+  )
+}
+
+function HeroFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase text-amber-200">{label}</p>
+      <p className="mt-1 font-semibold text-white">{value}</p>
     </div>
   )
 }

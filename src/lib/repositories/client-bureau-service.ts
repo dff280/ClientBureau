@@ -13,6 +13,7 @@ import {
   createPaymentPlan,
   createServiceFeeOrder,
   createWatchlistItem,
+  deleteSavedClientSearch,
   deleteReportDraft,
   linkEvidenceToServiceCase,
   getContractorDashboard,
@@ -35,8 +36,11 @@ import {
   reviewReportsBulk,
   runFloridaLienPrecheck,
   runRecoveryPrecheck,
+  recordProfileShareEvent,
+  recordSearchEvent,
   reviewCommunityDiscussion,
   saveAdminQueueView,
+  saveClientSearch,
   saveReportDraft,
   searchClients,
   setMockModerationDecisionReason,
@@ -74,6 +78,7 @@ import {
   createPaymentRecoveryCaseSupabase,
   createServiceFeeOrderSupabase,
   createWatchlistItemSupabase,
+  deleteSavedClientSearchSupabase,
   deleteAdminRecordSupabase,
   deleteReportDraftSupabase,
   getAdminModerationCrmDataSupabase,
@@ -97,7 +102,10 @@ import {
   reviewReportsBulkSupabase,
   runFloridaLienPrecheckSupabase,
   runRecoveryPrecheckSupabase,
+  recordProfileShareEventSupabase,
+  recordSearchEventSupabase,
   saveAdminQueueViewSupabase,
+  saveClientSearchSupabase,
   saveReportDraftSupabase,
   searchClientsSupabase,
   setModerationDecisionReasonSupabase,
@@ -150,8 +158,11 @@ import type {
   RecoveryComplianceReviewInput,
   ResolutionDeskContactInput,
   ReportDraftInput,
+  SavedClientSearchInput,
+  SearchAnalyticsEventInput,
   ServiceFeeCheckoutInput,
   ServicePrecheckInput,
+  ProfileShareEventInput,
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
@@ -165,6 +176,9 @@ import type {
   ModerationCaseStatus,
   ModerationDecisionReason,
   ModerationPriority,
+  ProfileShareEvent,
+  SavedClientSearch,
+  SearchAnalyticsEvent,
   SearchFilters,
   User,
   WatchlistStatus,
@@ -223,6 +237,39 @@ export async function searchClientsService(query?: string, filters?: SearchFilte
   if (shouldUseSupabase()) return searchClientsSupabase(query, filters)
 
   return searchClients(query, filters)
+}
+
+export async function saveClientSearchService(
+  userId: string,
+  input: SavedClientSearchInput,
+): Promise<SavedClientSearch | undefined> {
+  if (shouldUseSupabase()) return saveClientSearchSupabase(userId, input)
+
+  return saveClientSearch(userId, input)
+}
+
+export async function deleteSavedClientSearchService(userId: string, searchId: string) {
+  if (shouldUseSupabase()) return deleteSavedClientSearchSupabase(userId, searchId)
+
+  return deleteSavedClientSearch(userId, searchId)
+}
+
+export async function recordSearchEventService(
+  userId: string | undefined,
+  input: SearchAnalyticsEventInput,
+): Promise<SearchAnalyticsEvent | undefined> {
+  if (shouldUseSupabase()) return recordSearchEventSupabase(userId, input)
+
+  return recordSearchEvent(userId, input)
+}
+
+export async function recordProfileShareEventService(
+  userId: string | undefined,
+  input: ProfileShareEventInput,
+): Promise<ProfileShareEvent | undefined> {
+  if (shouldUseSupabase()) return recordProfileShareEventSupabase(userId, input)
+
+  return recordProfileShareEvent(userId, input)
 }
 
 export async function getContractorDashboardService(userId: string) {

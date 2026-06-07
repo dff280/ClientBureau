@@ -1,5 +1,12 @@
 import { z } from "zod"
 
+import {
+  businessTypes,
+  companySizes,
+  onboardingGoals,
+  usStateCodes,
+  yearsInBusinessOptions,
+} from "@/lib/locations"
 import { isPositiveReportCategory, reportCategories, riskLevels } from "@/lib/types"
 
 export const discussionCategories = [
@@ -22,6 +29,14 @@ const optionalText = z
   .trim()
   .optional()
   .transform((value) => (value ? value : undefined))
+
+const stateCode = (label: string) =>
+  z
+    .enum(usStateCodes, { error: `${label} must be selected from the state list.` })
+    .transform((value) => value.toUpperCase())
+
+const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
+  z.enum(values).optional().or(z.literal("")).transform((value) => value || undefined)
 
 const money = (label: string) =>
   z.coerce
@@ -65,10 +80,11 @@ export const clientReportSchema = z
       .optional()
       .transform((value) => (value ? value : undefined)),
     city: requiredText("Client city"),
-    state: requiredText("Client state", 2).max(2, "Use a two-letter state abbreviation."),
+    state: stateCode("Client state"),
+    zip: z.string().trim().max(10, "Keep ZIP under 10 characters.").optional(),
     projectType: requiredText("Project type"),
     projectCity: requiredText("Project city"),
-    projectState: requiredText("Project state", 2).max(2, "Use a two-letter state abbreviation."),
+    projectState: stateCode("Project state"),
     contractAmount: money("Contract amount"),
     amountUnpaid: money("Amount unpaid"),
     reportCategory: z.enum(reportCategories),
@@ -134,9 +150,17 @@ export const signupSchema = z.object({
   email: z.email("Enter a valid email."),
   password: requiredText("Password", 8),
   businessName: requiredText("Business name"),
+  businessType: optionalChoice(businessTypes),
   trade: requiredText("Trade"),
+  businessPhone: optionalText,
+  websiteUrl: z.url("Enter a valid website URL.").optional().or(z.literal("")).transform((value) => value || undefined),
+  licenseNumber: optionalText,
+  yearsInBusiness: optionalChoice(yearsInBusinessOptions),
+  companySize: optionalChoice(companySizes),
+  serviceArea: z.string().trim().max(500, "Keep service areas under 500 characters.").optional().transform((value) => value || undefined),
+  primaryGoal: optionalChoice(onboardingGoals),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
 })
 
 export const loginSchema = z.object({
@@ -196,7 +220,7 @@ export const adminClientUpdateSchema = z.object({
   lastName: requiredText("Last name"),
   businessName: optionalText,
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   riskLevel: z.enum(riskLevels),
   clientBureauScore: z.coerce.number().min(0).max(100),
   isPublic: z.coerce.boolean().optional(),
@@ -208,7 +232,7 @@ export const adminContractorUpdateSchema = z.object({
   businessName: requiredText("Business name"),
   trade: requiredText("Trade"),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   verificationStatus: z.enum(["unverified", "pending", "verified"]),
   moderatorNote: z.string().trim().max(700).optional(),
 })
@@ -224,9 +248,51 @@ export const bulkUploadImportSchema = z.object({
 
 export const searchSchema = z.object({
   query: z.string().trim().optional().default(""),
-  state: z.string().trim().max(2).optional(),
+  state: stateCode("State").optional(),
   riskLevel: z.enum(riskLevels).optional(),
   category: z.enum(reportCategories).optional(),
+})
+
+export const savedClientSearchSchema = z.object({
+  searchId: optionalText,
+  query: z.string().trim().max(240, "Keep search text under 240 characters.").optional().default(""),
+  city: optionalText,
+  state: stateCode("State").optional(),
+  riskLevel: z.enum(riskLevels).optional(),
+  category: z.enum(reportCategories).optional(),
+  resultCount: z.coerce
+    .number({ error: "Result count must be a number." })
+    .int("Result count must be a whole number.")
+    .min(0, "Result count cannot be negative.")
+    .max(100000, "Result count is outside the expected range.")
+    .default(0),
+})
+
+export const deleteSavedClientSearchSchema = z.object({
+  searchId: requiredText("Saved search ID"),
+})
+
+export const searchAnalyticsEventSchema = z.object({
+  query: z.string().trim().max(240).optional(),
+  state: stateCode("State").optional(),
+  riskLevel: z.enum(riskLevels).optional(),
+  category: z.enum(reportCategories).optional(),
+  resultCount: z.coerce.number().int().min(0).max(100000).optional(),
+  eventType: z.enum([
+    "search_submitted",
+    "suggestion_clicked",
+    "result_viewed",
+    "save_search",
+    "private_identifier_check",
+    "no_result",
+  ]),
+  source: z.enum(["search_page", "profile_page", "directory", "dashboard"]).default("search_page"),
+})
+
+export const profileShareEventSchema = z.object({
+  profileSlug: requiredText("Profile slug", 3).max(220),
+  channel: z.enum(["copy_link", "profile_card", "referral_badge", "social"]),
+  source: z.enum(["profile_page", "directory", "dashboard"]).default("profile_page"),
 })
 
 export const watchlistItemSchema = z.object({
@@ -262,7 +328,7 @@ export const deleteReportDraftSchema = z.object({
 export const intakeAssessmentSchema = z.object({
   clientName: requiredText("Client name"),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   projectValue: money("Project value"),
   depositReceived: z.coerce.boolean().optional(),
   contractSigned: z.coerce.boolean().optional(),
@@ -273,7 +339,7 @@ export const intakeAssessmentSchema = z.object({
 export const paymentRecoveryCaseSchema = z.object({
   clientName: requiredText("Client name"),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   amountDue: money("Amount due"),
   invoiceAgeDays: z.coerce
     .number({ error: "Invoice age must be a number." })
@@ -292,7 +358,7 @@ export const managedRecoveryCaseSchema = z.object({
   clientName: requiredText("Client name"),
   clientEmail: z.email("Enter a valid client email.").optional().or(z.literal("")),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   amountDue: money("Amount due"),
   invoiceAgeDays: z.coerce
     .number({ error: "Invoice age must be a number." })
@@ -361,7 +427,7 @@ export const lienNoticeDraftSchema = z.object({
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
   propertyCity: requiredText("Property city"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   amountDue: money("Amount due"),
   lastWorkDate: requiredText("Last work date", 8),
   targetSendDate: optionalText,
@@ -490,7 +556,7 @@ export const clientPipelineItemSchema = z.object({
   clientId: optionalText,
   clientName: requiredText("Client name"),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   stage: z.enum(["new_lead", "screening", "contract_pending", "active_job", "payment_follow_up", "closed"]),
   priority: z.enum(["low", "normal", "high", "urgent"]).default("normal"),
   estimatedValue: money("Estimated value"),
@@ -508,7 +574,7 @@ export const clientRiskRoomSchema = z.object({
   clientId: optionalText,
   clientName: requiredText("Client name"),
   city: requiredText("City"),
-  state: requiredText("State", 2).max(2, "Use a two-letter state abbreviation."),
+  state: stateCode("State"),
   headline: requiredText("Client work file headline", 8).max(160, "Keep the headline under 160 characters."),
   summary: requiredText("Client work file summary", 20).max(900, "Keep the summary under 900 characters."),
 })
@@ -725,3 +791,6 @@ export type ContractSignatureInput = z.infer<typeof contractSignatureSchema>
 export type UpdateEvidenceVaultStatusInput = z.infer<typeof updateEvidenceVaultStatusSchema>
 export type AdminSavedViewInput = z.infer<typeof adminSavedViewSchema>
 export type RecoveryComplianceReviewInput = z.infer<typeof recoveryComplianceReviewSchema>
+export type SavedClientSearchInput = z.infer<typeof savedClientSearchSchema>
+export type SearchAnalyticsEventInput = z.infer<typeof searchAnalyticsEventSchema>
+export type ProfileShareEventInput = z.infer<typeof profileShareEventSchema>

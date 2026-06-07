@@ -21,7 +21,13 @@ import {
   summarizeLaunchHealth,
 } from "@/lib/launch-health"
 import type { Database } from "@/lib/database.types"
-import { clientReportSchema, clientResponseSchema } from "@/lib/schemas/client-bureau"
+import {
+  clientReportSchema,
+  clientResponseSchema,
+  profileShareEventSchema,
+  savedClientSearchSchema,
+  searchAnalyticsEventSchema,
+} from "@/lib/schemas/client-bureau"
 import {
   calculateClientBureauScore,
   getReportedBalanceSummary,
@@ -31,7 +37,10 @@ import {
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
+  buildSearchSuggestions,
   buildSearchExperienceStats,
+  isPrivateIdentifierSearch,
+  rankSearchPreviewProfiles,
   toSearchPreviewProfile,
 } from "@/lib/search-experience"
 import {
@@ -592,6 +601,48 @@ describe("search and public profiles", () => {
     expect(stats.approvedReportSignals).toBeGreaterThan(0)
     expect(stats.statesCovered).toBeGreaterThan(0)
     expect(stats.averageScore).toBeGreaterThan(0)
+  })
+
+  it("ranks predictive profile previews and creates safe suggestions", () => {
+    const previews = searchClients("").map(toSearchPreviewProfile)
+    const ranked = rankSearchPreviewProfiles(previews, "John Orlando")
+    const suggestions = buildSearchSuggestions(previews, "John", "FL")
+
+    expect(ranked[0]?.publicSlug).toBe("john-smith-orlando-fl")
+    expect(suggestions.some((suggestion) => suggestion.href === "/client/john-smith-orlando-fl")).toBe(true)
+    expect(JSON.stringify(suggestions)).not.toContain("sha256:")
+  })
+
+  it("recognizes private identifier searches without exposing raw identifiers", () => {
+    const previews = searchClients("").map(toSearchPreviewProfile)
+    const suggestions = buildSearchSuggestions(previews, "person@example.com", "FL")
+
+    expect(isPrivateIdentifierSearch("person@example.com")).toBe(true)
+    expect(isPrivateIdentifierSearch("(407) 555-1010")).toBe(true)
+    expect(suggestions[0]?.kind).toBe("private_identifier")
+    expect(suggestions[0]?.description).toContain("private matching")
+    expect(JSON.stringify(suggestions)).not.toContain("407")
+  })
+
+  it("validates search activation inputs", () => {
+    expect(savedClientSearchSchema.safeParse({
+      query: "John Smith",
+      state: "FL",
+      riskLevel: "Elevated",
+      category: "Non-payment",
+      resultCount: 2,
+    }).success).toBe(true)
+    expect(searchAnalyticsEventSchema.safeParse({
+      query: "John Smith",
+      eventType: "search_submitted",
+      source: "search_page",
+      resultCount: 1,
+    }).success).toBe(true)
+    expect(profileShareEventSchema.safeParse({
+      profileSlug: "john-smith-orlando-fl",
+      channel: "referral_badge",
+      source: "profile_page",
+    }).success).toBe(true)
   })
 
   it("only returns public profile data with reviewable reports", () => {
