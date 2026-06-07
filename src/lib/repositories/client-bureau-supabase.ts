@@ -181,7 +181,15 @@ type ProfileShareEventRow = Tables["profile_share_events"]["Row"]
 const emptyHash = "sha256:empty-private"
 
 function isMissingRelationError(error: { message?: string; code?: string } | null | undefined) {
-  return error?.code === "42P01" || error?.message?.toLowerCase().includes("does not exist")
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return (
+    error?.code === "42P01" ||
+    error?.code === "PGRST205" ||
+    message.includes("does not exist") ||
+    message.includes("could not find the table") ||
+    message.includes("schema cache")
+  )
 }
 
 function isMissingContractPacketColumnError(error: { message?: string; code?: string } | null | undefined) {
