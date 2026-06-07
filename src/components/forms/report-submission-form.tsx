@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { submitClientReportAction } from "@/lib/actions/client-bureau"
+import { clientTypes, jobStatuses, paymentDisputeStatuses } from "@/lib/locations"
 import type { ActionResult, ClientReport, ReportCategory } from "@/lib/types"
 import { isPositiveReportCategory, positiveReportCategories, reportCategories } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -64,6 +65,19 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
       >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
+            <Label htmlFor="clientType">Client type</Label>
+            <select id="clientType" name="clientType" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue="Individual">
+              {clientTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <FieldError name="clientType" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="businessName">Business name optional</Label>
+            <Input id="businessName" name="businessName" defaultValue={defaults.businessName} placeholder="ABC Property Group" />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="firstName">Client first name</Label>
             <Input id="firstName" name="firstName" defaultValue={defaults.firstName} placeholder="John" />
             <FieldError name="firstName" errors={state.ok ? undefined : state.fieldErrors} />
@@ -72,10 +86,6 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <Label htmlFor="lastName">Client last name</Label>
             <Input id="lastName" name="lastName" defaultValue={defaults.lastName} placeholder="Smith" />
             <FieldError name="lastName" errors={state.ok ? undefined : state.fieldErrors} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="businessName">Business name optional</Label>
-            <Input id="businessName" name="businessName" defaultValue={defaults.businessName} placeholder="Smith Holdings" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Client email for private matching</Label>
@@ -103,15 +113,41 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               <FieldError name="zip" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
           </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="jobAddress">Job address optional and private</Label>
+            <Input id="jobAddress" name="jobAddress" placeholder="Street address is used only for moderation/private matching" autoComplete="street-address" />
+            <p className="text-xs leading-5 text-slate-500">Public profiles show city/state only. Street addresses are not published.</p>
+            <FieldError name="jobAddress" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
         </div>
       </WorkflowStep>
 
       <WorkflowStep step="2" title="Project details" text="Describe the contracted work and where it occurred. Use the project location, not a private street address.">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
+            <Label htmlFor="tradeCategory">Trade or service category</Label>
+            <Input id="tradeCategory" name="tradeCategory" placeholder="Painting, roofing, remodeling, HVAC" />
+            <FieldError name="tradeCategory" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="projectType">Project type</Label>
             <Input id="projectType" name="projectType" placeholder="Kitchen remodel" />
             <FieldError name="projectType" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="jobType">Job type</Label>
+            <Input id="jobType" name="jobType" placeholder="Residential repaint, emergency repair, commercial install" />
+            <FieldError name="jobType" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="jobStatus">Job status</Label>
+            <select id="jobStatus" name="jobStatus" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue="">
+              <option value="">Select status</option>
+              {jobStatuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+            <FieldError name="jobStatus" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
             <div className="space-y-2">
@@ -125,10 +161,46 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               <FieldError name="projectState" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
           </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="jobStartDate">Job start date optional</Label>
+              <Input id="jobStartDate" name="jobStartDate" type="date" />
+              <FieldError name="jobStartDate" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="jobCompletionDate">Completion date optional</Label>
+              <Input id="jobCompletionDate" name="jobCompletionDate" type="date" />
+              <FieldError name="jobCompletionDate" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+          </div>
           <div className="space-y-2">
             <Label htmlFor="contractAmount">Contract amount</Label>
             <Input id="contractAmount" name="contractAmount" type="number" placeholder="18400" />
             <FieldError name="contractAmount" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="depositRequested">Deposit requested optional</Label>
+              <Input id="depositRequested" name="depositRequested" type="number" min="0" placeholder="2500" />
+              <FieldError name="depositRequested" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="depositPaid">Deposit paid optional</Label>
+              <Input id="depositPaid" name="depositPaid" type="number" min="0" placeholder="2500" />
+              <FieldError name="depositPaid" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="finalInvoiceAmount">Final invoice amount optional</Label>
+              <Input id="finalInvoiceAmount" name="finalInvoiceAmount" type="number" min="0" placeholder="18400" />
+              <FieldError name="finalInvoiceAmount" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="materialsPurchasedAmount">Materials purchased optional</Label>
+              <Input id="materialsPurchasedAmount" name="materialsPurchasedAmount" type="number" min="0" placeholder="4200" />
+              <FieldError name="materialsPurchasedAmount" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="amountUnpaid">
@@ -150,6 +222,16 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
                 : "Enter the amount currently represented as unpaid or unresolved. Use 0 if the issue is resolved."}
             </p>
             <FieldError name="amountUnpaid" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="grid content-start gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="signedContract" value="true" className="size-4 rounded border-slate-300" />
+              Signed contract or proposal exists
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" name="writtenChangeOrder" value="true" className="size-4 rounded border-slate-300" />
+              Written change order exists
+            </label>
           </div>
         </div>
       </WorkflowStep>
@@ -195,6 +277,23 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <FieldError name="reportCategory" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="secondaryCategory">Secondary category optional</Label>
+            <select
+              id="secondaryCategory"
+              name="secondaryCategory"
+              defaultValue=""
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <option value="">No secondary category</option>
+              {reportCategories.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+            <FieldError name="secondaryCategory" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="paymentStatus">Payment status</Label>
             <Input
               id="paymentStatus"
@@ -206,6 +305,42 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               }
             />
             <FieldError name="paymentStatus" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="disputeStatus">Payment/dispute status</Label>
+            <select id="disputeStatus" name="disputeStatus" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue={isPositiveReport ? "No payment issue" : ""}>
+              <option value="">Select status</option>
+              {paymentDisputeStatuses.map((status) => (
+                <option key={status} value={status}>{status}</option>
+              ))}
+            </select>
+            <FieldError name="disputeStatus" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="grid gap-3 md:col-span-2 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="amountDisputed">Amount disputed optional</Label>
+              <Input id="amountDisputed" name="amountDisputed" type="number" min="0" placeholder="1200" />
+              <FieldError name="amountDisputed" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="daysOverdue">Days overdue optional</Label>
+              <Input id="daysOverdue" name="daysOverdue" type="number" min="0" placeholder="30" />
+              <FieldError name="daysOverdue" errors={state.ok ? undefined : state.fieldErrors} />
+            </div>
+          </div>
+          <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 md:col-span-2 sm:grid-cols-2">
+            {[
+              ["clientResponded", "Client responded"],
+              ["issueResolved", "Issue resolved"],
+              ["paymentReminderSent", "Payment reminder sent"],
+              ["demandLetterSent", "Demand letter sent"],
+              ["lienNoticeStarted", "Lien notice/legal process started"],
+            ].map(([name, label]) => (
+              <label key={name} className="flex items-center gap-2">
+                <input type="checkbox" name={name} value="true" className="size-4 rounded border-slate-300" />
+                {label}
+              </label>
+            ))}
           </div>
         </div>
       </WorkflowStep>
@@ -224,6 +359,20 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             className="min-h-36"
           />
           <FieldError name="detailedExperience" errors={state.ok ? undefined : state.fieldErrors} />
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <StructuredTextarea name="whatWasAgreed" label="What was agreed?" placeholder="Briefly describe the agreed scope, price, timeline, or payment terms." errors={state.ok ? undefined : state.fieldErrors} />
+          <StructuredTextarea name="workCompleted" label="What work was completed?" placeholder="Describe completed labor, materials, milestones, approvals, or delivery." errors={state.ok ? undefined : state.fieldErrors} />
+          <StructuredTextarea name="paymentIssue" label="What payment or dispute issue occurred?" placeholder="Describe the reported issue using factual, neutral wording." errors={state.ok ? undefined : state.fieldErrors} />
+          <StructuredTextarea name="evidenceSupport" label="What evidence supports this?" placeholder="List invoices, contracts, messages, photos, receipts, change orders, or notices." errors={state.ok ? undefined : state.fieldErrors} />
+          <div className="md:col-span-2">
+            <StructuredTextarea name="desiredResolution" label="What would resolve the issue?" placeholder="Describe payment, correction, documentation, or resolution terms that would close the matter." errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="resolutionSummary">Resolution summary optional</Label>
+            <Textarea id="resolutionSummary" name="resolutionSummary" placeholder="If resolved or partially resolved, describe the current outcome." className="min-h-24" />
+            <FieldError name="resolutionSummary" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
         </div>
       </WorkflowStep>
 
@@ -279,6 +428,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
 
       <WorkflowStep step="7" title="Review and attest" text="Before submission, confirm the report is accurate, documentable, and appropriate for moderation.">
         <div className="grid gap-3">
+          <Attestation name="relationshipCertification" label="I confirm I had a real commercial relationship with this client." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation name="truthfulCertification" label="I certify this report is truthful to the best of my knowledge." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation name="documentationCertification" label="I can provide documentation or have accurately described the documentation available." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation
@@ -290,6 +440,10 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             }
             errors={state.ok ? undefined : state.fieldErrors}
           />
+          <Attestation name="moderationCertification" label="I understand public summaries are moderated before publication." errors={state.ok ? undefined : state.fieldErrors} />
+          <Attestation name="evidencePrivacyCertification" label="I understand private evidence is not automatically public." errors={state.ok ? undefined : state.fieldErrors} />
+          <Attestation name="responseRightCertification" label="I understand reported parties may respond or request correction." errors={state.ok ? undefined : state.fieldErrors} />
+          <Attestation name="noHarassmentCertification" label="I will not include threats, harassment, or sensitive personal information in public summaries." errors={state.ok ? undefined : state.fieldErrors} />
         </div>
       </WorkflowStep>
 
@@ -298,7 +452,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         className="bg-slate-950 text-white hover:bg-slate-800"
       >
         <ShieldCheck aria-hidden="true" />
-        Report a Client Experience
+        Submit for Moderation
       </PendingSubmitButton>
     </form>
   )
@@ -368,6 +522,26 @@ function WorkflowStep({
       </div>
       {children}
     </section>
+  )
+}
+
+function StructuredTextarea({
+  name,
+  label,
+  placeholder,
+  errors,
+}: {
+  name: string
+  label: string
+  placeholder: string
+  errors?: Record<string, string[]>
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name}>{label}</Label>
+      <Textarea id={name} name={name} placeholder={placeholder} className="min-h-28" />
+      <FieldError name={name} errors={errors} />
+    </div>
   )
 }
 

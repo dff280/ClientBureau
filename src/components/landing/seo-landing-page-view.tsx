@@ -80,7 +80,7 @@ export function SeoLandingPageView({
               <h2 className="text-2xl font-semibold text-slate-950">Built for pre-client decisions.</h2>
               <p className="text-sm leading-6 text-slate-600">{page.audience}</p>
               <div className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                Public pages show approved summaries, reported experience context, score factors,
+                Public pages show approved summaries, reported experience context, rating factors,
                 client response information, and evidence-on-file labels. Private phone numbers,
                 emails, street addresses, raw files, and pending content are not displayed.
               </div>
@@ -90,7 +90,7 @@ export function SeoLandingPageView({
             <CardContent className="space-y-4 p-6">
               <p className="text-sm font-semibold uppercase text-amber-700">Search first workflow</p>
               <div className="grid gap-3 sm:grid-cols-2">
-                {["Search public profile context", "Review score factors and balances", "Check response or dispute context", "Document your own experience"].map((step, index) => (
+                {["Search public profile context", "Review rating factors and balances", "Check response or dispute context", "Document your own experience"].map((step, index) => (
                   <div key={step} className="rounded-md border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold uppercase text-slate-500">Step {index + 1}</p>
                     <p className="mt-1 font-semibold text-slate-950">{step}</p>
@@ -185,7 +185,7 @@ export function SeoLandingPageView({
                       <RiskBadge riskLevel={profile.riskLevel} />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-3">
-                      <ProfileFact label="Score" value={`${profile.clientBureauScore}/100`} />
+                      <ProfileFact label="Rating" value={`${profile.clientBureauScore}/100`} />
                       <ProfileFact label="Reports" value={String(profile.reports.length)} />
                       <ProfileFact label="Payment issue context" value={formatPaymentContext(profile.balanceSummary.totalReportedUnpaid)} />
                     </div>
@@ -396,7 +396,7 @@ function getLandingFaqs(page: SeoLandingPage) {
     {
       question: `What are ${context.noun}?`,
       answer:
-        "They are Client Bureau public research pages built from approved client profile context, moderated contractor-submitted summaries, response information, and non-sensitive score factors.",
+        "They are Client Bureau public research pages built from approved client profile context, moderated contractor-submitted summaries, response information, and non-sensitive rating factors.",
     },
     {
       question: "Does Client Bureau show private phone numbers, emails, or evidence files?",

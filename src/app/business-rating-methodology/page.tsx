@@ -82,7 +82,7 @@ export default function BusinessRatingMethodologyPage() {
               <Button asChild variant="outline">
                 <Link href="/score-methodology">
                   <HelpCircle aria-hidden="true" />
-                  Client score methodology
+                  Client rating methodology
                 </Link>
               </Button>
             </div>

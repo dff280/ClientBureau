@@ -82,7 +82,7 @@ export default function ModerationPolicyPage() {
             body: "When a report is approved, rejected, disputed, resolved, or edited, moderators should ensure the related public client profile stays accurate and current.",
             bullets: [
               "Approved reports may create or update a public SEO-friendly client profile page.",
-              "Report count, risk level, score factors, dispute count, resolution count, and last-updated date should reflect approved public context.",
+              "Report count, risk level, rating factors, dispute count, resolution count, and last-updated date should reflect approved public context.",
               "Rejected or pending content should not influence public profile wording or sitemap-visible profile content.",
             ],
           },

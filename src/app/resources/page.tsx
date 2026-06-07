@@ -10,7 +10,7 @@ import { JsonLd, getFaqSchema } from "@/lib/seo"
 export const metadata: Metadata = {
   title: "Contractor Resources",
   description:
-    "Client Bureau resources for client search, score methodology, report policies, moderation standards, and client response workflows.",
+    "Client Bureau resources for client search, rating methodology, report policies, moderation standards, and client response workflows.",
   alternates: {
     canonical: "/resources",
   },
@@ -38,7 +38,7 @@ const faqs = [
   {
     question: "What should contractors read first?",
     answer:
-      "Start with How It Works, Score Methodology, and Report Policy to understand search, scoring, moderation, and public reporting standards.",
+      "Start with How It Works, Rating Methodology, and Report Policy to understand search, ratings, moderation, and public reporting standards.",
   },
   {
     question: "Can clients respond to a public profile?",
@@ -64,7 +64,7 @@ export default function ResourcesPage() {
               Clear guidance for using Client Bureau responsibly.
             </h1>
             <p className="max-w-3xl text-base leading-7 text-slate-300">
-              Learn how client search, public reports, score methodology, private evidence
+              Learn how client search, public reports, rating methodology, private evidence
               handling, moderation, and response paths work together for contractors and clients.
             </p>
             <div className="flex flex-wrap gap-3">

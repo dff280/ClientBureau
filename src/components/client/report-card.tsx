@@ -3,6 +3,7 @@ import { FileText, ShieldCheck, ThumbsUp } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import { cleanPublicReportText, reportResponseStatus } from "@/lib/client-rating"
 import { reportConfidenceLabel, reportConfidenceScore } from "@/lib/trust-verification"
 import { isPositiveReportCategory, type ClientReport } from "@/lib/types"
 
@@ -49,7 +50,7 @@ export function ReportCard({ report }: { report: ClientReport }) {
           <p className="text-xs font-semibold uppercase text-slate-500">
             {isPositive ? "Moderated positive summary" : "Moderated summary"}
           </p>
-          <p className="mt-2 text-sm leading-6 text-slate-700">{report.publicSummary}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-700">{cleanPublicReportText(report.publicSummary)}</p>
         </div>
         <div className="grid gap-3 text-sm sm:grid-cols-3">
           <div>
@@ -76,6 +77,12 @@ export function ReportCard({ report }: { report: ClientReport }) {
             <p className="text-xs font-semibold uppercase text-slate-500">Resolution status</p>
             <p className="font-medium text-slate-900">{report.resolutionStatus ?? "Unresolved"}</p>
           </div>
+          <div>
+            <p className="text-xs font-semibold uppercase text-slate-500">Client response status</p>
+            <p className="font-medium text-slate-900">{report.responseStatus ?? reportResponseStatus(report)}</p>
+          </div>
+        </div>
+        <div className="grid gap-3 text-sm sm:grid-cols-2">
           <div>
             <p className="text-xs font-semibold uppercase text-slate-500">Evidence</p>
             <p className="inline-flex items-center gap-1 font-medium text-slate-900">

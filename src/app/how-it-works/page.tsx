@@ -24,7 +24,7 @@ const workflow = [
   {
     icon: ClipboardCheck,
     title: "Review report context",
-    text: "Evaluate Client Bureau Score, risk level, report count, payment reliability, dispute history, and approved summaries.",
+    text: "Evaluate Client Bureau Rating, risk level, report count, payment reliability, dispute history, and approved summaries.",
   },
   {
     icon: FilePlus2,
@@ -75,7 +75,7 @@ export default function HowItWorksPage() {
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
               When a report is approved, Client Bureau can create or update a public client profile
-              with a moderated summary, updated score factors, risk level, evidence-on-file summary,
+              with a moderated summary, updated rating factors, risk level, evidence-on-file summary,
               and a neutral response path for the client.
             </p>
             <Button asChild className="mt-5 bg-slate-950 text-white hover:bg-slate-800">

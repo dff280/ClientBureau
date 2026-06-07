@@ -195,6 +195,21 @@ function isMissingContractPacketColumnError(error: { message?: string; code?: st
   )
 }
 
+function isMissingReportIntakeColumnError(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return (
+    error?.code === "42703" ||
+    message.includes("client_type") ||
+    message.includes("trade_category") ||
+    message.includes("job_start_date") ||
+    message.includes("deposit_requested") ||
+    message.includes("secondary_category") ||
+    message.includes("evidence_confidence") ||
+    message.includes("response_status")
+  )
+}
+
 function formatSupabaseCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -209,6 +224,7 @@ function mapUser(row: UserRow): User {
     email: row.email,
     fullName: row.full_name,
     role: row.role,
+    accountType: row.account_type ?? (row.role === "contractor" ? "contractor" : undefined),
     createdAt: row.created_at,
   }
 }
@@ -308,6 +324,35 @@ function mapClientReport(row: ClientReportRow): ClientReport {
     id: row.id,
     contractorId: row.contractor_id,
     clientId: row.client_id,
+    clientType: row.client_type ?? undefined,
+    clientJobAddressPrivate: row.client_job_address_private ?? undefined,
+    tradeCategory: row.trade_category ?? undefined,
+    jobType: row.job_type ?? undefined,
+    jobStartDate: row.job_start_date ?? undefined,
+    jobCompletionDate: row.job_completion_date ?? undefined,
+    jobStatus: row.job_status ?? undefined,
+    depositRequested: row.deposit_requested ?? undefined,
+    depositPaid: row.deposit_paid ?? undefined,
+    finalInvoiceAmount: row.final_invoice_amount ?? undefined,
+    materialsPurchasedAmount: row.materials_purchased_amount ?? undefined,
+    signedContract: row.signed_contract ?? undefined,
+    writtenChangeOrder: row.written_change_order ?? undefined,
+    secondaryCategory: row.secondary_category ?? undefined,
+    disputeStatus: row.dispute_status ?? undefined,
+    amountDisputed: row.amount_disputed ?? undefined,
+    daysOverdue: row.days_overdue ?? undefined,
+    clientResponded: row.client_responded ?? undefined,
+    issueResolved: row.issue_resolved ?? undefined,
+    resolutionSummary: row.resolution_summary ?? undefined,
+    paymentReminderSent: row.payment_reminder_sent ?? undefined,
+    demandLetterSent: row.demand_letter_sent ?? undefined,
+    lienNoticeStarted: row.lien_notice_started ?? undefined,
+    factualSummaryPublic: row.factual_summary_public ?? undefined,
+    detailedTimelinePrivate: row.detailed_timeline_private ?? undefined,
+    evidenceConfidence: row.evidence_confidence === "Medium" || row.evidence_confidence === "Strong" ? row.evidence_confidence : "Limited",
+    responseStatus: row.response_status === "Response published" || row.response_status === "Disputed" || row.response_status === "Resolved" || row.response_status === "No response yet"
+      ? row.response_status
+      : "Pending response",
     projectType: row.project_type,
     projectCity: row.project_city,
     projectState: row.project_state,
@@ -1963,29 +2008,69 @@ export async function submitClientReportSupabase(
   const contractorRow = await getOrCreateContractorProfileForUser(userId)
 
   const clientRow = await findOrCreateClientProfile(input)
-  const { data: reportRow, error: reportError } = await supabase
+  const baseReportInsert: Tables["client_reports"]["Insert"] = {
+    contractor_id: contractorRow.id,
+    client_id: clientRow.id,
+    project_type: input.projectType,
+    project_city: input.projectCity,
+    project_state: input.projectState.toUpperCase(),
+    contract_amount: input.contractAmount,
+    amount_unpaid: input.amountUnpaid,
+    report_category: input.reportCategory,
+    payment_status: input.paymentStatus,
+    report_summary: input.reportSummary,
+    detailed_experience: input.detailedExperience,
+    public_summary: input.reportSummary,
+    evidence_attached: Boolean(input.evidenceAttached || evidenceFiles.length > 0),
+    status: "pending",
+    moderation_note: "Queued for Client Bureau moderation.",
+  }
+  const extendedReportInsert: Tables["client_reports"]["Insert"] = {
+    ...baseReportInsert,
+    client_type: input.clientType ?? null,
+    client_job_address_private: input.jobAddress ?? null,
+    trade_category: input.tradeCategory ?? null,
+    job_type: input.jobType ?? null,
+    job_start_date: input.jobStartDate ?? null,
+    job_completion_date: input.jobCompletionDate ?? null,
+    job_status: input.jobStatus ?? null,
+    deposit_requested: input.depositRequested ?? null,
+    deposit_paid: input.depositPaid ?? null,
+    final_invoice_amount: input.finalInvoiceAmount ?? null,
+    materials_purchased_amount: input.materialsPurchasedAmount ?? null,
+    signed_contract: input.signedContract ?? null,
+    written_change_order: input.writtenChangeOrder ?? null,
+    secondary_category: input.secondaryCategory ?? null,
+    dispute_status: input.disputeStatus ?? null,
+    amount_disputed: input.amountDisputed ?? null,
+    days_overdue: input.daysOverdue ?? null,
+    client_responded: input.clientResponded ?? null,
+    issue_resolved: input.issueResolved ?? null,
+    resolution_summary: input.resolutionSummary ?? null,
+    payment_reminder_sent: input.paymentReminderSent ?? null,
+    demand_letter_sent: input.demandLetterSent ?? null,
+    lien_notice_started: input.lienNoticeStarted ?? null,
+    factual_summary_public: input.reportSummary,
+    detailed_timeline_private: input.detailedExperience,
+    evidence_confidence: evidenceFiles.length > 1 ? "Strong" : Boolean(input.evidenceAttached || evidenceFiles.length > 0) ? "Medium" : "Limited",
+    response_status: "Pending response",
+  }
+  let reportResult = await supabase
     .from("client_reports")
-    .insert({
-      contractor_id: contractorRow.id,
-      client_id: clientRow.id,
-      project_type: input.projectType,
-      project_city: input.projectCity,
-      project_state: input.projectState.toUpperCase(),
-      contract_amount: input.contractAmount,
-      amount_unpaid: input.amountUnpaid,
-      report_category: input.reportCategory,
-      payment_status: input.paymentStatus,
-      report_summary: input.reportSummary,
-      detailed_experience: input.detailedExperience,
-      public_summary: input.reportSummary,
-      evidence_attached: Boolean(input.evidenceAttached || evidenceFiles.length > 0),
-      status: "pending",
-      moderation_note: "Queued for Client Bureau moderation.",
-    })
+    .insert(extendedReportInsert)
     .select("*")
     .single()
 
-  if (reportError) throw new Error(reportError.message)
+  if (reportResult.error && isMissingReportIntakeColumnError(reportResult.error)) {
+    reportResult = await supabase
+      .from("client_reports")
+      .insert(baseReportInsert)
+      .select("*")
+      .single()
+  }
+
+  if (reportResult.error) throw new Error(reportResult.error.message)
+  const reportRow = reportResult.data
 
   const validFiles = evidenceFiles.filter((file) => file.size > 0)
 

@@ -52,6 +52,7 @@ export const users: User[] = [
     email: "morgan@ridgebuild.com",
     fullName: "Morgan Ellis",
     role: "contractor",
+    accountType: "contractor",
     createdAt: "2026-02-02T14:00:00.000Z",
   },
   {
@@ -59,6 +60,7 @@ export const users: User[] = [
     email: "review@clientbureau.com",
     fullName: "Client Bureau Review Team",
     role: "admin",
+    accountType: "contractor",
     createdAt: "2026-01-12T14:00:00.000Z",
   },
 ]

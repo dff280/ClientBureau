@@ -26,7 +26,7 @@ const widthClasses: Record<number, string> = {
 
 export function ScoreGauge({
   score,
-  label = "Client Bureau Score",
+  label = "Client Bureau Rating",
   className,
 }: {
   score: number

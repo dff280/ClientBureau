@@ -4,6 +4,7 @@ import type {
   RiskLevel,
   SubscriptionTier,
   UserRole,
+  AccountType,
   VerificationStatus,
   DiscussionCategory,
   DiscussionStatus,
@@ -60,6 +61,7 @@ export interface Database {
           email: string
           full_name: string
           role: UserRole
+          account_type: AccountType | null
           created_at: string
         }
         Insert: {
@@ -67,12 +69,14 @@ export interface Database {
           email: string
           full_name: string
           role?: UserRole
+          account_type?: AccountType | null
           created_at?: string
         }
         Update: {
           email?: string
           full_name?: string
           role?: UserRole
+          account_type?: AccountType | null
         }
         Relationships: []
       }
@@ -161,6 +165,33 @@ export interface Database {
           id: string
           contractor_id: string
           client_id: string
+          client_type: string | null
+          client_job_address_private: string | null
+          trade_category: string | null
+          job_type: string | null
+          job_start_date: string | null
+          job_completion_date: string | null
+          job_status: string | null
+          deposit_requested: number | null
+          deposit_paid: number | null
+          final_invoice_amount: number | null
+          materials_purchased_amount: number | null
+          signed_contract: boolean | null
+          written_change_order: boolean | null
+          secondary_category: ReportCategory | null
+          dispute_status: string | null
+          amount_disputed: number | null
+          days_overdue: number | null
+          client_responded: boolean | null
+          issue_resolved: boolean | null
+          resolution_summary: string | null
+          payment_reminder_sent: boolean | null
+          demand_letter_sent: boolean | null
+          lien_notice_started: boolean | null
+          factual_summary_public: string | null
+          detailed_timeline_private: string | null
+          evidence_confidence: string | null
+          response_status: string | null
           project_type: string
           project_city: string
           project_state: string
@@ -182,6 +213,33 @@ export interface Database {
           id?: string
           contractor_id: string
           client_id: string
+          client_type?: string | null
+          client_job_address_private?: string | null
+          trade_category?: string | null
+          job_type?: string | null
+          job_start_date?: string | null
+          job_completion_date?: string | null
+          job_status?: string | null
+          deposit_requested?: number | null
+          deposit_paid?: number | null
+          final_invoice_amount?: number | null
+          materials_purchased_amount?: number | null
+          signed_contract?: boolean | null
+          written_change_order?: boolean | null
+          secondary_category?: ReportCategory | null
+          dispute_status?: string | null
+          amount_disputed?: number | null
+          days_overdue?: number | null
+          client_responded?: boolean | null
+          issue_resolved?: boolean | null
+          resolution_summary?: string | null
+          payment_reminder_sent?: boolean | null
+          demand_letter_sent?: boolean | null
+          lien_notice_started?: boolean | null
+          factual_summary_public?: string | null
+          detailed_timeline_private?: string | null
+          evidence_confidence?: string | null
+          response_status?: string | null
           project_type: string
           project_city: string
           project_state: string

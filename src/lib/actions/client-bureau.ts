@@ -103,6 +103,7 @@ import {
   requireContractorAccess,
 } from "@/lib/auth"
 import { getDataMode, getSiteUrl } from "@/lib/env"
+import { normalizeCityName, normalizeStateCode } from "@/lib/locations"
 import {
   deleteAdminRecordService,
   assignModerationCaseService,
@@ -158,8 +159,70 @@ import {
   updateModerationCaseService,
   updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
+import type { ClientReportInput } from "@/lib/schemas/client-bureau"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
+
+const emptyStructuredReportFields = {
+  clientType: undefined,
+  jobAddress: undefined,
+  tradeCategory: undefined,
+  jobType: undefined,
+  jobStartDate: undefined,
+  jobCompletionDate: undefined,
+  jobStatus: undefined,
+  depositRequested: undefined,
+  depositPaid: undefined,
+  finalInvoiceAmount: undefined,
+  materialsPurchasedAmount: undefined,
+  signedContract: undefined,
+  writtenChangeOrder: undefined,
+  secondaryCategory: undefined,
+  disputeStatus: undefined,
+  amountDisputed: undefined,
+  daysOverdue: undefined,
+  clientResponded: undefined,
+  issueResolved: undefined,
+  resolutionSummary: undefined,
+  paymentReminderSent: undefined,
+  demandLetterSent: undefined,
+  lienNoticeStarted: undefined,
+  whatWasAgreed: undefined,
+  workCompleted: undefined,
+  paymentIssue: undefined,
+  evidenceSupport: undefined,
+  desiredResolution: undefined,
+} satisfies Pick<
+  ClientReportInput,
+  | "clientType"
+  | "jobAddress"
+  | "tradeCategory"
+  | "jobType"
+  | "jobStartDate"
+  | "jobCompletionDate"
+  | "jobStatus"
+  | "depositRequested"
+  | "depositPaid"
+  | "finalInvoiceAmount"
+  | "materialsPurchasedAmount"
+  | "signedContract"
+  | "writtenChangeOrder"
+  | "secondaryCategory"
+  | "disputeStatus"
+  | "amountDisputed"
+  | "daysOverdue"
+  | "clientResponded"
+  | "issueResolved"
+  | "resolutionSummary"
+  | "paymentReminderSent"
+  | "demandLetterSent"
+  | "lienNoticeStarted"
+  | "whatWasAgreed"
+  | "workCompleted"
+  | "paymentIssue"
+  | "evidenceSupport"
+  | "desiredResolution"
+>
 
 function evidenceFilesFromForm(formData: FormData) {
   return formData
@@ -194,12 +257,63 @@ function isMissingOnboardingColumn(error: { code?: string; message?: string } | 
     error?.code === "42703" ||
     message.includes("business_type") ||
     message.includes("business_phone") ||
+    message.includes("account_type") ||
     message.includes("website_url") ||
     message.includes("service_area") ||
     message.includes("company_size") ||
     message.includes("years_in_business") ||
     message.includes("primary_goal")
   )
+}
+
+function yesNo(value?: boolean) {
+  return value ? "Yes" : "No"
+}
+
+function reportDetailLine(label: string, value?: string | number | boolean) {
+  if (value === undefined || value === null || value === "") return undefined
+
+  return `${label}: ${typeof value === "boolean" ? yesNo(value) : value}`
+}
+
+function buildPrivateReportTimeline(input: ClientReportInput) {
+  const lines = [
+    reportDetailLine("Client type", input.clientType),
+    reportDetailLine("Private job address provided", Boolean(input.jobAddress)),
+    reportDetailLine("Trade or service category", input.tradeCategory),
+    reportDetailLine("Job type", input.jobType),
+    reportDetailLine("Job start date", input.jobStartDate),
+    reportDetailLine("Job completion date", input.jobCompletionDate),
+    reportDetailLine("Job status", input.jobStatus),
+    reportDetailLine("Deposit requested", input.depositRequested),
+    reportDetailLine("Deposit paid", input.depositPaid),
+    reportDetailLine("Final invoice amount", input.finalInvoiceAmount),
+    reportDetailLine("Materials purchased amount", input.materialsPurchasedAmount),
+    reportDetailLine("Signed contract or proposal", input.signedContract),
+    reportDetailLine("Written change order", input.writtenChangeOrder),
+    reportDetailLine("Secondary category", input.secondaryCategory),
+    reportDetailLine("Payment/dispute status", input.disputeStatus),
+    reportDetailLine("Amount disputed", input.amountDisputed),
+    reportDetailLine("Days overdue", input.daysOverdue),
+    reportDetailLine("Client responded", input.clientResponded),
+    reportDetailLine("Issue resolved", input.issueResolved),
+    reportDetailLine("Payment reminder sent", input.paymentReminderSent),
+    reportDetailLine("Demand letter sent", input.demandLetterSent),
+    reportDetailLine("Lien notice or legal process started", input.lienNoticeStarted),
+    reportDetailLine("Resolution summary", input.resolutionSummary),
+    reportDetailLine("What was agreed", input.whatWasAgreed),
+    reportDetailLine("What work was completed", input.workCompleted),
+    reportDetailLine("What payment issue occurred", input.paymentIssue),
+    reportDetailLine("Evidence support", input.evidenceSupport),
+    reportDetailLine("What would resolve the issue", input.desiredResolution),
+  ].filter(Boolean)
+
+  if (lines.length === 0) return input
+
+  return {
+    ...input,
+    detailedExperience: `${input.detailedExperience}\n\nStructured private intake details:\n${lines.join("\n")}`,
+  }
 }
 
 function revalidatePublicProfileDirectories(profile?: Pick<ClientProfile, "city" | "state">) {
@@ -252,7 +366,7 @@ export async function submitClientReportAction(
 
   const user = await requireContractorAccess()
 
-  const report = await submitClientReportService(parsed.data, user.id, evidenceFilesFromForm(formData))
+  const report = await submitClientReportService(buildPrivateReportTimeline(parsed.data), user.id, evidenceFilesFromForm(formData))
 
   revalidatePath("/dashboard")
   revalidatePath("/admin/reviews")
@@ -427,6 +541,7 @@ export async function signupAction(
           full_name: parsed.data.fullName,
           business_name: parsed.data.businessName,
           trade: parsed.data.trade,
+          account_type: parsed.data.accountType,
         },
       },
     })
@@ -443,6 +558,15 @@ export async function signupAction(
       })
 
       if (userError) return fail(userError.message)
+
+      const { error: accountTypeError } = await service
+        .from("users")
+        .update({ account_type: parsed.data.accountType })
+        .eq("id", data.user.id)
+
+      if (accountTypeError && !isMissingOnboardingColumn(accountTypeError)) {
+        return fail(accountTypeError.message)
+      }
 
       const { error: contractorError } = await service.from("contractor_profiles").upsert(
         {
@@ -488,10 +612,13 @@ export async function signupAction(
         email: parsed.data.email,
         fullName: parsed.data.fullName,
         role: "contractor",
+        accountType: parsed.data.accountType,
         createdAt: data.user?.created_at ?? new Date().toISOString(),
       },
       data.user
-        ? "Contractor account created. You can now use protected Client Bureau tools."
+        ? parsed.data.accountType === "client"
+          ? "Client account created. You can respond, request correction, or claim a profile."
+          : "Contractor account created. You can now use protected Client Bureau tools."
         : "Signup received. Check your email to confirm the account.",
     )
   }
@@ -502,9 +629,12 @@ export async function signupAction(
         email: parsed.data.email,
         fullName: parsed.data.fullName,
         role: "contractor",
+        accountType: parsed.data.accountType,
         createdAt: new Date().toISOString(),
       },
-    "Contractor account created. You can now continue with Client Bureau tools.",
+    parsed.data.accountType === "client"
+      ? "Client account created. You can respond, request correction, or claim a profile."
+      : "Contractor account created. You can now continue with Client Bureau tools.",
   )
 }
 
@@ -812,20 +942,27 @@ export async function bulkUploadImportAction(
       ? (reportType as (typeof reportCategories)[number])
       : "Other"
     const amount = Number(row.amount ?? 0)
+    const city = normalizeCityName(String(row.city ?? ""))
+    const state = normalizeStateCode(String(row.state ?? ""))
+
+    if (!city || !state) {
+      return fail(`CSV row for ${clientName || "unknown client"} must include a valid city and state.`)
+    }
 
     try {
       await submitClientReportService(
         {
+          ...emptyStructuredReportFields,
           firstName: firstName || "Unknown",
           lastName: lastParts.join(" ") || "Client",
           businessName: undefined,
           email: "",
           phone: undefined,
-          city: String(row.city ?? "Unknown"),
-          state: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
+          city,
+          state,
           projectType: reportType,
-          projectCity: String(row.city ?? "Unknown"),
-          projectState: String(row.state ?? "NA").slice(0, 2).toUpperCase(),
+          projectCity: city,
+          projectState: state,
           contractAmount: amount,
           amountUnpaid: amount,
           reportCategory,

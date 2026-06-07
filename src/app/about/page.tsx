@@ -77,7 +77,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-semibold text-slate-950">What Client Bureau publishes</h2>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
             Public profiles show non-sensitive client identity fields, approved report summaries,
-            score context, evidence-on-file summaries, response or dispute context, and public
+            rating context, evidence-on-file summaries, response or dispute context, and public
             moderation status. They do not show raw evidence files, private identifiers, private
             addresses, or unapproved submissions.
           </p>
@@ -86,7 +86,7 @@ export default function AboutPage() {
               <Link href="/search">Check a Client</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/score-methodology">Review score methodology</Link>
+              <Link href="/score-methodology">Review rating methodology</Link>
             </Button>
           </div>
         </div>

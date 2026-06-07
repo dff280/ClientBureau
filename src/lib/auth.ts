@@ -30,6 +30,7 @@ function mapUser(row: UserRow): User {
     email: row.email,
     fullName: row.full_name,
     role: row.role,
+    accountType: row.account_type ?? (row.role === "contractor" ? "contractor" : undefined),
     createdAt: row.created_at,
   }
 }
@@ -51,6 +52,7 @@ function fallbackUserFromAuth(user: SupabaseAuthUserLike): User {
     email: user.email ?? "",
     fullName,
     role: isConfiguredAdminEmail(user.email) ? "admin" : "contractor",
+    accountType: user.user_metadata.account_type === "client" ? "client" : "contractor",
     createdAt: user.created_at,
   }
 }

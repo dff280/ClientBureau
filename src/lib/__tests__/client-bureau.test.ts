@@ -34,6 +34,7 @@ import {
   getScoreCategoryBreakdown,
   scoreToRiskLevel,
 } from "@/lib/scoring"
+import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
@@ -891,6 +892,17 @@ describe("public SEO landing pages", () => {
 })
 
 describe("schemas and mock actions", () => {
+  const requiredReportCertifications = {
+    truthfulCertification: true,
+    documentationCertification: true,
+    publicSummaryCertification: true,
+    relationshipCertification: true,
+    moderationCertification: true,
+    evidencePrivacyCertification: true,
+    responseRightCertification: true,
+    noHarassmentCertification: true,
+  }
+
   it("validates report submission and rejects impossible unpaid amounts", () => {
     const parsed = clientReportSchema.safeParse({
       firstName: "Alex",
@@ -934,9 +946,7 @@ describe("schemas and mock actions", () => {
         "A contractor-submitted positive report states the client paid according to the agreement and communicated clearly.",
       detailedExperience:
         "The contractor reported clear scheduling, timely access, prompt approvals, and payment within the agreed invoice window after completion.",
-      truthfulCertification: true,
-      documentationCertification: true,
-      publicSummaryCertification: true,
+      ...requiredReportCertifications,
     })
     const invalidPositive = clientReportSchema.safeParse({
       firstName: "Maria",
@@ -954,13 +964,20 @@ describe("schemas and mock actions", () => {
         "A contractor-submitted positive report states the client paid according to the agreement and communicated clearly.",
       detailedExperience:
         "The contractor reported clear scheduling, timely access, prompt approvals, and payment within the agreed invoice window after completion.",
-      truthfulCertification: true,
-      documentationCertification: true,
-      publicSummaryCertification: true,
+      ...requiredReportCertifications,
     })
 
     expect(validPositive.success).toBe(true)
     expect(invalidPositive.success).toBe(false)
+  })
+
+  it("interprets client ratings and cleans public report copy", () => {
+    expect(clientRatingBand(92, 2)).toBe("Strong client history")
+    expect(clientRatingBand(66, 1)).toBe("Moderate caution")
+    expect(clientRatingBand(50, 0)).toBe("Limited history")
+    expect(cleanPublicReportText("Invoice was devliered   after completion.")).toBe(
+      "Invoice was delivered after completion.",
+    )
   })
 
   it("accepts client response requests with factual context", () => {

@@ -54,6 +54,30 @@ export const usStates = [
 
 export const usStateCodes = usStates.map((state) => state.code) as [string, ...string[]]
 
+const stateCodeSet = new Set<string>(usStateCodes)
+
+export function normalizeStateCode(value?: string | null) {
+  return value?.trim().toUpperCase() ?? ""
+}
+
+export function isValidStateCode(value?: string | null) {
+  return stateCodeSet.has(normalizeStateCode(value))
+}
+
+export function getStateName(value?: string | null) {
+  const code = normalizeStateCode(value)
+
+  return usStates.find((state) => state.code === code)?.name
+}
+
+export function normalizeCityName(value?: string | null) {
+  return (value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .replace(/[<>]/g, "")
+    .slice(0, 80)
+}
+
 export const businessTypes = [
   "General contractor",
   "Specialty trade contractor",
@@ -87,4 +111,43 @@ export const onboardingGoals = [
   "Track payment recovery",
   "Use Florida lien service",
   "Organize evidence and project records",
+] as const
+
+export const accountTypeOptions = [
+  {
+    value: "contractor",
+    label: "Contractor / Service Business",
+    description: "I perform work for clients and want to check client ratings, submit reports, and protect payment.",
+  },
+  {
+    value: "client",
+    label: "Client / Homeowner / Customer",
+    description: "I want to respond to a report, request a correction, or manage my profile.",
+  },
+] as const
+
+export const clientTypes = [
+  "Individual",
+  "Business",
+  "Property Manager",
+  "Other",
+] as const
+
+export const jobStatuses = [
+  "Not started",
+  "In progress",
+  "Substantially complete",
+  "Completed",
+  "Paused",
+  "Cancelled",
+] as const
+
+export const paymentDisputeStatuses = [
+  "Paid",
+  "Partially paid",
+  "Unpaid",
+  "Disputed",
+  "Refunded",
+  "Chargeback",
+  "No payment issue",
 ] as const

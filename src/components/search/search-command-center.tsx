@@ -31,6 +31,7 @@ import {
   recordSearchEventAction,
   saveClientSearchAction,
 } from "@/lib/actions/client-bureau"
+import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import {
   buildSearchHref,
   buildSearchExperienceStats,
@@ -430,11 +431,14 @@ export function SearchCommandCenter({
                           </div>
                           <div className="shrink-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center">
                             <p className="text-xl font-semibold text-slate-950">{profile.clientBureauScore}</p>
-                            <p className="text-[11px] font-semibold uppercase text-slate-500">score</p>
+                            <p className="text-[11px] font-semibold uppercase text-slate-500">rating</p>
                           </div>
                         </div>
+                        <p className="mt-2 text-xs font-semibold uppercase text-amber-700">
+                          {clientRatingBand(profile.clientBureauScore, profile.reportCount)}
+                        </p>
                         <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
-                          {profile.latestSummary ?? "Approved public profile with moderated contractor-submitted reports."}
+                          {cleanPublicReportText(profile.latestSummary) || "Approved public profile with moderated contractor-submitted reports."}
                         </p>
                         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
                           <span>{profile.reportCount} approved signals</span>
@@ -514,7 +518,7 @@ export function SearchCommandCenter({
                 </div>
                 <div className="rounded-md border border-white/10 bg-white/5 p-3">
                   <p className="text-2xl font-semibold">{stats.averageScore}</p>
-                  <p className="mt-1 text-xs leading-5 text-slate-300">average score</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-300">average rating</p>
                 </div>
               </div>
 

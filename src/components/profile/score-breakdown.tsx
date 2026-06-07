@@ -10,12 +10,12 @@ export function ScoreBreakdown({ score, factors }: { score: number; factors: Sco
     <div className="space-y-5">
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4 text-sm">
-          <span className="font-semibold text-slate-950">Score confidence</span>
+          <span className="font-semibold text-slate-950">Rating confidence</span>
           <span className="font-medium text-slate-500">{score}/100</span>
         </div>
         <Progress value={score} className="h-2" />
         <Link href="/score-methodology" className="inline-flex text-xs font-semibold text-amber-700 hover:text-amber-800">
-          How scores are calculated
+          How ratings are interpreted
         </Link>
       </div>
       <div className="grid gap-3">

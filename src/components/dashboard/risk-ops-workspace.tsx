@@ -488,7 +488,7 @@ export function RiskOpsWorkspace({
               {rankedWatchlist.length === 0 ? (
                 <EmptyState
                   title="No watched clients yet"
-                  text="Watch a client profile to track new reports, response context, dispute changes, resolved cases, and score movement."
+                  text="Watch a client profile to track new reports, response context, dispute changes, resolved cases, and rating movement."
                 />
               ) : null}
             </div>
@@ -543,7 +543,7 @@ export function RiskOpsWorkspace({
         <TabsContent value="alerts" className="space-y-5">
           <WorkspaceIntro
             title="Monitoring alerts"
-            text="Review watched-client changes, dispute updates, resolved-case signals, and score movement without digging through every tool."
+            text="Review watched-client changes, dispute updates, resolved-case signals, and rating movement without digging through every tool."
           />
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">

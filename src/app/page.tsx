@@ -34,6 +34,7 @@ import {
 } from "@/lib/repositories/client-bureau-service"
 import { pricingTiers } from "@/lib/stripe/pricing"
 import { corePositioning, primaryHook, primarySearchCta, reportExperienceCta } from "@/lib/product-positioning"
+import { cleanPublicReportText, clientRatingBand, clientRatingDisclaimer, evidenceConfidenceLabel, responseStatusLabel } from "@/lib/client-rating"
 import { isPositiveReportCategory } from "@/lib/types"
 import {
   getFaqSchema,
@@ -45,9 +46,9 @@ import {
 } from "@/lib/seo"
 
 export const metadata: Metadata = {
-  title: "Client Bureau | Check Clients Before You Take the Job",
+  title: "Client Bureau | Check Client Ratings Before You Take the Job",
   description:
-    "Client Bureau helps contractors and service businesses check clients, review moderated reports, document jobs, and protect payment before work starts.",
+    "Search client ratings, payment-risk indicators, contractor-submitted reports, and response context before risking labor, materials, crew time, and profit.",
   alternates: {
     canonical: "/",
   },
@@ -90,9 +91,9 @@ const painWorkflows = [
   {
     icon: BadgeCheck,
     title: "Review payment-risk indicators before saying yes.",
-    text: "Review score context, report count, positive references, open disputes, resolved issues, and evidence-on-file summaries without exposing private data.",
+    text: "Review rating context, report count, positive references, open disputes, resolved issues, and evidence-on-file summaries without exposing private data.",
     href: "/score-methodology",
-    cta: "Score method",
+    cta: "Rating method",
   },
   {
     icon: Building2,
@@ -262,7 +263,7 @@ export default async function Home() {
           <div className="max-w-4xl space-y-7">
             <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
               <ShieldCheck className="size-4" aria-hidden="true" />
-              Contractor-powered client reputation
+              Contractor-powered client ratings
             </div>
 
             <div className="space-y-5">
@@ -270,8 +271,8 @@ export default async function Home() {
                 {heroHeadline}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                Search contractor-submitted client reports, payment-risk indicators, response context,
-                and documented experiences before risking labor, materials, deposits, crew time, and profit.
+                Search client ratings, payment-risk indicators, contractor-submitted reports, and response context
+                before risking labor, materials, deposits, crew time, and profit.
               </p>
               <p className="text-base font-semibold text-amber-200">{primaryHook}</p>
             </div>
@@ -285,7 +286,7 @@ export default async function Home() {
                 <Input
                   id="homepage-client-search"
                   name="q"
-                  placeholder="Search by name, business, phone, email, city, or job address"
+                  placeholder="Search by client name, business, phone, email, or city"
                   className="h-12 border-0 pl-10 text-slate-950 shadow-none focus-visible:ring-0"
                 />
               </div>
@@ -294,6 +295,9 @@ export default async function Home() {
               </Button>
             </form>
             <div className="flex max-w-4xl flex-wrap gap-2 text-xs font-semibold uppercase text-slate-300">
+              <span className="rounded-md border border-amber-300/30 bg-amber-300/10 px-3 py-1.5 text-amber-200">
+                Try: Orlando homeowner, John Smith, ABC Property Group
+              </span>
               {["Name", "Business", "Phone", "Email", "City", "Job address"].map((label) => (
                 <span key={label} className="rounded-md border border-white/10 bg-white/5 px-3 py-1.5">
                   {label}
@@ -414,7 +418,7 @@ export default async function Home() {
             <SectionIntro
               eyebrow="Moderated public intelligence"
               title="When a report becomes public, it should help the next business make a better decision."
-              text="Profile pages show approved summaries, report counts, score context, evidence-on-file summaries, positive reports, disputes, and client responses after moderation."
+              text="Profile pages show approved summaries, report counts, rating context, evidence-on-file summaries, positive reports, disputes, and client responses after moderation."
               dark
             />
             <div className="grid gap-3 sm:grid-cols-2">
@@ -668,21 +672,22 @@ function HeroProfilePreview({
         <CardContent className="space-y-5 p-5">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase text-amber-200">Public profile preview</p>
+              <p className="text-xs font-semibold uppercase text-amber-200">Client Bureau Rating preview</p>
               <h2 className="mt-2 text-2xl font-semibold text-white">What a search result shows</h2>
             </div>
             <ShieldCheck className="size-7 text-amber-200" aria-hidden="true" />
           </div>
           <p className="text-sm leading-6 text-slate-200">
-            Approved profile pages show moderated summaries, score context, evidence-on-file
+            Approved profile pages show moderated summaries, rating context, evidence-on-file
             labels, positive reports, and a client response path. Raw phone numbers, emails,
             private addresses, and evidence files stay private.
           </p>
           <div className="grid gap-3 sm:grid-cols-3">
-            <DarkFact label="Score" value="0-100" />
+            <DarkFact label="Rating" value="0-100" />
             <DarkFact label="Evidence" value="Private" />
             <DarkFact label="Response" value="Available" />
           </div>
+          <p className="text-xs leading-5 text-slate-300">{clientRatingDisclaimer()}</p>
           <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
             <Link href="/how-it-works">
               See how reports work
@@ -696,13 +701,19 @@ function HeroProfilePreview({
 
   const { profile, report } = item
   const paymentFact = getReportPaymentFact(report)
+  const ratingLabel = clientRatingBand(profile.clientBureauScore, profile.reports.length)
+  const evidenceConfidence = evidenceConfidenceLabel({
+    evidenceCount: profile.evidence.length,
+    reportCount: profile.reports.length,
+    hasEvidenceOnFile: profile.reports.some((item) => item.evidenceAttached),
+  })
 
   return (
     <Card className="rounded-md border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur">
       <CardContent className="space-y-5 p-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase text-amber-200">Live public profile preview</p>
+            <p className="text-xs font-semibold uppercase text-amber-200">Client Bureau Rating</p>
             <h2 className="mt-2 text-2xl font-semibold text-white">
               {profile.firstName} {profile.lastName}
             </h2>
@@ -714,26 +725,27 @@ function HeroProfilePreview({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <DarkFact label="Score" value={`${profile.clientBureauScore}/100`} />
-          <DarkFact label="Reports" value={profile.reports.length.toLocaleString()} />
+          <DarkFact label="Rating" value={`${profile.clientBureauScore}/100`} />
+          <DarkFact label="Band" value={ratingLabel} />
           <DarkFact label={paymentFact.label} value={paymentFact.value} />
         </div>
 
         <div className="rounded-md border border-white/10 bg-slate-950/35 p-4">
           <p className="text-xs font-semibold uppercase text-slate-400">{report.reportCategory}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-200">{report.publicSummary}</p>
+          <p className="mt-2 text-sm leading-6 text-slate-200">{cleanPublicReportText(report.publicSummary)}</p>
         </div>
 
         <div className="grid gap-2 text-xs font-semibold text-slate-200 sm:grid-cols-2">
           <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
             <FileCheck2 className="size-4 text-amber-200" aria-hidden="true" />
-            {profile.evidence.length > 0 ? "Evidence on file" : "Evidence reviewed privately"}
+            Evidence confidence: {evidenceConfidence}
           </span>
           <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
             <MessageSquareText className="size-4 text-amber-200" aria-hidden="true" />
-            Client response path
+            {responseStatusLabel(profile)}
           </span>
         </div>
+        <p className="text-xs leading-5 text-slate-300">{clientRatingDisclaimer()}</p>
 
         <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
           <Link href={`/client/${profile.publicSlug}`}>
@@ -779,7 +791,7 @@ function PublicReportPreview({
         <div className="grid gap-3 sm:grid-cols-3">
           <DarkFact label="Category" value={report.reportCategory} />
           <DarkFact label={paymentFact.label} value={paymentFact.value} />
-          <DarkFact label="Client score" value={`${profile.clientBureauScore}/100`} />
+          <DarkFact label="Client rating" value={`${profile.clientBureauScore}/100`} />
         </div>
 
         <p className="text-sm leading-6 text-slate-300">{report.publicSummary}</p>

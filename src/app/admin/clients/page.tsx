@@ -56,7 +56,7 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
         <AdminPageHeader
           eyebrow="Records"
           title="Manage Client Profiles"
-          description="Review profile visibility, score context, city/state SEO fields, and private matching signals without exposing raw contact data."
+          description="Review profile visibility, rating context, city/state SEO fields, and private matching signals without exposing raw contact data."
           actions={
             <>
               <HeaderActionButton href="/admin/reports" variant="outline">

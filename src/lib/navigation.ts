@@ -28,7 +28,7 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard/recovery", label: "Payment Recovery", description: "Get help recovering payment, track Resolution Desk cases, and document invoice follow-up." },
   { href: "/dashboard/lien-readiness", label: "Florida Lien Service", description: "Private Florida notice, filing, recording proof, and release workflows." },
   { href: "/dashboard/evidence", label: "Evidence Vault", description: "Private invoices, screenshots, contracts, photos, PDFs, and review status." },
-  { href: "/dashboard/watchlist", label: "Alerts", description: "Watchlist changes, dispute updates, and score movement." },
+  { href: "/dashboard/watchlist", label: "Alerts", description: "Watchlist changes, dispute updates, and rating movement." },
   { href: "/dashboard/billing", label: "Billing", description: "Plan, usage, invoices, and payment settings." },
   { href: "/dashboard/activity", label: "Activity", description: "Recent workspace actions, client files, and pipeline movement." },
 ]
@@ -76,7 +76,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
     title: "Learn the Platform",
     links: [
       { href: "/how-it-works", label: "How It Works", description: "Search, decide, document, and resolve." },
-      { href: "/score-methodology", label: "Score Methodology", description: "How scores, risk levels, and confidence are presented." },
+      { href: "/score-methodology", label: "Rating Methodology", description: "How ratings, risk levels, and confidence are presented." },
       { href: "/business-rating-methodology", label: "Business Rating", description: "How public contractor and service-business ratings are calculated." },
       { href: "/pricing", label: "Pricing", description: "Plans for contractors, service businesses, teams, and enterprise review." },
       { href: "/enterprise", label: "Enterprise", description: "Team workflows, moderation controls, and account support." },
@@ -114,7 +114,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/resources", label: "Resources" },
       { href: "/clients", label: "Client Directory" },
       { href: "/enterprise", label: "Enterprise" },
-      { href: "/score-methodology", label: "Score Methodology" },
+      { href: "/score-methodology", label: "Rating Methodology" },
       { href: "/business-rating-methodology", label: "Business Rating" },
     ],
   },

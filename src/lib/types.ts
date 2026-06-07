@@ -22,8 +22,11 @@ export const concernReportCategories = reportCategories.filter(
 
 export const riskLevels = ["Low", "Moderate", "Elevated", "High"] as const
 
+export const accountTypes = ["contractor", "client"] as const
+
 export type ReportCategory = (typeof reportCategories)[number]
 export type RiskLevel = (typeof riskLevels)[number]
+export type AccountType = (typeof accountTypes)[number]
 export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
 export type ReportResolutionStatus =
   | "Unresolved"
@@ -225,6 +228,7 @@ export interface User {
   email: string
   fullName: string
   role: UserRole
+  accountType?: AccountType
   createdAt: string
 }
 
@@ -833,6 +837,33 @@ export interface ClientReport {
   id: string
   contractorId: string
   clientId: string
+  clientType?: string
+  clientJobAddressPrivate?: string
+  tradeCategory?: string
+  jobType?: string
+  jobStartDate?: string
+  jobCompletionDate?: string
+  jobStatus?: string
+  depositRequested?: number
+  depositPaid?: number
+  finalInvoiceAmount?: number
+  materialsPurchasedAmount?: number
+  signedContract?: boolean
+  writtenChangeOrder?: boolean
+  secondaryCategory?: ReportCategory
+  disputeStatus?: string
+  amountDisputed?: number
+  daysOverdue?: number
+  clientResponded?: boolean
+  issueResolved?: boolean
+  resolutionSummary?: string
+  paymentReminderSent?: boolean
+  demandLetterSent?: boolean
+  lienNoticeStarted?: boolean
+  factualSummaryPublic?: string
+  detailedTimelinePrivate?: string
+  evidenceConfidence?: "Limited" | "Medium" | "Strong"
+  responseStatus?: "No response yet" | "Pending response" | "Response published" | "Disputed" | "Resolved"
   projectType: string
   projectCity: string
   projectState: string

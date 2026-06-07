@@ -218,7 +218,7 @@ export function buildSearchSuggestions(
       id: `client-${profile.id}`,
       kind: profile.businessName ? "business" : "client",
       label: profile.businessName ? `${name} / ${profile.businessName}` : name,
-      description: `${profile.city}, ${profile.state} / ${profile.reportCount} approved signals / score ${profile.clientBureauScore}`,
+      description: `${profile.city}, ${profile.state} / ${profile.reportCount} approved signals / rating ${profile.clientBureauScore}`,
       href: `/client/${profile.publicSlug}`,
       query: name,
       state: profile.state,

@@ -13,7 +13,7 @@ const directoryFaqs = [
   {
     question: "What appears in the Client Bureau directory?",
     answer:
-      "The directory lists approved public client profiles by state and city. Profiles are published only after moderation and should show cautious contractor-submitted report context, client response information, and public-safe score factors.",
+      "The directory lists approved public client profiles by state and city. Profiles are published only after moderation and should show cautious contractor-submitted report context, client response information, and public-safe rating factors.",
   },
   {
     question: "Does the directory show private client contact information?",
@@ -138,7 +138,7 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
               <h2 className="text-2xl font-semibold text-slate-950">Use this as one intake signal.</h2>
               <p className="text-sm leading-6 text-slate-600">
                 Client Bureau public pages are not accusation lists. They organize approved summaries,
-                reported experience context, score factors, response paths, and evidence-on-file
+                reported experience context, rating factors, response paths, and evidence-on-file
                 labels to support better business decisions.
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -337,7 +337,7 @@ function ProfileGrid({ title, profiles }: { title: string; profiles: ClientProfi
                   <RiskBadge riskLevel={profile.riskLevel} />
                 </div>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <DirectoryFact label="Score" value={`${profile.clientBureauScore}/100`} />
+                  <DirectoryFact label="Rating" value={`${profile.clientBureauScore}/100`} />
                   <DirectoryFact label="Reports" value={String(profile.reportCount)} />
                   <DirectoryFact label="Updated" value={formatDate(profile.updatedAt)} />
                 </div>

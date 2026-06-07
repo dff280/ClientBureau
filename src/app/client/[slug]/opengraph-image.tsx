@@ -108,7 +108,7 @@ export default async function Image({ params }: ImageProps) {
                 {score}
               </div>
               <div style={{ display: "flex", color: "#cbd5e1", fontSize: 20, textTransform: "uppercase" }}>
-                Score / 100
+                Rating / 100
               </div>
             </div>
             <div style={{ display: "flex", height: 1, background: "rgba(255,255,255,0.18)" }} />

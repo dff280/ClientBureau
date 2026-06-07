@@ -140,7 +140,7 @@ export const reportLandingPages: SeoLandingPage[] = [
     description:
       "Review high-risk Client Bureau profiles with approved public report summaries, dispute context, and reported payment-risk indicators.",
     intro:
-      "High-risk profile pages are not labels or accusations. They summarize approved contractor-submitted report context, score factors, and response pathways.",
+      "High-risk profile pages are not labels or accusations. They summarize approved contractor-submitted report context, rating factors, and response pathways.",
     audience: "Business owners who need additional intake controls before committing labor, materials, or delivery capacity.",
     canonicalPath: "/reports/high-risk",
     primaryCta: "Search high-risk profiles",

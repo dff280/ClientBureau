@@ -68,11 +68,11 @@ export default function DisputePolicyPage() {
           },
           {
             title: "Corrections and identity updates",
-            body: "Client Bureau may correct profile identity fields, location, public summaries, business names, moderation labels, score context, or report status when reliable documentation supports the change.",
+            body: "Client Bureau may correct profile identity fields, location, public summaries, business names, moderation labels, rating context, or report status when reliable documentation supports the change.",
             bullets: [
               "Corrections may address mistaken identity, outdated city or business information, duplicate profiles, inaccurate balance status, or resolved payment context.",
               "Some corrections may update public wording without removing the underlying report.",
-              "If a correction affects score factors or risk level, the profile can be recalculated after moderation.",
+              "If a correction affects rating factors or risk level, the profile can be recalculated after moderation.",
             ],
           },
           {
@@ -88,7 +88,7 @@ export default function DisputePolicyPage() {
             title: "No automatic removal",
             body: "A dispute or response request does not automatically remove an approved report. The moderation team reviews documentation, policy compliance, privacy issues, relevance, and public-interest context before deciding what should change.",
             bullets: [
-              "Client Bureau may approve a response, edit a summary, update score context, mark a report resolved, request more information, or reject a request.",
+              "Client Bureau may approve a response, edit a summary, update rating context, mark a report resolved, request more information, or reject a request.",
               "Abusive, irrelevant, threatening, or unsupported response submissions may be rejected or held for review.",
               "The goal is a clearer, more accurate public record, not automatic removal or automatic publication.",
             ],

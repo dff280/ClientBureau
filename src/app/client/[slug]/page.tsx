@@ -22,6 +22,13 @@ import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/c
 import { getSiteUrl } from "@/lib/env"
 import { JsonLd, getClientProfileStructuredData } from "@/lib/seo"
 import { getPublicTrustSummary } from "@/lib/trust-verification"
+import {
+  clientRatingBand,
+  clientRatingDisclaimer,
+  clientRatingIndicators,
+  responseStatusLabel,
+  resolutionStatusLabel,
+} from "@/lib/client-rating"
 import { isPositiveReportCategory } from "@/lib/types"
 
 type ClientProfilePageProps = {
@@ -44,7 +51,7 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
   const name = `${profile.firstName} ${profile.lastName}`
   const location = `${profile.city}, ${profile.state}`
   const title = `${name} ${profile.city} ${profile.state} Client Bureau Profile`
-  const description = `${name} in ${location}: moderated contractor-submitted reports, response context, evidence-on-file summary, and Client Bureau score.`
+  const description = `${name} in ${location}: Client Bureau Rating, moderated contractor-submitted reports, response context, and evidence-on-file summaries.`
   const profileUrl = `${siteUrl}/client/${profile.publicSlug}`
   const imageUrl = `${profileUrl}/opengraph-image`
 
@@ -105,6 +112,10 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const resolvedReports = profile.balanceSummary.resolvedReportCount
   const evidenceSummary = summarizeEvidence(profile.evidence)
   const trustSummary = getPublicTrustSummary(profile)
+  const ratingBand = clientRatingBand(profile.clientBureauScore, profile.reports.length)
+  const responseStatus = responseStatusLabel(profile)
+  const resolutionStatus = resolutionStatusLabel(profile)
+  const ratingIndicators = clientRatingIndicators(profile)
 
   return (
     <article className="bg-slate-100">
@@ -135,7 +146,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </h1>
               <p className="mt-3 text-lg text-slate-300">
                 {profile.businessName ? `${profile.businessName} | ` : ""}
-                {profile.city}, {profile.state} / Contractor-submitted reports, score context, positive references, public responses, and moderated profile context.
+                {profile.city}, {profile.state} / Contractor-submitted reports, Client Bureau Rating context, positive references, public responses, and moderated profile context.
               </p>
             </div>
             <p className="max-w-3xl leading-7 text-slate-300">
@@ -161,7 +172,8 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <HeroFact label="Approved reports" value={String(profile.reports.length)} />
               <HeroFact label="Positive references" value={String(profile.positiveReports.length)} />
               <HeroFact label="Evidence review" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private only"} />
-              <HeroFact label="Response status" value={profile.clientResponses.length > 0 ? "Response published" : "Response available"} />
+              <HeroFact label="Response status" value={responseStatus} />
+              <HeroFact label="Resolution status" value={resolutionStatus} />
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
@@ -202,17 +214,21 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <div className="flex items-center justify-between gap-4">
                 <Badge className="rounded-md bg-slate-950 text-white">
                   <Star className="size-3" aria-hidden="true" />
-                  Client Bureau Score
+                  Client Bureau Rating
                 </Badge>
                 <span className="text-xs font-semibold uppercase text-slate-500">Client Bureau</span>
               </div>
-              <ScoreGauge score={profile.clientBureauScore} label="Client Reputation Score" />
+              <ScoreGauge score={profile.clientBureauScore} label="Client Bureau Rating" />
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-semibold text-amber-950">{ratingBand}</p>
+                <p className="mt-1 text-xs leading-5 text-amber-900">{clientRatingDisclaimer()}</p>
+              </div>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button type="button" className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
                       <HelpCircle className="size-3.5" aria-hidden="true" />
-                      Score context
+                      Rating context
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -221,12 +237,16 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 </Tooltip>
               </TooltipProvider>
               <Link href="/score-methodology" className="inline-flex text-xs font-semibold text-amber-700 hover:text-amber-800">
-                View score methodology
+                View rating methodology
               </Link>
               <div className="grid gap-3 text-sm">
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Report count</span>
                   <span className="font-semibold text-slate-950">{profile.reportCount}</span>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <span className="text-slate-500">Rating label</span>
+                  <span className="font-semibold text-slate-950">{ratingBand}</span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Payment issue context</span>
@@ -255,16 +275,12 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   </span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Payment reliability</span>
-                  <span className="text-right font-semibold text-slate-950">
-                    {profile.paymentReliability}
-                  </span>
+                  <span className="text-slate-500">Response status</span>
+                  <span className="text-right font-semibold text-slate-950">{responseStatus}</span>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Dispute history</span>
-                  <span className="text-right font-semibold text-slate-950">
-                    {profile.disputeHistory}
-                  </span>
+                  <span className="text-slate-500">Resolution status</span>
+                  <span className="text-right font-semibold text-slate-950">{resolutionStatus}</span>
                 </div>
               </div>
             </CardContent>
@@ -288,15 +304,15 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
-                  Reputation indicators
+                  Rating indicators
                 </CardTitle>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-3">
-                <BalanceFact label="Client Bureau Score" value={`${profile.clientBureauScore}/100`} />
-                <BalanceFact label="Risk level" value={profile.riskLevel} />
-                <BalanceFact label="Evidence status" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private review"} />
-                <BalanceFact label="Payment reliability" value={profile.paymentReliability} />
-                <BalanceFact label="Dispute history" value={profile.disputeHistory} />
+                <BalanceFact label="Client Bureau Rating" value={`${profile.clientBureauScore}/100`} />
+                <BalanceFact label="Rating band" value={ratingBand} />
+                {ratingIndicators.map((indicator) => (
+                  <BalanceFact key={indicator.label} label={indicator.label} value={indicator.value} />
+                ))}
                 <BalanceFact label="Last updated" value={new Date(profile.updatedAt).toLocaleDateString()} />
               </CardContent>
             </Card>
@@ -448,7 +464,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             />
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
-                <CardTitle className="text-lg">Score factors</CardTitle>
+                <CardTitle className="text-lg">Rating factors</CardTitle>
               </CardHeader>
               <CardContent>
                 <ScoreBreakdown score={profile.clientBureauScore} factors={profile.scoreFactors} />
@@ -554,13 +570,13 @@ function ProfileSearchSummary({
           </h2>
           <p className="mt-3 text-sm leading-6 text-slate-700">
             This public page summarizes moderated contractor-submitted experiences, approved report
-            status, private evidence-review indicators, score context, and client response options.
+            status, private evidence-review indicators, rating context, and client response options.
             It is not a legal finding and does not publish raw contact details or private files.
           </p>
         </div>
         <div className="grid gap-2 rounded-md border border-amber-200 bg-white p-4 text-sm">
           <div className="flex justify-between gap-3">
-            <span className="text-slate-500">Score</span>
+            <span className="text-slate-500">Rating</span>
             <span className="font-semibold text-slate-950">{score}/100</span>
           </div>
           <div className="flex justify-between gap-3">

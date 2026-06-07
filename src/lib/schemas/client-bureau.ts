@@ -2,12 +2,17 @@ import { z } from "zod"
 
 import {
   businessTypes,
+  clientTypes,
   companySizes,
+  jobStatuses,
+  normalizeCityName,
+  normalizeStateCode,
   onboardingGoals,
+  paymentDisputeStatuses,
   usStateCodes,
   yearsInBusinessOptions,
 } from "@/lib/locations"
-import { isPositiveReportCategory, reportCategories, riskLevels } from "@/lib/types"
+import { accountTypes, isPositiveReportCategory, reportCategories, riskLevels } from "@/lib/types"
 
 export const discussionCategories = [
   "Contractor Experience",
@@ -31,9 +36,17 @@ const optionalText = z
   .transform((value) => (value ? value : undefined))
 
 const stateCode = (label: string) =>
+  z.preprocess(
+    (value) => (typeof value === "string" ? normalizeStateCode(value) : value),
+    z.enum(usStateCodes, { error: `${label} must be selected from the state list.` }),
+  )
+
+const cityText = (label: string) =>
   z
-    .enum(usStateCodes, { error: `${label} must be selected from the state list.` })
-    .transform((value) => value.toUpperCase())
+    .string()
+    .trim()
+    .transform(normalizeCityName)
+    .pipe(z.string().min(2, `${label} is required.`).max(80, `${label} must be under 80 characters.`))
 
 const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
   z.enum(values).optional().or(z.literal("")).transform((value) => value || undefined)
@@ -43,6 +56,18 @@ const money = (label: string) =>
     .number({ error: `${label} must be a number.` })
     .min(0, `${label} cannot be negative.`)
     .max(10_000_000, `${label} is above the current review limit.`)
+
+const optionalMoney = (label: string) =>
+  z
+    .union([z.literal(""), money(label)])
+    .optional()
+    .transform((value) => (value === "" ? undefined : value))
+
+const optionalDate = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value) => value || undefined)
 
 function milestoneScheduleTotals(value?: string) {
   const lines = (value ?? "")
@@ -70,6 +95,7 @@ function milestoneScheduleTotals(value?: string) {
 
 export const clientReportSchema = z
   .object({
+    clientType: z.enum(clientTypes).optional(),
     firstName: requiredText("Client first name"),
     lastName: requiredText("Client last name"),
     businessName: optionalText,
@@ -79,16 +105,38 @@ export const clientReportSchema = z
       .trim()
       .optional()
       .transform((value) => (value ? value : undefined)),
-    city: requiredText("Client city"),
+    city: cityText("Client city"),
     state: stateCode("Client state"),
     zip: z.string().trim().max(10, "Keep ZIP under 10 characters.").optional(),
+    jobAddress: z.string().trim().max(160, "Keep private job address under 160 characters.").optional().transform((value) => value || undefined),
+    tradeCategory: optionalText,
+    jobType: optionalText,
+    jobStartDate: optionalDate,
+    jobCompletionDate: optionalDate,
+    jobStatus: z.enum(jobStatuses).optional().or(z.literal("")).transform((value) => value || undefined),
     projectType: requiredText("Project type"),
-    projectCity: requiredText("Project city"),
+    projectCity: cityText("Project city"),
     projectState: stateCode("Project state"),
     contractAmount: money("Contract amount"),
+    depositRequested: optionalMoney("Deposit requested"),
+    depositPaid: optionalMoney("Deposit paid"),
+    finalInvoiceAmount: optionalMoney("Final invoice amount"),
+    materialsPurchasedAmount: optionalMoney("Materials purchased amount"),
     amountUnpaid: money("Amount unpaid"),
+    signedContract: z.coerce.boolean().optional(),
+    writtenChangeOrder: z.coerce.boolean().optional(),
     reportCategory: z.enum(reportCategories),
+    secondaryCategory: z.enum(reportCategories).optional().or(z.literal("")).transform((value) => value || undefined),
     paymentStatus: requiredText("Payment status"),
+    disputeStatus: z.enum(paymentDisputeStatuses).optional().or(z.literal("")).transform((value) => value || undefined),
+    amountDisputed: optionalMoney("Amount disputed"),
+    daysOverdue: z.union([z.literal(""), z.coerce.number().min(0).max(3650)]).optional().transform((value) => value === "" ? undefined : value),
+    clientResponded: z.coerce.boolean().optional(),
+    issueResolved: z.coerce.boolean().optional(),
+    resolutionSummary: z.string().trim().max(700, "Keep resolution summary under 700 characters.").optional().transform((value) => value || undefined),
+    paymentReminderSent: z.coerce.boolean().optional(),
+    demandLetterSent: z.coerce.boolean().optional(),
+    lienNoticeStarted: z.coerce.boolean().optional(),
     reportSummary: requiredText("Public report summary", 20).max(
       600,
       "Keep the public summary under 600 characters.",
@@ -97,10 +145,20 @@ export const clientReportSchema = z
       3000,
       "Keep the detailed experience under 3,000 characters.",
     ),
+    whatWasAgreed: z.string().trim().max(900, "Keep agreement details under 900 characters.").optional().transform((value) => value || undefined),
+    workCompleted: z.string().trim().max(900, "Keep completed-work details under 900 characters.").optional().transform((value) => value || undefined),
+    paymentIssue: z.string().trim().max(900, "Keep payment issue details under 900 characters.").optional().transform((value) => value || undefined),
+    evidenceSupport: z.string().trim().max(900, "Keep evidence details under 900 characters.").optional().transform((value) => value || undefined),
+    desiredResolution: z.string().trim().max(900, "Keep resolution details under 900 characters.").optional().transform((value) => value || undefined),
     evidenceAttached: z.coerce.boolean().optional(),
     truthfulCertification: z.coerce.boolean().optional(),
     documentationCertification: z.coerce.boolean().optional(),
     publicSummaryCertification: z.coerce.boolean().optional(),
+    relationshipCertification: z.coerce.boolean().optional(),
+    moderationCertification: z.coerce.boolean().optional(),
+    evidencePrivacyCertification: z.coerce.boolean().optional(),
+    responseRightCertification: z.coerce.boolean().optional(),
+    noHarassmentCertification: z.coerce.boolean().optional(),
   })
   .refine((value) => value.amountUnpaid <= value.contractAmount, {
     path: ["amountUnpaid"],
@@ -121,6 +179,26 @@ export const clientReportSchema = z
   .refine((value) => value.publicSummaryCertification === true, {
     path: ["publicSummaryCertification"],
     message: "Confirm that the public summary avoids private or inflammatory claims.",
+  })
+  .refine((value) => value.relationshipCertification === true, {
+    path: ["relationshipCertification"],
+    message: "Confirm that you had a real commercial relationship with this client.",
+  })
+  .refine((value) => value.moderationCertification === true, {
+    path: ["moderationCertification"],
+    message: "Confirm that public summaries are moderated before publication.",
+  })
+  .refine((value) => value.evidencePrivacyCertification === true, {
+    path: ["evidencePrivacyCertification"],
+    message: "Confirm that private evidence is not automatically public.",
+  })
+  .refine((value) => value.responseRightCertification === true, {
+    path: ["responseRightCertification"],
+    message: "Confirm that reported parties may respond or request correction.",
+  })
+  .refine((value) => value.noHarassmentCertification === true, {
+    path: ["noHarassmentCertification"],
+    message: "Confirm that public summaries will not include threats, harassment, or sensitive personal information.",
   })
 
 export const clientResponseSchema = z.object({
@@ -146,12 +224,13 @@ export const clientResponseSchema = z.object({
 })
 
 export const signupSchema = z.object({
+  accountType: z.enum(accountTypes, { error: "Choose an account type." }),
   fullName: requiredText("Full name"),
   email: z.email("Enter a valid email."),
   password: requiredText("Password", 8),
-  businessName: requiredText("Business name"),
+  businessName: requiredText("Business or display name"),
   businessType: optionalChoice(businessTypes),
-  trade: requiredText("Trade"),
+  trade: requiredText("Trade, service, or relationship context"),
   businessPhone: optionalText,
   websiteUrl: z.url("Enter a valid website URL.").optional().or(z.literal("")).transform((value) => value || undefined),
   licenseNumber: optionalText,
@@ -159,7 +238,7 @@ export const signupSchema = z.object({
   companySize: optionalChoice(companySizes),
   serviceArea: z.string().trim().max(500, "Keep service areas under 500 characters.").optional().transform((value) => value || undefined),
   primaryGoal: optionalChoice(onboardingGoals),
-  city: requiredText("City"),
+  city: cityText("City"),
   state: stateCode("State"),
 })
 

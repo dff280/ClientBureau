@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Building2, MapPin, Target, UserRound } from "lucide-react"
+import { Building2, Home, MapPin, Target, UserRound } from "lucide-react"
 import type React from "react"
 import { useActionState, useEffect } from "react"
 import { toast } from "sonner"
@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { signupAction } from "@/lib/actions/client-bureau"
 import {
+  accountTypeOptions,
   businessTypes,
   companySizes,
   onboardingGoals,
@@ -71,6 +72,13 @@ export function SignupForm() {
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
+
+    if (state.ok) {
+      const nextPath = state.data.accountType === "client" ? "/client-response" : "/dashboard"
+      const timer = window.setTimeout(() => window.location.assign(nextPath), 700)
+
+      return () => window.clearTimeout(timer)
+    }
   }, [state])
 
   return (
@@ -81,6 +89,38 @@ export function SignupForm() {
           <AlertDescription>{state.message}</AlertDescription>
         </Alert>
       ) : null}
+      <OnboardingBlock
+        icon={<Target className="size-4" aria-hidden="true" />}
+        title="Choose account type"
+        text="This keeps contractor tools and client response tools separate from the start."
+      >
+        <div className="grid gap-3 md:grid-cols-2">
+          {accountTypeOptions.map((option) => (
+            <label
+              key={option.value}
+              className="flex cursor-pointer gap-3 rounded-md border border-slate-200 bg-white p-4 transition hover:border-amber-300 has-[:checked]:border-amber-400 has-[:checked]:bg-amber-50"
+            >
+              <input
+                type="radio"
+                name="accountType"
+                value={option.value}
+                defaultChecked={option.value === "contractor"}
+                className="mt-1 size-4"
+              />
+              <span>
+                <span className="flex items-center gap-2 font-semibold">
+                  {option.value === "client" ? <Home className="size-4" aria-hidden="true" /> : <Building2 className="size-4" aria-hidden="true" />}
+                  {option.label}
+                </span>
+                <span className="mt-2 block text-sm leading-6 text-slate-600">
+                  {option.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <FieldError name="accountType" errors={state.ok ? undefined : state.fieldErrors} />
+      </OnboardingBlock>
       <OnboardingBlock
         icon={<UserRound className="size-4" aria-hidden="true" />}
         title="Account owner"
@@ -107,13 +147,13 @@ export function SignupForm() {
 
       <OnboardingBlock
         icon={<Building2 className="size-4" aria-hidden="true" />}
-        title="Business profile"
-        text="More complete business details help verification, contracts, reports, and future service workflows."
+        title="Business or response profile"
+        text="Contractors can enter company details. Clients can enter the name or organization connected to a response, correction, or profile claim."
       >
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="businessName">Business name</Label>
-            <Input id="businessName" name="businessName" placeholder="RidgeBuild Contracting" autoComplete="organization" />
+            <Label htmlFor="businessName">Business or display name</Label>
+            <Input id="businessName" name="businessName" placeholder="RidgeBuild Contracting or Morgan Ellis" autoComplete="organization" />
             <FieldError name="businessName" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
@@ -125,8 +165,8 @@ export function SignupForm() {
             <FieldError name="businessType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="trade">Primary trade or service</Label>
-            <Input id="trade" name="trade" placeholder="Residential remodeling" />
+            <Label htmlFor="trade">Trade, service, or relationship context</Label>
+            <Input id="trade" name="trade" placeholder="Residential remodeling or homeowner response" />
             <FieldError name="trade" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">

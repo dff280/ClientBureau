@@ -6,17 +6,20 @@ import { ScoreGauge } from "@/components/client/score-gauge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import type { ClientSearchResult } from "@/lib/types"
 
 export function SearchResultCard({ result }: { result: ClientSearchResult }) {
   const evidenceLabel = result.evidenceOnFile ? "Evidence on file" : "No public evidence label"
   const paymentLabel = result.paymentContextLabel ?? "Payment context reviewed"
+  const ratingBand = clientRatingBand(result.clientBureauScore, result.reportCount)
 
   return (
     <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm transition hover:border-amber-300 hover:shadow-md">
       <CardContent className="grid gap-6 p-5 lg:grid-cols-[190px_1fr_180px] lg:items-center">
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          <ScoreGauge score={result.clientBureauScore} label="Client Bureau Score" />
+          <ScoreGauge score={result.clientBureauScore} label="Client Bureau Rating" />
+          <p className="mt-2 text-sm font-semibold text-slate-700">{ratingBand}</p>
         </div>
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
@@ -37,7 +40,7 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
             {result.city}, {result.state}
           </p>
           <p className="text-sm leading-6 text-slate-700">
-            {result.latestSummary ?? "Approved profile with moderated contractor-submitted reports."}
+            {cleanPublicReportText(result.latestSummary) || "Approved profile with moderated contractor-submitted reports."}
           </p>
           <div className="grid gap-2 text-xs font-medium text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
             <SearchFact icon={ShieldCheck} label={`${result.reportCount} approved signals`} />
