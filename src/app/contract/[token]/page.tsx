@@ -1,8 +1,6 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import {
-  ArrowLeft,
   BadgeCheck,
   CalendarDays,
   CheckCircle2,
@@ -13,8 +11,8 @@ import {
 } from "lucide-react"
 
 import { ContractSigningForm } from "@/components/contracts/contract-signing-form"
+import { PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getContractShareByTokenService } from "@/lib/repositories/client-bureau-service"
 
@@ -51,44 +49,33 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
   const signedDigestLabel = packet.signedDigest
     ? `${packet.signedDigest.slice(0, 18)}...${packet.signedDigest.slice(-8)}`
     : undefined
+  const proofItems = [
+    { label: "Agreement", value: packet.templateType.replaceAll("_", " "), text: packet.projectType },
+    { label: "Value", value: formatCurrency(packet.packetValue), text: `${packet.milestoneCount} scheduled milestones` },
+    { label: "Signature", value: signatureStatus, text: "Private electronic signature workflow." },
+    { label: "Payment", value: paymentMode, text: "Terms only; Client Bureau does not hold funds here." },
+  ]
 
   return (
-    <section className="bg-slate-100">
-      <div className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container py-10">
-          <Button asChild variant="outline" className="mb-6 border-white/20 bg-white/10 text-white hover:bg-white/15">
-            <Link href="/">
-              <ArrowLeft aria-hidden="true" />
-              Client Bureau
-            </Link>
-          </Button>
-          <div className="grid gap-6 lg:grid-cols-[1fr_360px] lg:items-end">
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
-                <FileSignature className="size-4" aria-hidden="true" />
-                Private agreement review
-              </div>
-              <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
-                Review and sign the agreement for {packet.projectType}.
-              </h1>
-              <p className="max-w-3xl text-sm leading-6 text-slate-300">
-                This private link was prepared by the contractor for agreement review, electronic
-                signature, and payment-timing coordination before work starts.
-              </p>
-            </div>
-            <Card className="rounded-md border-white/10 bg-white/10 text-white shadow-sm">
-              <CardContent className="space-y-3 p-5">
-                <ShieldCheck className="size-7 text-amber-300" aria-hidden="true" />
-                <p className="font-semibold">Private workflow</p>
-                <p className="text-sm leading-6 text-slate-300">
-                  This page is not a public client profile, report, payment demand notice, lien filing,
-                  or evidence repository.
-                </p>
-              </CardContent>
-            </Card>
+    <main className="bg-slate-100">
+      <PremiumHero
+        eyebrow="Private agreement review"
+        title={`Review and sign the agreement for ${packet.projectType}.`}
+        description="This private link was prepared by the contractor for agreement review, electronic signature, and payment-timing coordination before work starts."
+        primary={{ href: "/", label: "Client Bureau", icon: FileSignature }}
+        aside={
+          <div className="space-y-3 text-white">
+            <ShieldCheck className="size-8 text-amber-300" aria-hidden="true" />
+            <p className="text-xl font-semibold">Private workflow</p>
+            <p className="text-sm leading-6 text-slate-300">
+              This page is not a public client profile, report, payment demand notice, lien filing,
+              or evidence repository.
+            </p>
           </div>
-        </div>
-      </div>
+        }
+      />
+
+      <PremiumProofStrip items={proofItems} dark />
 
       <div className="bureau-container grid gap-6 py-8 lg:grid-cols-[1fr_420px]">
         <div className="space-y-5">
@@ -252,7 +239,7 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
           </CardContent>
         </Card>
       </div>
-    </section>
+    </main>
   )
 }
 

@@ -75,7 +75,7 @@ export function SiteHeader() {
   const moreNav = session.authenticated ? contractorPrimaryNav.slice(3).filter((item) => item.label !== "Contracts") : []
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/92 shadow-sm shadow-slate-950/[0.03] backdrop-blur">
       <div className="bureau-container flex min-h-16 items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-4">
           <BrandMark />
@@ -85,7 +85,7 @@ export function SiteHeader() {
         </div>
         <nav className="hidden items-center gap-4 text-sm font-medium text-slate-600 lg:flex">
           {desktopNav.map((item) => (
-            <Link key={item.href} href={item.href} className="transition hover:text-slate-950">
+            <Link key={item.href} href={item.href} className="rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950">
               {item.label}
             </Link>
           ))}
@@ -132,7 +132,7 @@ export function SiteHeader() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="rounded-md border border-slate-200 px-3 py-3 text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                    className="rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
                   >
                     <span className="font-semibold">{item.label}</span>
                     {item.description ? (
@@ -163,7 +163,7 @@ export function SiteHeader() {
                 {session.authenticated ? (
                   <Link
                     href="/api/auth/logout"
-                    className="rounded-md border border-slate-200 px-3 py-3 text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                    className="rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950"
                   >
                     Logout
                   </Link>
@@ -171,13 +171,13 @@ export function SiteHeader() {
                   <>
                     <Link
                       href="/login"
-                      className="rounded-md border border-slate-200 px-3 py-3 text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                      className="rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950"
                     >
                       Login
                     </Link>
                     <Link
                       href="/signup"
-                      className="rounded-md border border-slate-950 bg-slate-950 px-3 py-3 text-white transition hover:bg-slate-800"
+                      className="rounded-md border border-slate-950 bg-slate-950 px-3 py-3 text-white shadow-sm transition hover:bg-slate-800"
                     >
                       Create Account
                     </Link>

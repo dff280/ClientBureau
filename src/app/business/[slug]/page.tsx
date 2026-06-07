@@ -3,20 +3,18 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import {
   ArrowRight,
-  Building2,
   CheckCircle2,
   FileCheck2,
   HelpCircle,
-  ShieldCheck,
   Star,
   UserCheck,
 } from "lucide-react"
 
+import { PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { getSiteUrl } from "@/lib/env"
 import { getPublicBusinessProfileService } from "@/lib/repositories/client-bureau-service"
 import { JsonLd } from "@/lib/seo"
@@ -110,89 +108,44 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
     ],
   }
   const badgeEmbed = `<a href="${siteUrl}/business/${profile.publicSlug}" rel="nofollow noopener">View ${profile.businessName} on Client Bureau</a>`
+  const proofItems = [
+    { label: "Business", value: profile.trade, text: `${profile.city}, ${profile.state}` },
+    { label: "Rating", value: profile.ratingGrade, text: `${profile.ratingScore}/100 with ${profile.ratingConfidence} confidence` },
+    { label: "Public status", value: profile.publicProfileStatus, text: "Private account details are not displayed." },
+    { label: "Contributions", value: String(profile.reportStats.published), text: "Approved public report contributions." },
+  ]
 
   return (
     <article className="bg-slate-100">
       <JsonLd data={structuredData} />
-      <section className="border-b border-slate-200 bg-white">
-        <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
-          <div className="space-y-5">
-            <div className="flex flex-wrap gap-2">
-              <Badge className="rounded-md bg-emerald-700 text-white">
-                <ShieldCheck className="size-3" aria-hidden="true" />
-                {profile.publicProfileStatus}
-              </Badge>
-              <Badge variant="outline" className="rounded-md bg-white">
-                {profile.ratingConfidence} confidence
-              </Badge>
+      <PremiumHero
+        eyebrow="Public business profile"
+        title={profile.businessName}
+        description={`${profile.trade} in ${profile.city}, ${profile.state}. This Client Bureau business profile summarizes verification status, documentation habits, approved contribution history, and business rating context without exposing private account details.`}
+        primary={{ href: `/claim-profile?profile=${encodeURIComponent(profile.publicSlug)}`, label: "Claim or update profile", icon: UserCheck }}
+        secondary={{ href: "/business-rating-methodology", label: "Rating methodology", icon: HelpCircle }}
+        aside={
+          <div className="space-y-5 text-white">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase text-slate-300">Business Rating</p>
+                <p className="mt-2 text-5xl font-semibold text-white">{profile.ratingGrade}</p>
+              </div>
+              <Star className="size-8 text-amber-300" aria-hidden="true" />
             </div>
-            <div>
-              <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-                {profile.businessName}
-              </h1>
-              <p className="mt-3 text-lg text-slate-600">
-                {profile.trade} | {profile.city}, {profile.state}
-              </p>
+            <Progress value={profile.ratingScore} />
+            <div className="flex justify-between text-sm">
+              <span className="font-semibold text-white">{profile.ratingScore}/100</span>
+              <span className="text-slate-300">{profile.ratingConfidence} confidence</span>
             </div>
-            <p className="max-w-3xl leading-7 text-slate-600">
-              This public Client Bureau business profile summarizes verification status,
-              documentation habits, approved contribution history, and business rating context.
-              It does not display private emails, phone numbers, street addresses, raw evidence,
-              internal admin notes, or client private identifiers.
+            <p className="rounded-md border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">
+              {profile.ratingSummary}
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                <Link href="/signup">
-                  <Building2 aria-hidden="true" />
-                  Create business profile
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href={`/claim-profile?profile=${encodeURIComponent(profile.publicSlug)}`}>
-                  <UserCheck aria-hidden="true" />
-                  Claim or update profile
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/business-rating-methodology">
-                  <HelpCircle aria-hidden="true" />
-                  Rating methodology
-                </Link>
-              </Button>
-            </div>
           </div>
-          <Card className="rounded-md border-slate-200 shadow-sm">
-            <CardContent className="space-y-5 p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase text-slate-500">Business Rating</p>
-                  <p className="mt-2 text-5xl font-semibold text-slate-950">{profile.ratingGrade}</p>
-                </div>
-                <Star className="size-8 text-amber-600" aria-hidden="true" />
-              </div>
-              <Progress value={profile.ratingScore} />
-              <div className="flex justify-between text-sm">
-                <span className="font-semibold text-slate-950">{profile.ratingScore}/100</span>
-                <span className="text-slate-500">{profile.ratingConfidence} confidence</span>
-              </div>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
-                      <HelpCircle className="size-3.5" aria-hidden="true" />
-                      What this rating means
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Based on verification, documentation, contribution history, resolution posture, and account completeness.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <p className="text-xs leading-5 text-slate-500">{profile.ratingSummary}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+        }
+      />
+
+      <PremiumProofStrip items={proofItems} dark />
 
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">

@@ -1,14 +1,18 @@
 import type { Metadata } from "next"
-import Link from "next/link"
-import { BarChart3, CheckCircle2, HelpCircle, ShieldCheck } from "lucide-react"
+import { BarChart3, CheckCircle2, FileSearch, HelpCircle, MessageSquareText, ShieldCheck } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import {
+  PremiumCtaBand,
+  PremiumHero,
+  PremiumProofStrip,
+  PremiumSectionHeader,
+} from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
 
 export const metadata: Metadata = {
   title: "Client Bureau Rating Methodology",
   description:
-    "How Client Bureau Ratings use moderated contractor-submitted reports, evidence context, disputes, resolutions, and positive reports.",
+    "How Client Bureau Ratings use moderated reports, evidence context, disputes, resolutions, positive reports, and confidence signals.",
   alternates: {
     canonical: "/score-methodology",
   },
@@ -33,19 +37,19 @@ const factors = [
   },
   {
     title: "Approved report categories",
-    text: "Categories such as late payment, non-payment, chargeback, and positive experience carry different weights after moderation.",
-  },
-  {
-    title: "Payment and resolution context",
-    text: "Reported unpaid amounts, paid-after-follow-up notes, documented resolutions, and active dispute context influence the score.",
+    text: "Late payment, non-payment, chargeback, positive experience, and resolution categories carry different weights after moderation.",
   },
   {
     title: "Report volume and recency",
-    text: "Multiple approved reports may increase confidence. Newer reports and resolved items are weighed with additional context.",
+    text: "Multiple approved reports can increase confidence. Newer reports and resolved items are weighed with additional context.",
   },
   {
     title: "Positive reports",
-    text: "Approved positive experiences and would-work-with-again reports can improve the score and help profiles avoid one-sided presentation.",
+    text: "Approved positive experiences and would-work-with-again reports help profiles avoid one-sided presentation.",
+  },
+  {
+    title: "Public response context",
+    text: "Client responses, disputes, corrections, and resolution updates can add important context after moderation.",
   },
 ]
 
@@ -58,37 +62,45 @@ const ratingBands = [
   ["No reports", "Limited history"],
 ]
 
+const proof = [
+  { label: "Range", value: "0-100", text: "A profile context signal, not a legal finding or consumer credit score." },
+  { label: "Inputs", value: "Moderated", text: "Approved reports, evidence context, responses, disputes, and resolutions." },
+  { label: "Fairness", value: "Balanced", text: "Positive reports and resolution updates can improve public context." },
+  { label: "Privacy", value: "Protected", text: "Raw evidence and private identifiers are not part of public scoring pages." },
+]
+
 export default function ScoreMethodologyPage() {
   return (
-    <section className="bureau-section bg-slate-100">
-      <div className="bureau-container space-y-10">
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-end">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-700">Rating methodology</p>
-            <h1 className="max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-              How the Client Bureau Rating is interpreted.
-            </h1>
-            <p className="max-w-3xl leading-7 text-slate-600">
-              The rating is a client-risk intelligence signal based on moderated,
-              contractor-submitted reports, evidence context, response history, balance status,
-              positive reports, and resolution signals. It is designed to support judgment, not replace it.
+    <main className="bg-slate-100">
+      <PremiumHero
+        eyebrow="Rating methodology"
+        title="How the Client Bureau Rating turns reports into cautious business context."
+        description="The rating is a client-risk intelligence signal based on moderated contractor-submitted reports, evidence context, response history, balance status, positive reports, and resolution signals."
+        primary={{ href: "/search", label: "Check a Client", icon: FileSearch }}
+        secondary={{ href: "/report-policy", label: "Report standards", icon: ShieldCheck }}
+        aside={
+          <div className="space-y-4 text-white">
+            <BarChart3 className="size-9 text-amber-300" aria-hidden="true" />
+            <p className="text-xl font-semibold">A decision aid, not a verdict.</p>
+            <p className="text-sm leading-6 text-slate-300">
+              Scores help contractors understand reported payment and dispute context, but they do
+              not replace contracts, deposits, communication records, or business judgment.
             </p>
           </div>
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <BarChart3 className="size-8 text-slate-950" aria-hidden="true" />
-              <h2 className="text-2xl font-semibold text-slate-950">0-100 range</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Higher scores generally indicate stronger reported payment reliability and fewer
-                unresolved concerns. Lower scores may indicate reported payment risk or unresolved
-                dispute context.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        }
+      />
 
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm md:col-span-2 lg:col-span-3">
+      <PremiumProofStrip items={proof} dark />
+
+      <section className="bureau-section">
+        <div className="bureau-container space-y-10">
+          <PremiumSectionHeader
+            eyebrow="Score range"
+            title="Ratings are interpreted with report count, confidence, disputes, and resolution status."
+            description="A profile with several approved reports, evidence summaries, response history, and resolution updates carries more context than a single new submission."
+          />
+
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="grid gap-3 p-5 md:grid-cols-3 lg:grid-cols-6">
               {ratingBands.map(([range, label]) => (
                 <div key={range} className="rounded-md border border-slate-200 bg-slate-50 p-3">
@@ -98,46 +110,61 @@ export default function ScoreMethodologyPage() {
               ))}
             </CardContent>
           </Card>
-          {factors.map((factor) => (
-            <Card key={factor.title} className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardContent className="space-y-3 p-5">
-                <CheckCircle2 className="size-6 text-emerald-700" aria-hidden="true" />
-                <h2 className="text-xl font-semibold text-slate-950">{factor.title}</h2>
-                <p className="text-sm leading-6 text-slate-600">{factor.text}</p>
+
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {factors.map((factor) => (
+              <Card key={factor.title} className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardContent className="space-y-3 p-5">
+                  <CheckCircle2 className="size-6 text-emerald-700" aria-hidden="true" />
+                  <h2 className="text-xl font-semibold text-slate-950">{factor.title}</h2>
+                  <p className="text-sm leading-6 text-slate-600">{factor.text}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-3">
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-6">
+                <ShieldCheck className="size-8 text-amber-700" aria-hidden="true" />
+                <h2 className="text-2xl font-semibold text-slate-950">Confidence matters</h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  Report count, evidence summaries, dispute status, response history, and last updated
+                  date help contractors understand how much context supports the rating.
+                </p>
               </CardContent>
             </Card>
-          ))}
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-6">
+                <MessageSquareText className="size-8 text-amber-700" aria-hidden="true" />
+                <h2 className="text-2xl font-semibold text-slate-950">Responses can add context</h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  Approved client responses, corrections, disputes, and resolution updates can appear
+                  publicly to make the profile more complete and fair.
+                </p>
+              </CardContent>
+            </Card>
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-6">
+                <HelpCircle className="size-8 text-slate-950" aria-hidden="true" />
+                <h2 className="text-2xl font-semibold text-slate-950">What the score is not</h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  The rating is not a legal finding, consumer credit score, payment enforcement
+                  decision, accusation, or guarantee of future behavior.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
+      </section>
 
-        <div className="grid gap-5 lg:grid-cols-2">
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <ShieldCheck className="size-8 text-amber-700" aria-hidden="true" />
-              <h2 className="text-2xl font-semibold text-slate-950">Confidence matters</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                A rating with several approved reports, evidence references, and response history
-                carries more context than a rating based on a single recent submission. Public
-                profile cards show report count, disputes, resolved reports, and last updated date
-                so contractors can weigh the signal responsibly.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <HelpCircle className="size-8 text-slate-950" aria-hidden="true" />
-              <h2 className="text-2xl font-semibold text-slate-950">What the score is not</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                The rating is not a legal finding, consumer credit score, payment enforcement decision,
-                accusation, or guarantee of future behavior. It summarizes moderated, documented
-                contractor experiences and relevant profile context.
-              </p>
-              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                <Link href="/search">Check a Client</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </section>
+      <PremiumCtaBand
+        eyebrow="Use the score responsibly"
+        title="Search the profile, read the context, and decide the terms that protect your business."
+        description="A rating is most useful when paired with contracts, deposits, change orders, communication records, and your own judgment."
+        primary={{ href: "/search", label: "Check a Client", icon: FileSearch }}
+        secondary={{ href: "/how-it-works", label: "How Client Bureau Works", icon: ShieldCheck }}
+      />
+    </main>
   )
 }

@@ -11,6 +11,7 @@ import {
   UserCheck,
 } from "lucide-react"
 
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { StateSelect } from "@/components/forms/state-select"
 import { Button } from "@/components/ui/button"
@@ -82,54 +83,40 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
     <main className="bg-slate-100">
       <JsonLd data={getFaqSchema(faqs)} />
 
-      <section className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/10 px-3 py-2 text-sm font-semibold text-amber-200">
-              <UserCheck className="size-4" aria-hidden="true" />
-              Business profile claiming
-            </div>
-            <div>
-              <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">
-                Claim your Client Bureau business profile.
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-                Connect your business account to a public profile, strengthen verification signals,
-                invite trusted contractors, and request moderated reviews after real client work.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href={signupHref}>
-                  <UserCheck aria-hidden="true" />
-                  Start profile claim
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
-                <Link href="/businesses">Browse business profiles</Link>
-              </Button>
-            </div>
+      <PremiumHero
+        eyebrow="Business profile claiming"
+        title="Claim your Client Bureau business profile."
+        description="Connect your business account to a public profile, strengthen verification signals, invite trusted contractors, and request moderated reviews after real client work."
+        primary={{ href: signupHref, label: "Start profile claim", icon: UserCheck }}
+        secondary={{ href: "/businesses", label: "Browse business profiles", icon: Building2 }}
+        aside={
+          <div className="space-y-4 text-white">
+            <p className="text-sm font-semibold uppercase text-amber-200">What claiming unlocks</p>
+            {[
+              "Business verification status",
+              "Public profile badge",
+              "Review request links",
+              "Referral credit loop",
+              "Service area and trade context",
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-2 text-sm text-slate-100">
+                <CheckCircle2 className="size-4 text-amber-300" aria-hidden="true" />
+                <span>{item}</span>
+              </div>
+            ))}
           </div>
+        }
+      />
 
-          <Card className="rounded-md border-white/10 bg-white/10 text-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-sm font-semibold uppercase text-amber-200">What claiming unlocks</p>
-              {[
-                "Business verification status",
-                "Public profile badge",
-                "Review request links",
-                "Referral credit loop",
-                "Service area and trade context",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-2 text-sm text-slate-100">
-                  <CheckCircle2 className="size-4 text-amber-300" aria-hidden="true" />
-                  <span>{item}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+      <PremiumProofStrip
+        items={[
+          { label: "Step 1", value: "Identify", text: "Connect the right public business profile to the right account." },
+          { label: "Step 2", value: "Verify", text: "Add reasonable business verification and service-area context." },
+          { label: "Step 3", value: "Share", text: "Use branded profile links and review requests after real work." },
+          { label: "Privacy", value: "Protected", text: "Private account details and evidence remain private." },
+        ]}
+        dark
+      />
 
       <section className="bureau-section">
         <div className="bureau-container space-y-8">
@@ -205,6 +192,14 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
           </div>
         </div>
       </section>
+
+      <PremiumCtaBand
+        eyebrow="Build a stronger trust profile"
+        title="Claiming turns a public listing into a business-owner workflow."
+        description="Start with your business details, then complete verification and use profile tools from your private dashboard."
+        primary={{ href: signupHref, label: "Start profile claim", icon: UserCheck }}
+        secondary={{ href: "/business-rating-methodology", label: "Rating methodology", icon: ClipboardCheck }}
+      />
     </main>
   )
 }

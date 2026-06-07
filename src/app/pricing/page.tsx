@@ -1,144 +1,251 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { CheckCircle2, HelpCircle, Radar } from "lucide-react"
+import { ArrowRight, CheckCircle2, FileCheck2, Radar, ReceiptText, ShieldCheck, Signature, Users } from "lucide-react"
 
-import { BusinessProtectionWorkflow } from "@/components/marketing/business-protection-workflow"
-import { PricingCard } from "@/components/pricing/pricing-card"
-import { Card, CardContent } from "@/components/ui/card"
+import {
+  PremiumCtaBand,
+  PremiumFeatureCard,
+  PremiumHero,
+  PremiumProofStrip,
+  PremiumSectionHeader,
+  ProductMockupFrame,
+  WorkflowTimeline,
+} from "@/components/marketing/premium-page-shell"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
 export const metadata: Metadata = {
   title: "Pricing for Contractors and Service Businesses",
   description:
-    "Client Bureau pricing for contractors and service businesses that need client checks, documented reports, evidence workflows, watchlists, recovery support, and team controls.",
+    "Client Bureau pricing for client checks, documented reports, contracts, evidence records, payment recovery workflows, Florida lien service, and team controls.",
   alternates: {
     canonical: "/pricing",
   },
 }
 
-export default function PricingPage() {
-  const comparisonRows = [
-    ["Client profile search", "Limited", "Unlimited", "Team shared", "Custom"],
-    ["Positive client reports", "Included", "Included", "Included", "Included"],
-    ["Documented report submission", "One included", "Unlimited", "Team managed", "Custom"],
-    ["Evidence Vault", "Basic", "Expanded", "Shared team vault", "Custom retention"],
-    ["Saved searches and watchlist", "-", "Included", "Shared", "Advanced"],
-    ["Intake risk assessments", "-", "Included", "Team shared", "Custom"],
-    ["Payment recovery workflow", "-", "Service fee per case", "Team workflow", "Specialist workflow"],
-    ["Contract signing links", "-", "Client review, e-signature, and change-order tracking", "Shared link controls", "Custom templates"],
-    ["Client invite portal", "-", "Private agreement link", "Team-managed invites", "Custom onboarding"],
-    ["Florida lien service", "-", "Notice and filing service fees", "Team review", "Specialist workflow"],
-    ["Moderation priority", "Standard", "Priority", "Team priority", "Dedicated review"],
-    ["Audit and exports", "-", "-", "Included", "Custom"],
-  ]
+const proof = [
+  { label: "Start", value: "$0", text: "Search and submit a documented report before you upgrade." },
+  { label: "Best fit", value: "Pro", text: "Unlimited client checks, watchlists, contracts, evidence, and recovery tools." },
+  { label: "Teams", value: "Shared", text: "Multiple users, shared records, CSV intake, and manager review controls." },
+  { label: "Service work", value: "Add-on", text: "Recovery and Florida lien workflows use service-fee paths." },
+]
 
+const planOutcomes = [
+  {
+    icon: Radar,
+    title: "Search before you schedule",
+    text: "Run client checks before committing crew time, material orders, deposits, or final invoice risk.",
+  },
+  {
+    icon: Signature,
+    title: "Set terms before work starts",
+    text: "Use agreement packets, signing links, deposit terms, milestones, and change-order tracking.",
+  },
+  {
+    icon: FileCheck2,
+    title: "Keep evidence organized",
+    text: "Store invoices, contracts, screenshots, photos, approvals, and completion notes privately.",
+  },
+  {
+    icon: ReceiptText,
+    title: "Escalate professionally",
+    text: "Open private recovery and Florida lien-service workflows when a payment issue becomes serious.",
+  },
+]
+
+const workflowSteps = [
+  {
+    icon: Radar,
+    title: "Check the client",
+    text: "Run the intake search before accepting the job, ordering materials, or blocking the schedule.",
+    href: "/search",
+    cta: "Check a Client",
+  },
+  {
+    icon: Signature,
+    title: "Set terms",
+    text: "Move into agreement packets, deposits, milestones, exclusions, and signature tracking.",
+    href: "/dashboard/contracts",
+    cta: "Contracts",
+  },
+  {
+    icon: ReceiptText,
+    title: "Protect payment",
+    text: "Use evidence, recovery workflows, and Florida lien-service paths when payment risk appears.",
+    href: "/payment-recovery-service",
+    cta: "Recovery",
+  },
+]
+
+const comparisonRows = [
+  ["Client profile search", "Limited", "Unlimited", "Shared", "Custom"],
+  ["Watchlists and saved searches", "Basic", "Included", "Shared", "Advanced"],
+  ["Client experience reports", "One included", "Unlimited", "Team managed", "Custom"],
+  ["Positive client reports", "Included", "Included", "Included", "Included"],
+  ["Contract signing links", "-", "Included", "Shared controls", "Custom workflows"],
+  ["Evidence Vault", "Basic", "Expanded", "Team vault", "Retention options"],
+  ["Payment recovery workflow", "-", "Service fee per case", "Team workflow", "Specialist workflow"],
+  ["Florida lien service", "-", "Notice and filing service fees", "Team review", "Specialist workflow"],
+  ["Moderation priority", "Standard", "Priority", "Team priority", "Dedicated review"],
+  ["Audit and exports", "-", "-", "Included", "Custom"],
+]
+
+const faqs = [
+  ["Can I start free?", "Yes. Free is designed for basic client checks and an initial documented client experience report."],
+  ["What plan should an active contractor choose?", "Pro Contractor is the clearest fit for businesses that want client checks, watchlists, contracts, evidence, recovery, and report workflows in daily use."],
+  ["Do recovery and lien services guarantee payment?", "No. Client Bureau does not guarantee collection, lien rights, recording results, legal outcomes, or payment timing."],
+  ["Are private emails, phone numbers, addresses, or evidence public?", "No. Private identifiers and raw evidence stay private and are not displayed on public client profiles."],
+]
+
+export default function PricingPage() {
   return (
-    <section className="bureau-section bg-slate-100">
-      <div className="bureau-container space-y-10">
-        <div className="mx-auto max-w-3xl space-y-4 text-center">
-          <p className="text-sm font-semibold uppercase text-amber-700">Pricing</p>
-          <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-            Choose the client-check workflow your business needs.
-          </h1>
-          <p className="leading-7 text-slate-600">
-            Start with basic search and one documented report. Upgrade when client checks become part
-            of every estimate: unlimited searches, watchlists, evidence workflows, payment follow-up,
-            client response tracking, and faster moderation.
-          </p>
-          <p className="mx-auto max-w-2xl text-sm font-semibold text-slate-800">
-            One avoided bad job can pay for the year. Client Bureau helps reduce surprises without guaranteeing outcomes.
-          </p>
-          <div className="inline-flex rounded-md border border-slate-200 bg-white p-1 text-sm font-semibold text-slate-600">
-            <span className="rounded-sm bg-slate-950 px-4 py-2 text-white">Monthly</span>
-            <span className="px-4 py-2">Annual options available for teams</span>
+    <>
+      <PremiumHero
+        eyebrow="Pricing"
+        title="Choose the client-protection workflow your business needs."
+        description="Client Bureau pricing is built around one practical idea: one avoided payment problem, unclear contract, or risky client decision can matter more than the monthly cost."
+        primary={{ href: "/signup?plan=pro", label: "Start Pro Contractor", icon: ArrowRight }}
+        secondary={{ href: "/search", label: "Check a Client", icon: Radar }}
+        aside={
+          <ProductMockupFrame
+            dark
+            eyebrow="Pro workflow"
+            title="One plan. One intake process."
+            description="Search, contract, document, recover, and monitor from the same private workspace."
+            imageSrc="/images/search-intelligence-console.webp"
+            imageAlt="Client Bureau search intelligence console showing client ratings and private matching."
+            points={["Unlimited checks on Pro", "Private evidence records", "Recovery and lien-service paths"]}
+          />
+        }
+      />
+      <PremiumProofStrip items={proof} dark />
+
+      <section className="bureau-section bg-slate-100">
+        <div className="bureau-container space-y-10">
+          <div className="grid gap-5 lg:grid-cols-4">
+            {pricingTiers.map((tier) => (
+              <PlanCard key={tier.id} tier={tier} />
+            ))}
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {planOutcomes.map((item) => (
+              <PremiumFeatureCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
+            ))}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
+            <ProductMockupFrame
+              eyebrow="Plan value"
+              title="Pricing is tied to the work you already do."
+              description="Client Bureau should sit at the front of intake, not after a job goes bad."
+              imageSrc="/images/contract-packet-console.webp"
+              imageAlt="Client Bureau contract packet workspace with scope, payment terms, and signature status."
+              points={["Client checks before scheduling", "Agreement packets before work starts", "Evidence and recovery records after issues appear"]}
+            />
+            <WorkflowTimeline items={workflowSteps} />
           </div>
         </div>
+      </section>
 
-        <BusinessProtectionWorkflow compact showGuardrails={false} />
+      <section className="bureau-section bg-white">
+        <div className="bureau-container space-y-8">
+          <PremiumSectionHeader
+            eyebrow="Feature comparison"
+            title="Compare plans by the workflow you want to protect."
+            description="The biggest difference is how much client-risk work you want inside Client Bureau: search volume, saved monitoring, evidence depth, contracts, service workflows, and team controls."
+          />
+          <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[800px] text-left text-sm">
+                  <thead className="bg-slate-950 text-xs uppercase text-slate-300">
+                    <tr>
+                      <th className="p-4">Workflow</th>
+                      <th className="p-4">Free</th>
+                      <th className="p-4">Pro Contractor</th>
+                      <th className="p-4">Bureau Team</th>
+                      <th className="p-4">Enterprise</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {comparisonRows.map((row) => (
+                      <tr key={row[0]} className="border-t border-slate-100">
+                        {row.map((cell, index) => (
+                          <td key={`${row[0]}-${index}`} className={index === 0 ? "p-4 font-semibold text-slate-950" : "p-4 text-slate-600"}>
+                            {cell}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
 
-        <div className="grid gap-5 lg:grid-cols-4">
-          {pricingTiers.map((tier) => (
-            <PricingCard key={tier.id} tier={tier} />
+      <section className="bureau-section bg-slate-100">
+        <div className="bureau-container grid gap-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+          <PremiumSectionHeader
+            eyebrow="FAQ"
+            title="Clear pricing, careful expectations."
+            description="Client Bureau is a business-protection platform. It helps organize decisions and workflows, but it does not guarantee payment, legal outcomes, or dispute resolution."
+          />
+          <div className="grid gap-3">
+            {faqs.map(([question, answer]) => (
+              <div key={question} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+                <p className="font-semibold text-slate-950">{question}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{answer}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <PremiumCtaBand
+        eyebrow="Make it part of intake"
+        title="Before the next estimate, check the client."
+        description="Start with a free account, then upgrade when search, contracts, evidence, recovery, and team workflows become part of your business process."
+        primary={{ href: "/signup?plan=pro", label: "Start Pro Contractor", icon: ShieldCheck }}
+        secondary={{ href: "/enterprise", label: "View Enterprise", icon: Users }}
+      />
+    </>
+  )
+}
+
+function PlanCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
+  const href = tier.id === "enterprise" ? "/enterprise" : `/signup?plan=${tier.id}`
+
+  return (
+    <Card className={tier.featured ? "rounded-md border-2 border-amber-400 bg-slate-950 text-white shadow-xl" : "rounded-md border-slate-200 bg-white shadow-sm"}>
+      <CardContent className="space-y-5 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className={tier.featured ? "text-xl font-semibold text-white" : "text-xl font-semibold text-slate-950"}>{tier.name}</p>
+            <p className={tier.featured ? "mt-2 text-sm leading-6 text-slate-300" : "mt-2 text-sm leading-6 text-slate-600"}>{tier.description}</p>
+          </div>
+          {tier.featured ? <Badge className="rounded-md bg-amber-400 text-slate-950">Best fit</Badge> : null}
+        </div>
+        <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
+          <span className={tier.featured ? "text-4xl font-semibold text-white" : "text-4xl font-semibold text-slate-950"}>{tier.price}</span>
+          <span className={tier.featured ? "pb-1 text-sm text-slate-300" : "pb-1 text-sm text-slate-500"}>{tier.cadence}</span>
+        </div>
+        <div className="grid gap-2">
+          {tier.features.slice(0, 6).map((feature) => (
+            <div key={feature} className={tier.featured ? "flex gap-2 text-sm text-slate-200" : "flex gap-2 text-sm text-slate-600"}>
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-amber-500" aria-hidden="true" />
+              <span>{feature}</span>
+            </div>
           ))}
         </div>
-
-        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-          <CardContent className="p-0">
-            <div className="border-b border-slate-200 p-6">
-              <h2 className="text-2xl font-semibold text-slate-950">Feature comparison</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Plans are designed around search volume, loss-prevention workflow depth, moderation speed, and team controls.
-              </p>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-sm">
-                <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-                  <tr>
-                    <th className="p-4">Feature</th>
-                    <th className="p-4">Free</th>
-                    <th className="p-4">Pro</th>
-                    <th className="p-4">Team</th>
-                    <th className="p-4">Enterprise</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {comparisonRows.map((row) => (
-                    <tr key={row[0]} className="border-t border-slate-100">
-                      {row.map((cell, index) => (
-                        <td key={`${row[0]}-${index}`} className={index === 0 ? "p-4 font-semibold text-slate-950" : "p-4 text-slate-600"}>
-                          {cell}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <CheckCircle2 className="size-8 text-emerald-700" aria-hidden="true" />
-              <h2 className="text-2xl font-semibold text-slate-950">Fairness is included in every plan.</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Public profile summaries are moderated, private identifiers are not displayed,
-                evidence is reviewed privately, and clients have a clear response and correction path.
-              </p>
-              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                <Link href="/signup">Create contractor account</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/enterprise">Explore enterprise</Link>
-              </Button>
-            </CardContent>
-          </Card>
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <Radar className="size-8 text-amber-700" aria-hidden="true" />
-              <h2 className="text-2xl font-semibold text-slate-950">Client intake tools are built into Pro.</h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Pro Contractor adds unlimited client checks, watchlists, saved searches, intake assessments,
-                managed recovery cases, Florida lien service workflows, contract signing links, evidence review, and client response tracking.
-              </p>
-              <HelpCircle className="size-8 text-amber-700" aria-hidden="true" />
-              <h2 className="text-2xl font-semibold text-slate-950">FAQ</h2>
-              {[
-                ["Can I report client experiences on Free?", "Yes. Reports still go through moderation before any public summary appears."],
-                ["Are phone numbers or emails public?", "No. They are used for private matching and are not displayed on public profile pages."],
-                ["Can a client respond?", "Yes. Every public profile includes a response, dispute, correction, or resolution-update path."],
-              ].map(([question, answer]) => (
-                <div key={question} className="border-t border-slate-100 pt-3">
-                  <p className="font-semibold text-slate-950">{question}</p>
-                  <p className="mt-1 text-sm leading-6 text-slate-600">{answer}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </section>
+        <Button asChild className={tier.featured ? "w-full bg-amber-500 text-slate-950 hover:bg-amber-400" : "w-full"} variant={tier.featured ? "default" : "outline"}>
+          <Link href={href}>{tier.id === "enterprise" ? "View enterprise" : "Choose plan"}</Link>
+        </Button>
+      </CardContent>
+    </Card>
   )
 }

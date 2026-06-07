@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowRight, FilePlus2, LockKeyhole, Search, ShieldCheck } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getClientDirectory } from "@/lib/client-directory"
@@ -31,46 +32,33 @@ export function SeoLandingPageView({
     : []
 
   return (
-    <section className="bg-slate-100">
+    <main className="bg-slate-100">
       <JsonLd data={getFaqSchema(faqs)} />
-      <div className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
-              <ShieldCheck className="size-4" aria-hidden="true" />
-              Moderated client-risk intelligence
-            </div>
-            <div>
-              <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">
-                {page.h1}
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">{page.intro}</p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href="/search">
-                  <Search aria-hidden="true" />
-                  {page.primaryCta}
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
-                <Link href="/submit-report">
-                  <FilePlus2 aria-hidden="true" />
-                  {page.secondaryCta}
-                </Link>
-              </Button>
-            </div>
+      <PremiumHero
+        eyebrow="Moderated client-risk intelligence"
+        title={page.h1}
+        description={page.intro}
+        primary={{ href: "/search", label: page.primaryCta, icon: Search }}
+        secondary={{ href: "/submit-report", label: page.secondaryCta, icon: FilePlus2 }}
+        aside={
+          <div className="grid gap-4 text-white">
+            <Metric label="Matched public profiles" value={profiles.length.toLocaleString()} />
+            <Metric label="Published reports" value={reports.length.toLocaleString()} />
+            <Metric label="Reported unpaid balances" value={formatCurrency(totalUnpaid)} />
+            <Metric label="Open dispute context" value={openDisputes.toLocaleString()} />
           </div>
-          <Card className="rounded-md border-white/10 bg-white/5 text-white shadow-sm">
-            <CardContent className="grid gap-4 p-5">
-              <Metric label="Matched public profiles" value={profiles.length.toLocaleString()} />
-              <Metric label="Published reports" value={reports.length.toLocaleString()} />
-              <Metric label="Reported unpaid balances" value={formatCurrency(totalUnpaid)} />
-              <Metric label="Open dispute context" value={openDisputes.toLocaleString()} />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        }
+      />
+
+      <PremiumProofStrip
+        items={[
+          { label: "Public content", value: "Approved", text: "Only moderated profile and report context appears on these pages." },
+          { label: "Search intent", value: "High signal", text: "Built for contractors checking specific client, city, and report context." },
+          { label: "Fairness", value: "Response-aware", text: "Client responses and disputes are included only after review." },
+          { label: "Privacy", value: "Protected", text: "Raw contact details, evidence files, and internal notes stay private." },
+        ]}
+        dark
+      />
 
       <div className="bureau-container space-y-8 py-10">
         <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
@@ -276,7 +264,14 @@ export function SeoLandingPageView({
           </CardContent>
         </Card>
       </div>
-    </section>
+      <PremiumCtaBand
+        eyebrow="Use this page as a starting point"
+        title="Search the client, review the context, and decide the terms before the job starts."
+        description="Client Bureau combines public research pages with private tools for contracts, evidence, reports, recovery, and response-aware records."
+        primary={{ href: "/search", label: "Check a Client", icon: Search }}
+        secondary={{ href: "/clients", label: "Browse directory", icon: ShieldCheck }}
+      />
+    </main>
   )
 }
 

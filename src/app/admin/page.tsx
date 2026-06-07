@@ -103,7 +103,7 @@ export default async function AdminHomePage() {
       <div className="mx-auto max-w-7xl space-y-6">
         <DashboardPageHeader
           eyebrow="Admin Command Center"
-          title="Today’s platform operations"
+          title="Today's platform operations"
           description="Review public content, manage ratings and profiles, supervise private service workflows, and keep every admin action traceable."
           actions={
             <>

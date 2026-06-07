@@ -1,6 +1,7 @@
 import Link from "next/link"
-import { ArrowRight, CheckCircle2, FileText, LockKeyhole, Search, ShieldCheck } from "lucide-react"
+import { ArrowRight, CheckCircle2, FileText, LockKeyhole, Search } from "lucide-react"
 
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { AcquisitionPage } from "@/lib/acquisition-pages"
@@ -73,46 +74,36 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
   }
 
   return (
-    <section className="bg-slate-100">
+    <main className="bg-slate-100">
       <JsonLd data={structuredData} />
       <JsonLd data={getFaqSchema(page.faqs)} />
-      <div className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 py-14 lg:grid-cols-[1fr_380px] lg:items-end">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
-              <ShieldCheck className="size-4" aria-hidden="true" />
-              {page.eyebrow}
-            </div>
+      <PremiumHero
+        eyebrow={page.eyebrow}
+        title={page.h1}
+        description={page.heroCopy}
+        primary={{ href: page.primaryCta.href, label: page.primaryCta.label, icon: Search }}
+        secondary={{ href: page.secondaryCta.href, label: page.secondaryCta.label, icon: ArrowRight }}
+        aside={
+          <div className="space-y-4 text-white">
+            <LockKeyhole className="size-9 text-amber-300" aria-hidden="true" />
             <div>
-              <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">
-                {page.h1}
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">{page.heroCopy}</p>
+              <p className="text-sm font-semibold uppercase text-slate-300">{page.proofLabel}</p>
+              <p className="mt-1 text-2xl font-semibold">{page.proofValue}</p>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href={page.primaryCta.href}>
-                  {page.primaryCta.label}
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
-                <Link href={page.secondaryCta.href}>{page.secondaryCta.label}</Link>
-              </Button>
-            </div>
+            <p className="text-sm leading-6 text-slate-300">{page.proofDetail}</p>
           </div>
-          <Card className="rounded-md border-white/10 bg-white/10 text-white shadow-none">
-            <CardContent className="space-y-4 p-6">
-              <LockKeyhole className="size-8 text-amber-300" aria-hidden="true" />
-              <div>
-                <p className="text-sm font-semibold uppercase text-slate-300">{page.proofLabel}</p>
-                <p className="mt-1 text-2xl font-semibold">{page.proofValue}</p>
-              </div>
-              <p className="text-sm leading-6 text-slate-300">{page.proofDetail}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+        }
+      />
+
+      <PremiumProofStrip
+        items={[
+          { label: "Before work", value: "Search", text: "Check client context before committing time, labor, materials, or deposits." },
+          { label: "During work", value: "Document", text: "Use contracts, change orders, evidence, and project records." },
+          { label: "After work", value: "Resolve", text: "Track reports, response context, recovery workflows, and updates." },
+          { label: "Privacy", value: "Protected", text: "Private identifiers and raw evidence stay out of public pages." },
+        ]}
+        dark
+      />
 
       <div className="bureau-container space-y-10 py-10">
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -211,6 +202,14 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
           </CardContent>
         </Card>
       </div>
-    </section>
+
+      <PremiumCtaBand
+        eyebrow="Ready to protect the next job?"
+        title="Check the client first, then document the work with Client Bureau."
+        description="Use search, reports, contracts, evidence, and response-aware workflows to make better business decisions."
+        primary={{ href: "/search", label: "Check a Client", icon: Search }}
+        secondary={{ href: "/submit-report", label: "Report a Client Experience", icon: FileText }}
+      />
+    </main>
   )
 }

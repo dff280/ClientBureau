@@ -33,7 +33,7 @@ export function DashboardShell({
   className?: string
 }) {
   return (
-    <section className={cn("min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-8", className)}>
+    <section className={cn("bureau-paper min-h-screen px-4 py-6 sm:px-6 lg:px-8", className)}>
       <div className="mx-auto max-w-7xl space-y-6">{children}</div>
     </section>
   )
@@ -126,7 +126,7 @@ export function StatCard({
   href?: string
 }) {
   const content = (
-    <div className={cn("h-full rounded-md border p-4 shadow-sm", toneClasses[tone])}>
+    <div className={cn("bureau-hover-lift h-full rounded-md border p-4 shadow-sm", toneClasses[tone])}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
@@ -173,7 +173,7 @@ export function QuickActionCard({
       href={href}
       prefetch={false}
       className={cn(
-        "group flex h-full flex-col justify-between rounded-md border p-4 shadow-sm transition hover:-translate-y-0.5",
+        "bureau-hover-lift group flex h-full flex-col justify-between rounded-md border p-4 shadow-sm",
         primary
           ? "border-slate-950 bg-slate-950 text-white"
           : "border-slate-200 bg-white text-slate-950 hover:border-amber-300",
@@ -245,8 +245,8 @@ export function EmptyState({
   icon?: LucideIcon
 }) {
   return (
-    <div className="grid place-items-center rounded-md border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
-      <div className="flex size-12 items-center justify-center rounded-md bg-white text-slate-700 shadow-sm">
+    <div className="grid place-items-center rounded-md border border-dashed border-slate-300 bg-white px-6 py-10 text-center shadow-sm">
+      <div className="flex size-12 items-center justify-center rounded-md bg-slate-950 text-amber-300 shadow-sm">
         <Icon className="size-6" aria-hidden="true" />
       </div>
       <h3 className="mt-4 font-semibold text-slate-950">{title}</h3>

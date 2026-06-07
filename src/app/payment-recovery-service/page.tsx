@@ -2,6 +2,14 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, FileText, PhoneCall, ShieldCheck } from "lucide-react"
 
+import {
+  PremiumCtaBand,
+  PremiumFeatureCard,
+  PremiumHero,
+  PremiumProofStrip,
+  ProductMockupFrame,
+  WorkflowTimeline,
+} from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
@@ -16,10 +24,33 @@ export const metadata: Metadata = {
 }
 
 const steps = [
-  "Submit invoice, contract, project timeline, and evidence-on-file summary.",
-  "Pay the Client Bureau service fee for Resolution Desk review.",
-  "Client Bureau staff reviews the private case and contacts the client with factual language.",
-  "Responses, payment-plan offers, disputes, and resolution status are privately logged.",
+  {
+    icon: FileText,
+    title: "Submit the case file",
+    text: "Upload invoice, contract, project timeline, communication history, and evidence-on-file summary.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Review and service fee",
+    text: "Pay the Client Bureau service fee so Resolution Desk can review the private case.",
+  },
+  {
+    icon: PhoneCall,
+    title: "Professional follow-up",
+    text: "Client Bureau staff reviews records and contacts the client with factual, respectful language.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Track response and resolution",
+    text: "Responses, payment-plan offers, disputes, and contractor-direct resolution status are privately logged.",
+  },
+]
+
+const proof = [
+  { label: "Case type", value: "Private", text: "Recovery records do not become public profile content." },
+  { label: "Payment path", value: "Direct", text: "Client payments remain contractor-direct in this sprint." },
+  { label: "Outreach", value: "Logged", text: "Calls, messages, responses, and next actions are organized." },
+  { label: "Outcome", value: "Tracked", text: "Resolved, unresolved, paused, disputed, or closed." },
 ]
 
 const faqs = [
@@ -79,45 +110,30 @@ const caseFileSections = [
 
 export default function PaymentRecoveryServicePage() {
   return (
-    <section className="bg-slate-100">
+    <>
       <JsonLd data={getFaqSchema(faqs)} />
-      <div className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 py-14 lg:grid-cols-[1fr_380px] lg:items-end">
-          <div className="space-y-5">
-            <p className="text-sm font-semibold uppercase text-amber-300">Managed Resolution Desk</p>
-            <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">
-              Get help recovering payment without turning the dispute public.
-            </h1>
-            <p className="max-w-3xl text-base leading-7 text-slate-300">
-              Open a private payment recovery case when an invoice is overdue and you need a documented,
-              professional follow-up process. Client Bureau reviews your records, contacts the client,
-              logs responses, and tracks contractor-direct resolution options.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href="/dashboard/recovery">
-                  Get help recovering payment
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
-                <Link href="/pricing">View service plans</Link>
-              </Button>
-            </div>
-          </div>
-          <Card className="rounded-md border-white/10 bg-white/10 text-white shadow-none">
-            <CardContent className="space-y-4 p-6">
-              <PhoneCall className="size-8 text-amber-300" aria-hidden="true" />
-              <p className="text-xl font-semibold">Private, documented, staff-assisted.</p>
-              <p className="text-sm leading-6 text-slate-300">
-                Use Resolution Desk for professional invoice follow-up, not public pressure. Client payments remain direct to your business.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <PremiumHero
+        eyebrow="Managed Resolution Desk"
+        title="Get help recovering payment without turning the dispute public."
+        description="Open a private payment recovery case when an invoice is overdue and you need a documented, professional follow-up process. Client Bureau reviews your records, contacts the client, logs responses, and tracks contractor-direct resolution options."
+        primary={{ href: "/dashboard/recovery", label: "Open Payment Recovery Case", icon: PhoneCall }}
+        secondary={{ href: "/pricing", label: "View service plans", icon: ArrowRight }}
+        aside={
+          <ProductMockupFrame
+            dark
+            eyebrow="Private case workflow"
+            title="Resolution Desk record"
+            description="Staff-assisted follow-up, payment-plan context, response notes, and case outcomes stay organized privately."
+            imageSrc="/images/resolution-desk-console.webp"
+            imageAlt="Client Bureau resolution desk console for payment recovery cases."
+            points={["Document review", "Respectful outreach", "Contractor-direct payment tracking"]}
+          />
+        }
+      />
+      <PremiumProofStrip items={proof} dark />
 
-      <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[0.9fr_1.1fr]">
+      <section className="bureau-section bg-slate-100">
+      <div className="bureau-container grid gap-8 lg:grid-cols-[0.86fr_1.14fr]">
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase text-amber-700">How It Works</p>
           <h2 className="text-3xl font-semibold tracking-normal text-slate-950">A managed workflow for overdue invoices.</h2>
@@ -130,37 +146,22 @@ export default function PaymentRecoveryServicePage() {
             <Link href="/report-policy">Read report and moderation policy</Link>
           </Button>
         </div>
-        <div className="grid gap-3">
-          {steps.map((step, index) => (
-            <div key={step} className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-950 text-sm font-semibold text-white">
-                  {index + 1}
-                </span>
-                <p className="text-sm leading-6 text-slate-700">{step}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        <WorkflowTimeline items={steps} />
       </div>
+      </section>
 
-      <div className="bureau-container grid gap-4 pb-14 md:grid-cols-3">
+      <section className="bg-white pb-14">
+      <div className="bureau-container grid gap-4 md:grid-cols-3">
         {highlights.map((item) => {
-          const Icon = item.icon
-
           return (
-          <Card key={item.title} className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-3 p-5">
-              <Icon className="size-7 text-amber-700" aria-hidden="true" />
-              <h3 className="font-semibold text-slate-950">{item.title}</h3>
-              <p className="text-sm leading-6 text-slate-600">{item.text}</p>
-            </CardContent>
-          </Card>
+          <PremiumFeatureCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
           )
         })}
       </div>
+      </section>
 
-      <div className="bureau-container grid gap-4 pb-14 lg:grid-cols-2">
+      <section className="bg-slate-100 pb-14">
+      <div className="bureau-container grid gap-4 lg:grid-cols-2">
         {caseFileSections.map((section) => (
           <Card key={section.title} className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
@@ -177,6 +178,15 @@ export default function PaymentRecoveryServicePage() {
           </Card>
         ))}
       </div>
-    </section>
+      </section>
+
+      <PremiumCtaBand
+        eyebrow="Private resolution workflow"
+        title="When the invoice is overdue, open a clear case file."
+        description="Bring the contract, invoice, messages, evidence, and timeline into one private recovery workflow before the situation gets harder to manage."
+        primary={{ href: "/dashboard/recovery", label: "Open Payment Recovery Case", icon: PhoneCall }}
+        secondary={{ href: "/contact", label: "Talk to Client Bureau", icon: ArrowRight }}
+      />
+    </>
   )
 }

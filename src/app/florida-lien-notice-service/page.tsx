@@ -1,8 +1,13 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { ArrowRight, FileCheck2, Landmark, Scale, ShieldCheck } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
+import {
+  PremiumCtaBand,
+  PremiumFeatureCard,
+  PremiumHero,
+  PremiumProofStrip,
+  ProductMockupFrame,
+} from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 
@@ -56,6 +61,13 @@ const noticeSteps = [
   },
 ]
 
+const proof = [
+  { label: "Workflow", value: "Notice", text: "Florida notice packets use review, fee, and authorization gates." },
+  { label: "Delivery", value: "Tracked", text: "Method, tracking, proof summary, and status stay private." },
+  { label: "Privacy", value: "Default", text: "Property details, raw docs, and staff notes are not public." },
+  { label: "Next step", value: "Filing review", text: "Eligible cases can move into claim-of-lien review." },
+]
+
 const noticeReadiness = [
   {
     title: "Information to gather before review",
@@ -77,61 +89,40 @@ const noticeReadiness = [
 
 export default function FloridaLienNoticeServicePage() {
   return (
-    <section className="bg-slate-100">
+    <>
       <JsonLd data={getFaqSchema(faqs)} />
-      <div className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 py-14 lg:grid-cols-[1fr_380px] lg:items-end">
-          <div className="space-y-5">
-            <p className="text-sm font-semibold uppercase text-amber-300">Florida lien notice workflow</p>
-            <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">
-              Prepare Florida lien notices with review, authorization, and delivery tracking.
-            </h1>
-            <p className="max-w-3xl text-base leading-7 text-slate-300">
-              Client Bureau helps contractors organize Florida notice packets, review key project
-              facts, collect required documents, route the case through attorney/vendor review, and
-              track delivery proof in a private workflow.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href="/dashboard/lien-readiness">
-                  Start Florida notice case
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
-                <Link href="/florida-lien-filing-service">View filing service</Link>
-              </Button>
-            </div>
-          </div>
-          <Card className="rounded-md border-white/10 bg-white/10 text-white shadow-none">
-            <CardContent className="space-y-4 p-6">
-              <Landmark className="size-8 text-amber-300" aria-hidden="true" />
-              <p className="text-xl font-semibold">Private notice workflow.</p>
-              <p className="text-sm leading-6 text-slate-300">
-                Florida notice cases stay private and require contractor certification before staff or vendor action.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <PremiumHero
+        eyebrow="Florida lien notice workflow"
+        title="Prepare Florida lien notices with review, authorization, and delivery tracking."
+        description="Client Bureau helps contractors organize Florida notice packets, review key project facts, collect required documents, route the case through attorney/vendor review, and track delivery proof in a private workflow."
+        primary={{ href: "/dashboard/lien-readiness", label: "Start Florida Lien Service", icon: Landmark }}
+        secondary={{ href: "/florida-lien-filing-service", label: "View filing service", icon: ArrowRight }}
+        aside={
+          <ProductMockupFrame
+            dark
+            eyebrow="Notice packet"
+            title="Private notice workflow"
+            description="Florida notice cases stay private and require contractor certification before staff or vendor action."
+            imageSrc="/images/resolution-desk-console.webp"
+            imageAlt="Client Bureau Florida notice workflow console."
+            points={["Document review", "Authorization gate", "Delivery proof tracking"]}
+          />
+        }
+      />
+      <PremiumProofStrip items={proof} dark />
 
-      <div className="bureau-container grid gap-6 py-12 md:grid-cols-4">
+      <section className="bureau-section bg-slate-100">
+      <div className="bureau-container grid gap-6 md:grid-cols-4">
         {noticeSteps.map((item) => {
-          const Icon = item.icon
-
           return (
-          <Card key={item.title} className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-3 p-5">
-              <Icon className="size-7 text-amber-700" aria-hidden="true" />
-              <h2 className="font-semibold text-slate-950">{item.title}</h2>
-              <p className="text-sm leading-6 text-slate-600">{item.text}</p>
-            </CardContent>
-          </Card>
+          <PremiumFeatureCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
           )
         })}
       </div>
+      </section>
 
-      <div className="bureau-container pb-14">
+      <section className="bg-white pb-14">
+      <div className="bureau-container">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="grid gap-6 p-6 lg:grid-cols-[0.8fr_1.2fr]">
             <div>
@@ -152,8 +143,10 @@ export default function FloridaLienNoticeServicePage() {
           </CardContent>
         </Card>
       </div>
+      </section>
 
-      <div className="bureau-container grid gap-4 pb-14 lg:grid-cols-2">
+      <section className="bg-slate-100 pb-14">
+      <div className="bureau-container grid gap-4 lg:grid-cols-2">
         {noticeReadiness.map((section) => (
           <Card key={section.title} className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
@@ -170,6 +163,14 @@ export default function FloridaLienNoticeServicePage() {
           </Card>
         ))}
       </div>
-    </section>
+      </section>
+      <PremiumCtaBand
+        eyebrow="Florida notice workflow"
+        title="Start the notice packet before the case gets harder to organize."
+        description="Bring deadlines, property context, contract records, invoices, and authorization into one private review-gated workflow."
+        primary={{ href: "/dashboard/lien-readiness", label: "Start Florida Lien Service", icon: Landmark }}
+        secondary={{ href: "/florida-lien-filing-service", label: "View filing service", icon: ArrowRight }}
+      />
+    </>
   )
 }

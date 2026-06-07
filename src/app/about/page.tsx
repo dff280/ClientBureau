@@ -1,14 +1,21 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { BadgeCheck, FileSearch, Scale, ShieldCheck } from "lucide-react"
+import { BadgeCheck, Building2, FileSearch, Scale, ShieldCheck, Users } from "lucide-react"
 
+import {
+  PremiumCtaBand,
+  PremiumFeatureCard,
+  PremiumHero,
+  PremiumProofStrip,
+  PremiumSectionHeader,
+} from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 export const metadata: Metadata = {
   title: "About Client Bureau",
   description:
-    "Client Bureau is a moderated client intelligence platform helping contractors and service businesses check clients, document jobs, and submit client reports.",
+    "Client Bureau helps contractors and service businesses check clients, document projects, protect payment, and handle response-aware reports.",
   alternates: {
     canonical: "/about",
   },
@@ -17,80 +24,159 @@ export const metadata: Metadata = {
 const principles = [
   {
     icon: FileSearch,
-    title: "Business-owner client intelligence",
-    text: "Contractors and service businesses need better pre-job information before accepting work, assigning crews, ordering materials, and extending credit-like trust.",
+    title: "Check before the job",
+    text: "Client Bureau helps business owners review moderated client context before committing labor, materials, scheduling, or deposits.",
+  },
+  {
+    icon: Building2,
+    title: "Built for service businesses",
+    text: "The platform supports contractors, trades, home-service companies, specialty crews, and local business owners who work directly with customers.",
   },
   {
     icon: Scale,
     title: "Moderated and fair",
-    text: "Client Bureau uses reported-experience language, admin review, evidence-on-file summaries, and a visible right-of-response path.",
+    text: "Public records are framed as contractor-submitted reported experiences with admin review, response paths, and dispute context.",
   },
   {
     icon: ShieldCheck,
     title: "Private by design",
-    text: "Phone numbers, emails, raw evidence, private addresses, and internal moderation notes do not appear on public client profiles.",
+    text: "Raw evidence, private contact identifiers, addresses, internal notes, pending content, and rejected submissions stay out of public profiles.",
   },
+]
+
+const proof = [
+  { label: "Audience", value: "Business owners", text: "Contractors and service companies checking clients before the job." },
+  { label: "Public records", value: "Moderated", text: "Approved summaries, response context, and evidence-on-file signals." },
+  { label: "Private tools", value: "Protected", text: "Contracts, recovery, lien service, and evidence vault stay private." },
+  { label: "Posture", value: "Fair", text: "Clients can respond, dispute, correct, or share resolution updates." },
+]
+
+const standards = [
+  "Public profiles use cautious, factual, reported-experience language.",
+  "Client Bureau does not publish raw phone numbers, emails, street addresses, or private evidence files.",
+  "Positive reports, resolved cases, and client responses are part of the trust record.",
+  "Administrative review separates private workflow records from public profile summaries.",
 ]
 
 export default function AboutPage() {
   return (
-    <section className="bureau-section bg-slate-100">
-      <div className="bureau-container space-y-10">
-        <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-end">
-          <div className="space-y-4">
-            <p className="text-sm font-semibold uppercase text-amber-700">About Client Bureau</p>
-            <h1 className="max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-              A trust platform for contractors and service businesses who need to know more before the job starts.
-            </h1>
-            <p className="max-w-3xl leading-7 text-slate-600">
-              Client Bureau helps contractors and service businesses search client profiles,
-              review moderated contractor-submitted reports, submit documented experiences, and
-              understand response or dispute context before accepting work from a homeowner, customer,
-              property owner, lead, or project client.
+    <main className="bg-slate-100">
+      <PremiumHero
+        eyebrow="About Client Bureau"
+        title="The business protection platform contractors have needed for years."
+        description="Client Bureau helps contractors and service business owners check clients, document projects, organize contracts and evidence, and protect payment before a job becomes a costly lesson."
+        primary={{ href: "/search", label: "Check a Client", icon: FileSearch }}
+        secondary={{ href: "/how-it-works", label: "How it works", icon: BadgeCheck }}
+        aside={
+          <div className="space-y-4 text-white">
+            <BadgeCheck className="size-9 text-amber-300" aria-hidden="true" />
+            <p className="text-xl font-semibold">Built for documentation, moderation, and fair context.</p>
+            <p className="text-sm leading-6 text-slate-300">
+              Client Bureau is a moderated record system built around documented business experiences,
+              private matching, evidence-on-file summaries, and client right-of-response.
             </p>
           </div>
+        }
+      />
+
+      <PremiumProofStrip items={proof} dark />
+
+      <section className="bureau-section">
+        <div className="bureau-container space-y-10">
+          <PremiumSectionHeader
+            eyebrow="The mission"
+            title="Give service businesses the same kind of pre-job visibility customers have had for years."
+            description="Customers can check reviews before hiring a contractor. Contractors should also be able to check documented client experiences before accepting work, extending trust, or putting crews and materials on the line."
+          />
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {principles.map((principle) => (
+              <PremiumFeatureCard
+                key={principle.title}
+                icon={principle.icon}
+                title={principle.title}
+                text={principle.text}
+              />
+            ))}
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-6">
+                <Users className="size-8 text-amber-700" aria-hidden="true" />
+                <h2 className="text-2xl font-semibold tracking-normal text-slate-950">
+                  Who Client Bureau is for
+                </h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  Client Bureau is for contractors, service businesses, trades, project-based
+                  companies, and small business owners who need to decide whether a client,
+                  homeowner, customer, property owner, or business lead is a good fit.
+                </p>
+                <div className="flex flex-wrap gap-2 text-xs font-semibold text-slate-700">
+                  {["General contractors", "Roofers", "Remodelers", "Landscapers", "Specialty trades", "Home services"].map((item) => (
+                    <span key={item} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-6">
+                <h2 className="text-2xl font-semibold tracking-normal text-slate-950">
+                  What Client Bureau publishes
+                </h2>
+                <p className="text-sm leading-6 text-slate-600">
+                  Public profiles show non-sensitive identity fields, Client Bureau score context,
+                  approved report summaries, evidence-on-file indicators, moderation status, and
+                  response or dispute context. Private operational records stay private.
+                </p>
+                <ul className="grid gap-3">
+                  {standards.map((item) => (
+                    <li key={item} className="flex gap-3 text-sm leading-6 text-slate-600">
+                      <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-3 p-6">
-              <BadgeCheck className="size-8 text-amber-700" aria-hidden="true" />
-              <p className="text-xl font-semibold text-slate-950">Not a public accusation board.</p>
-              <p className="text-sm leading-6 text-slate-600">
-                Client Bureau is built around documentation, moderation, and fairness. Public
-                content is framed as reported contractor experience and reviewed profile context.
-              </p>
+            <CardContent className="grid gap-5 p-6 lg:grid-cols-[1fr_300px] lg:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase text-amber-700">Product doctrine</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">
+                  Search before the job. Document during the job. Protect payment after the job.
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  Client Bureau connects client checks, report documentation, contract packets,
+                  evidence records, payment recovery workflows, Florida lien service, and moderated
+                  public profiles into one business-owner protection system.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3 lg:justify-end">
+                <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                  <Link href="/search">Check a Client</Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link href="/pricing">View plans</Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
+      </section>
 
-        <div className="grid gap-5 md:grid-cols-3">
-          {principles.map((principle) => (
-            <Card key={principle.title} className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardContent className="space-y-4 p-5">
-                <principle.icon className="size-8 text-slate-950" aria-hidden="true" />
-                <h2 className="text-xl font-semibold text-slate-950">{principle.title}</h2>
-                <p className="text-sm leading-6 text-slate-600">{principle.text}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <div className="rounded-md border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold text-slate-950">What Client Bureau publishes</h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            Public profiles show non-sensitive client identity fields, approved report summaries,
-            rating context, evidence-on-file summaries, response or dispute context, and public
-            moderation status. They do not show raw evidence files, private identifiers, private
-            addresses, or unapproved submissions.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/search">Check a Client</Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link href="/score-methodology">Review rating methodology</Link>
-            </Button>
-          </div>
-        </div>
-      </div>
-    </section>
+      <PremiumCtaBand
+        eyebrow="Ready to use Client Bureau?"
+        title="One search could prevent the wrong job from consuming your week, your crew, and your cash flow."
+        description="Start with a client check, then use reports, contracts, evidence, and recovery tools when the job needs more protection."
+        primary={{ href: "/search", label: "Check a Client", icon: FileSearch }}
+        secondary={{ href: "/signup", label: "Create account", icon: Building2 }}
+      />
+    </main>
   )
 }

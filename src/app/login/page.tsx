@@ -1,12 +1,13 @@
 import type { Metadata } from "next"
-import { LockKeyhole } from "lucide-react"
+import { LockKeyhole, Radar, ReceiptText, ShieldCheck } from "lucide-react"
 
 import { LoginForm } from "@/components/forms/auth-forms"
+import { PremiumFeatureCard } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Login to Client Bureau for client checks, documented reports, evidence records, and business account management.",
+  description: "Login to Client Bureau for client checks, documented reports, evidence records, contracts, recovery workflows, and account management.",
   robots: {
     index: false,
     follow: false,
@@ -27,20 +28,63 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const messageVariant = params.error ? "destructive" : "default"
 
   return (
-    <section className="bureau-section bg-slate-100">
-      <div className="bureau-container flex justify-center">
-        <Card className="w-full max-w-md rounded-md border-slate-200 bg-white shadow-sm">
+    <section className="bg-slate-100">
+      <div className="border-b border-slate-900 bg-slate-950 text-white">
+        <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/[0.06] px-3 py-2 text-sm font-semibold text-amber-200">
+              <LockKeyhole className="size-4" aria-hidden="true" />
+              Secure account access
+            </div>
+            <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">
+              Return to your business protection workspace.
+            </h1>
+            <p className="max-w-3xl text-base leading-7 text-slate-300">
+              Access saved searches, watched clients, submitted reports, contract packets, evidence records, recovery cases, lien-service workflows, and moderation status.
+            </p>
+          </div>
+          <Card className="rounded-md border-white/10 bg-white/[0.06] text-white shadow-none">
+            <CardContent className="space-y-4 p-5">
+              <ShieldCheck className="size-8 text-amber-300" aria-hidden="true" />
+              <p className="text-xl font-semibold">Session-safe redirect handling.</p>
+              <p className="text-sm leading-6 text-slate-300">
+                Login keeps internal return paths safe and sends you back to the dashboard, admin area, or workflow you requested.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[minmax(0,440px)_1fr] lg:items-start">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="space-y-3">
             <LockKeyhole className="size-8 text-slate-950" aria-hidden="true" />
             <CardTitle className="text-2xl">Login to Client Bureau</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
-              Access your business dashboard, saved searches, submitted client reports, contract records, and moderation status.
+              Access your dashboard, searches, reports, contracts, evidence records, service cases, and account settings.
             </p>
           </CardHeader>
           <CardContent>
             <LoginForm redirectTo={redirectTo} message={message} variant={messageVariant} />
           </CardContent>
         </Card>
+        <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1">
+          <PremiumFeatureCard
+            icon={Radar}
+            title="Continue client checks"
+            text="Pick up saved searches, watched clients, and report context from your dashboard."
+          />
+          <PremiumFeatureCard
+            icon={ReceiptText}
+            title="Track payment workflows"
+            text="Review recovery cases, lien-service status, contracts, evidence, and recent activity."
+          />
+          <PremiumFeatureCard
+            icon={ShieldCheck}
+            title="Private records stay private"
+            text="Raw identifiers, evidence files, internal notes, and private service cases are not public profile content."
+          />
+        </div>
       </div>
     </section>
   )

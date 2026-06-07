@@ -36,7 +36,7 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
     .slice(0, 8)
 
   return (
-    <section className="bg-slate-100">
+    <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
         eyebrow="Public client directory"
@@ -90,7 +90,7 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
 
 export function ClientDirectoryStateView({ state }: { state: ClientDirectoryState }) {
   return (
-    <section className="bg-slate-100">
+    <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
         eyebrow="State client directory"
@@ -176,7 +176,7 @@ export function ClientDirectoryCityView({
   city: ClientDirectoryCity
 }) {
   return (
-    <section className="bg-slate-100">
+    <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
         eyebrow="City client directory"
@@ -234,7 +234,7 @@ function DirectoryHero({
   stats: [string, string][]
 }) {
   return (
-    <div className="border-b border-slate-800 bg-slate-950 text-white">
+    <div className="premium-hero-surface relative isolate overflow-hidden border-b border-slate-800 bg-slate-950 text-white">
       <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
         <div className="space-y-5">
           <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
@@ -257,7 +257,7 @@ function DirectoryHero({
             </Button>
           </div>
         </div>
-        <Card className="rounded-md border-white/10 bg-white/5 text-white shadow-sm">
+        <Card className="premium-card-glow rounded-md border-white/10 bg-white/5 text-white shadow-sm">
           <CardContent className="grid gap-3 p-5">
             {stats.map(([label, value]) => (
               <div key={label} className="rounded-md border border-white/10 bg-white/5 p-4">
@@ -274,7 +274,7 @@ function DirectoryHero({
 
 function StateDirectoryCard({ state }: { state: ClientDirectoryState }) {
   return (
-    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+    <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
       <CardContent className="space-y-5 p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -322,7 +322,7 @@ function ProfileGrid({ title, profiles }: { title: string; profiles: ClientProfi
       {profiles.length > 0 ? (
         <div className="grid gap-4 lg:grid-cols-2">
           {profiles.map((profile) => (
-            <Card key={profile.id} className="rounded-md border-slate-200 bg-white shadow-sm">
+            <Card key={profile.id} className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardContent className="space-y-5 p-5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>

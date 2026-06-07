@@ -28,7 +28,7 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard/recovery", label: "Payment Recovery", description: "Get help recovering payment, track Resolution Desk cases, and document invoice follow-up." },
   { href: "/dashboard/lien-readiness", label: "Florida Lien Service", description: "Private Florida notice, filing, recording proof, and release workflows." },
   { href: "/dashboard/evidence", label: "Evidence Vault", description: "Private invoices, screenshots, contracts, photos, PDFs, and review status." },
-  { href: "/dashboard/watchlist", label: "Alerts", description: "Watchlist changes, dispute updates, and rating movement." },
+  { href: "/dashboard/alerts", label: "Alerts", description: "Watchlist changes, dispute updates, and rating movement." },
   { href: "/dashboard/billing", label: "Billing", description: "Plan, usage, invoices, and payment settings." },
   { href: "/dashboard/activity", label: "Activity", description: "Recent workspace actions, client files, and pipeline movement." },
 ]

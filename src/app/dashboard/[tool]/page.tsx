@@ -77,6 +77,29 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     tab: "activity",
     title: "Activity",
   },
+  alerts: {
+    activeHref: "/dashboard/alerts",
+    badge: "Alerts",
+    description: "Review watched-client changes, dispute updates, profile movement, and private-match signals before you commit to the next step.",
+    explanations: [
+      {
+        title: "What this does",
+        text: "Shows alert signals tied to watched clients, saved searches, profile changes, and items that may need follow-up.",
+      },
+      {
+        title: "When to use it",
+        text: "Use Alerts before scheduling, sending a contract, approving a change order, or following up on payment.",
+      },
+      {
+        title: "What stays private",
+        text: "Your watched clients, private-match signals, and alert history remain inside your account workspace.",
+      },
+    ],
+    primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
+    secondaryAction: { href: "/dashboard/watchlist", icon: Search, label: "Open watchlist" },
+    tab: "watchlist",
+    title: "Alerts",
+  },
   billing: {
     activeHref: "/dashboard/billing",
     badge: "Account",

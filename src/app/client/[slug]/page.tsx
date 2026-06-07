@@ -120,7 +120,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   return (
     <article className="bg-slate-100">
       <JsonLd data={structuredData} />
-      <section className="border-b border-slate-900 bg-slate-950 text-white">
+      <section className="premium-hero-surface relative isolate overflow-hidden border-b border-slate-900 bg-slate-950 text-white">
         <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
           <div className="space-y-5">
             <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-slate-400">
@@ -209,7 +209,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </Button>
             </div>
           </div>
-          <Card className="rounded-md border-white/10 bg-white text-slate-950 shadow-2xl">
+          <Card className="premium-card-glow rounded-md border-white/10 bg-white text-slate-950 shadow-2xl">
             <CardContent className="space-y-5 p-6">
               <div className="flex items-center justify-between gap-4">
                 <Badge className="rounded-md bg-slate-950 text-white">
@@ -288,7 +288,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
         </div>
       </section>
 
-      <section className="bureau-section">
+      <section className="bureau-section bureau-paper">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
             <div className="grid gap-3 md:grid-cols-4">
@@ -300,7 +300,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
             <TrustVerificationPanel profileName={name} summary={trustSummary} />
 
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
@@ -317,7 +317,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </CardContent>
             </Card>
 
-            <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+            <Card className="bureau-hover-lift overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader className="border-b border-slate-200 bg-slate-50">
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <CalendarClock className="size-5 text-amber-700" aria-hidden="true" />
@@ -341,7 +341,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               evidenceSummary={evidenceSummary}
             />
 
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <Banknote className="size-5 text-amber-700" aria-hidden="true" />
@@ -356,7 +356,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </CardContent>
             </Card>
 
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <HelpCircle className="size-5 text-amber-700" aria-hidden="true" />
@@ -420,7 +420,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               )}
             </div>
 
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <MessageSquareText className="size-5 text-amber-700" aria-hidden="true" />
@@ -529,7 +529,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
 function TrustMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="bureau-hover-lift rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
     </div>

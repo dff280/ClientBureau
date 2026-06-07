@@ -66,7 +66,7 @@ export async function GET() {
         "private matching",
       ],
       avoidLanguage: [
-        "blacklist",
+        "public accusation labels",
         "expose",
         "shame",
         "fraudster",

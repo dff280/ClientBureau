@@ -301,7 +301,7 @@ export function SearchCommandCenter({
 
   return (
     <div className="grid gap-5">
-      <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+      <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-xl shadow-slate-950/10">
         <CardContent className="p-0">
           <div className="grid gap-0 xl:grid-cols-[1fr_360px]">
             <div className="space-y-5 p-4 sm:p-5 lg:p-6">
@@ -331,7 +331,7 @@ export function SearchCommandCenter({
                       setSavedMessage("")
                     }}
                     placeholder="Search a client by name, business, city, phone, or email"
-                    className="h-14 rounded-md border-slate-300 pl-12 text-base shadow-sm"
+                    className="h-14 rounded-md border-slate-300 bg-white pl-12 text-base shadow-sm"
                     aria-label="Search clients"
                   />
                 </div>
@@ -387,7 +387,7 @@ export function SearchCommandCenter({
               </form>
 
               <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4 shadow-inner">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase text-slate-500">Reputation previews</p>
@@ -411,7 +411,7 @@ export function SearchCommandCenter({
                         key={profile.id}
                         href={`/client/${profile.publicSlug}`}
                         onClick={() => trackSearchEvent("result_viewed", instantProfiles.length)}
-                        className="group rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md"
+                        className="bureau-hover-lift group rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -460,7 +460,7 @@ export function SearchCommandCenter({
                   </div>
                 </div>
 
-                <div className="rounded-md border border-slate-200 bg-white p-4">
+                <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex items-center gap-2">
                     <Radar className="size-4 text-amber-700" aria-hidden="true" />
                     <h2 className="font-semibold text-slate-950">Search suggestions</h2>
@@ -498,7 +498,7 @@ export function SearchCommandCenter({
               </div>
             </div>
 
-            <aside className="border-t border-slate-200 bg-slate-950 p-4 text-white sm:p-5 lg:p-6 xl:border-l xl:border-t-0">
+            <aside className="premium-hero-surface border-t border-slate-200 bg-slate-950 p-4 text-white sm:p-5 lg:p-6 xl:border-l xl:border-t-0">
               <div className="flex items-center gap-2 text-amber-300">
                 <BarChart3 className="size-5" aria-hidden="true" />
                 <p className="text-sm font-semibold uppercase">Search intelligence</p>
@@ -604,7 +604,7 @@ export function SearchCommandCenter({
       <div className="grid gap-3 md:grid-cols-3">
         <Link
           href="/clients"
-          className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
+        className="bureau-hover-lift rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
         >
           <Building2 className="size-5 text-amber-700" aria-hidden="true" />
           <h2 className="mt-3 font-semibold text-slate-950">Browse client directory</h2>
@@ -612,7 +612,7 @@ export function SearchCommandCenter({
         </Link>
         <Link
           href="/reports/recent"
-          className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
+        className="bureau-hover-lift rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
         >
           <Clock3 className="size-5 text-amber-700" aria-hidden="true" />
           <h2 className="mt-3 font-semibold text-slate-950">Recent public reports</h2>
@@ -620,7 +620,7 @@ export function SearchCommandCenter({
         </Link>
         <Link
           href="/dashboard/watchlist"
-          className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
+        className="bureau-hover-lift rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
         >
           <Eye className="size-5 text-amber-700" aria-hidden="true" />
           <h2 className="mt-3 font-semibold text-slate-950">Watchlist and alerts</h2>

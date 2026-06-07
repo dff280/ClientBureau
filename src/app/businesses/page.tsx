@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowRight, Building2, CheckCircle2, Search, ShieldCheck, Star } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -51,70 +51,70 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
 
   return (
     <main className="bg-slate-100">
-      <section className="border-b border-slate-200 bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
-          <div className="space-y-5">
-            <Badge className="rounded-md bg-amber-500 text-slate-950">
-              <ShieldCheck className="size-3" aria-hidden="true" />
-              Business trust profiles
-            </Badge>
-            <div>
-              <h1 className="text-4xl font-semibold tracking-normal sm:text-5xl">
-                Find verified contractors and business owners.
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">
-                Public business profiles help owners show verification status, documentation habits,
-                approved contribution history, and Client Bureau Business Rating context without
-                exposing private account details.
-              </p>
+      <PremiumHero
+        eyebrow="Business trust profiles"
+        title="Find verified contractors and service business owners."
+        description="Public business profiles help owners show verification status, documentation habits, approved contribution history, and Client Bureau Business Rating context without exposing private account details."
+        primary={{ href: "/claim-profile", label: "Claim your profile", icon: Building2 }}
+        secondary={{ href: "/business-rating-methodology", label: "Rating methodology", icon: Star }}
+        aside={
+          <div className="space-y-4 text-white">
+            <p className="text-xs font-semibold uppercase text-amber-200">Directory snapshot</p>
+            <div className="grid gap-3">
+              <DirectoryStat label="Public businesses" value={profiles.length.toLocaleString()} />
+              <DirectoryStat label="Average rating" value={`${averageRating}/100`} />
+              <DirectoryStat label="States represented" value={states.length.toLocaleString()} />
             </div>
-            <form className="grid max-w-3xl gap-2 rounded-md border border-white/10 bg-white p-2 shadow-2xl sm:grid-cols-[1fr_140px_140px_auto]">
-              <Input
-                name="q"
-                defaultValue={params.q}
-                placeholder="Search business, trade, or city"
-                className="border-0 bg-white text-slate-950 shadow-none"
-                aria-label="Search business profiles"
-              />
-              <select name="state" defaultValue={state} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950">
-                <option value="all">All states</option>
-                {states.map((item) => (
-                  <option key={item} value={item}>{item}</option>
-                ))}
-              </select>
-              <select name="rating" defaultValue={rating} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950">
-                <option value="all">All ratings</option>
-                <option value="A+">A+</option>
-                <option value="A">A</option>
-                <option value="B">B</option>
-                <option value="C">C</option>
-                <option value="Review Pending">Review pending</option>
-              </select>
-              <Button className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Search aria-hidden="true" />
-                Search
-              </Button>
-            </form>
+            <p className="text-xs leading-5 text-slate-300">
+              Business ratings are readiness and documentation signals, not customer star reviews or guarantees.
+            </p>
           </div>
-          <Card className="rounded-md border-white/10 bg-white/10 text-white shadow-2xl">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-xs font-semibold uppercase text-amber-200">Directory snapshot</p>
-              <div className="grid gap-3">
-                <DirectoryStat label="Public businesses" value={profiles.length.toLocaleString()} />
-                <DirectoryStat label="Average rating" value={`${averageRating}/100`} />
-                <DirectoryStat label="States represented" value={states.length.toLocaleString()} />
-              </div>
-              <p className="text-xs leading-5 text-slate-300">
-                Business ratings are readiness and documentation signals. They are not customer
-                star reviews or guarantees of project outcomes.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
+        }
+      />
+
+      <PremiumProofStrip
+        items={[
+          { label: "Profiles", value: "Public-safe", text: "Business pages avoid private account details and internal notes." },
+          { label: "Signals", value: "Verified", text: "Verification, documentation, contribution history, and resolution posture." },
+          { label: "Claims", value: "Structured", text: "Owners can claim or update profiles through a private workflow." },
+          { label: "Ratings", value: "Explained", text: "Business Rating is a readiness signal, not a customer review score." },
+        ]}
+        dark
+      />
 
       <section className="bureau-section">
         <div className="bureau-container space-y-6">
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="p-4">
+              <form className="grid gap-2 sm:grid-cols-[1fr_140px_140px_auto]">
+                <Input
+                  name="q"
+                  defaultValue={params.q}
+                  placeholder="Search business, trade, or city"
+                  aria-label="Search business profiles"
+                />
+                <select name="state" defaultValue={state} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950">
+                  <option value="all">All states</option>
+                  {states.map((item) => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+                <select name="rating" defaultValue={rating} className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950">
+                  <option value="all">All ratings</option>
+                  <option value="A+">A+</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="Review Pending">Review pending</option>
+                </select>
+                <Button className="bg-slate-950 text-white hover:bg-slate-800">
+                  <Search aria-hidden="true" />
+                  Search
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
           <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
             <div>
               <p className="text-sm font-semibold uppercase text-amber-700">Public directory</p>
@@ -185,6 +185,14 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
           ) : null}
         </div>
       </section>
+
+      <PremiumCtaBand
+        eyebrow="Own a service business?"
+        title="Claim your profile and make your Client Bureau record work for your reputation."
+        description="Verified business profiles connect documentation habits, public contribution history, and profile claiming into a safer trust loop."
+        primary={{ href: "/claim-profile", label: "Claim your profile", icon: Building2 }}
+        secondary={{ href: "/business-rating-methodology", label: "How ratings work", icon: ShieldCheck }}
+      />
     </main>
   )
 }

@@ -46,7 +46,7 @@ export const dynamic = "force-dynamic"
 const workspaceRedirects: Record<string, string> = {
   account: "/dashboard/billing",
   activity: "/dashboard/activity",
-  alerts: "/dashboard/watchlist",
+  alerts: "/dashboard/alerts",
   billing: "/dashboard/billing",
   contracts: "/dashboard/contracts",
   evidence: "/dashboard/evidence",

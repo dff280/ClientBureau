@@ -1,9 +1,8 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import { Building2, CheckCircle2, HelpCircle, ShieldCheck, Star } from "lucide-react"
 
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSiteUrl } from "@/lib/env"
 
@@ -54,42 +53,38 @@ const notA = [
 export default function BusinessRatingMethodologyPage() {
   return (
     <main className="bg-slate-100">
-      <section className="border-b border-slate-200 bg-white">
-        <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
-          <div className="space-y-5">
-            <Badge className="rounded-md bg-amber-500 text-slate-950">
-              <Star className="size-3" aria-hidden="true" />
-              Rating methodology
-            </Badge>
-            <div>
-              <h1 className="text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
-                How Client Bureau Business Rating works.
-              </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
-                Business Rating is a public trust signal for contractors and service businesses.
-                It summarizes verification, documentation habits, approved contribution history,
-                resolution posture, and account completeness in a simple letter grade and 0-100
-                score.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                <Link href="/businesses">
-                  <Building2 aria-hidden="true" />
-                  Browse business profiles
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link href="/score-methodology">
-                  <HelpCircle aria-hidden="true" />
-                  Client rating methodology
-                </Link>
-              </Button>
-            </div>
+      <PremiumHero
+        eyebrow="Business Rating methodology"
+        title="How Client Bureau Business Rating works."
+        description="Business Rating is a public trust signal for contractors and service businesses. It summarizes verification, documentation habits, approved contribution history, resolution posture, and account completeness in a letter grade and 0-100 score."
+        primary={{ href: "/businesses", label: "Browse business profiles", icon: Building2 }}
+        secondary={{ href: "/score-methodology", label: "Client rating methodology", icon: HelpCircle }}
+        aside={
+          <div className="space-y-4 text-white">
+            <Star className="size-9 text-amber-300" aria-hidden="true" />
+            <p className="text-xl font-semibold">Readiness, not customer stars.</p>
+            <p className="text-sm leading-6 text-slate-300">
+              Business Rating evaluates platform readiness and documentation habits. It is not a
+              workmanship guarantee, license verification service, or customer review score.
+            </p>
           </div>
-          <Card className="rounded-md border-slate-200 shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-xs font-semibold uppercase text-slate-500">Rating bands</p>
+        }
+      />
+
+      <PremiumProofStrip
+        items={[
+          { label: "Range", value: "0-100", text: "Presented with a public letter grade." },
+          { label: "Top factor", value: "Verification", text: "Business verification carries the largest weight." },
+          { label: "Process", value: "Documentation", text: "Contracts, evidence, reports, and resolution posture matter." },
+          { label: "Privacy", value: "Protected", text: "Private account data is not displayed publicly." },
+        ]}
+        dark
+      />
+
+      <section className="bureau-section">
+        <div className="bureau-container space-y-8">
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="grid gap-3 p-5 md:grid-cols-5">
               {[
                 ["A+", "92-100", "Strong verification and documentation confidence."],
                 ["A", "82-91", "High readiness with meaningful approved activity."],
@@ -107,11 +102,7 @@ export default function BusinessRatingMethodologyPage() {
               ))}
             </CardContent>
           </Card>
-        </div>
-      </section>
 
-      <section className="bureau-section">
-        <div className="bureau-container space-y-8">
           <div className="grid gap-4 lg:grid-cols-5">
             {factors.map((factor) => (
               <Card key={factor.title} className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -174,6 +165,14 @@ export default function BusinessRatingMethodologyPage() {
           </div>
         </div>
       </section>
+
+      <PremiumCtaBand
+        eyebrow="Build your business profile"
+        title="A stronger Client Bureau business record starts with verification and documentation."
+        description="Claim your profile, complete verification, and keep your project records organized before you ask people to trust your business profile."
+        primary={{ href: "/claim-profile", label: "Claim your profile", icon: Building2 }}
+        secondary={{ href: "/businesses", label: "Browse profiles", icon: Star }}
+      />
     </main>
   )
 }
