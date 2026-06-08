@@ -4,13 +4,26 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
-### Added
+No unreleased changes.
 
-- Release process documentation for feature branches, production `main`, version tags, VPS deploys, rollback, hotfixes, and release checks.
+## 0.2.2 - Live SEO Profile Cleanup
 
-### Improved
+Date: June 7, 2026
 
-- Repository workflow is now explicit: build work on `codex/*` branches, release to `main` only when intentionally approved, and deploy the VPS from `main`.
+### Fixed
+
+- Report-category pages and industry landing pages now render dynamically so production pages use live approved Supabase profiles instead of build-time mock profile links.
+- Removed the public client profile route loading shell so indexable profile pages do not expose `Loading public client profile` as the initial H1.
+- Strengthened `seo:check` so it selects a real public profile from `sitemap.xml` instead of a hard-coded sample profile.
+- Added SEO verification for public landing pages that link to client profiles, preventing dead public profile links from shipping unnoticed.
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+- `npm run mobile:check`
 
 ## 0.2.1 - Premium UX Patch
 
@@ -20,6 +33,7 @@ Date: June 7, 2026
 
 - Premium page loading states for search, public profiles, dashboard, and admin surfaces.
 - Optimized WebP product visuals for search intelligence, contract packets, evidence vault, and resolution desk workflows.
+- Release process documentation for feature branches, production `main`, version tags, VPS deploys, rollback, hotfixes, and release checks.
 
 ### Improved
 

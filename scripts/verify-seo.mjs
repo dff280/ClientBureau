@@ -40,6 +40,24 @@ function wordCount(html) {
   return text ? text.split(/\s+/).length : 0
 }
 
+function clientProfileLinks(html) {
+  return [...html.matchAll(/href=["']([^"']*\/client\/[^"']+)["']/gi)]
+    .map((match) => {
+      try {
+        return new URL(match[1], expectedSiteUrl).pathname
+      } catch {
+        return ""
+      }
+    })
+    .filter(Boolean)
+}
+
+function sitemapProfilePath(xml) {
+  const match = xml.match(/<loc>https?:\/\/[^<]+(\/client\/[^<]+)<\/loc>/i)
+
+  return match?.[1] ?? ""
+}
+
 const home = await read("/")
 if (home.response.ok) pass("Homepage returns 200")
 else fail("Homepage returns 200", String(home.response.status))
@@ -136,7 +154,45 @@ for (const path of publicContentPages) {
   }
 }
 
-const publicProfile = await read("/client/john-smith-orlando-fl")
+const publicLinkPages = [
+  "/reports/recent",
+  "/reports/non-payment",
+  "/reports/high-risk",
+  "/industries/contractors",
+  "/industries/service-businesses",
+]
+const checkedProfileLinks = new Map()
+
+for (const path of publicLinkPages) {
+  const page = await read(path)
+  if (!page.response.ok) continue
+
+  for (const profilePath of new Set(clientProfileLinks(page.text))) {
+    if (!checkedProfileLinks.has(profilePath)) {
+      const linkedProfile = await read(profilePath)
+      const ok = linkedProfile.response.ok && !linkedProfile.text.includes("Client Profile Not Found")
+      checkedProfileLinks.set(profilePath, ok)
+    }
+  }
+}
+
+const brokenProfileLinks = [...checkedProfileLinks.entries()]
+  .filter(([, ok]) => !ok)
+  .map(([path]) => path)
+
+if (brokenProfileLinks.length === 0) {
+  pass("Public landing pages link only to available client profiles", `${checkedProfileLinks.size} checked`)
+} else {
+  fail("Public landing pages link only to available client profiles", brokenProfileLinks.join(", "))
+}
+
+const sitemap = await read("/sitemap.xml")
+const profilePath = sitemapProfilePath(sitemap.text)
+
+if (profilePath) pass("Sitemap includes at least one public client profile", profilePath)
+else fail("Sitemap includes at least one public client profile")
+
+const publicProfile = profilePath ? await read(profilePath) : { response: { ok: false, status: "missing" }, text: "" }
 if (publicProfile.response.ok) {
   const visibleText = publicProfile.text.replace(/<script[\s\S]*?<\/script>/g, "")
   const hasEmail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(visibleText)
@@ -144,6 +200,12 @@ if (publicProfile.response.ok) {
 
   if (!hasEmail && !hasPhone) pass("Public profile hides raw email and phone")
   else fail("Public profile hides raw email and phone")
+
+  if (!publicProfile.text.includes("Loading public client profile")) {
+    pass("Public profile initial HTML is not a loading shell")
+  } else {
+    fail("Public profile initial HTML is not a loading shell")
+  }
 
   for (const type of ["WebPage", "Person", "BreadcrumbList", "ItemList"]) {
     if (publicProfile.text.includes(`"@type":"${type}"`) || publicProfile.text.includes(`"@type": "${type}"`)) {

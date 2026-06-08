@@ -10,6 +10,8 @@ type IndustriesLandingPageProps = {
   params: Promise<{ industry: string }>
 }
 
+export const dynamic = "force-dynamic"
+
 export function generateStaticParams() {
   return getSeoLandingPages("industries").map((page) => ({
     industry: page.slug,
