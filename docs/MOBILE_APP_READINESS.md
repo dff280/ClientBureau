@@ -17,7 +17,7 @@ The platform already has the right product shape for mobile:
 Current mobile readiness status:
 
 - Components: dashboard shell and search are ready; dense operations modules need native adapters.
-- APIs: the first mobile BFF endpoints now exist for account, dashboard, managed recovery, and Florida lien service; search, reports, contracts, evidence, client response, and native checkout handoff remain in the backlog.
+- APIs: mobile BFF endpoints now exist for account, dashboard, search, saved searches, reports, contracts, evidence, watchlist, managed recovery, and Florida lien service; client response, upload handoff, and native checkout handoff remain in the backlog.
 - Responsive layout: public profile, search, and dashboard entry are ready; submission and contract signing should become native step flows.
 - Workflows: all core customer workflows are mapped, but most need mobile-specific JSON contracts before native build.
 
@@ -40,14 +40,18 @@ Implemented first:
 - `/api/mobile/dashboard`: contractor profile, verification, report/search counts, subscription, and private ops summaries.
 - `/api/mobile/recovery`: managed recovery cases, fee state, Resolution Desk progress, and service readiness.
 - `/api/mobile/lien-service`: Florida lien cases, authorization state, vendor/attorney review status, and service readiness.
-
-Remaining backlog before starting full native screens:
-
 - `/api/mobile/search`: predictive search, saved searches, result previews, private-match messaging.
+- `/api/mobile/saved-searches`: save and list mobile-safe saved searches.
 - `/api/mobile/reports`: draft, submit, status tracking, positive reports, evidence attachment mapping.
 - `/api/mobile/contracts`: agreement packets, signing links, share status, signature status.
 - `/api/mobile/evidence`: private evidence vault summaries and signed upload handoff.
+- `/api/mobile/watchlist`: watched clients and private alert counts.
+
+Remaining backlog after the first APK foundation:
+
 - `/api/mobile/client-response`: public response, dispute, correction, resolution update submissions.
+- `/api/mobile/uploads`: signed evidence upload handoff for camera, screenshots, contracts, invoices, PDFs, and photos.
+- `/api/mobile/checkout`: hosted checkout handoff for subscriptions and service fees when billing is enabled.
 
 Each endpoint should:
 
@@ -125,3 +129,41 @@ The following components should guide the native build:
 - Add app-safe feature flags and remote config.
 - Add privacy regression tests against mobile payloads.
 - Add rate limits for search, report submission, response/dispute submission, and uploads.
+
+## Android APK And AAB Build Commands
+
+The first native app lives in `apps/mobile` and uses Expo Native with EAS Build.
+
+Local setup:
+
+```bash
+cd apps/mobile
+cp .env.example .env.local
+npm install
+npx eas-cli login
+```
+
+Required mobile environment values:
+
+```bash
+EXPO_PUBLIC_API_BASE_URL=https://clientbureau.com
+EXPO_PUBLIC_SITE_URL=https://clientbureau.com
+EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-supabase-publishable-key
+```
+
+Build from the repository root:
+
+```bash
+npm run mobile:typecheck
+npm run mobile:doctor
+npm run mobile:build:apk
+npm run mobile:build:aab
+```
+
+Build profiles:
+
+- `preview-apk`: internal Android APK for direct device testing.
+- `production-aab`: Android App Bundle for Google Play Console.
+
+EAS-managed Android signing credentials should be used unless a dedicated Client Bureau signing key is created later.

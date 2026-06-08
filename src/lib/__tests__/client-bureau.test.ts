@@ -66,6 +66,11 @@ import {
   responsiveAudit,
 } from "@/lib/mobile-readiness"
 import {
+  sanitizeContractPacketForMobile,
+  sanitizeEvidenceVaultForMobile,
+  sanitizeSearchResultForMobile,
+} from "@/lib/mobile-api"
+import {
   assignModerationCase,
   buildTodaysWorkItems,
   contractCompletionPercentage,
@@ -556,6 +561,10 @@ describe("mobile app readiness", () => {
     expect(mobileDashboard?.status).toBe("ready")
     expect(mobileDashboard?.auth).toBe("bearer")
     expect(mobileRecovery?.status).toBe("ready")
+    expect(mobileApiAudit.find((item) => item.route === "/api/mobile/search")?.status).toBe("ready")
+    expect(mobileApiAudit.find((item) => item.route === "/api/mobile/reports")?.status).toBe("ready")
+    expect(mobileApiAudit.find((item) => item.route === "/api/mobile/contracts")?.status).toBe("ready")
+    expect(mobileApiAudit.find((item) => item.route === "/api/mobile/evidence")?.status).toBe("ready")
     expect(backlog.map((item) => item.route)).toContain("/api/session")
     expect(backlog.every((item) => item.status === "needs-adapter")).toBe(true)
   })
@@ -570,6 +579,21 @@ describe("mobile app readiness", () => {
     expect(
       authenticatedWorkflows.map((workflow) => workflow.entryRoute),
     ).toContain("/dashboard/lien-readiness")
+  })
+
+  it("keeps mobile DTOs free of private evidence paths and signed contract snapshots", () => {
+    const riskOps = getContractorRiskOpsData("user_contractor_01")
+    if (!riskOps) throw new Error("Expected seeded contractor risk ops data")
+
+    const evidence = sanitizeEvidenceVaultForMobile(riskOps.evidenceVault[0])
+    const contract = sanitizeContractPacketForMobile(riskOps.contractPackets[0])
+    const searchResult = sanitizeSearchResultForMobile(searchClients("John", { state: "FL" })[0])
+    const payload = JSON.stringify({ evidence, contract, searchResult })
+
+    expect(payload).not.toContain("privateStoragePath")
+    expect(payload).not.toContain("signedSnapshot")
+    expect(payload).not.toContain("phoneHash")
+    expect(payload).not.toContain("emailHash")
   })
 })
 

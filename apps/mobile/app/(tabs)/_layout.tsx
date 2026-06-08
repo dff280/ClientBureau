@@ -1,0 +1,73 @@
+import { Redirect, Tabs } from "expo-router"
+import { Text, type ColorValue } from "react-native"
+
+import { LoadingState } from "@/components/ui"
+import { useAuth } from "@/providers/auth-provider"
+
+function TabIcon({ label, color }: { label: string; color: ColorValue }) {
+  return <Text style={{ color, fontSize: 18, fontWeight: "900" }}>{label}</Text>
+}
+
+export default function TabLayout() {
+  const { loading, session } = useAuth()
+
+  if (loading) return <LoadingState />
+  if (!session) return <Redirect href="/login" />
+
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: "#b89135",
+        tabBarInactiveTintColor: "#667085",
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopColor: "#d7deea",
+          minHeight: 64,
+          paddingBottom: 8,
+          paddingTop: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: "800",
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: "Home",
+          tabBarIcon: ({ color }) => <TabIcon color={color} label="CB" />,
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ color }) => <TabIcon color={color} label="?" />,
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: "Reports",
+          tabBarIcon: ({ color }) => <TabIcon color={color} label="R" />,
+        }}
+      />
+      <Tabs.Screen
+        name="tools"
+        options={{
+          title: "Tools",
+          tabBarIcon: ({ color }) => <TabIcon color={color} label="T" />,
+        }}
+      />
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: "Account",
+          tabBarIcon: ({ color }) => <TabIcon color={color} label="A" />,
+        }}
+      />
+    </Tabs>
+  )
+}

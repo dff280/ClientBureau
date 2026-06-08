@@ -4,7 +4,17 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
-No unreleased changes.
+### Added
+
+- Added a real Expo Native Android app foundation under `apps/mobile` for contractor/business-owner workflows.
+- Added EAS build profiles for direct-test APKs and Google Play-ready AABs.
+- Added mobile BFF endpoints for search, saved searches, reports, contracts, evidence, watchlist, signup, recovery, and Florida lien service.
+- Added mobile-safe DTO helpers and tests to keep private evidence paths, raw identifiers, and signed contract snapshots out of app payloads.
+
+### Improved
+
+- Mobile readiness checks now verify the native app scaffold, Android package identity, and APK/AAB build profiles.
+- Mobile readiness documentation now includes setup, environment, and build commands for the Android app.
 
 ## 0.3.0 - Product Activation Guidance
 

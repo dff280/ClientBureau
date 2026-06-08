@@ -22,6 +22,12 @@ function readProjectFile(...parts) {
 const doc = checks[0].pass ? readProjectFile("docs", "MOBILE_APP_READINESS.md") : ""
 const shell = readProjectFile("src", "components", "dashboard", "client-dashboard-shell.tsx")
 const model = checks[1].pass ? readProjectFile("src", "lib", "mobile-readiness.ts") : ""
+const mobilePackageExists = existsSync(join(root, "apps", "mobile", "package.json"))
+const mobileAppConfigExists = existsSync(join(root, "apps", "mobile", "app.json"))
+const mobileEasExists = existsSync(join(root, "apps", "mobile", "eas.json"))
+const mobilePackage = mobilePackageExists ? readProjectFile("apps", "mobile", "package.json") : ""
+const mobileAppConfig = mobileAppConfigExists ? readProjectFile("apps", "mobile", "app.json") : ""
+const mobileEas = mobileEasExists ? readProjectFile("apps", "mobile", "eas.json") : ""
 
 checks.push(
   {
@@ -59,6 +65,23 @@ checks.push(
       /\/api\/mobile\/contracts/.test(model) &&
       /\/api\/mobile\/lien-service/.test(model),
   },
+  {
+    label: "Expo native app scaffold exists",
+    pass: mobilePackageExists && /@client-bureau\/mobile/.test(mobilePackage),
+  },
+  {
+    label: "Android package identity is configured",
+    pass: mobileAppConfigExists && /com\.clientbureau\.app/.test(mobileAppConfig),
+  },
+  {
+    label: "EAS APK and AAB build profiles exist",
+    pass:
+      mobileEasExists &&
+      /preview-apk/.test(mobileEas) &&
+      /production-aab/.test(mobileEas) &&
+      /"buildType": "apk"/.test(mobileEas) &&
+      /"buildType": "app-bundle"/.test(mobileEas),
+  },
 )
 
 const failed = checks.filter((check) => !check.pass)
@@ -73,4 +96,3 @@ if (failed.length > 0) {
 }
 
 console.log("\nMobile readiness verification passed.")
-

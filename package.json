@@ -9,6 +9,12 @@
     "lint": "eslint",
     "test": "vitest run",
     "mobile:check": "node scripts/verify-mobile-readiness.mjs",
+    "mobile:dev": "npm --prefix apps/mobile run start",
+    "mobile:typecheck": "npm --prefix apps/mobile run typecheck",
+    "mobile:lint": "npm --prefix apps/mobile run lint",
+    "mobile:doctor": "npm --prefix apps/mobile run doctor",
+    "mobile:build:apk": "npm --prefix apps/mobile run build:apk",
+    "mobile:build:aab": "npm --prefix apps/mobile run build:aab",
     "seo:check": "node scripts/verify-seo.mjs",
     "verify:live": "node scripts/verify-live-release.mjs"
   },
