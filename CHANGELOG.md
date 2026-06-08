@@ -4,9 +4,24 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+No unreleased changes.
+
+## 0.3.0 - Product Activation Guidance
+
+Date: June 8, 2026
+
 ### Improved
 
 - Focused dashboard tool pages now show live-backed/safe-mode status and plain-English next-best-action cards for reports, contracts, recovery, Florida lien service, evidence, watchlist, activity, billing, and growth.
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+- `npm run mobile:check`
+- Live `npm run verify:live` is the post-VPS rebuild gate.
 
 ## 0.2.3 - Launch Reliability + Revenue Readiness
 
