@@ -18,6 +18,8 @@ Date: June 8, 2026
 
 - Deployment docs now list migrations through `0013`, include safer fast-forward VPS pull commands, and document the post-deploy live verification flow.
 - Release process docs now require live version/health checks and the new live verifier after each VPS rebuild.
+- Admin settings now explain the safe-mode rollout path in plain English, including when to run the `0013` backfill and when to flip advanced tools to Supabase.
+- The contractor dashboard snapshot now keeps deeper trends, report rollups, and activity history behind a focused details panel to reduce first-screen clutter.
 
 ### Verification
 

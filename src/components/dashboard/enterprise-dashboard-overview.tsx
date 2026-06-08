@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BarChart3,
   ClipboardCheck,
+  ChevronDown,
   DollarSign,
   FileText,
   Lightbulb,
@@ -97,15 +98,34 @@ export function EnterpriseDashboardOverview({ summary }: { summary: EnterpriseDa
         </CardContent>
       </Card>
 
-      <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
-        <TrendPanel trends={summary.trends} />
-        <InsightPanel insights={summary.insights} />
-      </div>
+      <details className="group rounded-md border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-5 marker:hidden sm:flex-row sm:items-center">
+          <span>
+            <span className="text-xs font-semibold uppercase text-amber-700">Detailed insights</span>
+            <span className="mt-1 block text-xl font-semibold tracking-normal text-slate-950">
+              Trends, reports, and activity history
+            </span>
+            <span className="mt-1 block max-w-3xl text-sm leading-6 text-slate-600">
+              Open this when you want deeper context. The dashboard stays focused on what needs action first.
+            </span>
+          </span>
+          <span className="inline-flex w-fit items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+            View details
+            <ChevronDown className="size-4 transition group-open:rotate-180" aria-hidden="true" />
+          </span>
+        </summary>
+        <div className="space-y-5 border-t border-slate-100 p-5">
+          <div className="grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+            <TrendPanel trends={summary.trends} />
+            <InsightPanel insights={summary.insights} />
+          </div>
 
-      <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <ReportCenter summaries={summary.reportSummaries} />
-        <ActivityFeed items={summary.activityFeed} />
-      </div>
+          <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+            <ReportCenter summaries={summary.reportSummaries} />
+            <ActivityFeed items={summary.activityFeed} />
+          </div>
+        </div>
+      </details>
     </section>
   )
 }

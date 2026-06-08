@@ -239,11 +239,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Keep advanced tools mocked"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0009 before flipping advanced tools."
+      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0013 before flipping advanced tools."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing or revenue workflow columns are missing. Apply migrations through 0009 before using Supabase-backed advanced workflows."
+      "Platform tables exist, but contract signing or revenue workflow columns are missing. Apply migrations through 0013 before using Supabase-backed advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin ops are configured for Supabase-backed persistence."

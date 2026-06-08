@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Activity, Database, Settings, ShieldCheck, Signature } from "lucide-react"
+import { Activity, ArrowRight, Database, FileCode2, Settings, ShieldCheck, Signature } from "lucide-react"
 
 import { AdminPageHeader, DashboardSection, StatCard } from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
@@ -94,13 +94,43 @@ export default async function AdminSettingsPage() {
           description="Review moderation rules, publication defaults, evidence privacy, recovery review requirements, contract workflow defaults, and launch readiness."
         />
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <StatCard label="Launch status" value={health.status} helper={readiness.readinessLabel} icon={ShieldCheck} tone={health.status === "ok" ? "emerald" : "amber"} />
-          <StatCard label="Data mode" value={health.dataMode} helper="Core records source" icon={Database} tone={health.dataMode === "supabase" ? "emerald" : "amber"} />
-            <StatCard label="Feature mode" value={health.platformFeatureDataMode} helper="Advanced ops data source" icon={Settings} tone={health.platformFeatureDataMode === "supabase" ? "emerald" : "amber"} />
-            <StatCard label="Platform tables" value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`} helper="Advanced ops readiness" icon={Activity} tone={readiness.platformTablesReady ? "emerald" : "amber"} />
-            <StatCard label="Signing fields" value={`${readiness.platformColumnCount.ready}/${readiness.platformColumnCount.total}`} helper="Contract packet readiness" icon={Signature} tone={readiness.platformSchemaReady ? "emerald" : "amber"} />
-          </div>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <StatCard
+            label="Launch status"
+            value={health.status}
+            helper={readiness.readinessLabel}
+            icon={ShieldCheck}
+            tone={health.status === "ok" ? "emerald" : "amber"}
+          />
+          <StatCard
+            label="Data mode"
+            value={health.dataMode}
+            helper="Core records source"
+            icon={Database}
+            tone={health.dataMode === "supabase" ? "emerald" : "amber"}
+          />
+          <StatCard
+            label="Feature mode"
+            value={health.platformFeatureDataMode}
+            helper="Advanced ops data source"
+            icon={Settings}
+            tone={health.platformFeatureDataMode === "supabase" ? "emerald" : "amber"}
+          />
+          <StatCard
+            label="Platform tables"
+            value={`${readiness.platformTableCount.ready}/${readiness.platformTableCount.total}`}
+            helper="Advanced ops readiness"
+            icon={Activity}
+            tone={readiness.platformTablesReady ? "emerald" : "amber"}
+          />
+          <StatCard
+            label="Signing fields"
+            value={`${readiness.platformColumnCount.ready}/${readiness.platformColumnCount.total}`}
+            helper="Contract packet readiness"
+            icon={Signature}
+            tone={readiness.platformSchemaReady ? "emerald" : "amber"}
+          />
+        </div>
 
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
@@ -109,7 +139,13 @@ export default async function AdminSettingsPage() {
                 <p className="text-xs font-semibold uppercase text-amber-700">Launch health</p>
                 <CardTitle className="mt-1">Staged live ops activation</CardTitle>
               </div>
-              <Badge className={readiness.platformCanUseSupabase ? "rounded-md bg-emerald-700 text-white" : "rounded-md bg-amber-600 text-white"}>
+              <Badge
+                className={
+                  readiness.platformCanUseSupabase
+                    ? "rounded-md bg-emerald-700 text-white"
+                    : "rounded-md bg-amber-600 text-white"
+                }
+              >
                 {readiness.readinessLabel}
               </Badge>
             </div>
@@ -133,26 +169,40 @@ export default async function AdminSettingsPage() {
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {readiness.readinessMessage}
               </p>
-              <div className="mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-600">
-                Flip only after platform tables are complete. Roll back by setting{" "}
-                <code className="rounded bg-slate-100 px-1 py-0.5 text-xs">PLATFORM_FEATURE_DATA_MODE=mock</code>,
-                rebuilding, and leaving core Supabase records untouched.
+              <div className="mt-4 grid gap-3">
+                <ReadinessStep
+                  title="Keep advanced tools in safe mode"
+                  detail="Core auth, reports, admin review, public profiles, and search can stay live while advanced ops waits for the database finish."
+                  value="PLATFORM_FEATURE_DATA_MODE=mock"
+                />
+                <ReadinessStep
+                  title="Apply the platform backfill if health shows missing columns"
+                  detail="Run this SQL after the earlier migrations when contract signing, recovery, or lien readiness fields are missing."
+                  value="supabase/migrations/0013_live_platform_schema_backfill.sql"
+                />
+                <ReadinessStep
+                  title="Flip only after health says ready"
+                  detail="When platformCanUseSupabase is true, switch advanced workflows to Supabase and rebuild. Rollback is the same safe-mode value."
+                  value="PLATFORM_FEATURE_DATA_MODE=supabase"
+                />
               </div>
-                {missingTables.length > 0 || readiness.missingPlatformColumns.length > 0 ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {missingTables.slice(0, 8).map((table) => (
-                      <Badge key={table.name} variant="outline" className="rounded-md bg-white">
-                        {table.name}
-                      </Badge>
-                    ))}
-                    {readiness.missingPlatformColumns.slice(0, 8).map((column) => (
-                      <Badge key={column} variant="outline" className="rounded-md bg-white">
-                        {column}
-                      </Badge>
-                    ))}
-                    {missingTables.length > 8 ? (
-                      <Badge variant="outline" className="rounded-md bg-white">+{missingTables.length - 8} more</Badge>
-                    ) : null}
+              {missingTables.length > 0 || readiness.missingPlatformColumns.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {missingTables.slice(0, 8).map((table) => (
+                    <Badge key={table.name} variant="outline" className="rounded-md bg-white">
+                      {table.name}
+                    </Badge>
+                  ))}
+                  {readiness.missingPlatformColumns.slice(0, 8).map((column) => (
+                    <Badge key={column} variant="outline" className="rounded-md bg-white">
+                      {column}
+                    </Badge>
+                  ))}
+                  {missingTables.length > 8 ? (
+                    <Badge variant="outline" className="rounded-md bg-white">
+                      +{missingTables.length - 8} more
+                    </Badge>
+                  ) : null}
                 </div>
               ) : null}
             </div>
@@ -160,7 +210,11 @@ export default async function AdminSettingsPage() {
         </Card>
 
         {settingsGroups.map((group) => (
-          <DashboardSection key={group.title} title={group.title} description="Plain-English rules admins should be able to verify before publishing, importing, or changing records.">
+          <DashboardSection
+            key={group.title}
+            title={group.title}
+            description="Plain-English rules admins should be able to verify before publishing, importing, or changing records."
+          >
             <div className="grid gap-4 md:grid-cols-2">
               {group.items.map(([title, text]) => (
                 <div key={title} className="rounded-md border border-slate-200 bg-slate-50 p-5">
@@ -173,6 +227,26 @@ export default async function AdminSettingsPage() {
         ))}
       </div>
     </section>
+  )
+}
+
+function ReadinessStep({ title, detail, value }: { title: string; detail: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-3">
+      <div className="flex items-start gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <FileCode2 className="size-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-semibold text-slate-950">{title}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{detail}</p>
+          <p className="mt-2 inline-flex max-w-full items-center gap-2 rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+            <ArrowRight className="size-3.5 shrink-0" aria-hidden="true" />
+            <code className="truncate">{value}</code>
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }
 
