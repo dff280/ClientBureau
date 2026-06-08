@@ -6,19 +6,13 @@
   "build": {
     "preview-apk": {
       "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://clientbureau.com",
-        "EXPO_PUBLIC_SITE_URL": "https://clientbureau.com"
-      },
+      "environment": "preview",
       "android": {
         "buildType": "apk"
       }
     },
     "production-aab": {
-      "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://clientbureau.com",
-        "EXPO_PUBLIC_SITE_URL": "https://clientbureau.com"
-      },
+      "environment": "production",
       "android": {
         "buildType": "app-bundle"
       }
