@@ -2,6 +2,41 @@
 
 All notable Client Bureau product changes should be documented here before a release branch is pushed.
 
+## Unreleased
+
+### Added
+
+- Release process documentation for feature branches, production `main`, version tags, VPS deploys, rollback, hotfixes, and release checks.
+
+### Improved
+
+- Repository workflow is now explicit: build work on `codex/*` branches, release to `main` only when intentionally approved, and deploy the VPS from `main`.
+
+## 0.2.1 - Premium UX Patch
+
+Date: June 7, 2026
+
+### Added
+
+- Premium page loading states for search, public profiles, dashboard, and admin surfaces.
+- Optimized WebP product visuals for search intelligence, contract packets, evidence vault, and resolution desk workflows.
+
+### Improved
+
+- Homepage, pricing, search, public profile, directory, dashboard, admin, and service-page presentation were upgraded toward the credit-bureau-grade visual system.
+- Shared checkbox controls now receive fallback accessible labels when a page does not provide a custom label.
+- Public service pages for Payment Recovery, Florida Lien Notice, and Florida Lien Filing use stronger premium positioning and careful managed-service language.
+- Admin and dashboard pages were checked for rendered overflow, blank states, missing image alt text, unlabeled buttons, and console errors at desktop and mobile widths.
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+- `npm run mobile:check`
+- Browser QA for homepage, pricing, search, public profile, clients, reports, dashboard tools, admin pages, and Florida lien pages.
+
 ## 0.2.0 - Admin Ops CRM + SEO Growth Infrastructure
 
 Date: June 7, 2026

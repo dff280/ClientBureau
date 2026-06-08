@@ -87,6 +87,10 @@ npm run seo:check
 
 Release notes are tracked in `CHANGELOG.md`.
 
+Release workflow:
+
+- `docs/RELEASE_PROCESS.md`
+
 Current release audit:
 
 - `docs/RELEASE_AUDIT_2026-06-07.md`
