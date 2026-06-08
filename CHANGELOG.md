@@ -4,6 +4,10 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+### Improved
+
+- Focused dashboard tool pages now show live-backed/safe-mode status and plain-English next-best-action cards for reports, contracts, recovery, Florida lien service, evidence, watchlist, activity, billing, and growth.
+
 ## 0.2.3 - Launch Reliability + Revenue Readiness
 
 Date: June 8, 2026

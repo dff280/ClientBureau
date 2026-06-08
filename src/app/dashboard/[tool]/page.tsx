@@ -3,6 +3,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import {
   AlertCircle,
+  ArrowRight,
   CreditCard,
   FilePlus2,
   Gift,
@@ -25,7 +26,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getClientDashboardData } from "@/lib/dashboard-data"
-import { getSiteUrl } from "@/lib/env"
+import { getPlatformFeatureDataMode, getSiteUrl } from "@/lib/env"
 import { getMockGrowthEngineData } from "@/lib/growth-engine"
 
 export const dynamic = "force-dynamic"
@@ -39,6 +40,12 @@ type DashboardToolConfig = {
   explanations: {
     title: string
     text: string
+  }[]
+  nextActions: {
+    detail: string
+    href: string
+    label: string
+    primary?: boolean
   }[]
   primaryAction?: {
     href: string
@@ -74,6 +81,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
+    nextActions: [
+      {
+        detail: "Review the newest client work files, notes, and pipeline movement before starting the day.",
+        href: "/dashboard/activity",
+        label: "Review recent activity",
+        primary: true,
+      },
+      {
+        detail: "Check the next client before you send a proposal, schedule work, or order materials.",
+        href: "/search",
+        label: "Check a Client",
+      },
+      {
+        detail: "Document a real client experience and send it to moderation when the job is complete.",
+        href: "/submit-report",
+        label: "Report a Client Experience",
+      },
+    ],
     tab: "activity",
     title: "Activity",
   },
@@ -97,6 +122,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     ],
     primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
     secondaryAction: { href: "/dashboard/watchlist", icon: Search, label: "Open watchlist" },
+    nextActions: [
+      {
+        detail: "Open unread alerts first, especially before accepting deposits, scheduling crews, or extending credit.",
+        href: "/dashboard/alerts",
+        label: "Review alert signals",
+        primary: true,
+      },
+      {
+        detail: "Run a fresh client check when an alert changes your decision context.",
+        href: "/search",
+        label: "Search again",
+      },
+      {
+        detail: "Turn a client into a monitored record so future profile or response changes are easier to catch.",
+        href: "/dashboard/watchlist",
+        label: "Watch this client",
+      },
+    ],
     tab: "watchlist",
     title: "Alerts",
   },
@@ -119,6 +162,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/pricing", icon: CreditCard, label: "View plans" },
+    nextActions: [
+      {
+        detail: "Review plan limits and verification status before onboarding a team or adding more reports.",
+        href: "/dashboard/billing",
+        label: "Review account status",
+        primary: true,
+      },
+      {
+        detail: "Strengthen your public business profile so reports and responses stay accountable.",
+        href: "/claim-profile",
+        label: "Claim profile",
+      },
+      {
+        detail: "Invite trusted contractors when you are ready to build the network effect.",
+        href: "/dashboard/growth",
+        label: "Open Growth Engine",
+      },
+    ],
     tab: "billing",
     title: "Billing and Account",
   },
@@ -142,6 +203,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     ],
     primaryAction: { href: "/dashboard/contracts", icon: Signature, label: "Create agreement" },
     secondaryAction: { href: "/search", icon: Search, label: "Search first" },
+    nextActions: [
+      {
+        detail: "Create the agreement packet before scheduling work, ordering materials, or accepting scope changes.",
+        href: "/dashboard/contracts",
+        label: "Create agreement packet",
+        primary: true,
+      },
+      {
+        detail: "Check the client first so contract terms match the risk and payment context.",
+        href: "/search",
+        label: "Check a Client",
+      },
+      {
+        detail: "Attach invoices, proposal screenshots, photos, and contract records to the private vault.",
+        href: "/dashboard/evidence",
+        label: "Organize evidence",
+      },
+    ],
     tab: "contracts",
     title: "Contracts",
   },
@@ -164,6 +243,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Attach to report" },
+    nextActions: [
+      {
+        detail: "Attach private documentation before submitting a report, recovery case, or lien service case.",
+        href: "/dashboard/evidence",
+        label: "Review evidence status",
+        primary: true,
+      },
+      {
+        detail: "Create or finish the report that the evidence supports.",
+        href: "/submit-report",
+        label: "Submit report",
+      },
+      {
+        detail: "Open payment recovery when evidence supports overdue invoice follow-up.",
+        href: "/dashboard/recovery",
+        label: "Open recovery case",
+      },
+    ],
     tab: "evidence",
     title: "Evidence Vault",
   },
@@ -187,6 +284,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     ],
     primaryAction: { href: "/dashboard/growth", icon: Gift, label: "Invite contractor" },
     secondaryAction: { href: "/claim-profile", icon: UserCheck, label: "Claim profile" },
+    nextActions: [
+      {
+        detail: "Invite trusted contractors and service business owners who would benefit from checking clients first.",
+        href: "/dashboard/growth",
+        label: "Invite contractors",
+        primary: true,
+      },
+      {
+        detail: "Claim or improve your business profile so contractors and clients see accountable identity context.",
+        href: "/claim-profile",
+        label: "Claim profile",
+      },
+      {
+        detail: "Request feedback after successful jobs to build positive client history.",
+        href: "/dashboard/growth",
+        label: "Request feedback",
+      },
+    ],
     tab: "growth",
     title: "Growth Engine",
   },
@@ -209,6 +324,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/dashboard/lien-readiness", icon: Landmark, label: "Start Florida case" },
+    nextActions: [
+      {
+        detail: "Start the Florida case when deadline, property, contract, invoice, and authorization details are ready for review.",
+        href: "/dashboard/lien-readiness",
+        label: "Start Florida case",
+        primary: true,
+      },
+      {
+        detail: "Collect contracts, invoices, photos, notices, and communication records privately before staff review.",
+        href: "/dashboard/evidence",
+        label: "Prepare documents",
+      },
+      {
+        detail: "Use Resolution Desk when a payment conversation may resolve the matter before filing steps continue.",
+        href: "/dashboard/recovery",
+        label: "Open recovery case",
+      },
+    ],
     tab: "lien-readiness",
     title: "Florida Lien Service",
   },
@@ -231,6 +364,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/dashboard/recovery", icon: PhoneCall, label: "Get help recovering payment" },
+    nextActions: [
+      {
+        detail: "Open a managed recovery case when an invoice is overdue and private documentation supports follow-up.",
+        href: "/dashboard/recovery",
+        label: "Open recovery case",
+        primary: true,
+      },
+      {
+        detail: "Attach invoices, messages, contracts, photos, and payment records before staff review.",
+        href: "/dashboard/evidence",
+        label: "Prepare evidence",
+      },
+      {
+        detail: "If the job is in Florida and deadlines matter, review lien service readiness as a separate private workflow.",
+        href: "/dashboard/lien-readiness",
+        label: "Review lien readiness",
+      },
+    ],
     tab: "recovery",
     title: "Payment Recovery",
   },
@@ -254,6 +405,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     ],
     primaryAction: { href: "/submit-report", icon: FilePlus2, label: "Report a Client Experience" },
     secondaryAction: { href: "/dashboard/evidence", icon: Vault, label: "Evidence vault" },
+    nextActions: [
+      {
+        detail: "Submit a documented positive, resolved, or concerning client experience for moderation.",
+        href: "/submit-report",
+        label: "Report a Client Experience",
+        primary: true,
+      },
+      {
+        detail: "Review drafts and evidence before submitting so moderation has clean context.",
+        href: "/dashboard/reports",
+        label: "Review report status",
+      },
+      {
+        detail: "Use evidence vault when files need private organization before a report is submitted.",
+        href: "/dashboard/evidence",
+        label: "Organize evidence",
+      },
+    ],
     tab: "reports",
     title: "Reports",
   },
@@ -276,6 +445,24 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
+    nextActions: [
+      {
+        detail: "Search first when a lead, homeowner, property owner, or customer asks for work.",
+        href: "/search",
+        label: "Check a Client",
+        primary: true,
+      },
+      {
+        detail: "Save or watch clients you may work with again so changes are easier to spot.",
+        href: "/dashboard/watchlist",
+        label: "Review watched clients",
+      },
+      {
+        detail: "Create a private contract packet after a client check and before scheduling work.",
+        href: "/dashboard/contracts",
+        label: "Create contract packet",
+      },
+    ],
     tab: "watchlist",
     title: "Watchlist and Alerts",
   },
@@ -317,6 +504,7 @@ export default async function DashboardToolPage({
   if (!config) notFound()
 
   const { dashboard, clientProfiles, riskOps } = await getClientDashboardData()
+  const featureDataMode = getPlatformFeatureDataMode()
 
   if (!dashboard || !riskOps) {
     return (
@@ -360,6 +548,66 @@ export default async function DashboardToolPage({
           </Card>
         ))}
       </div>
+
+      <DashboardSection
+        eyebrow="Next best actions"
+        title="Start with the simplest next step"
+        description={
+          featureDataMode === "supabase"
+            ? "This workspace is connected to live account records. Actions here should persist after refresh."
+            : "This workspace is in safe preview mode. Core search, reports, admin review, and public profiles remain live."
+        }
+      >
+        <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase text-amber-700">Tool status</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">
+              {featureDataMode === "supabase" ? "Live-backed" : "Safe mode"}
+            </p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              {featureDataMode === "supabase"
+                ? "Advanced records are using Supabase for account-level persistence."
+                : "Flip PLATFORM_FEATURE_DATA_MODE after deployment when health is ready."}
+            </p>
+            <div className="mt-3">
+              <StatusBadge tone={featureDataMode === "supabase" ? "emerald" : "amber"}>
+                {featureDataMode}
+              </StatusBadge>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {config.nextActions.map((action) => (
+              <Link
+                key={`${config.activeHref}-${action.href}-${action.label}`}
+                href={action.href}
+                className={
+                  action.primary
+                    ? "group rounded-md border border-slate-950 bg-slate-950 p-4 text-white shadow-sm transition hover:-translate-y-0.5"
+                    : "group rounded-md border border-slate-200 bg-white p-4 text-slate-950 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
+                }
+              >
+                <span
+                  className={
+                    action.primary
+                      ? "text-xs font-semibold uppercase text-amber-300"
+                      : "text-xs font-semibold uppercase text-amber-700"
+                  }
+                >
+                  {action.primary ? "Recommended" : "Next option"}
+                </span>
+                <span className="mt-2 block font-semibold">{action.label}</span>
+                <span className={action.primary ? "mt-2 block text-sm leading-6 text-slate-300" : "mt-2 block text-sm leading-6 text-slate-600"}>
+                  {action.detail}
+                </span>
+                <span className={action.primary ? "mt-4 inline-flex items-center gap-2 text-sm font-semibold text-amber-200" : "mt-4 inline-flex items-center gap-2 text-sm font-semibold text-amber-700"}>
+                  Continue
+                  <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </DashboardSection>
 
       {config.tab === "growth" ? (
         <ContractorGrowthEngine data={getMockGrowthEngineData(dashboard.contractor, getSiteUrl())} />
