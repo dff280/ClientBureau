@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Text } from "react-native"
 
-import { Card, LoadingState, Message, PrimaryButton, Screen, styles } from "@/components/ui"
+import { Card, EmptyState, LoadingState, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import type { ApiResult, MobileEvidence } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
@@ -47,16 +47,23 @@ export default function EvidenceScreen() {
             <Text style={styles.cardTitle}>Privacy guardrail</Text>
             <Text style={styles.body}>{result.data.privacyNote}</Text>
           </Card>
-          {[...result.data.evidenceVault, ...result.data.reportEvidence].map((item) => (
-            <Card key={item.id}>
-              <Text style={styles.cardTitle}>{item.label}</Text>
-              <Text style={styles.body}>{item.clientName ?? "Report evidence"} / {item.status ?? "uploaded"}</Text>
-              <Text style={styles.helper}>{item.publicSummary}</Text>
-              {item.status && item.status !== "reviewed" ? (
-                <PrimaryButton title="Mark reviewed" tone="light" onPress={() => markReviewed(item.id)} />
-              ) : null}
-            </Card>
-          ))}
+          {[...result.data.evidenceVault, ...result.data.reportEvidence].length ? (
+            <>
+              <SectionHeader title="Evidence items" body="Private document summaries and review status." />
+              {[...result.data.evidenceVault, ...result.data.reportEvidence].map((item) => (
+                <Card key={item.id}>
+                  <Text style={styles.cardTitle}>{item.label}</Text>
+                  <Text style={styles.body}>{item.clientName ?? "Report evidence"} / {item.status ?? "uploaded"}</Text>
+                  <Text style={styles.helper}>{item.publicSummary}</Text>
+                  {item.status && item.status !== "reviewed" ? (
+                    <PrimaryButton title="Mark reviewed" tone="light" onPress={() => markReviewed(item.id)} />
+                  ) : null}
+                </Card>
+              ))}
+            </>
+          ) : (
+            <EmptyState title="No evidence yet" body="Upload evidence from report, recovery, lien, or contract workflows on the web dashboard." />
+          )}
         </>
       ) : (
         <Message text={result.message} tone="error" />

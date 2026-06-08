@@ -5,7 +5,7 @@ import { Text, View } from "react-native"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import { siteUrl } from "@/lib/config"
 import type { ApiResult, MobileSearchResult } from "@/lib/types"
-import { Badge, Card, ChoiceRow, Field, Message, PrimaryButton, Screen, SecondaryButton, styles } from "@/components/ui"
+import { ActionRow, Badge, Card, ChoiceRow, Field, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 type SearchPayload = {
@@ -65,6 +65,12 @@ export default function SearchScreen() {
             <Text style={styles.cardTitle}>Private matching</Text>
             <Text style={styles.body}>{result.data.privacyNote}</Text>
           </Card>
+          {result.data.results.length ? (
+            <SectionHeader
+              title="Search results"
+              body="Open the public profile for approved context, or save this search to watch it later."
+            />
+          ) : null}
           {result.data.results.map((item) => (
             <Card key={item.id}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
@@ -78,8 +84,10 @@ export default function SearchScreen() {
               </View>
               <Text style={styles.helper}>{item.matchedBy}</Text>
               <Text style={styles.body}>{item.latestSummary ?? item.paymentContextLabel}</Text>
-              <SecondaryButton
+              <ActionRow
                 title="Open public profile"
+                body="View approved report context and response status."
+                badge={item.riskLevel}
                 onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/client/${item.publicSlug}`)}
               />
             </Card>
@@ -93,7 +101,11 @@ export default function SearchScreen() {
               <PrimaryButton onPress={() => saveSearch(0)} title="Save this search" tone="gold" />
             </Card>
           ) : (
-            <PrimaryButton onPress={() => saveSearch(result.data.results.length)} title="Save this search" tone="light" />
+            <ActionRow
+              title="Save this search"
+              body="Keep this client lookup in your account for later follow-up."
+              onPress={() => saveSearch(result.data.results.length)}
+            />
           )}
         </>
       ) : result && !result.ok ? (

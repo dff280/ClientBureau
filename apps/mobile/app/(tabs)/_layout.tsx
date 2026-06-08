@@ -1,5 +1,6 @@
 import { Redirect, Tabs } from "expo-router"
 import { Text, type ColorValue } from "react-native"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { LoadingState } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
@@ -10,6 +11,8 @@ function TabIcon({ label, color }: { label: string; color: ColorValue }) {
 
 export default function TabLayout() {
   const { loading, session } = useAuth()
+  const insets = useSafeAreaInsets()
+  const bottomInset = Math.max(insets.bottom, 10)
 
   if (loading) return <LoadingState />
   if (!session) return <Redirect href="/login" />
@@ -23,8 +26,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#d7deea",
-          minHeight: 64,
-          paddingBottom: 8,
+          height: 58 + bottomInset,
+          minHeight: 58 + bottomInset,
+          paddingBottom: bottomInset,
           paddingTop: 8,
         },
         tabBarLabelStyle: {

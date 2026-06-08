@@ -3,7 +3,7 @@ import { Text, View } from "react-native"
 
 import { jsonBody, mobileFetch } from "@/lib/api"
 import type { ApiResult, MobileReport } from "@/lib/types"
-import { Badge, Card, ChoiceRow, Field, LoadingState, Message, PrimaryButton, Screen, styles } from "@/components/ui"
+import { Badge, Card, ChoiceRow, EmptyState, Field, LoadingState, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 type ReportsPayload = {
@@ -101,17 +101,35 @@ export default function ReportsScreen() {
         </Card>
       ) : null}
       {result.ok ? (
-        result.data.reports.map((report) => (
-          <Card key={report.id}>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
-              <Text style={styles.cardTitle}>{report.projectType}</Text>
-              <Badge label={report.status} tone={report.status === "approved" ? "green" : "gold"} />
-            </View>
-            <Text style={styles.body}>
-              {report.reportCategory} / {report.paymentStatus} / {report.projectCity}, {report.projectState}
-            </Text>
-          </Card>
-        ))
+        result.data.reports.length ? (
+          <>
+            <SectionHeader title="Report status" body="Track what is pending, approved, disputed, rejected, or published." />
+            {result.data.reports.map((report) => {
+              const paymentLabel =
+                report.amountUnpaid > 0
+                  ? `Reported unpaid: $${report.amountUnpaid.toLocaleString()}`
+                  : "Payment issue: none reported"
+
+              return (
+                <Card key={report.id}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+                    <Text style={styles.cardTitle}>{report.projectType}</Text>
+                    <Badge label={report.status} tone={report.status === "approved" ? "green" : "gold"} />
+                  </View>
+                  <Text style={styles.body}>
+                    {report.reportCategory} / {report.paymentStatus} / {report.projectCity}, {report.projectState}
+                  </Text>
+                  <Text style={styles.helper}>{paymentLabel}</Text>
+                </Card>
+              )
+            })}
+          </>
+        ) : (
+          <EmptyState
+            title="No reports yet"
+            body="Submit your first documented client experience when you have a real project record to preserve."
+          />
+        )
       ) : (
         <Message tone="error" text={result.message} />
       )}

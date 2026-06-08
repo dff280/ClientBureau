@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { Text } from "react-native"
 
-import { Card, Field, LoadingState, Message, PrimaryButton, Screen, styles } from "@/components/ui"
+import { Card, EmptyState, Field, LoadingState, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import type { ApiResult } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
@@ -23,6 +23,7 @@ export default function WatchlistScreen() {
   const [clientId, setClientId] = useState("")
   const [watchReason, setWatchReason] = useState("")
   const [message, setMessage] = useState<string>()
+  const [showForm, setShowForm] = useState(false)
 
   async function load() {
     if (!accessToken) return
@@ -49,23 +50,39 @@ export default function WatchlistScreen() {
   return (
     <Screen eyebrow="Watchlist" title="Monitor clients and private signals.">
       <Card>
-        <Text style={styles.cardTitle}>Add by Client Bureau profile ID</Text>
+        <Text style={styles.cardTitle}>Private monitoring</Text>
         <Text style={styles.body}>
           Search first, then add a public profile ID to watch for new moderated signals.
         </Text>
-        <Field label="Client profile ID" value={clientId} onChangeText={setClientId} />
-        <Field multiline label="Watch reason" value={watchReason} onChangeText={setWatchReason} />
-        <PrimaryButton title="Watch this client" onPress={submit} />
+        <PrimaryButton
+          title={showForm ? "Close watch form" : "Watch a client"}
+          onPress={() => setShowForm(!showForm)}
+        />
       </Card>
+      {showForm ? (
+        <Card>
+          <Text style={styles.cardTitle}>Add by Client Bureau profile ID</Text>
+          <Field label="Client profile ID" value={clientId} onChangeText={setClientId} />
+          <Field multiline label="Watch reason" value={watchReason} onChangeText={setWatchReason} />
+          <PrimaryButton title="Watch this client" onPress={submit} />
+        </Card>
+      ) : null}
       <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
       {result.ok
-        ? result.data.watchlist.map((item) => (
-            <Card key={item.id}>
-              <Text style={styles.cardTitle}>{item.clientId}</Text>
-              <Text style={styles.body}>{item.watchReason}</Text>
-              <Text style={styles.helper}>{item.status} / {item.lastSignal}</Text>
-            </Card>
-          ))
+        ? result.data.watchlist.length ? (
+          <>
+            <SectionHeader title="Watched clients" body={`${result.data.alerts} alert(s) currently need attention.`} />
+            {result.data.watchlist.map((item) => (
+              <Card key={item.id}>
+                <Text style={styles.cardTitle}>{item.clientId}</Text>
+                <Text style={styles.body}>{item.watchReason}</Text>
+                <Text style={styles.helper}>{item.status} / {item.lastSignal}</Text>
+              </Card>
+            ))}
+          </>
+        ) : (
+          <EmptyState title="No watched clients yet" body="Save a client after searching so you can monitor new moderated signals." />
+        )
         : <Message text={result.message} tone="error" />}
     </Screen>
   )

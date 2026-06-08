@@ -1,7 +1,7 @@
 {
   "name": "@client-bureau/mobile",
   "main": "expo-router/entry",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "dependencies": {
     "expo": "~56.0.9",
     "expo-constants": "~56.0.17",

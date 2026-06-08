@@ -1,6 +1,8 @@
 import { PropsWithChildren } from "react"
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleProp,
@@ -10,7 +12,7 @@ import {
   View,
   ViewStyle,
 } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { colors, radius, spacing } from "@/lib/theme"
 
@@ -19,13 +21,25 @@ export function Screen({
   eyebrow,
   children,
 }: PropsWithChildren<{ title: string; eyebrow?: string }>) {
+  const insets = useSafeAreaInsets()
+
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.screen}>
-        {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-        <Text style={styles.title}>{title}</Text>
-        {children}
-      </ScrollView>
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.safe}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoider}
+      >
+        <ScrollView
+          contentContainerStyle={[styles.screen, { paddingBottom: spacing.xl + insets.bottom + 96 }]}
+          contentInsetAdjustmentBehavior="automatic"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+          <Text style={styles.title}>{title}</Text>
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -91,6 +105,75 @@ export function SecondaryButton({ title, onPress }: { title: string; onPress?: (
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={styles.secondaryButton}>
       <Text style={styles.secondaryButtonText}>{title}</Text>
+    </Pressable>
+  )
+}
+
+export function SectionHeader({
+  eyebrow,
+  title,
+  body,
+}: {
+  eyebrow?: string
+  title: string
+  body?: string
+}) {
+  return (
+    <View style={styles.sectionHeader}>
+      {eyebrow ? <Text style={styles.sectionEyebrow}>{eyebrow}</Text> : null}
+      <Text style={styles.sectionTitle}>{title}</Text>
+      {body ? <Text style={styles.body}>{body}</Text> : null}
+    </View>
+  )
+}
+
+export function ActionRow({
+  title,
+  body,
+  badge,
+  onPress,
+}: {
+  title: string
+  body?: string
+  badge?: string
+  onPress?: () => void
+}) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={styles.actionRow}>
+      <View style={styles.actionText}>
+        <Text style={styles.actionTitle}>{title}</Text>
+        {body ? <Text style={styles.helper}>{body}</Text> : null}
+      </View>
+      <View style={styles.actionAside}>
+        {badge ? <Badge label={badge} tone="gold" /> : null}
+        <Text style={styles.actionArrow}>{">"}</Text>
+      </View>
+    </Pressable>
+  )
+}
+
+export function ToolCard({
+  title,
+  body,
+  meta,
+  onPress,
+}: {
+  title: string
+  body: string
+  meta?: string
+  onPress?: () => void
+}) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={styles.toolCard}>
+      <View style={styles.toolIcon}>
+        <Text style={styles.toolIconText}>{title.slice(0, 1)}</Text>
+      </View>
+      <View style={styles.actionText}>
+        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={styles.body}>{body}</Text>
+        {meta ? <Text style={styles.helper}>{meta}</Text> : null}
+      </View>
+      <Text style={styles.actionArrow}>{">"}</Text>
     </Pressable>
   )
 }
@@ -209,6 +292,9 @@ export const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bg,
   },
+  keyboardAvoider: {
+    flex: 1,
+  },
   screen: {
     padding: spacing.md,
     gap: spacing.md,
@@ -235,6 +321,17 @@ export const styles = StyleSheet.create({
     color: colors.navy,
     fontSize: 20,
     fontWeight: "800",
+  },
+  sectionHeader: {
+    gap: 6,
+    paddingTop: 4,
+  },
+  sectionEyebrow: {
+    color: colors.gold,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
   card: {
     backgroundColor: colors.panel,
@@ -318,6 +415,69 @@ export const styles = StyleSheet.create({
     color: colors.navy,
     fontSize: 14,
     fontWeight: "800",
+  },
+  actionRow: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.md,
+    minHeight: 72,
+    padding: spacing.md,
+    shadowColor: "#101828",
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 1,
+  },
+  actionText: {
+    flex: 1,
+    gap: 4,
+  },
+  actionTitle: {
+    color: colors.navy,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  actionAside: {
+    alignItems: "flex-end",
+    gap: 6,
+  },
+  actionArrow: {
+    color: colors.gold,
+    fontSize: 28,
+    fontWeight: "900",
+    lineHeight: 30,
+  },
+  toolCard: {
+    alignItems: "center",
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.md,
+    padding: spacing.md,
+    shadowColor: "#101828",
+    shadowOpacity: 0.07,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 2,
+  },
+  toolIcon: {
+    alignItems: "center",
+    backgroundColor: colors.goldSoft,
+    borderRadius: radius.md,
+    height: 46,
+    justifyContent: "center",
+    width: 46,
+  },
+  toolIconText: {
+    color: colors.navy,
+    fontSize: 18,
+    fontWeight: "900",
   },
   badge: {
     alignSelf: "flex-start",
