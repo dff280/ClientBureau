@@ -4,7 +4,30 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
-No unreleased changes.
+## 0.2.3 - Launch Reliability + Revenue Readiness
+
+Date: June 8, 2026
+
+### Added
+
+- Added `/api/version` so live deployments expose non-secret release identity, app version, data mode, platform feature mode, and optional commit metadata.
+- Added `npm run verify:live` for production release checks against `https://clientbureau.com`.
+- Added `supabase/migrations/0013_live_platform_schema_backfill.sql` as an idempotent repair migration for missing contract signing, managed recovery, and Florida lien readiness columns.
+
+### Improved
+
+- Deployment docs now list migrations through `0013`, include safer fast-forward VPS pull commands, and document the post-deploy live verification flow.
+- Release process docs now require live version/health checks and the new live verifier after each VPS rebuild.
+
+### Verification
+
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+- `npm run mobile:check`
+- `node --check scripts/verify-live-release.mjs`
+- Live `npm run verify:live` is the post-VPS rebuild gate.
 
 ## 0.2.2 - Live SEO Profile Cleanup
 

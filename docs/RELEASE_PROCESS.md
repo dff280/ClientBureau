@@ -16,6 +16,7 @@ Recommended branch names:
 - `codex/search-upgrade`
 - `codex/admin-fixes`
 - `codex/release-process-cleanup`
+- `codex/launch-reliability-revenue-readiness`
 
 ## Standard Update Flow
 
@@ -90,10 +91,21 @@ Post-deploy checks:
 
 ```bash
 curl -I https://clientbureau.com
+curl https://clientbureau.com/api/version
 curl https://clientbureau.com/api/health
 curl https://clientbureau.com/robots.txt
 curl https://clientbureau.com/sitemap.xml
 ```
+
+Run the full live release verifier from your local machine after the VPS rebuild:
+
+```powershell
+$env:LIVE_BASE_URL="https://clientbureau.com"
+npm run verify:live
+Remove-Item Env:LIVE_BASE_URL
+```
+
+The verifier fails for broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet or advanced ops still requiring `PLATFORM_FEATURE_DATA_MODE=mock`.
 
 ## Rollback
 
@@ -149,6 +161,7 @@ Before pushing `main`:
 - `npm run build` passes.
 - `npm run seo:check` passes against a running local build.
 - `npm run mobile:check` passes.
+- `npm run verify:live` passes after the VPS rebuild.
 - Browser QA covers the changed public/dashboard/admin routes.
 - No secrets or private data appear in `git diff`.
 - The release is intentionally approved for production.

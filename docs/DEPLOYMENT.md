@@ -32,6 +32,11 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0006_launch_ops_hardening.sql`
    - `supabase/migrations/0007_contract_signing_packets.sql`
    - `supabase/migrations/0008_managed_recovery_lien_filing.sql`
+   - `supabase/migrations/0009_revenue_workflow_hardening.sql`
+   - `supabase/migrations/0010_search_activation_events.sql`
+   - `supabase/migrations/0011_contractor_onboarding_fields.sql`
+   - `supabase/migrations/0012_ratings_signup_report_intake.sql`
+   - `supabase/migrations/0013_live_platform_schema_backfill.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -186,7 +191,15 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003`, `0004`, `0005`, `0006`, `0007`, and `0008` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003` through `0013` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+
+If `/api/health` reports missing contract, managed recovery, or Florida lien readiness columns, run:
+
+```text
+supabase/migrations/0013_live_platform_schema_backfill.sql
+```
+
+That migration is idempotent and exists as a production repair pass for databases that received only part of the platform schema rollout.
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
 
@@ -227,10 +240,21 @@ After pushing code changes to GitHub:
 ```bash
 ssh root@5.78.231.192
 cd /opt/client-bureau
-git pull
+git fetch origin
+git checkout main
+git pull --ff-only origin main
 docker compose up -d --build
 docker image prune -f
 ```
+
+Confirm the deployed app is serving the expected release:
+
+```bash
+curl https://clientbureau.com/api/version
+curl https://clientbureau.com/api/health
+```
+
+The `/api/version` endpoint returns non-secret release identity information such as the app version, optional commit environment variable, data mode, and platform feature mode.
 
 ## 8. Launch Checklist
 
@@ -247,6 +271,7 @@ Verify on the VPS:
 ```bash
 docker compose ps
 curl -I https://clientbureau.com
+curl https://clientbureau.com/api/version
 curl https://clientbureau.com/api/health
 curl https://clientbureau.com/robots.txt
 curl https://clientbureau.com/sitemap.xml
@@ -257,6 +282,20 @@ From your local Windows machine, this repository also includes:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\verify-launch.ps1
 ```
+
+After the VPS rebuild, run a full live release verification from your local machine:
+
+```powershell
+$env:LIVE_BASE_URL="https://clientbureau.com"
+npm run verify:live
+Remove-Item Env:LIVE_BASE_URL
+
+$env:SEO_BASE_URL="https://clientbureau.com"
+npm run seo:check
+Remove-Item Env:SEO_BASE_URL
+```
+
+The live release verification is expected to warn, not fail, while Stripe is unconfigured or `PLATFORM_FEATURE_DATA_MODE=mock` is still required. It should fail if the live build links to unavailable public client profiles, serves profile loading shells, loses core Supabase readiness, or exposes private identifiers on public profile pages.
 
 Browser-check these routes on desktop and mobile:
 
