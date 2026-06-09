@@ -4,6 +4,24 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.3.10 - VPS Active Directory Detection
+
+Date: June 9, 2026
+
+### Fixed
+
+- Updated the VPS deploy helper to prefer the active `/opt/ClientBureau` repo before falling back to `/opt/client-bureau`.
+- Prevented the deploy helper from accidentally targeting a fresh lowercase clone when the live Docker Compose project uses the existing uppercase directory.
+
+### Verification
+
+- Git Bash syntax check for `scripts/vps-deploy.sh`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+- `npm run mobile:check`
+
 ## 0.3.9 - One-Command Live Release Verification
 
 Date: June 9, 2026

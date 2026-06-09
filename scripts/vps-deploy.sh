@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/opt/client-bureau"
 REPO_URL="https://github.com/dff280/ClientBureau.git"
 BRANCH="${BRANCH:-main}"
+
+if [ -z "${APP_DIR:-}" ]; then
+  if [ -d "/opt/ClientBureau/.git" ]; then
+    APP_DIR="/opt/ClientBureau"
+  else
+    APP_DIR="/opt/client-bureau"
+  fi
+fi
 
 upsert_env() {
   local key="$1"
