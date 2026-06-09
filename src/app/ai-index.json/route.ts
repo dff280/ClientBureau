@@ -33,6 +33,11 @@ export async function GET() {
       url: `${siteUrl}/resources`,
       intent: "Policy, methodology, and responsible-use resource hub.",
     },
+    {
+      title: "Android Mobile App",
+      url: `${siteUrl}/mobile-app`,
+      intent: "Download and understand the native Android contractor app for client checks, reports, contracts, recovery, lien service, evidence, and alerts.",
+    },
     ...acquisitionPages.map((page) => ({
       title: page.title,
       url: `${siteUrl}${page.path}`,
