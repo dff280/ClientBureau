@@ -82,7 +82,16 @@ The VPS deploys from `main`.
 
 ```bash
 cd /opt/client-bureau
+git fetch origin
+git checkout main
 git pull --ff-only origin main
+export RELEASE_COMMIT="$(git rev-parse HEAD)"
+grep -q '^GIT_COMMIT_SHA=' .env.production \
+  && sed -i "s/^GIT_COMMIT_SHA=.*/GIT_COMMIT_SHA=$RELEASE_COMMIT/" .env.production \
+  || printf '\nGIT_COMMIT_SHA=%s\n' "$RELEASE_COMMIT" >> .env.production
+grep -q '^GIT_BRANCH=' .env.production \
+  && sed -i "s/^GIT_BRANCH=.*/GIT_BRANCH=main/" .env.production \
+  || printf 'GIT_BRANCH=main\n' >> .env.production
 docker compose up -d --build
 docker compose ps
 ```
@@ -101,11 +110,15 @@ Run the full live release verifier from your local machine after the VPS rebuild
 
 ```powershell
 $env:LIVE_BASE_URL="https://clientbureau.com"
+$env:EXPECTED_APP_VERSION="0.3.7"
+$env:EXPECTED_GIT_COMMIT="$(git rev-parse HEAD)"
 npm run verify:live
 Remove-Item Env:LIVE_BASE_URL
+Remove-Item Env:EXPECTED_APP_VERSION
+Remove-Item Env:EXPECTED_GIT_COMMIT
 ```
 
-The verifier fails for broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet or advanced ops still requiring `PLATFORM_FEATURE_DATA_MODE=mock`.
+The verifier fails for a stale version or commit when expected values are provided, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet or advanced ops still requiring `PLATFORM_FEATURE_DATA_MODE=mock`.
 
 ## Rollback
 

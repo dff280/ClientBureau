@@ -243,6 +243,13 @@ cd /opt/client-bureau
 git fetch origin
 git checkout main
 git pull --ff-only origin main
+RELEASE_COMMIT="$(git rev-parse HEAD)"
+grep -q '^GIT_COMMIT_SHA=' .env.production \
+  && sed -i "s/^GIT_COMMIT_SHA=.*/GIT_COMMIT_SHA=$RELEASE_COMMIT/" .env.production \
+  || printf '\nGIT_COMMIT_SHA=%s\n' "$RELEASE_COMMIT" >> .env.production
+grep -q '^GIT_BRANCH=' .env.production \
+  && sed -i "s/^GIT_BRANCH=.*/GIT_BRANCH=main/" .env.production \
+  || printf 'GIT_BRANCH=main\n' >> .env.production
 docker compose up -d --build
 docker image prune -f
 ```
@@ -287,8 +294,12 @@ After the VPS rebuild, run a full live release verification from your local mach
 
 ```powershell
 $env:LIVE_BASE_URL="https://clientbureau.com"
+$env:EXPECTED_APP_VERSION="0.3.7"
+$env:EXPECTED_GIT_COMMIT="$(git rev-parse HEAD)"
 npm run verify:live
 Remove-Item Env:LIVE_BASE_URL
+Remove-Item Env:EXPECTED_APP_VERSION
+Remove-Item Env:EXPECTED_GIT_COMMIT
 
 $env:SEO_BASE_URL="https://clientbureau.com"
 npm run seo:check

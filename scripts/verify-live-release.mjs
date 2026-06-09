@@ -1,5 +1,7 @@
 const baseUrl = (process.env.LIVE_BASE_URL || process.env.SEO_BASE_URL || "https://clientbureau.com").replace(/\/$/, "")
 const expectedSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || baseUrl).replace(/\/$/, "")
+const expectedAppVersion = process.env.EXPECTED_APP_VERSION || process.env.RELEASE_VERSION || ""
+const expectedCommit = process.env.EXPECTED_GIT_COMMIT || process.env.GIT_COMMIT_SHA || ""
 
 const checks = []
 
@@ -103,6 +105,22 @@ function containsPrivateIdentifier(html) {
 const version = await readJson("/api/version")
 if (version.response.ok && version.json?.version) {
   pass("/api/version release identity", `${version.json.version}${version.json.commit ? ` @ ${version.json.commit}` : ""}`)
+
+  if (expectedAppVersion) {
+    if (version.json.version === expectedAppVersion) {
+      pass("Expected app version", expectedAppVersion)
+    } else {
+      fail("Expected app version", `expected ${expectedAppVersion}, got ${version.json.version}`)
+    }
+  }
+
+  if (expectedCommit) {
+    if (version.json.commit === expectedCommit) {
+      pass("Expected Git commit", expectedCommit)
+    } else {
+      fail("Expected Git commit", `expected ${expectedCommit}, got ${version.json.commit || "not reported"}`)
+    }
+  }
 } else {
   fail("/api/version release identity", version.error || String(version.response.status))
 }

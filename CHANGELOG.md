@@ -4,17 +4,57 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.3.7 - Release Identity + Deploy Verification Hardening
+
+Date: June 9, 2026
+
+### Improved
+
+- Bumped the web app release metadata to `0.3.7` so `/api/version` can prove the deployed site is current.
+- Added optional expected app version and expected commit gates to `npm run verify:live`.
+- Updated VPS deployment docs to refresh `GIT_COMMIT_SHA` and `GIT_BRANCH` before each Docker rebuild.
+- Added release identity environment placeholders to `.env.production.example`.
+
+### Verification
+
+- `node --check scripts/verify-live-release.mjs`
+- `npm run lint`
+- `npm test`
+- `npm run seo:check`
+- `npm run build`
+- `npm run mobile:check`
+
+## 0.3.6 - Android Login Fix + Mobile Release Hardening
+
+Date: June 9, 2026
+
 ### Added
 
 - Added a real Expo Native Android app foundation under `apps/mobile` for contractor/business-owner workflows.
 - Added EAS build profiles for direct-test APKs and Google Play-ready AABs.
 - Added mobile BFF endpoints for search, saved searches, reports, contracts, evidence, watchlist, signup, recovery, and Florida lien service.
 - Added mobile-safe DTO helpers and tests to keep private evidence paths, raw identifiers, and signed contract snapshots out of app payloads.
+- Added an Android app download page with direct-test APK and Play-ready AAB release links.
 
 ### Improved
 
 - Mobile readiness checks now verify the native app scaffold, Android package identity, and APK/AAB build profiles.
 - Mobile readiness documentation now includes setup, environment, and build commands for the Android app.
+- Redesigned Android auth entry screens around a compact premium mobile login/signup experience.
+- Fixed Android login and signup focus behavior so email can advance to password and password can submit without jumping focus.
+- Improved shared mobile form fields with refs, keyboard return-key flow, autocomplete hints, password visibility stability, and Android autofill support.
+- Polished mobile Home, Search, Reports, Tools, Account, and empty/no-result actions without changing backend APIs.
+
+### Verification
+
+- `npm run mobile:typecheck`
+- `npm run mobile:lint`
+- `npm run mobile:doctor`
+- `npm run mobile:check`
+- `npm run lint`
+- `npm test`
+- `npm run seo:check`
+- `npm run build`
 
 ## 0.3.0 - Product Activation Guidance
 
