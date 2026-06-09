@@ -26,10 +26,10 @@ import { JsonLd, getFaqSchema } from "@/lib/seo"
 
 const apkUrl =
   process.env.NEXT_PUBLIC_ANDROID_APK_URL ??
-  "https://expo.dev/artifacts/eas/a4trJBWyM1B1VN6FxveBRe.apk"
+  "https://expo.dev/artifacts/eas/gnVCkwRL5buptKzNKKsETA.apk"
 const aabUrl =
   process.env.NEXT_PUBLIC_ANDROID_AAB_URL ??
-  "https://expo.dev/artifacts/eas/buaLF2fWGNPDNLfdvtsGKa.aab"
+  "https://expo.dev/artifacts/eas/4DujDw2GEKoEskhN8WHyuv.aab"
 
 export const metadata: Metadata = {
   title: "Client Bureau Android App",
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Current APK", value: "0.3.4", text: "Direct Android install for contractor testing." },
-  { label: "Build", value: "5", text: "Auth entry, safe areas, and premium mobile UI." },
+  { label: "Current APK", value: "0.3.5", text: "Direct Android install for contractor testing." },
+  { label: "Build", value: "6", text: "Premium auth, core screens, search actions, and mobile tool polish." },
   { label: "Core tools", value: "8", text: "Search, reports, contracts, recovery, lien service, evidence, watchlist, account." },
   { label: "Private first", value: "Yes", text: "No public exposure of private documents or raw identifiers." },
 ]
@@ -126,7 +126,7 @@ export default function MobileAppPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-300">
                 Current mobile release
               </p>
-              <p className="mt-2 text-4xl font-semibold">0.3.4</p>
+              <p className="mt-2 text-4xl font-semibold">0.3.5</p>
               <p className="mt-2 text-sm leading-6 text-slate-300">
                 Direct-test Android build with premium auth, safe-area support, secure login, and
                 contractor-first mobile workflows.
@@ -134,7 +134,7 @@ export default function MobileAppPage() {
             </div>
             <div className="grid gap-2 text-sm text-slate-300">
               <span>Package: com.clientbureau.app</span>
-              <span>Build: Android versionCode 5</span>
+              <span>Build: Android versionCode 6</span>
               <span>Format: APK for direct install, AAB for Play Console readiness</span>
             </div>
           </div>
