@@ -1,9 +1,26 @@
+import { ClipboardCheck, FileText, ShieldCheck } from "lucide-react-native"
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
+import {
+  BureauHero,
+  Card,
+  ChoiceRow,
+  EmptyState,
+  Field,
+  FormStepPanel,
+  IconActionRow,
+  LoadingState,
+  Message,
+  PrimaryButton,
+  Screen,
+  SectionHeader,
+  StatusPill,
+  TimelineItem,
+  styles,
+} from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import type { ApiResult, MobileReport } from "@/lib/types"
-import { Badge, Card, ChoiceRow, EmptyState, Field, LoadingState, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 type ReportsPayload = {
@@ -77,29 +94,44 @@ export default function ReportsScreen() {
 
   return (
     <Screen eyebrow="Reports" title="Document client experiences with moderation.">
-      <Card>
-        <Text style={styles.cardTitle}>What this does</Text>
-        <Text style={styles.body}>
-          Submit contractor experiences for admin review. Private evidence and sensitive details stay private.
-        </Text>
-        <PrimaryButton onPress={() => setShowForm(!showForm)} title={showForm ? "Close report form" : "Submit a report"} />
-      </Card>
+      <BureauHero
+        eyebrow="Moderated reports"
+        title="Create a clear record, not a complaint post."
+        body="Submit documented contractor experiences for review. Private evidence and sensitive details stay private."
+      >
+        <StatusPill label="Admin reviewed" tone="gold" />
+      </BureauHero>
+
+      <IconActionRow
+        icon={FileText}
+        title={showForm ? "Close report form" : "Submit a report"}
+        body="Use this for payment issues, positive experiences, disputes, and project context."
+        onPress={() => setShowForm(!showForm)}
+      />
       <Message tone={message?.includes("correct") ? "error" : "success"} text={message} />
+
       {showForm ? (
-        <Card>
-          <Field label="Client first name" value={form.firstName} onChangeText={(v) => setForm({ ...form, firstName: v })} />
-          <Field label="Client last name" value={form.lastName} onChangeText={(v) => setForm({ ...form, lastName: v })} />
-          <Field label="Client city" value={form.city} onChangeText={(v) => setForm({ ...form, city: v })} />
-          <ChoiceRow label="State" options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
-          <Field label="Project type" value={form.projectType} onChangeText={(v) => setForm({ ...form, projectType: v })} />
-          <Field keyboardType="numeric" label="Contract amount" value={form.contractAmount} onChangeText={(v) => setForm({ ...form, contractAmount: v })} />
-          <Field keyboardType="numeric" label="Amount unpaid" value={form.amountUnpaid} onChangeText={(v) => setForm({ ...form, amountUnpaid: v })} />
-          <ChoiceRow label="Category" options={["Non-payment", "Late payment", "Positive experience", "Would work with again"]} value={form.reportCategory} onChange={(v) => setForm({ ...form, reportCategory: v })} />
-          <Field label="Public summary" multiline value={form.reportSummary} onChangeText={(v) => setForm({ ...form, reportSummary: v })} />
-          <Field label="Detailed private experience" multiline value={form.detailedExperience} onChangeText={(v) => setForm({ ...form, detailedExperience: v })} />
-          <PrimaryButton loading={busy} onPress={submit} title="Submit for moderation" tone="gold" />
-        </Card>
+        <>
+          <FormStepPanel step="Step 1" title="Client identity" body="Use the client information you have from the real project record.">
+            <Field label="Client first name" value={form.firstName} onChangeText={(v) => setForm({ ...form, firstName: v })} />
+            <Field label="Client last name" value={form.lastName} onChangeText={(v) => setForm({ ...form, lastName: v })} />
+            <Field label="Client city" value={form.city} onChangeText={(v) => setForm({ ...form, city: v })} />
+            <ChoiceRow label="State" options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+          </FormStepPanel>
+          <FormStepPanel step="Step 2" title="Project and payment" body="Summarize the project and payment status in plain English.">
+            <Field label="Project type" value={form.projectType} onChangeText={(v) => setForm({ ...form, projectType: v })} />
+            <Field keyboardType="numeric" label="Contract amount" value={form.contractAmount} onChangeText={(v) => setForm({ ...form, contractAmount: v })} />
+            <Field keyboardType="numeric" label="Amount unpaid" value={form.amountUnpaid} onChangeText={(v) => setForm({ ...form, amountUnpaid: v })} />
+            <ChoiceRow label="Category" options={["Non-payment", "Late payment", "Positive experience", "Would work with again"]} value={form.reportCategory} onChange={(v) => setForm({ ...form, reportCategory: v })} />
+          </FormStepPanel>
+          <FormStepPanel step="Step 3" title="Summary for moderation" body="Keep public wording factual, neutral, and response-aware.">
+            <Field label="Public summary" multiline value={form.reportSummary} onChangeText={(v) => setForm({ ...form, reportSummary: v })} />
+            <Field label="Detailed private experience" multiline value={form.detailedExperience} onChangeText={(v) => setForm({ ...form, detailedExperience: v })} />
+            <PrimaryButton loading={busy} onPress={submit} title="Submit for moderation" tone="gold" />
+          </FormStepPanel>
+        </>
       ) : null}
+
       {result.ok ? (
         result.data.reports.length ? (
           <>
@@ -114,12 +146,14 @@ export default function ReportsScreen() {
                 <Card key={report.id}>
                   <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
                     <Text style={styles.cardTitle}>{report.projectType}</Text>
-                    <Badge label={report.status} tone={report.status === "approved" ? "green" : "gold"} />
+                    <StatusPill label={report.status} tone={report.status === "approved" ? "green" : "gold"} />
                   </View>
-                  <Text style={styles.body}>
-                    {report.reportCategory} / {report.paymentStatus} / {report.projectCity}, {report.projectState}
-                  </Text>
-                  <Text style={styles.helper}>{paymentLabel}</Text>
+                  <TimelineItem
+                    title={report.reportCategory}
+                    body={`${report.paymentStatus} / ${report.projectCity}, ${report.projectState}`}
+                    meta={paymentLabel}
+                    tone={report.status === "approved" ? "green" : "gold"}
+                  />
                 </Card>
               )
             })}
@@ -133,6 +167,9 @@ export default function ReportsScreen() {
       ) : (
         <Message tone="error" text={result.message} />
       )}
+
+      <IconActionRow icon={ShieldCheck} title="Moderation guardrail" body="Public records use admin-approved summaries and private evidence indicators." />
+      <IconActionRow icon={ClipboardCheck} title="Positive reports are supported" body="Good clients can be documented too." />
     </Screen>
   )
 }

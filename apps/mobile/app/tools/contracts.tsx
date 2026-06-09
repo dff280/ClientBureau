@@ -1,7 +1,24 @@
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
+import { FileSignature, Link2, ShieldCheck } from "lucide-react-native"
 
-import { Card, ChoiceRow, EmptyState, Field, LoadingState, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
+import {
+  BureauHero,
+  Card,
+  ChoiceRow,
+  EmptyState,
+  Field,
+  FormStepPanel,
+  IconActionRow,
+  LoadingState,
+  Message,
+  PrimaryButton,
+  Screen,
+  SectionHeader,
+  StatusPill,
+  TimelineItem,
+  styles,
+} from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import type { ApiResult, MobileContractPacket } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
@@ -60,21 +77,34 @@ export default function ContractsScreen() {
   if (!result) return <LoadingState label="Loading contracts..." />
 
   return (
-    <Screen eyebrow="Contracts" title="Create agreement packets clients can sign.">
+    <Screen eyebrow="Contracts" title="Agreement packets">
+      <BureauHero
+        eyebrow="Private contract workspace"
+        title="Create a signing packet before the job starts."
+        body="Document scope, payment terms, deposits, and change-order expectations in a private record your client can sign."
+      >
+        <StatusPill label="Private by default" tone="gold" />
+      </BureauHero>
+      <IconActionRow
+        icon={FileSignature}
+        title={showForm ? "Close agreement builder" : "Create agreement packet"}
+        body="Use this before scheduling work, ordering materials, or approving a change order."
+        badge="E-sign ready"
+        onPress={() => setShowForm(!showForm)}
+      />
       <Card>
-        <Text style={styles.cardTitle}>Private contract workspace</Text>
+        <Text style={styles.cardTitle}>What stays private</Text>
         <Text style={styles.body}>
-          Use this before scheduling work, buying materials, or accepting a change order.
-          Contract content stays private and is not shown on public profiles.
+          Contract terms, client details, signing links, and payment terms stay off public Client Bureau profiles.
         </Text>
-        <PrimaryButton
-          title={showForm ? "Close packet form" : "Create agreement packet"}
-          onPress={() => setShowForm(!showForm)}
-        />
       </Card>
       {showForm ? (
-        <Card>
-          <Text style={styles.cardTitle}>Create packet</Text>
+        <>
+        <FormStepPanel
+          step="Step 1"
+          title="Client and packet type"
+          body="Start with the client, project, and agreement template."
+        >
           <Field label="Client name" value={form.clientName} onChangeText={(v) => setForm({ ...form, clientName: v })} />
           <Field label="Project type" value={form.projectType} onChangeText={(v) => setForm({ ...form, projectType: v })} />
           <ChoiceRow
@@ -83,14 +113,30 @@ export default function ContractsScreen() {
             value={form.templateType}
             onChange={(v) => setForm({ ...form, templateType: v })}
           />
+        </FormStepPanel>
+        <FormStepPanel
+          step="Step 2"
+          title="Agreement value and payment terms"
+          body="Record deposit, milestone, and payment expectations clearly."
+        >
           <Field keyboardType="numeric" label="Agreement value" value={form.packetValue} onChangeText={(v) => setForm({ ...form, packetValue: v })} />
           <Field keyboardType="numeric" label="Deposit required" value={form.depositRequired} onChangeText={(v) => setForm({ ...form, depositRequired: v })} />
+          <Field keyboardType="numeric" label="Milestone count" value={form.milestoneCount} onChangeText={(v) => setForm({ ...form, milestoneCount: v })} />
+          <Field label="Payment terms" multiline value={form.paymentTerms} onChangeText={(v) => setForm({ ...form, paymentTerms: v })} />
+        </FormStepPanel>
+        <FormStepPanel
+          step="Step 3"
+          title="Scope and change-order rules"
+          body="Keep the packet useful by separating included work from later changes."
+        >
           <Field label="Scope summary" multiline value={form.scopeSummary} onChangeText={(v) => setForm({ ...form, scopeSummary: v })} />
           <Field label="Included work" multiline value={form.includedWork} onChangeText={(v) => setForm({ ...form, includedWork: v })} />
-          <Field label="Payment terms" multiline value={form.paymentTerms} onChangeText={(v) => setForm({ ...form, paymentTerms: v })} />
+          <Field label="Change-order policy" multiline value={form.changeOrderPolicy} onChangeText={(v) => setForm({ ...form, changeOrderPolicy: v })} />
+          <Field label="Cancellation policy" multiline value={form.cancellationPolicy} onChangeText={(v) => setForm({ ...form, cancellationPolicy: v })} />
           <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
           <PrimaryButton loading={busy} title="Create agreement packet" onPress={submit} />
-        </Card>
+        </FormStepPanel>
+        </>
       ) : (
         <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
       )}
@@ -100,12 +146,23 @@ export default function ContractsScreen() {
       {result.ok
         ? result.data.contractPackets.length ? result.data.contractPackets.map((packet) => (
             <Card key={packet.id}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+              <View style={styles.rowBetween}>
                 <Text style={styles.cardTitle}>{packet.clientName}</Text>
-                <Text style={styles.helper}>{packet.status}</Text>
+                <StatusPill label={packet.status.replaceAll("_", " ")} tone="blue" />
               </View>
               <Text style={styles.body}>{packet.projectType} / ${packet.packetValue.toLocaleString()}</Text>
-              <Text style={styles.helper}>{packet.nextAction}</Text>
+              <TimelineItem
+                title="Next action"
+                body={packet.nextAction}
+                meta="Private agreement packet"
+                tone={packet.status === "signed" ? "green" : "gold"}
+              />
+              <IconActionRow
+                icon={packet.status === "signed" ? ShieldCheck : Link2}
+                title={packet.status === "signed" ? "Signed packet on file" : "Review signing link status"}
+                body="Open the web dashboard to copy links, review signatures, or archive packets."
+                badge={packet.status === "signed" ? "Signed" : "Track"}
+              />
             </Card>
           )) : (
             <EmptyState title="No agreement packets yet" body="Create a private contract packet before scheduling a new job or change order." />

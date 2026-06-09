@@ -1,8 +1,9 @@
 import { Link, Redirect } from "expo-router"
+import { LogIn, ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text } from "react-native"
 
-import { Card, ChoiceRow, Field, LoadingState, Message, PrimaryButton, Screen, styles } from "@/components/ui"
+import { BureauHero, Card, ChoiceRow, Field, FormStepPanel, IconActionRow, LoadingState, Message, PrimaryButton, Screen, StatusPill, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 const states = ["FL", "GA", "AL", "SC", "NC", "TX"]
@@ -49,15 +50,23 @@ export default function SignupScreen() {
 
   return (
     <Screen eyebrow="Create account" title="Build your contractor protection workspace.">
-      <Card>
-        <Text style={styles.cardTitle}>Business owner profile</Text>
-        <Text style={styles.body}>
-          This information helps Client Bureau keep records clean and route your reports,
-          contracts, and service cases correctly.
-        </Text>
+      <BureauHero
+        eyebrow="Business owner setup"
+        title="Create a cleaner record from day one."
+        body="A complete business profile keeps searches, reports, contracts, and service cases easier to match."
+      >
+        <StatusPill label="Private profile" tone="gold" />
+      </BureauHero>
+      <FormStepPanel
+        step="Step 1"
+        title="Business owner profile"
+        body="Use accurate business details so Client Bureau can keep records clean."
+      >
         <Field label="Full name" onChangeText={setFullName} value={fullName} />
         <Field keyboardType="email-address" label="Email" onChangeText={setEmail} value={email} />
         <Field label="Password" onChangeText={setPassword} secureTextEntry value={password} />
+      </FormStepPanel>
+      <FormStepPanel step="Step 2" title="Business details" body="Tell us what kind of work you do and where you operate.">
         <Field label="Business name" onChangeText={setBusinessName} value={businessName} />
         <Field label="Trade or service" onChangeText={setTrade} placeholder="Roofing, remodeling, HVAC..." value={trade} />
         <Field label="City" onChangeText={setCity} value={city} />
@@ -65,9 +74,16 @@ export default function SignupScreen() {
         <Message tone="success" text={message} />
         <Message tone="error" text={error} />
         <PrimaryButton loading={busy} onPress={submit} title="Create account" />
+      </FormStepPanel>
+      <Card>
+        <StatusPill label="Moderated platform" tone="dark" />
+        <Text style={styles.body}>
+          Client Bureau uses moderated reports, private evidence summaries, and response-aware records.
+        </Text>
+        <IconActionRow icon={ShieldCheck} title="Built for documented contractor experiences" />
       </Card>
-      <Link href="/login" style={{ color: "#07111f", fontWeight: "800", textAlign: "center" }}>
-        Already have an account? Sign in
+      <Link href="/login" asChild>
+        <IconActionRow icon={LogIn} title="Already have an account?" body="Sign in to your mobile workspace." />
       </Link>
     </Screen>
   )

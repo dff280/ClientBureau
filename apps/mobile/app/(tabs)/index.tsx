@@ -1,8 +1,22 @@
 import { router } from "expo-router"
+import { ClipboardCheck, FileSignature, Search, Siren, TrendingUp } from "lucide-react-native"
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
-import { ActionRow, Badge, Card, EmptyState, LoadingState, Screen, SectionHeader, StatCard, styles } from "@/components/ui"
+import {
+  Badge,
+  BureauHero,
+  Card,
+  EmptyState,
+  IconActionRow,
+  LoadingState,
+  MetricTile,
+  Screen,
+  SectionHeader,
+  StatusPill,
+  TimelineItem,
+  styles,
+} from "@/components/ui"
 import { mobileFetch } from "@/lib/api"
 import type { ApiResult, DashboardPayload } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
@@ -31,8 +45,12 @@ export default function HomeScreen() {
 
   return (
     <Screen eyebrow="Contractor command center" title={`Welcome${user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}.`}>
-      <Card style={{ backgroundColor: "#07111f" }}>
-        <Badge label={dashboard.subscription?.tier ?? "Free plan"} tone="gold" />
+      <BureauHero
+        eyebrow="Mobile command center"
+        title="Check, document, and protect the job."
+        body="Use Client Bureau before you commit labor, materials, scheduling, or payment follow-up."
+      >
+        <StatusPill label={dashboard.subscription?.tier ?? "Free plan"} tone="gold" />
         <Text style={[styles.cardTitle, { color: "#ffffff", fontSize: 22 }]}>
           {dashboard.contractor.businessName}
         </Text>
@@ -40,13 +58,13 @@ export default function HomeScreen() {
           {dashboard.contractor.trade} / {dashboard.contractor.city}, {dashboard.contractor.state}
         </Text>
         <Badge label={`Verification: ${dashboard.contractor.verificationStatus}`} tone="green" />
-      </Card>
+      </BureauHero>
 
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-        <StatCard label="Reports" value={dashboard.stats.reportsSubmitted} />
-        <StatCard label="Saved searches" value={dashboard.stats.savedSearches} />
-        <StatCard label="Watched clients" value={counts?.watchlist ?? 0} />
-        <StatCard label="Open recovery" value={counts?.managedRecoveryCases ?? 0} />
+        <MetricTile label="Reports" value={dashboard.stats.reportsSubmitted} />
+        <MetricTile label="Saved searches" value={dashboard.stats.savedSearches} />
+        <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} />
+        <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} tone="gold" />
       </View>
 
       <Card>
@@ -55,7 +73,8 @@ export default function HomeScreen() {
           Search a client before accepting work, check any alerts, and keep reports,
           contracts, recovery cases, and lien service packets organized in one place.
         </Text>
-        <ActionRow
+        <IconActionRow
+          icon={Search}
           title="Check a Client"
           body="Search public profiles, private matches, and saved signals."
           onPress={() => router.push("/search")}
@@ -66,17 +85,20 @@ export default function HomeScreen() {
         title="Next best actions"
         body="Start with the tool that protects the job you are about to take or the payment issue you are already handling."
       />
-      <ActionRow
+      <IconActionRow
+        icon={FileSignature}
         title="Create a contract packet"
         body="Prepare a private agreement clients can review and sign."
         onPress={() => router.push("/tools/contracts")}
       />
-      <ActionRow
+      <IconActionRow
+        icon={TrendingUp}
         title="Open payment recovery case"
         body="Request managed help documenting and resolving unpaid invoices."
         onPress={() => router.push("/tools/recovery")}
       />
-      <ActionRow
+      <IconActionRow
+        icon={Siren}
         title="Start Florida lien service"
         body="Begin a private Florida notice or filing review workflow."
         onPress={() => router.push("/tools/lien-service")}
@@ -86,12 +108,13 @@ export default function HomeScreen() {
         <Card>
           <Text style={styles.cardTitle}>Recent report status</Text>
           {dashboard.reports.slice(0, 3).map((report) => (
-            <View key={report.id} style={{ gap: 4 }}>
-              <Text style={{ color: "#07111f", fontWeight: "800" }}>{report.projectType}</Text>
-              <Text style={styles.helper}>
-                {report.reportCategory} / {report.status} / {report.projectCity}, {report.projectState}
-              </Text>
-            </View>
+            <TimelineItem
+              key={report.id}
+              title={report.projectType}
+              body={`${report.reportCategory} / ${report.status}`}
+              meta={`${report.projectCity}, ${report.projectState}`}
+              tone={report.status === "approved" ? "green" : "gold"}
+            />
           ))}
         </Card>
       ) : (
@@ -100,6 +123,13 @@ export default function HomeScreen() {
           body="When a client experience needs documentation, start a report and attach evidence privately."
         />
       )}
+
+      <IconActionRow
+        icon={ClipboardCheck}
+        title="Open full tool list"
+        body="Contracts, recovery, lien service, evidence, and watchlist."
+        onPress={() => router.push("/tools")}
+      />
     </Screen>
   )
 }

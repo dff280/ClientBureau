@@ -1,8 +1,9 @@
 import { Link, Redirect } from "expo-router"
+import { ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text } from "react-native"
 
-import { Card, Field, LoadingState, Message, PrimaryButton, Screen, styles } from "@/components/ui"
+import { BureauHero, Card, Field, IconActionRow, LoadingState, Message, PrimaryButton, Screen, StatusPill, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 export default function LoginScreen() {
@@ -37,9 +38,16 @@ export default function LoginScreen() {
       {!configured ? (
         <Message
           tone="error"
-          text="Mobile Supabase settings are missing. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY."
+          text="Mobile sign-in is temporarily unavailable. Please use the web dashboard while support checks the app connection."
         />
       ) : null}
+      <BureauHero
+        eyebrow="Contractor protection"
+        title="Know who you are working with before the job starts."
+        body="Search client records, manage reports, organize contracts, and track payment protection tools from your phone."
+      >
+        <StatusPill label="Private matching" tone="gold" />
+      </BureauHero>
       <Card>
         <Text style={styles.cardTitle}>Sign in</Text>
         <Text style={styles.body}>
@@ -64,8 +72,12 @@ export default function LoginScreen() {
         <Message tone="error" text={error} />
         <PrimaryButton loading={busy} onPress={configured ? submit : undefined} title="Sign in" />
       </Card>
-      <Link href="/signup" style={{ color: "#07111f", fontWeight: "800", textAlign: "center" }}>
-        Create a contractor account
+      <Link href="/signup" asChild>
+        <IconActionRow
+          icon={ShieldCheck}
+          title="Create a contractor account"
+          body="Set up your mobile workspace and start checking clients."
+        />
       </Link>
     </Screen>
   )

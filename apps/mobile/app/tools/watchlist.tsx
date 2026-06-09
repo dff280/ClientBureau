@@ -1,7 +1,23 @@
 import { useEffect, useState } from "react"
-import { Text } from "react-native"
+import { Text, View } from "react-native"
+import { Bell, Search, ShieldCheck } from "lucide-react-native"
 
-import { Card, EmptyState, Field, LoadingState, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
+import {
+  BureauHero,
+  Card,
+  EmptyState,
+  Field,
+  FormStepPanel,
+  IconActionRow,
+  LoadingState,
+  Message,
+  PrimaryButton,
+  Screen,
+  SectionHeader,
+  StatusPill,
+  TimelineItem,
+  styles,
+} from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import type { ApiResult } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
@@ -48,24 +64,31 @@ export default function WatchlistScreen() {
   if (!result) return <LoadingState label="Loading watchlist..." />
 
   return (
-    <Screen eyebrow="Watchlist" title="Monitor clients and private signals.">
-      <Card>
-        <Text style={styles.cardTitle}>Private monitoring</Text>
-        <Text style={styles.body}>
-          Search first, then add a public profile ID to watch for new moderated signals.
-        </Text>
-        <PrimaryButton
-          title={showForm ? "Close watch form" : "Watch a client"}
-          onPress={() => setShowForm(!showForm)}
-        />
-      </Card>
+    <Screen eyebrow="Watchlist" title="Client monitoring">
+      <BureauHero
+        eyebrow="Search alerts"
+        title="Watch clients you may work with again."
+        body="Save a profile after searching and monitor for new approved reports, response activity, or private-match signals."
+      >
+        <StatusPill label={`${result.ok ? result.data.alerts : 0} active alerts`} tone="gold" />
+      </BureauHero>
+      <IconActionRow
+        icon={Bell}
+        title={showForm ? "Close watch form" : "Watch a client"}
+        body="Add a public Client Bureau profile ID after search, then track new moderated signals."
+        badge="Monitor"
+        onPress={() => setShowForm(!showForm)}
+      />
       {showForm ? (
-        <Card>
-          <Text style={styles.cardTitle}>Add by Client Bureau profile ID</Text>
+        <FormStepPanel
+          step="Step 1"
+          title="Add by Client Bureau profile ID"
+          body="This creates a private watch record for your account only."
+        >
           <Field label="Client profile ID" value={clientId} onChangeText={setClientId} />
           <Field multiline label="Watch reason" value={watchReason} onChangeText={setWatchReason} />
           <PrimaryButton title="Watch this client" onPress={submit} />
-        </Card>
+        </FormStepPanel>
       ) : null}
       <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
       {result.ok
@@ -74,14 +97,31 @@ export default function WatchlistScreen() {
             <SectionHeader title="Watched clients" body={`${result.data.alerts} alert(s) currently need attention.`} />
             {result.data.watchlist.map((item) => (
               <Card key={item.id}>
-                <Text style={styles.cardTitle}>{item.clientId}</Text>
+                <View style={styles.rowBetween}>
+                  <Text style={styles.cardTitle}>{item.clientId}</Text>
+                  <StatusPill label={item.alertLevel} tone={item.alertLevel === "high" ? "red" : "blue"} />
+                </View>
                 <Text style={styles.body}>{item.watchReason}</Text>
-                <Text style={styles.helper}>{item.status} / {item.lastSignal}</Text>
+                <TimelineItem
+                  title="Latest signal"
+                  body={item.lastSignal}
+                  meta={item.privateMatch ? "Private identifier match available" : "Public profile monitoring"}
+                  tone={item.privateMatch ? "gold" : "blue"}
+                />
+                <IconActionRow
+                  icon={item.privateMatch ? ShieldCheck : Search}
+                  title={item.privateMatch ? "Private match noted" : "Review public profile"}
+                  body="Open search or the web dashboard for deeper context before accepting work."
+                  badge={item.status}
+                />
               </Card>
             ))}
           </>
         ) : (
-          <EmptyState title="No watched clients yet" body="Save a client after searching so you can monitor new moderated signals." />
+          <EmptyState
+            title="No watched clients yet"
+            body="Search a client first, then save profiles that matter to your pipeline."
+          />
         )
         : <Message text={result.message} tone="error" />}
     </Screen>

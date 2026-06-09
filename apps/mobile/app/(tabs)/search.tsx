@@ -1,11 +1,25 @@
 import * as WebBrowser from "expo-web-browser"
+import { Eye, Save, Search, ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text, View } from "react-native"
 
+import {
+  BureauHero,
+  Card,
+  ChoiceRow,
+  Field,
+  IconActionRow,
+  Message,
+  PrimaryButton,
+  Screen,
+  SectionHeader,
+  StatusPill,
+  TrustScoreCard,
+  styles,
+} from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import { siteUrl } from "@/lib/config"
 import type { ApiResult, MobileSearchResult } from "@/lib/types"
-import { ActionRow, Badge, Card, ChoiceRow, Field, Message, PrimaryButton, Screen, SectionHeader, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 type SearchPayload = {
@@ -46,6 +60,14 @@ export default function SearchScreen() {
 
   return (
     <Screen eyebrow="Client search" title="Check a client before you take the job.">
+      <BureauHero
+        eyebrow="Search before you sign"
+        title="Look up the client, then decide the next move."
+        body="Search names, businesses, cities, and private identifiers without exposing sensitive matching details publicly."
+      >
+        <StatusPill label="Private matching" tone="gold" />
+      </BureauHero>
+
       <Card>
         <Field
           label="Client name, business, phone, email, or city"
@@ -54,17 +76,14 @@ export default function SearchScreen() {
           value={query}
         />
         <ChoiceRow label="State" onChange={setState} options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={state} />
-        <PrimaryButton loading={busy} onPress={runSearch} title="Search a Client" />
+        <PrimaryButton loading={busy} onPress={runSearch} title="Search a Client" tone="gold" />
       </Card>
 
       <Message text={message} tone="success" />
 
       {result?.ok ? (
         <>
-          <Card>
-            <Text style={styles.cardTitle}>Private matching</Text>
-            <Text style={styles.body}>{result.data.privacyNote}</Text>
-          </Card>
+          <IconActionRow icon={ShieldCheck} title="Private matching" body={result.data.privacyNote} />
           {result.data.results.length ? (
             <SectionHeader
               title="Search results"
@@ -80,14 +99,18 @@ export default function SearchScreen() {
                     {item.city}, {item.state} / {item.reportCount} approved signal(s)
                   </Text>
                 </View>
-                <Badge label={`${item.score}`} tone="gold" />
+                <StatusPill label={item.riskLevel} tone={item.riskLevel === "Low" ? "green" : item.riskLevel === "High" ? "red" : "gold"} />
               </View>
+              <TrustScoreCard
+                score={item.score}
+                label="Client Bureau signal"
+                body={item.latestSummary ?? item.paymentContextLabel}
+              />
               <Text style={styles.helper}>{item.matchedBy}</Text>
-              <Text style={styles.body}>{item.latestSummary ?? item.paymentContextLabel}</Text>
-              <ActionRow
+              <IconActionRow
+                icon={Eye}
                 title="Open public profile"
                 body="View approved report context and response status."
-                badge={item.riskLevel}
                 onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/client/${item.publicSlug}`)}
               />
             </Card>
@@ -101,7 +124,8 @@ export default function SearchScreen() {
               <PrimaryButton onPress={() => saveSearch(0)} title="Save this search" tone="gold" />
             </Card>
           ) : (
-            <ActionRow
+            <IconActionRow
+              icon={Save}
               title="Save this search"
               body="Keep this client lookup in your account for later follow-up."
               onPress={() => saveSearch(result.data.results.length)}
@@ -110,7 +134,13 @@ export default function SearchScreen() {
         </>
       ) : result && !result.ok ? (
         <Message text={result.message} tone="error" />
-      ) : null}
+      ) : (
+        <IconActionRow
+          icon={Search}
+          title="Start with a name or business"
+          body="Try a client name, business name, city, phone, or email."
+        />
+      )}
     </Screen>
   )
 }
