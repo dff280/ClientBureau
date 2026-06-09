@@ -3,7 +3,7 @@ import { ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text } from "react-native"
 
-import { BureauHero, Card, Field, IconActionRow, LoadingState, Message, PrimaryButton, Screen, StatusPill, styles } from "@/components/ui"
+import { BureauHero, Card, Field, IconActionRow, InsightCard, LoadingState, Message, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 export default function LoginScreen() {
@@ -47,7 +47,15 @@ export default function LoginScreen() {
         body="Search client records, manage reports, organize contracts, and track payment protection tools from your phone."
       >
         <StatusPill label="Private matching" tone="gold" />
+        <TrustBadge label="Secure mobile session" tone="green" />
       </BureauHero>
+      <InsightCard
+        icon={ShieldCheck}
+        label="Trust platform"
+        title="Built for business owners who need clean records."
+        body="The app focuses on search, documentation, contracts, recovery, lien service, evidence, and account status."
+        tone="gold"
+      />
       <Card>
         <Text style={styles.cardTitle}>Sign in</Text>
         <Text style={styles.body}>

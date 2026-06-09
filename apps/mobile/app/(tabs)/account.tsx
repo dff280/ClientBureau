@@ -3,14 +3,14 @@ import * as WebBrowser from "expo-web-browser"
 import { Globe, LifeBuoy, LogOut, ShieldCheck } from "lucide-react-native"
 import { Text } from "react-native"
 
-import { BureauHero, Card, IconActionRow, PrimaryButton, Screen, StatusPill, styles } from "@/components/ui"
+import { BureauHero, Card, IconActionRow, InsightCard, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
 import { siteUrl } from "@/lib/config"
 import { useAuth } from "@/providers/auth-provider"
 
 export default function AccountScreen() {
   const { user, signOut } = useAuth()
-  const version = Constants.expoConfig?.version ?? "0.3.2"
-  const build = Constants.expoConfig?.android?.versionCode ?? 3
+  const version = Constants.expoConfig?.version ?? "0.3.3"
+  const build = Constants.expoConfig?.android?.versionCode ?? 4
 
   return (
     <Screen eyebrow="Account" title="Client Bureau account">
@@ -20,13 +20,17 @@ export default function AccountScreen() {
         body="Manage your mobile session, support options, and full web dashboard access."
       >
         <StatusPill label={user?.role ?? "contractor"} tone="gold" />
+        <TrustBadge label="Authenticated" tone="green" />
       </BureauHero>
 
-      <Card>
-        <Text style={styles.cardTitle}>Account details</Text>
-        <Text style={styles.body}>{user?.email}</Text>
-        <Text style={styles.helper}>Version {version} / Android build {build}</Text>
-      </Card>
+      <InsightCard
+        icon={ShieldCheck}
+        label="Mobile release"
+        title={`Version ${version}`}
+        metric={`Build ${build}`}
+        body={user?.email ?? "Signed-in Client Bureau account"}
+        tone="gold"
+      />
 
       <IconActionRow
         icon={Globe}

@@ -6,15 +6,16 @@ import {
   BureauHero,
   Card,
   ChoiceRow,
-  EmptyState,
   Field,
   FormStepPanel,
   IconActionRow,
   LoadingState,
   Message,
+  PremiumEmptyState,
   PrimaryButton,
   Screen,
   SectionHeader,
+  SegmentedTabs,
   StatusPill,
   TimelineItem,
   styles,
@@ -28,10 +29,13 @@ type ReportsPayload = {
   drafts: Array<{ id: string; clientName: string; projectType: string; status: string; nextStep: string }>
 }
 
+const statusOptions = ["All", "Pending", "Approved", "Disputed", "Rejected"]
+
 export default function ReportsScreen() {
   const { accessToken } = useAuth()
   const [result, setResult] = useState<ApiResult<ReportsPayload>>()
   const [showForm, setShowForm] = useState(false)
+  const [statusFilter, setStatusFilter] = useState("All")
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string>()
   const [form, setForm] = useState({
@@ -92,6 +96,10 @@ export default function ReportsScreen() {
 
   if (!result) return <LoadingState label="Loading reports..." />
 
+  const visibleReports = result.ok
+    ? result.data.reports.filter((report) => statusFilter === "All" || report.status.toLowerCase() === statusFilter.toLowerCase())
+    : []
+
   return (
     <Screen eyebrow="Reports" title="Document client experiences with moderation.">
       <BureauHero
@@ -136,7 +144,8 @@ export default function ReportsScreen() {
         result.data.reports.length ? (
           <>
             <SectionHeader title="Report status" body="Track what is pending, approved, disputed, rejected, or published." />
-            {result.data.reports.map((report) => {
+            <SegmentedTabs options={statusOptions} value={statusFilter} onChange={setStatusFilter} />
+            {visibleReports.map((report) => {
               const paymentLabel =
                 report.amountUnpaid > 0
                   ? `Reported unpaid: $${report.amountUnpaid.toLocaleString()}`
@@ -144,7 +153,7 @@ export default function ReportsScreen() {
 
               return (
                 <Card key={report.id}>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+                  <View style={styles.rowBetween}>
                     <Text style={styles.cardTitle}>{report.projectType}</Text>
                     <StatusPill label={report.status} tone={report.status === "approved" ? "green" : "gold"} />
                   </View>
@@ -157,11 +166,21 @@ export default function ReportsScreen() {
                 </Card>
               )
             })}
+            {!visibleReports.length ? (
+              <PremiumEmptyState
+                title={`No ${statusFilter.toLowerCase()} reports`}
+                body="Switch filters or submit a new documented client experience when the project record is ready."
+                actionTitle="Submit report"
+                onAction={() => setShowForm(true)}
+              />
+            ) : null}
           </>
         ) : (
-          <EmptyState
+          <PremiumEmptyState
             title="No reports yet"
             body="Submit your first documented client experience when you have a real project record to preserve."
+            actionTitle="Start report"
+            onAction={() => setShowForm(true)}
           />
         )
       ) : (

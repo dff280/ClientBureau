@@ -6,17 +6,18 @@ import {
   BureauHero,
   Card,
   ChoiceRow,
-  EmptyState,
   Field,
   FormStepPanel,
   IconActionRow,
   LoadingState,
   Message,
+  PremiumEmptyState,
   PrimaryButton,
   Screen,
   SectionHeader,
   StatusPill,
   TimelineItem,
+  TrustBadge,
   styles,
 } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
@@ -88,6 +89,7 @@ export default function RecoveryScreen() {
         body="Submit the facts, upload supporting documents on the web dashboard, and track staff-reviewed follow-up toward a contractor-direct resolution."
       >
         <StatusPill label="Private case record" tone="gold" />
+        <TrustBadge label="Resolution desk" tone="green" />
       </BureauHero>
       <IconActionRow
         icon={MessageCircle}
@@ -163,7 +165,12 @@ export default function RecoveryScreen() {
             ))}
           </>
         ) : (
-          <EmptyState title="No recovery cases yet" body="Open a case when an invoice needs documented follow-up." />
+          <PremiumEmptyState
+            title="No recovery cases yet"
+            body="Open a case when an invoice needs documented follow-up."
+            actionTitle="Open case"
+            onAction={() => setShowForm(true)}
+          />
         )
         : <Message text={result.message} tone="error" />}
     </Screen>

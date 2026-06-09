@@ -3,7 +3,7 @@ import { LogIn, ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text } from "react-native"
 
-import { BureauHero, Card, ChoiceRow, Field, FormStepPanel, IconActionRow, LoadingState, Message, PrimaryButton, Screen, StatusPill, styles } from "@/components/ui"
+import { BureauHero, Card, ChoiceRow, Field, FormStepPanel, IconActionRow, InsightCard, LoadingState, Message, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 const states = ["FL", "GA", "AL", "SC", "NC", "TX"]
@@ -56,7 +56,15 @@ export default function SignupScreen() {
         body="A complete business profile keeps searches, reports, contracts, and service cases easier to match."
       >
         <StatusPill label="Private profile" tone="gold" />
+        <TrustBadge label="Clean data setup" tone="green" />
       </BureauHero>
+      <InsightCard
+        icon={ShieldCheck}
+        label="Why this matters"
+        title="Cleaner onboarding means cleaner client records."
+        body="Accurate business, trade, city, and state details reduce mismatches and help future reports stay organized."
+        tone="gold"
+      />
       <FormStepPanel
         step="Step 1"
         title="Business owner profile"

@@ -9,6 +9,9 @@ export const colors = {
   lineDark: "rgba(255,255,255,0.14)",
   panel: "#ffffff",
   paper: "#fbfcff",
+  surface: "#f8fafc",
+  elevated: "#ffffff",
+  ivory: "#fffaf0",
   bg: "#f4f7fb",
   gold: "#b89135",
   gold2: "#d6ad48",
@@ -22,6 +25,7 @@ export const colors = {
   blueSoft: "#dbeafe",
   slate: "#344054",
   white: "#ffffff",
+  black: "#020617",
 }
 
 export const spacing = {
@@ -47,6 +51,8 @@ export const typography = {
   section: 21,
   title: 31,
   hero: 34,
+  display: 38,
+  small: 12,
 }
 
 export const shadows = {
@@ -64,4 +70,17 @@ export const shadows = {
     shadowOffset: { width: 0, height: 16 },
     elevation: 4,
   },
+  floating: {
+    shadowColor: "#020617",
+    shadowOpacity: 0.14,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 14 },
+    elevation: 5,
+  },
 }
+
+export const gradients = {
+  hero: [colors.navy, colors.navy2, colors.navy3],
+  gold: [colors.gold2, colors.gold],
+  paper: [colors.white, colors.paper],
+} as const

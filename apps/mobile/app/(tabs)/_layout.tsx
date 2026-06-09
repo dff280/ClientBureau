@@ -1,4 +1,5 @@
 import { Redirect, Tabs } from "expo-router"
+import * as Haptics from "expo-haptics"
 import { BriefcaseBusiness, FileText, Home, Search, UserCircle, type LucideIcon } from "lucide-react-native"
 import type { ColorValue } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
@@ -20,21 +21,34 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      screenListeners={{
+        tabPress: () => {
+          Haptics.selectionAsync().catch(() => undefined)
+        },
+      }}
       screenOptions={{
         headerShown: false,
         tabBarActiveTintColor: "#b89135",
         tabBarInactiveTintColor: "#667085",
+        tabBarHideOnKeyboard: true,
         tabBarStyle: {
           backgroundColor: "#ffffff",
           borderTopColor: "#d7deea",
-          height: 58 + bottomInset,
-          minHeight: 58 + bottomInset,
+          borderTopWidth: 1,
+          height: 64 + bottomInset,
+          minHeight: 64 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 8,
+          paddingTop: 10,
+          shadowColor: "#020617",
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: -8 },
+          elevation: 8,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "800",
+          fontSize: 10.5,
+          fontWeight: "900",
+          letterSpacing: 0.1,
         },
         }}
       >

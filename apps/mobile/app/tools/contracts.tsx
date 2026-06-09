@@ -6,17 +6,18 @@ import {
   BureauHero,
   Card,
   ChoiceRow,
-  EmptyState,
   Field,
   FormStepPanel,
   IconActionRow,
   LoadingState,
   Message,
+  PremiumEmptyState,
   PrimaryButton,
   Screen,
   SectionHeader,
   StatusPill,
   TimelineItem,
+  TrustBadge,
   styles,
 } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
@@ -84,6 +85,7 @@ export default function ContractsScreen() {
         body="Document scope, payment terms, deposits, and change-order expectations in a private record your client can sign."
       >
         <StatusPill label="Private by default" tone="gold" />
+        <TrustBadge label="E-sign workflow" tone="green" />
       </BureauHero>
       <IconActionRow
         icon={FileSignature}
@@ -165,7 +167,12 @@ export default function ContractsScreen() {
               />
             </Card>
           )) : (
-            <EmptyState title="No agreement packets yet" body="Create a private contract packet before scheduling a new job or change order." />
+            <PremiumEmptyState
+              title="No agreement packets yet"
+              body="Create a private contract packet before scheduling a new job or change order."
+              actionTitle="Create packet"
+              onAction={() => setShowForm(true)}
+            />
           )
         : <Message text={result.message} tone="error" />}
     </Screen>

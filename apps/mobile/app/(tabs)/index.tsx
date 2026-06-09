@@ -4,17 +4,19 @@ import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
 import {
-  Badge,
+  ActionDock,
   BureauHero,
   Card,
-  EmptyState,
   IconActionRow,
+  InsightCard,
   LoadingState,
   MetricTile,
+  PremiumEmptyState,
   Screen,
   SectionHeader,
+  StatusTimeline,
   StatusPill,
-  TimelineItem,
+  TrustBadge,
   styles,
 } from "@/components/ui"
 import { mobileFetch } from "@/lib/api"
@@ -35,7 +37,7 @@ export default function HomeScreen() {
   if (!result.ok) {
     return (
       <Screen eyebrow="Dashboard" title="Workspace needs attention">
-        <EmptyState title="Could not load dashboard" body={result.message} />
+        <PremiumEmptyState title="Could not load dashboard" body={result.message} />
       </Screen>
     )
   }
@@ -57,29 +59,37 @@ export default function HomeScreen() {
         <Text style={[styles.body, { color: "#cbd5e1" }]}>
           {dashboard.contractor.trade} / {dashboard.contractor.city}, {dashboard.contractor.state}
         </Text>
-        <Badge label={`Verification: ${dashboard.contractor.verificationStatus}`} tone="green" />
+        <TrustBadge label={`Verification: ${dashboard.contractor.verificationStatus}`} tone="green" />
       </BureauHero>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
+      <View style={styles.metricGrid}>
         <MetricTile label="Reports" value={dashboard.stats.reportsSubmitted} />
         <MetricTile label="Saved searches" value={dashboard.stats.savedSearches} />
         <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} />
         <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} tone="gold" />
       </View>
 
-      <Card>
+      <ActionDock>
         <Text style={styles.cardTitle}>Today's work</Text>
         <Text style={styles.body}>
-          Search a client before accepting work, check any alerts, and keep reports,
-          contracts, recovery cases, and lien service packets organized in one place.
+          Start with the client search, then document the job only when the facts are ready.
         </Text>
         <IconActionRow
           icon={Search}
           title="Check a Client"
           body="Search public profiles, private matches, and saved signals."
+          badge="Start here"
           onPress={() => router.push("/search")}
         />
-      </Card>
+      </ActionDock>
+
+      <InsightCard
+        icon={ClipboardCheck}
+        label="Protection posture"
+        title="Search before the job. Document during the job. Protect payment after."
+        body="Client Bureau keeps the mobile workflow focused on the actions contractors take every day."
+        tone="gold"
+      />
 
       <SectionHeader
         title="Next best actions"
@@ -107,20 +117,21 @@ export default function HomeScreen() {
       {dashboard.reports.length ? (
         <Card>
           <Text style={styles.cardTitle}>Recent report status</Text>
-          {dashboard.reports.slice(0, 3).map((report) => (
-            <TimelineItem
-              key={report.id}
-              title={report.projectType}
-              body={`${report.reportCategory} / ${report.status}`}
-              meta={`${report.projectCity}, ${report.projectState}`}
-              tone={report.status === "approved" ? "green" : "gold"}
-            />
-          ))}
+          <StatusTimeline
+            items={dashboard.reports.slice(0, 3).map((report) => ({
+              title: report.projectType,
+              body: `${report.reportCategory} / ${report.status}`,
+              meta: `${report.projectCity}, ${report.projectState}`,
+              tone: report.status === "approved" ? "green" : "gold",
+            }))}
+          />
         </Card>
       ) : (
-        <EmptyState
+        <PremiumEmptyState
           title="No reports submitted yet"
           body="When a client experience needs documentation, start a report and attach evidence privately."
+          actionTitle="Submit report"
+          onAction={() => router.push("/reports")}
         />
       )}
 

@@ -1,7 +1,7 @@
 import { router } from "expo-router"
-import { Bell, FileSignature, FolderLock, Landmark, TrendingUp } from "lucide-react-native"
+import { Bell, FileSignature, FolderLock, Landmark, ShieldCheck, TrendingUp } from "lucide-react-native"
 
-import { BureauHero, Screen, SectionHeader, StatusPill, ToolCard } from "@/components/ui"
+import { BureauHero, InsightCard, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge } from "@/components/ui"
 
 const tools = [
   {
@@ -50,7 +50,15 @@ export default function ToolsScreen() {
         body="Contracts, recovery, lien service, evidence, and monitoring live in one contractor-first mobile workspace."
       >
         <StatusPill label="Private by default" tone="gold" />
+        <TrustBadge label="Business protection" tone="green" />
       </BureauHero>
+      <InsightCard
+        icon={ShieldCheck}
+        label="Tool doctrine"
+        title="Use the right tool at the right moment."
+        body="Search before you accept. Contracts before you schedule. Evidence and recovery when payment or project facts need documentation."
+        tone="gold"
+      />
       <SectionHeader
         title="Choose what you need to do next"
         body="Each tool is private by default and built for everyday contractor workflows."

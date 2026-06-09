@@ -5,15 +5,16 @@ import { FolderLock, ShieldCheck } from "lucide-react-native"
 import {
   BureauHero,
   Card,
-  EmptyState,
   IconActionRow,
   LoadingState,
   Message,
+  PremiumEmptyState,
   PrimaryButton,
   Screen,
   SectionHeader,
   StatusPill,
   TimelineItem,
+  TrustBadge,
   styles,
 } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
@@ -63,6 +64,7 @@ export default function EvidenceScreen() {
             body="Evidence supports reports, recovery cases, lien service, and contracts. Public pages only show approved summaries such as evidence on file."
           >
             <StatusPill label="Private by default" tone="gold" />
+            <TrustBadge label="Evidence on file" tone="green" />
           </BureauHero>
           <Card>
             <Text style={styles.cardTitle}>Privacy guardrail</Text>
@@ -104,7 +106,7 @@ export default function EvidenceScreen() {
               ))}
             </>
           ) : (
-            <EmptyState
+            <PremiumEmptyState
               title="No evidence yet"
               body="Upload invoices, screenshots, contracts, photos, and PDFs from the web dashboard when a report or service case needs support."
             />

@@ -5,17 +5,18 @@ import { Bell, Search, ShieldCheck } from "lucide-react-native"
 import {
   BureauHero,
   Card,
-  EmptyState,
   Field,
   FormStepPanel,
   IconActionRow,
   LoadingState,
   Message,
+  PremiumEmptyState,
   PrimaryButton,
   Screen,
   SectionHeader,
   StatusPill,
   TimelineItem,
+  TrustBadge,
   styles,
 } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
@@ -71,6 +72,7 @@ export default function WatchlistScreen() {
         body="Save a profile after searching and monitor for new approved reports, response activity, or private-match signals."
       >
         <StatusPill label={`${result.ok ? result.data.alerts : 0} active alerts`} tone="gold" />
+        <TrustBadge label="Private monitoring" tone="green" />
       </BureauHero>
       <IconActionRow
         icon={Bell}
@@ -118,9 +120,11 @@ export default function WatchlistScreen() {
             ))}
           </>
         ) : (
-          <EmptyState
+          <PremiumEmptyState
             title="No watched clients yet"
             body="Search a client first, then save profiles that matter to your pipeline."
+            actionTitle="Watch a client"
+            onAction={() => setShowForm(true)}
           />
         )
         : <Message text={result.message} tone="error" />}

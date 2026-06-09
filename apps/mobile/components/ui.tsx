@@ -1,4 +1,6 @@
 import { ComponentType, PropsWithChildren } from "react"
+import * as Haptics from "expo-haptics"
+import { LinearGradient } from "expo-linear-gradient"
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -14,9 +16,15 @@ import {
 } from "react-native"
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
-import { colors, radius, shadows, spacing, typography } from "@/lib/theme"
+import { colors, gradients, radius, shadows, spacing, typography } from "@/lib/theme"
 
 type MobileIcon = ComponentType<{ color?: string; size?: number; strokeWidth?: number }>
+
+function runPress(onPress?: () => void) {
+  if (!onPress) return
+  Haptics.selectionAsync().catch(() => undefined)
+  onPress()
+}
 
 export function Screen({
   title,
@@ -37,12 +45,36 @@ export function Screen({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-          <Text style={styles.title}>{title}</Text>
+          <AppHeader eyebrow={eyebrow} title={title} />
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  )
+}
+
+export function AppHeader({
+  eyebrow,
+  title,
+  body,
+  badge,
+}: {
+  eyebrow?: string
+  title: string
+  body?: string
+  badge?: string
+}) {
+  return (
+    <View style={styles.appHeader}>
+      <View style={styles.rowBetween}>
+        <View style={styles.headerText}>
+          {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
+          <Text style={styles.title}>{title}</Text>
+        </View>
+        {badge ? <TrustBadge label={badge} tone="gold" /> : null}
+      </View>
+      {body ? <Text style={styles.body}>{body}</Text> : null}
+    </View>
   )
 }
 
@@ -68,13 +100,13 @@ export function BureauHero({
   children,
 }: PropsWithChildren<{ eyebrow: string; title: string; body?: string }>) {
   return (
-    <BureauPanel dark style={styles.heroPanel}>
+    <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.bureauPanel, styles.bureauPanelDark, styles.heroPanel]}>
       <View style={styles.heroAccent} />
       <Text style={styles.heroEyebrow}>{eyebrow}</Text>
       <Text style={styles.heroTitle}>{title}</Text>
       {body ? <Text style={styles.heroBody}>{body}</Text> : null}
       {children}
-    </BureauPanel>
+    </LinearGradient>
   )
 }
 
@@ -131,7 +163,7 @@ export function PrimaryButton({
     <Pressable
       accessibilityRole="button"
       disabled={loading || !onPress}
-      onPress={onPress}
+      onPress={() => runPress(onPress)}
       style={[
         styles.button,
         tone === "gold" && styles.goldButton,
@@ -150,7 +182,7 @@ export function PrimaryButton({
 
 export function SecondaryButton({ title, onPress }: { title: string; onPress?: () => void }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.secondaryButton}>
+    <Pressable accessibilityRole="button" onPress={() => runPress(onPress)} style={styles.secondaryButton}>
       <Text style={styles.secondaryButtonText}>{title}</Text>
     </Pressable>
   )
@@ -170,6 +202,118 @@ export function SectionHeader({
       {eyebrow ? <Text style={styles.sectionEyebrow}>{eyebrow}</Text> : null}
       <Text style={styles.sectionTitle}>{title}</Text>
       {body ? <Text style={styles.body}>{body}</Text> : null}
+    </View>
+  )
+}
+
+export function TrustBadge({
+  label,
+  tone = "neutral",
+}: {
+  label: string
+  tone?: "neutral" | "gold" | "green" | "blue"
+}) {
+  return (
+    <View style={[styles.trustBadge, tone === "gold" && styles.trustBadgeGold, tone === "green" && styles.trustBadgeGreen, tone === "blue" && styles.trustBadgeBlue]}>
+      <View style={styles.trustBadgeDot} />
+      <Text style={styles.trustBadgeText}>{label}</Text>
+    </View>
+  )
+}
+
+export function InsightCard({
+  label,
+  title,
+  body,
+  metric,
+  icon: Icon,
+  tone = "light",
+}: {
+  label: string
+  title: string
+  body?: string
+  metric?: string | number
+  icon?: MobileIcon
+  tone?: "light" | "gold" | "dark"
+}) {
+  return (
+    <View style={[styles.insightCard, tone === "gold" && styles.insightCardGold, tone === "dark" && styles.insightCardDark]}>
+      <View style={styles.rowBetween}>
+        <View style={styles.actionText}>
+          <Text style={[styles.sectionEyebrow, tone === "dark" && styles.textOnDarkMuted]}>{label}</Text>
+          <Text style={[styles.cardTitle, tone === "dark" && styles.textOnDark]}>{title}</Text>
+        </View>
+        {Icon ? (
+          <View style={[styles.iconBadge, tone === "dark" && styles.iconBadgeDark]}>
+            <Icon color={tone === "dark" ? colors.gold2 : colors.navy} size={20} strokeWidth={2.3} />
+          </View>
+        ) : null}
+      </View>
+      {metric ? <Text style={[styles.insightMetric, tone === "dark" && styles.textOnDark]}>{metric}</Text> : null}
+      {body ? <Text style={[styles.body, tone === "dark" && styles.textOnDarkMuted]}>{body}</Text> : null}
+    </View>
+  )
+}
+
+export function SegmentedTabs({
+  options,
+  value,
+  onChange,
+}: {
+  options: string[]
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <View style={styles.segmentedTabs}>
+      {options.map((option) => {
+        const active = option === value
+
+        return (
+          <Pressable
+            accessibilityRole="button"
+            key={option}
+            onPress={() => runPress(() => onChange(option))}
+            style={[styles.segment, active && styles.segmentActive]}
+          >
+            <Text style={[styles.segmentText, active && styles.segmentTextActive]}>{option}</Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
+export function BureauSearchBox({
+  value,
+  onChangeText,
+  onSubmit,
+  loading,
+  placeholder = "Search a client",
+  buttonLabel = "Search",
+}: {
+  value: string
+  onChangeText: (value: string) => void
+  onSubmit?: () => void
+  loading?: boolean
+  placeholder?: string
+  buttonLabel?: string
+}) {
+  return (
+    <View style={styles.searchBox}>
+      <Text style={styles.fieldLabel}>Client search</Text>
+      <TextInput
+        accessibilityLabel="Client search"
+        autoCapitalize="words"
+        onChangeText={onChangeText}
+        onSubmitEditing={() => runPress(onSubmit)}
+        placeholder={placeholder}
+        placeholderTextColor={colors.muted2}
+        returnKeyType="search"
+        style={styles.searchInput}
+        value={value}
+      />
+      <PrimaryButton loading={loading} onPress={onSubmit} title={buttonLabel} tone="gold" />
     </View>
   )
 }
@@ -209,7 +353,7 @@ export function ActionRow({
   onPress?: () => void
 }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.actionRow}>
+    <Pressable accessibilityRole="button" onPress={() => runPress(onPress)} style={styles.actionRow}>
       <View style={styles.actionText}>
         <Text style={styles.actionTitle}>{title}</Text>
         {body ? <Text style={styles.helper}>{body}</Text> : null}
@@ -238,7 +382,7 @@ export function IconActionRow({
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={onPress}
+      onPress={() => runPress(onPress)}
       style={({ pressed }) => [styles.iconActionRow, pressed && styles.pressed]}
     >
       <View style={styles.iconBadge}>
@@ -270,7 +414,7 @@ export function ToolCard({
   onPress?: () => void
 }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.toolCard, pressed && styles.pressed]}>
+    <Pressable accessibilityRole="button" onPress={() => runPress(onPress)} style={({ pressed }) => [styles.toolCard, pressed && styles.pressed]}>
       <View style={styles.toolIcon}>
         {Icon ? <Icon color={colors.navy} size={21} strokeWidth={2.3} /> : <Text style={styles.toolIconText}>{title.slice(0, 1)}</Text>}
       </View>
@@ -427,7 +571,7 @@ export function ChoiceRow({
           <Pressable
             accessibilityRole="button"
             key={option}
-            onPress={() => onChange(option)}
+            onPress={() => runPress(() => onChange(option))}
             style={[styles.choice, value === option && styles.choiceActive]}
           >
             <Text style={[styles.choiceText, value === option && styles.choiceTextActive]}>{option}</Text>
@@ -444,6 +588,62 @@ export function EmptyState({ title, body }: { title: string; body: string }) {
       <Text style={styles.cardTitle}>{title}</Text>
       <Text style={styles.body}>{body}</Text>
     </Card>
+  )
+}
+
+export function PremiumEmptyState({
+  title,
+  body,
+  actionTitle,
+  onAction,
+}: {
+  title: string
+  body: string
+  actionTitle?: string
+  onAction?: () => void
+}) {
+  return (
+    <LinearGradient colors={gradients.paper} style={styles.emptyPremium}>
+      <TrustBadge label="No action needed yet" tone="gold" />
+      <Text style={styles.cardTitle}>{title}</Text>
+      <Text style={styles.body}>{body}</Text>
+      {actionTitle ? <PrimaryButton onPress={onAction} title={actionTitle} tone="light" /> : null}
+    </LinearGradient>
+  )
+}
+
+export function SkeletonPanel({ lines = 3 }: { lines?: number }) {
+  return (
+    <Card>
+      <View style={styles.skeletonHeader} />
+      {Array.from({ length: lines }).map((_, index) => (
+        <View key={index} style={[styles.skeletonLine, index === lines - 1 && styles.skeletonLineShort]} />
+      ))}
+    </Card>
+  )
+}
+
+export function ActionDock({ children }: PropsWithChildren) {
+  const insets = useSafeAreaInsets()
+
+  return (
+    <View style={[styles.actionDock, { marginBottom: Math.max(insets.bottom, spacing.sm) }]}>
+      {children}
+    </View>
+  )
+}
+
+export function StatusTimeline({
+  items,
+}: {
+  items: Array<{ title: string; body?: string; meta?: string; tone?: "gold" | "green" | "red" | "blue" }>
+}) {
+  return (
+    <View style={styles.statusTimeline}>
+      {items.map((item, index) => (
+        <TimelineItem key={`${item.title}-${index}`} title={item.title} body={item.body} meta={item.meta} tone={item.tone} />
+      ))}
+    </View>
   )
 }
 
@@ -484,6 +684,14 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: spacing.md,
+  },
+  appHeader: {
+    gap: spacing.sm,
+    paddingTop: spacing.xs,
+  },
+  headerText: {
+    flex: 1,
+    gap: 4,
   },
   eyebrow: {
     color: colors.gold,
@@ -580,6 +788,12 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
+  textOnDark: {
+    color: colors.white,
+  },
+  textOnDarkMuted: {
+    color: "#cbd5e1",
+  },
   statCard: {
     flex: 1,
     minWidth: "47%",
@@ -634,6 +848,120 @@ export const styles = StyleSheet.create({
     color: colors.navy,
     fontSize: 14,
     fontWeight: "800",
+  },
+  trustBadge: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    backgroundColor: "#eef2f7",
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 7,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  trustBadgeGold: {
+    backgroundColor: colors.goldSoft,
+    borderColor: colors.goldLine,
+  },
+  trustBadgeGreen: {
+    backgroundColor: colors.greenSoft,
+    borderColor: "#a6f4c5",
+  },
+  trustBadgeBlue: {
+    backgroundColor: colors.blueSoft,
+    borderColor: "#bfdbfe",
+  },
+  trustBadgeDot: {
+    backgroundColor: colors.gold,
+    borderRadius: 999,
+    height: 7,
+    width: 7,
+  },
+  trustBadgeText: {
+    color: colors.navy,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.3,
+    textTransform: "uppercase",
+  },
+  insightCard: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+    ...shadows.card,
+  },
+  insightCardGold: {
+    backgroundColor: colors.ivory,
+    borderColor: colors.goldLine,
+  },
+  insightCardDark: {
+    backgroundColor: colors.navy2,
+    borderColor: colors.lineDark,
+  },
+  iconBadgeDark: {
+    backgroundColor: "rgba(214,173,72,0.14)",
+    borderColor: "rgba(214,173,72,0.32)",
+  },
+  insightMetric: {
+    color: colors.navy,
+    fontSize: 28,
+    fontWeight: "900",
+    lineHeight: 32,
+  },
+  segmentedTabs: {
+    backgroundColor: "#eaf0f8",
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    padding: 5,
+  },
+  segment: {
+    alignItems: "center",
+    borderRadius: radius.sm,
+    flexGrow: 1,
+    minHeight: 38,
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  segmentActive: {
+    backgroundColor: colors.navy,
+    ...shadows.card,
+  },
+  segmentText: {
+    color: colors.slate,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  segmentTextActive: {
+    color: colors.white,
+  },
+  searchBox: {
+    backgroundColor: colors.panel,
+    borderColor: colors.goldLine,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+    ...shadows.floating,
+  },
+  searchInput: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    color: colors.ink,
+    fontSize: 17,
+    fontWeight: "800",
+    minHeight: 56,
+    paddingHorizontal: spacing.md,
   },
   actionRow: {
     alignItems: "center",
@@ -713,6 +1041,11 @@ export const styles = StyleSheet.create({
     gap: 3,
     minWidth: "47%",
     padding: spacing.md,
+  },
+  metricGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
   },
   metricTileDark: {
     backgroundColor: colors.navy2,
@@ -862,6 +1195,42 @@ export const styles = StyleSheet.create({
     gap: spacing.sm,
     padding: spacing.md,
     ...shadows.card,
+  },
+  actionDock: {
+    backgroundColor: "rgba(255,255,255,0.96)",
+    borderColor: colors.line,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+    ...shadows.floating,
+  },
+  statusTimeline: {
+    gap: spacing.sm,
+  },
+  emptyPremium: {
+    borderColor: colors.goldLine,
+    borderRadius: radius.xl,
+    borderWidth: 1,
+    gap: spacing.sm,
+    overflow: "hidden",
+    padding: spacing.lg,
+    ...shadows.card,
+  },
+  skeletonHeader: {
+    backgroundColor: "#e7edf6",
+    borderRadius: 999,
+    height: 20,
+    width: "46%",
+  },
+  skeletonLine: {
+    backgroundColor: "#eef2f7",
+    borderRadius: 999,
+    height: 12,
+    width: "100%",
+  },
+  skeletonLineShort: {
+    width: "64%",
   },
   loadingPanel: {
     alignItems: "center",

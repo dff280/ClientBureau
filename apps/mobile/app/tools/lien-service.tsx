@@ -6,17 +6,18 @@ import {
   BureauHero,
   Card,
   ChoiceRow,
-  EmptyState,
   Field,
   FormStepPanel,
   IconActionRow,
   LoadingState,
   Message,
+  PremiumEmptyState,
   PrimaryButton,
   Screen,
   SectionHeader,
   StatusPill,
   TimelineItem,
+  TrustBadge,
   styles,
 } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
@@ -96,6 +97,7 @@ export default function LienServiceScreen() {
         body="Submit project facts, deadline details, and unpaid amount. Client Bureau routes eligible cases through a controlled review workflow."
       >
         <StatusPill label="Florida only" tone="gold" />
+        <TrustBadge label="Private review" tone="green" />
       </BureauHero>
       <IconActionRow
         icon={Landmark}
@@ -175,7 +177,12 @@ export default function LienServiceScreen() {
             ))}
           </>
         ) : (
-          <EmptyState title="No Florida lien cases yet" body="Start a private review when a Florida project may need lien notice or filing support." />
+          <PremiumEmptyState
+            title="No Florida lien cases yet"
+            body="Start a private review when a Florida project may need lien notice or filing support."
+            actionTitle="Start case"
+            onAction={() => setShowForm(true)}
+          />
         )
         : <Message text={result.message} tone="error" />}
     </Screen>

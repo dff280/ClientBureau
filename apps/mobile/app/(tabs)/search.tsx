@@ -5,15 +5,16 @@ import { Text, View } from "react-native"
 
 import {
   BureauHero,
+  BureauSearchBox,
   Card,
-  ChoiceRow,
-  Field,
   IconActionRow,
   Message,
-  PrimaryButton,
+  PremiumEmptyState,
   Screen,
   SectionHeader,
+  SegmentedTabs,
   StatusPill,
+  TrustBadge,
   TrustScoreCard,
   styles,
 } from "@/components/ui"
@@ -28,6 +29,8 @@ type SearchPayload = {
   suggestions: Array<{ id: string; label: string; description: string; query?: string; state?: string }>
   privacyNote: string
 }
+
+const stateOptions = ["FL", "GA", "AL", "SC", "NC", "TX"]
 
 export default function SearchScreen() {
   const { accessToken } = useAuth()
@@ -66,18 +69,18 @@ export default function SearchScreen() {
         body="Search names, businesses, cities, and private identifiers without exposing sensitive matching details publicly."
       >
         <StatusPill label="Private matching" tone="gold" />
+        <TrustBadge label="Moderated profiles" tone="green" />
       </BureauHero>
 
-      <Card>
-        <Field
-          label="Client name, business, phone, email, or city"
-          onChangeText={setQuery}
-          placeholder="John Smith Orlando"
-          value={query}
-        />
-        <ChoiceRow label="State" onChange={setState} options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={state} />
-        <PrimaryButton loading={busy} onPress={runSearch} title="Search a Client" tone="gold" />
-      </Card>
+      <BureauSearchBox
+        buttonLabel="Search a Client"
+        loading={busy}
+        onChangeText={setQuery}
+        onSubmit={runSearch}
+        placeholder="John Smith Orlando"
+        value={query}
+      />
+      <SegmentedTabs options={stateOptions} value={state} onChange={setState} />
 
       <Message text={message} tone="success" />
 
@@ -92,7 +95,7 @@ export default function SearchScreen() {
           ) : null}
           {result.data.results.map((item) => (
             <Card key={item.id}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+              <View style={styles.rowBetween}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{item.displayName}</Text>
                   <Text style={styles.body}>
@@ -116,13 +119,31 @@ export default function SearchScreen() {
             </Card>
           ))}
           {!result.data.results.length ? (
-            <Card>
-              <Text style={styles.cardTitle}>No public profile found yet</Text>
-              <Text style={styles.body}>
-                Save this search or submit a documented report if you have a real client experience.
-              </Text>
-              <PrimaryButton onPress={() => saveSearch(0)} title="Save this search" tone="gold" />
-            </Card>
+            <>
+              {result.data.suggestions.length ? (
+                <Card>
+                  <Text style={styles.cardTitle}>Try a related search</Text>
+                  {result.data.suggestions.slice(0, 3).map((suggestion) => (
+                    <IconActionRow
+                      icon={Search}
+                      key={suggestion.id}
+                      title={suggestion.label}
+                      body={suggestion.description}
+                      onPress={() => {
+                        setQuery(suggestion.query ?? suggestion.label)
+                        if (suggestion.state) setState(suggestion.state)
+                      }}
+                    />
+                  ))}
+                </Card>
+              ) : null}
+              <PremiumEmptyState
+                title="No public profile found yet"
+                body="Save this search or submit a documented report if you have a real client experience."
+                actionTitle="Save this search"
+                onAction={() => saveSearch(0)}
+              />
+            </>
           ) : (
             <IconActionRow
               icon={Save}
