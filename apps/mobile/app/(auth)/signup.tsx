@@ -1,5 +1,6 @@
 import { Redirect, router } from "expo-router"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import type { TextInput } from "react-native"
 
 import {
   AuthHeroPanel,
@@ -23,6 +24,10 @@ const proofItems = ["Business profile", "Clean data", "Private records"]
 
 export default function SignupScreen() {
   const { loading, session, signUp } = useAuth()
+  const emailRef = useRef<TextInput>(null)
+  const passwordRef = useRef<TextInput>(null)
+  const tradeRef = useRef<TextInput>(null)
+  const cityRef = useRef<TextInput>(null)
   const [step, setStep] = useState("Account")
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
@@ -38,7 +43,19 @@ export default function SignupScreen() {
   if (loading) return <LoadingState />
   if (session) return <Redirect href="/" />
 
+  const canContinue =
+    fullName.trim().length > 1 &&
+    email.trim().length > 3 &&
+    password.length >= 6
+  const canCreate =
+    canContinue &&
+    businessName.trim().length > 1 &&
+    trade.trim().length > 1 &&
+    city.trim().length > 1 &&
+    !busy
+
   async function submit() {
+    if (!canCreate) return
     setBusy(true)
     setMessage(undefined)
     setError(undefined)
@@ -77,20 +94,74 @@ export default function SignupScreen() {
       >
         {step === "Account" ? (
           <>
-            <Field label="Full name" onChangeText={setFullName} value={fullName} />
-            <Field keyboardType="email-address" label="Email" onChangeText={setEmail} value={email} />
-            <PasswordField onChangeText={setPassword} value={password} />
-            <PrimaryButton onPress={() => setStep("Business")} title="Continue" />
+            <Field
+              label="Full name"
+              onChangeText={setFullName}
+              onSubmitEditing={() => emailRef.current?.focus()}
+              returnKeyType="next"
+              submitBehavior="submit"
+              textContentType="name"
+              value={fullName}
+            />
+            <Field
+              ref={emailRef}
+              keyboardType="email-address"
+              label="Email"
+              onChangeText={setEmail}
+              onSubmitEditing={() => passwordRef.current?.focus()}
+              returnKeyType="next"
+              submitBehavior="submit"
+              autoComplete="email"
+              textContentType="emailAddress"
+              importantForAutofill="yes"
+              value={email}
+            />
+            <PasswordField
+              ref={passwordRef}
+              autoComplete="new-password"
+              onChangeText={setPassword}
+              onSubmitEditing={() => {
+                if (canContinue) setStep("Business")
+              }}
+              returnKeyType="next"
+              submitBehavior="submit"
+              textContentType="newPassword"
+              value={password}
+            />
+            <PrimaryButton onPress={canContinue ? () => setStep("Business") : undefined} title="Continue" />
           </>
         ) : (
           <>
-            <Field label="Business name" onChangeText={setBusinessName} value={businessName} />
-            <Field label="Trade or service" onChangeText={setTrade} placeholder="Roofing, remodeling, HVAC..." value={trade} />
-            <Field label="City" onChangeText={setCity} value={city} />
+            <Field
+              label="Business name"
+              onChangeText={setBusinessName}
+              onSubmitEditing={() => tradeRef.current?.focus()}
+              returnKeyType="next"
+              submitBehavior="submit"
+              value={businessName}
+            />
+            <Field
+              ref={tradeRef}
+              label="Trade or service"
+              onChangeText={setTrade}
+              onSubmitEditing={() => cityRef.current?.focus()}
+              placeholder="Roofing, remodeling, HVAC..."
+              returnKeyType="next"
+              submitBehavior="submit"
+              value={trade}
+            />
+            <Field
+              ref={cityRef}
+              label="City"
+              onChangeText={setCity}
+              returnKeyType="done"
+              submitBehavior="submit"
+              value={city}
+            />
             <ChoiceRow label="State" onChange={setState} options={states} value={state} />
             <Message tone="success" text={message} />
             <Message tone="error" text={error} />
-            <PrimaryButton loading={busy} onPress={submit} title="Create account" />
+            <PrimaryButton loading={busy} onPress={canCreate ? submit : undefined} title="Create account" />
             <SecondaryButton onPress={() => setStep("Account")} title="Back to account details" />
           </>
         )}

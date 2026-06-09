@@ -1,5 +1,6 @@
+import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
-import { Bell, Eye, Save, Search, ShieldCheck } from "lucide-react-native"
+import { Bell, Eye, FileText, Save, Search, ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text, View } from "react-native"
 
@@ -179,6 +180,12 @@ export default function SearchScreen() {
                 body="Save this search or submit a documented report if you have a real client experience."
                 actionTitle="Save this search"
                 onAction={() => saveSearch(0)}
+              />
+              <IconActionRow
+                icon={FileText}
+                title="Document this client experience"
+                body="Create a report draft if you have a real project record and supporting context."
+                onPress={() => router.push("/reports")}
               />
             </>
           ) : (

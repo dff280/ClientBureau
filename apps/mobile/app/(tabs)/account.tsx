@@ -1,6 +1,6 @@
 import Constants from "expo-constants"
 import * as WebBrowser from "expo-web-browser"
-import { Globe, LifeBuoy, LogOut, ShieldCheck } from "lucide-react-native"
+import { Globe, LifeBuoy, LogOut, ShieldCheck, Smartphone } from "lucide-react-native"
 import { Text } from "react-native"
 
 import { BureauHero, Card, IconActionRow, InsightCard, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
@@ -9,8 +9,8 @@ import { useAuth } from "@/providers/auth-provider"
 
 export default function AccountScreen() {
   const { user, signOut } = useAuth()
-  const version = Constants.expoConfig?.version ?? "0.3.5"
-  const build = Constants.expoConfig?.android?.versionCode ?? 6
+  const version = Constants.expoConfig?.version ?? "0.3.6"
+  const build = Constants.expoConfig?.android?.versionCode ?? 7
 
   return (
     <Screen
@@ -42,6 +42,12 @@ export default function AccountScreen() {
         title="Open web dashboard"
         body="Manage full account settings, reports, billing, and support requests."
         onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/dashboard`)}
+      />
+      <IconActionRow
+        icon={Smartphone}
+        title="Mobile app release page"
+        body="Download the latest APK, review app version details, or share the Android install page."
+        onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/mobile-app`)}
       />
       <IconActionRow
         icon={LifeBuoy}

@@ -1,5 +1,6 @@
 import { Redirect, router } from "expo-router"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import type { TextInput } from "react-native"
 
 import {
   AuthHeroPanel,
@@ -19,6 +20,7 @@ const proofItems = ["Private matching", "Secure session", "Moderated records"]
 
 export default function LoginScreen() {
   const { configured, loading, session, signIn } = useAuth()
+  const passwordRef = useRef<TextInput>(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [busy, setBusy] = useState(false)
@@ -28,7 +30,10 @@ export default function LoginScreen() {
   if (loading) return <LoadingState />
   if (session) return <Redirect href="/" />
 
+  const canSubmit = configured && email.trim().length > 0 && password.length > 0 && !busy
+
   async function submit() {
+    if (!canSubmit) return
     setBusy(true)
     setError(undefined)
     setMessage(undefined)
@@ -62,13 +67,26 @@ export default function LoginScreen() {
           keyboardType="email-address"
           label="Email"
           onChangeText={setEmail}
+          onSubmitEditing={() => passwordRef.current?.focus()}
           placeholder="you@business.com"
+          returnKeyType="next"
+          submitBehavior="submit"
+          autoComplete="email"
+          textContentType="emailAddress"
+          importantForAutofill="yes"
           value={email}
         />
-        <PasswordField onChangeText={setPassword} value={password} />
+        <PasswordField
+          ref={passwordRef}
+          onChangeText={setPassword}
+          onSubmitEditing={canSubmit ? submit : undefined}
+          returnKeyType="done"
+          submitBehavior="submit"
+          value={password}
+        />
         <Message tone="success" text={message} />
         <Message tone="error" text={error} />
-        <PrimaryButton loading={busy} onPress={configured ? submit : undefined} title="Sign in" />
+        <PrimaryButton loading={busy} onPress={canSubmit ? submit : undefined} title="Sign in" />
       </SecureFormCard>
       <AuthSwitchCard
         action="Create account"

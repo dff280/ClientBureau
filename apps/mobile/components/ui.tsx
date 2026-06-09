@@ -1,4 +1,4 @@
-import { ComponentType, PropsWithChildren, useState } from "react"
+import { ComponentType, ForwardedRef, PropsWithChildren, forwardRef, useRef, useState } from "react"
 import * as Haptics from "expo-haptics"
 import { LinearGradient } from "expo-linear-gradient"
 import { Eye, EyeOff } from "lucide-react-native"
@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Text,
   TextInput,
+  TextInputProps,
   View,
   ViewStyle,
 } from "react-native"
@@ -20,6 +21,20 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { colors, gradients, radius, shadows, spacing, typography } from "@/lib/theme"
 
 type MobileIcon = ComponentType<{ color?: string; size?: number; strokeWidth?: number }>
+type MobileKeyboardType = TextInputProps["keyboardType"]
+type MobileReturnKeyType = TextInputProps["returnKeyType"]
+type MobileSubmitBehavior = TextInputProps["submitBehavior"]
+
+function assignTextInputRef(ref: ForwardedRef<TextInput>, value: TextInput | null) {
+  if (typeof ref === "function") {
+    ref(value)
+    return
+  }
+
+  if (ref) {
+    ref.current = value
+  }
+}
 
 function runPress(onPress?: () => void) {
   if (!onPress) return
@@ -638,7 +653,25 @@ export function Badge({ label, tone = "neutral" }: { label: string; tone?: "neut
   )
 }
 
-export function Field({
+type FieldProps = {
+  label: string
+  value: string
+  onChangeText: (value: string) => void
+  placeholder?: string
+  keyboardType?: MobileKeyboardType
+  multiline?: boolean
+  secureTextEntry?: boolean
+  returnKeyType?: MobileReturnKeyType
+  submitBehavior?: MobileSubmitBehavior
+  onSubmitEditing?: TextInputProps["onSubmitEditing"]
+  autoComplete?: TextInputProps["autoComplete"]
+  textContentType?: TextInputProps["textContentType"]
+  autoCorrect?: boolean
+  autoFocus?: boolean
+  importantForAutofill?: TextInputProps["importantForAutofill"]
+}
+
+export const Field = forwardRef<TextInput, FieldProps>(function Field({
   label,
   value,
   onChangeText,
@@ -646,15 +679,15 @@ export function Field({
   keyboardType,
   multiline,
   secureTextEntry,
-}: {
-  label: string
-  value: string
-  onChangeText: (value: string) => void
-  placeholder?: string
-  keyboardType?: "default" | "email-address" | "numeric"
-  multiline?: boolean
-  secureTextEntry?: boolean
-}) {
+  returnKeyType,
+  submitBehavior,
+  onSubmitEditing,
+  autoComplete,
+  textContentType,
+  autoCorrect,
+  autoFocus,
+  importantForAutofill,
+}, ref) {
   const [focused, setFocused] = useState(false)
 
   return (
@@ -663,32 +696,54 @@ export function Field({
       <TextInput
         accessibilityLabel={label}
         autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
+        autoComplete={autoComplete}
+        autoCorrect={autoCorrect ?? keyboardType !== "email-address"}
+        autoFocus={autoFocus}
+        importantForAutofill={importantForAutofill}
         keyboardType={keyboardType}
         multiline={multiline}
         onBlur={() => setFocused(false)}
         onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
+        onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
         placeholderTextColor="#98a2b3"
+        ref={(node) => assignTextInputRef(ref, node)}
+        returnKeyType={returnKeyType}
         secureTextEntry={secureTextEntry}
+        submitBehavior={submitBehavior}
         style={[styles.input, focused && styles.inputFocused, multiline && styles.multilineInput]}
+        textContentType={textContentType}
         value={value}
       />
     </View>
   )
-}
+})
 
-export function PasswordField({
-  label = "Password",
-  value,
-  onChangeText,
-  placeholder = "Your password",
-}: {
+type PasswordFieldProps = {
   label?: string
   value: string
   onChangeText: (value: string) => void
   placeholder?: string
-}) {
+  returnKeyType?: MobileReturnKeyType
+  submitBehavior?: MobileSubmitBehavior
+  onSubmitEditing?: TextInputProps["onSubmitEditing"]
+  autoComplete?: TextInputProps["autoComplete"]
+  textContentType?: TextInputProps["textContentType"]
+}
+
+export const PasswordField = forwardRef<TextInput, PasswordFieldProps>(function PasswordField({
+  label = "Password",
+  value,
+  onChangeText,
+  placeholder = "Your password",
+  returnKeyType,
+  submitBehavior,
+  onSubmitEditing,
+  autoComplete = "password",
+  textContentType = "password",
+}, ref) {
+  const inputRef = useRef<TextInput>(null)
   const [focused, setFocused] = useState(false)
   const [visible, setVisible] = useState(false)
   const Icon = visible ? EyeOff : Eye
@@ -700,19 +755,37 @@ export function PasswordField({
         <TextInput
           accessibilityLabel={label}
           autoCapitalize="none"
+          autoComplete={autoComplete}
+          autoCorrect={false}
+          importantForAutofill="yes"
           onBlur={() => setFocused(false)}
           onChangeText={onChangeText}
           onFocus={() => setFocused(true)}
+          onSubmitEditing={onSubmitEditing}
           placeholder={placeholder}
           placeholderTextColor="#98a2b3"
+          ref={(node) => {
+            inputRef.current = node
+            assignTextInputRef(ref, node)
+          }}
+          returnKeyType={returnKeyType}
           secureTextEntry={!visible}
           style={styles.passwordInput}
+          submitBehavior={submitBehavior}
+          textContentType={textContentType}
           value={value}
         />
         <Pressable
           accessibilityLabel={visible ? "Hide password" : "Show password"}
           accessibilityRole="button"
-          onPress={() => runPress(() => setVisible(!visible))}
+          focusable={false}
+          hitSlop={8}
+          onPress={() =>
+            runPress(() => {
+              setVisible((current) => !current)
+              requestAnimationFrame(() => inputRef.current?.focus())
+            })
+          }
           style={styles.passwordToggle}
         >
           <Icon color={colors.slate} size={19} strokeWidth={2.2} />
@@ -720,7 +793,7 @@ export function PasswordField({
       </View>
     </View>
   )
-}
+})
 
 export function ChoiceRow({
   label,
