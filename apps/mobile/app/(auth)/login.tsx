@@ -1,10 +1,21 @@
-import { Link, Redirect } from "expo-router"
-import { ShieldCheck } from "lucide-react-native"
+import { Redirect, router } from "expo-router"
 import { useState } from "react"
-import { Text } from "react-native"
 
-import { BureauHero, Card, Field, IconActionRow, InsightCard, LoadingState, Message, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
+import {
+  AuthHeroPanel,
+  AuthShell,
+  AuthSwitchCard,
+  Field,
+  LoadingState,
+  Message,
+  PasswordField,
+  PrimaryButton,
+  SecureFormCard,
+  TrustProofStrip,
+} from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
+
+const proofItems = ["Private matching", "Secure session", "Moderated records"]
 
 export default function LoginScreen() {
   const { configured, loading, session, signIn } = useAuth()
@@ -34,34 +45,19 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen eyebrow="Client Bureau Mobile" title="Check the client before you take the job.">
+    <AuthShell>
       {!configured ? (
         <Message
           tone="error"
           text="Mobile sign-in is temporarily unavailable. Please use the web dashboard while support checks the app connection."
         />
       ) : null}
-      <BureauHero
-        eyebrow="Contractor protection"
-        title="Know who you are working with before the job starts."
-        body="Search client records, manage reports, organize contracts, and track payment protection tools from your phone."
-      >
-        <StatusPill label="Private matching" tone="gold" />
-        <TrustBadge label="Secure mobile session" tone="green" />
-      </BureauHero>
-      <InsightCard
-        icon={ShieldCheck}
-        label="Trust platform"
-        title="Built for business owners who need clean records."
-        body="The app focuses on search, documentation, contracts, recovery, lien service, evidence, and account status."
-        tone="gold"
+      <AuthHeroPanel
+        title="Check the client before you take the job."
+        body="Search client records, manage reports, contracts, recovery, lien service, and private evidence from one secure mobile workspace."
       />
-      <Card>
-        <Text style={styles.cardTitle}>Sign in</Text>
-        <Text style={styles.body}>
-          Use your Client Bureau contractor account to load your dashboard, search, reports,
-          contracts, recovery cases, lien service, and evidence vault.
-        </Text>
+      <TrustProofStrip items={proofItems} />
+      <SecureFormCard title="Sign in" body="Access your contractor workspace.">
         <Field
           keyboardType="email-address"
           label="Email"
@@ -69,24 +65,16 @@ export default function LoginScreen() {
           placeholder="you@business.com"
           value={email}
         />
-        <Field
-          label="Password"
-          onChangeText={setPassword}
-          placeholder="Your password"
-          secureTextEntry
-          value={password}
-        />
+        <PasswordField onChangeText={setPassword} value={password} />
         <Message tone="success" text={message} />
         <Message tone="error" text={error} />
         <PrimaryButton loading={busy} onPress={configured ? submit : undefined} title="Sign in" />
-      </Card>
-      <Link href="/signup" asChild>
-        <IconActionRow
-          icon={ShieldCheck}
-          title="Create a contractor account"
-          body="Set up your mobile workspace and start checking clients."
-        />
-      </Link>
-    </Screen>
+      </SecureFormCard>
+      <AuthSwitchCard
+        action="Create account"
+        label="New to Client Bureau?"
+        onPress={() => router.push("/signup")}
+      />
+    </AuthShell>
   )
 }

@@ -1,15 +1,29 @@
-import { Link, Redirect } from "expo-router"
-import { LogIn, ShieldCheck } from "lucide-react-native"
+import { Redirect, router } from "expo-router"
 import { useState } from "react"
-import { Text } from "react-native"
 
-import { BureauHero, Card, ChoiceRow, Field, FormStepPanel, IconActionRow, InsightCard, LoadingState, Message, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
+import {
+  AuthHeroPanel,
+  AuthShell,
+  AuthSwitchCard,
+  ChoiceRow,
+  Field,
+  LoadingState,
+  Message,
+  PasswordField,
+  PrimaryButton,
+  SecondaryButton,
+  SecureFormCard,
+  SegmentedTabs,
+  TrustProofStrip,
+} from "@/components/ui"
 import { useAuth } from "@/providers/auth-provider"
 
 const states = ["FL", "GA", "AL", "SC", "NC", "TX"]
+const proofItems = ["Business profile", "Clean data", "Private records"]
 
 export default function SignupScreen() {
   const { loading, session, signUp } = useAuth()
+  const [step, setStep] = useState("Account")
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -49,50 +63,43 @@ export default function SignupScreen() {
   }
 
   return (
-    <Screen eyebrow="Create account" title="Build your contractor protection workspace.">
-      <BureauHero
-        eyebrow="Business owner setup"
-        title="Create a cleaner record from day one."
-        body="A complete business profile keeps searches, reports, contracts, and service cases easier to match."
-      >
-        <StatusPill label="Private profile" tone="gold" />
-        <TrustBadge label="Clean data setup" tone="green" />
-      </BureauHero>
-      <InsightCard
-        icon={ShieldCheck}
-        label="Why this matters"
-        title="Cleaner onboarding means cleaner client records."
-        body="Accurate business, trade, city, and state details reduce mismatches and help future reports stay organized."
-        tone="gold"
+    <AuthShell>
+      <AuthHeroPanel
+        eyebrow="Create account"
+        title="Build your contractor protection workspace."
+        body="Set up your business profile so search, reports, contracts, recovery, and service cases stay matched to the right records."
       />
-      <FormStepPanel
-        step="Step 1"
-        title="Business owner profile"
-        body="Use accurate business details so Client Bureau can keep records clean."
+      <TrustProofStrip items={proofItems} />
+      <SegmentedTabs options={["Account", "Business"]} value={step} onChange={setStep} />
+      <SecureFormCard
+        title={step === "Account" ? "Your account" : "Business details"}
+        body={step === "Account" ? "Start with the owner account used to sign in." : "Add the business identity contractors and records should use."}
       >
-        <Field label="Full name" onChangeText={setFullName} value={fullName} />
-        <Field keyboardType="email-address" label="Email" onChangeText={setEmail} value={email} />
-        <Field label="Password" onChangeText={setPassword} secureTextEntry value={password} />
-      </FormStepPanel>
-      <FormStepPanel step="Step 2" title="Business details" body="Tell us what kind of work you do and where you operate.">
-        <Field label="Business name" onChangeText={setBusinessName} value={businessName} />
-        <Field label="Trade or service" onChangeText={setTrade} placeholder="Roofing, remodeling, HVAC..." value={trade} />
-        <Field label="City" onChangeText={setCity} value={city} />
-        <ChoiceRow label="State" onChange={setState} options={states} value={state} />
-        <Message tone="success" text={message} />
-        <Message tone="error" text={error} />
-        <PrimaryButton loading={busy} onPress={submit} title="Create account" />
-      </FormStepPanel>
-      <Card>
-        <StatusPill label="Moderated platform" tone="dark" />
-        <Text style={styles.body}>
-          Client Bureau uses moderated reports, private evidence summaries, and response-aware records.
-        </Text>
-        <IconActionRow icon={ShieldCheck} title="Built for documented contractor experiences" />
-      </Card>
-      <Link href="/login" asChild>
-        <IconActionRow icon={LogIn} title="Already have an account?" body="Sign in to your mobile workspace." />
-      </Link>
-    </Screen>
+        {step === "Account" ? (
+          <>
+            <Field label="Full name" onChangeText={setFullName} value={fullName} />
+            <Field keyboardType="email-address" label="Email" onChangeText={setEmail} value={email} />
+            <PasswordField onChangeText={setPassword} value={password} />
+            <PrimaryButton onPress={() => setStep("Business")} title="Continue" />
+          </>
+        ) : (
+          <>
+            <Field label="Business name" onChangeText={setBusinessName} value={businessName} />
+            <Field label="Trade or service" onChangeText={setTrade} placeholder="Roofing, remodeling, HVAC..." value={trade} />
+            <Field label="City" onChangeText={setCity} value={city} />
+            <ChoiceRow label="State" onChange={setState} options={states} value={state} />
+            <Message tone="success" text={message} />
+            <Message tone="error" text={error} />
+            <PrimaryButton loading={busy} onPress={submit} title="Create account" />
+            <SecondaryButton onPress={() => setStep("Account")} title="Back to account details" />
+          </>
+        )}
+      </SecureFormCard>
+      <AuthSwitchCard
+        action="Sign in"
+        label="Already have an account?"
+        onPress={() => router.push("/login")}
+      />
+    </AuthShell>
   )
 }

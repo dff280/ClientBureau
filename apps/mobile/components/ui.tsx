@@ -1,6 +1,7 @@
-import { ComponentType, PropsWithChildren } from "react"
+import { ComponentType, PropsWithChildren, useState } from "react"
 import * as Haptics from "expo-haptics"
 import { LinearGradient } from "expo-linear-gradient"
+import { Eye, EyeOff } from "lucide-react-native"
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -53,6 +54,28 @@ export function Screen({
   )
 }
 
+export function AuthShell({ children }: PropsWithChildren) {
+  const insets = useSafeAreaInsets()
+
+  return (
+    <SafeAreaView edges={["top", "left", "right"]} style={styles.safe}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        style={styles.keyboardAvoider}
+      >
+        <ScrollView
+          contentContainerStyle={[styles.authScreen, { paddingBottom: spacing.lg + insets.bottom + 18 }]}
+          contentInsetAdjustmentBehavior="automatic"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  )
+}
+
 export function AppHeader({
   eyebrow,
   title,
@@ -75,6 +98,76 @@ export function AppHeader({
       </View>
       {body ? <Text style={styles.body}>{body}</Text> : null}
     </View>
+  )
+}
+
+export function AuthHeroPanel({
+  eyebrow = "Client Bureau Mobile",
+  title,
+  body,
+}: {
+  eyebrow?: string
+  title: string
+  body: string
+}) {
+  return (
+    <LinearGradient colors={gradients.hero} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.authHero}>
+      <View style={styles.authBrandRow}>
+        <View style={styles.authMark}>
+          <Text style={styles.authMarkText}>CB</Text>
+        </View>
+        <Text style={styles.authEyebrow}>{eyebrow}</Text>
+      </View>
+      <Text style={styles.authTitle}>{title}</Text>
+      <Text style={styles.authBody}>{body}</Text>
+    </LinearGradient>
+  )
+}
+
+export function TrustProofStrip({ items }: { items: string[] }) {
+  return (
+    <View style={styles.proofStrip}>
+      {items.map((item) => (
+        <View key={item} style={styles.proofChip}>
+          <View style={styles.proofDot} />
+          <Text style={styles.proofText}>{item}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
+export function SecureFormCard({
+  title,
+  body,
+  children,
+}: PropsWithChildren<{ title: string; body?: string }>) {
+  return (
+    <View style={styles.secureFormCard}>
+      <View style={styles.secureFormHeader}>
+        <Text style={styles.secureFormTitle}>{title}</Text>
+        <TrustBadge label="Secure" tone="gold" />
+      </View>
+      {body ? <Text style={styles.body}>{body}</Text> : null}
+      {children}
+    </View>
+  )
+}
+
+export function AuthSwitchCard({
+  label,
+  action,
+  onPress,
+}: {
+  label: string
+  action: string
+  onPress?: () => void
+}) {
+  return (
+    <Pressable accessibilityRole="button" onPress={() => runPress(onPress)} style={({ pressed }) => [styles.authSwitchCard, pressed && styles.pressed]}>
+      <Text style={styles.authSwitchLabel}>{label}</Text>
+      <Text style={styles.authSwitchAction}>{action}</Text>
+    </Pressable>
   )
 }
 
@@ -533,6 +626,8 @@ export function Field({
   multiline?: boolean
   secureTextEntry?: boolean
 }) {
+  const [focused, setFocused] = useState(false)
+
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
@@ -541,13 +636,59 @@ export function Field({
         autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
         keyboardType={keyboardType}
         multiline={multiline}
+        onBlur={() => setFocused(false)}
         onChangeText={onChangeText}
+        onFocus={() => setFocused(true)}
         placeholder={placeholder}
         placeholderTextColor="#98a2b3"
         secureTextEntry={secureTextEntry}
-        style={[styles.input, multiline && styles.multilineInput]}
+        style={[styles.input, focused && styles.inputFocused, multiline && styles.multilineInput]}
         value={value}
       />
+    </View>
+  )
+}
+
+export function PasswordField({
+  label = "Password",
+  value,
+  onChangeText,
+  placeholder = "Your password",
+}: {
+  label?: string
+  value: string
+  onChangeText: (value: string) => void
+  placeholder?: string
+}) {
+  const [focused, setFocused] = useState(false)
+  const [visible, setVisible] = useState(false)
+  const Icon = visible ? EyeOff : Eye
+
+  return (
+    <View style={styles.fieldWrap}>
+      <Text style={styles.fieldLabel}>{label}</Text>
+      <View style={[styles.passwordInputWrap, focused && styles.inputFocused]}>
+        <TextInput
+          accessibilityLabel={label}
+          autoCapitalize="none"
+          onBlur={() => setFocused(false)}
+          onChangeText={onChangeText}
+          onFocus={() => setFocused(true)}
+          placeholder={placeholder}
+          placeholderTextColor="#98a2b3"
+          secureTextEntry={!visible}
+          style={styles.passwordInput}
+          value={value}
+        />
+        <Pressable
+          accessibilityLabel={visible ? "Hide password" : "Show password"}
+          accessibilityRole="button"
+          onPress={() => runPress(() => setVisible(!visible))}
+          style={styles.passwordToggle}
+        >
+          <Icon color={colors.slate} size={19} strokeWidth={2.2} />
+        </Pressable>
+      </View>
     </View>
   )
 }
@@ -680,6 +821,11 @@ export const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
   },
+  authScreen: {
+    gap: spacing.sm,
+    padding: spacing.md,
+    paddingTop: spacing.sm,
+  },
   center: {
     alignItems: "center",
     justifyContent: "center",
@@ -692,6 +838,52 @@ export const styles = StyleSheet.create({
   headerText: {
     flex: 1,
     gap: 4,
+  },
+  authHero: {
+    borderColor: colors.lineDark,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    overflow: "hidden",
+    padding: spacing.lg,
+    ...shadows.hero,
+  },
+  authBrandRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  authMark: {
+    alignItems: "center",
+    backgroundColor: colors.gold,
+    borderRadius: radius.sm,
+    height: 32,
+    justifyContent: "center",
+    width: 32,
+  },
+  authMarkText: {
+    color: colors.navy,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  authEyebrow: {
+    color: colors.gold2,
+    flex: 1,
+    fontSize: typography.eyebrow,
+    fontWeight: "900",
+    letterSpacing: 1,
+    textTransform: "uppercase",
+  },
+  authTitle: {
+    color: colors.white,
+    fontSize: 30,
+    fontWeight: "900",
+    lineHeight: 35,
+  },
+  authBody: {
+    color: "#d8e1ed",
+    fontSize: 13.5,
+    lineHeight: 20,
   },
   eyebrow: {
     color: colors.gold,
@@ -848,6 +1040,81 @@ export const styles = StyleSheet.create({
     color: colors.navy,
     fontSize: 14,
     fontWeight: "800",
+  },
+  proofStrip: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+  },
+  proofChip: {
+    alignItems: "center",
+    backgroundColor: colors.panel,
+    borderColor: colors.goldLine,
+    borderRadius: 999,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    ...shadows.card,
+  },
+  proofDot: {
+    backgroundColor: colors.gold,
+    borderRadius: 999,
+    height: 7,
+    width: 7,
+  },
+  proofText: {
+    color: colors.navy,
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+  },
+  secureFormCard: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+    ...shadows.floating,
+  },
+  secureFormHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "space-between",
+  },
+  secureFormTitle: {
+    color: colors.navy,
+    flex: 1,
+    fontSize: 22,
+    fontWeight: "900",
+    lineHeight: 27,
+  },
+  authSwitchCard: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: spacing.sm,
+    justifyContent: "center",
+    minHeight: 52,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  authSwitchLabel: {
+    color: colors.muted,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  authSwitchAction: {
+    color: colors.navy,
+    fontSize: 14,
+    fontWeight: "900",
   },
   trustBadge: {
     alignItems: "center",
@@ -1275,6 +1542,36 @@ export const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 13,
     paddingVertical: 10,
+  },
+  inputFocused: {
+    borderColor: colors.gold,
+    shadowColor: colors.gold,
+    shadowOpacity: 0.16,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  passwordInputWrap: {
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flexDirection: "row",
+    minHeight: 48,
+    paddingLeft: 13,
+  },
+  passwordInput: {
+    color: colors.ink,
+    flex: 1,
+    minHeight: 48,
+    paddingVertical: 10,
+  },
+  passwordToggle: {
+    alignItems: "center",
+    height: 48,
+    justifyContent: "center",
+    width: 48,
   },
   multilineInput: {
     minHeight: 96,
