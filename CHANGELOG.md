@@ -4,6 +4,29 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.3.8 - VPS Deploy Helper Hardening
+
+Date: June 9, 2026
+
+### Added
+
+- Added `.gitattributes` so shell scripts keep LF endings for Ubuntu/VPS execution.
+
+### Improved
+
+- Hardened `scripts/vps-deploy.sh` so it fetches `main`, stamps release identity into `.env.production`, rebuilds Docker, prunes old images, and prints live version/health output.
+- Simplified README, deployment docs, and release-process docs around the deploy helper.
+- Updated live verification instructions to read the expected app version from `package.json`.
+
+### Verification
+
+- Git Bash syntax check for `scripts/vps-deploy.sh`
+- `npm run lint`
+- `npm test`
+- `npm run seo:check`
+- `npm run build`
+- `npm run mobile:check`
+
 ## 0.3.7 - Release Identity + Deploy Verification Hardening
 
 Date: June 9, 2026

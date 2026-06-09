@@ -69,7 +69,7 @@ Deployment uses Docker Compose with Caddy as the public web server and HTTPS ter
 
 ```bash
 cp .env.production.example .env.production
-docker compose up -d --build
+bash scripts/vps-deploy.sh
 ```
 
 Full VPS, DNS, Supabase, Stripe, GitHub upload, and update instructions are in `docs/DEPLOYMENT.md`.
