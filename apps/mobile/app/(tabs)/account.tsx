@@ -1,12 +1,13 @@
 import Constants from "expo-constants"
 import * as WebBrowser from "expo-web-browser"
-import { Globe, LifeBuoy, LogOut, ShieldCheck, Smartphone, UserCheck } from "lucide-react-native"
+import { Globe, LifeBuoy, LogOut, Share2, ShieldCheck, Smartphone, UserCheck, UserPlus } from "lucide-react-native"
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
 import { BureauHero, Card, IconActionRow, InsightCard, LaunchChecklist, MetricMini, PrimaryButton, Screen, SectionHeader, StatusPill, TrustBadge, styles } from "@/components/ui"
 import { mobileFetch } from "@/lib/api"
 import { siteUrl } from "@/lib/config"
+import { inviteContractorToClientBureau, shareClientBureauApp } from "@/lib/share"
 import type { ApiResult, DashboardPayload } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
 
@@ -20,8 +21,8 @@ function maskEmail(email?: string) {
 export default function AccountScreen() {
   const { accessToken, user, signOut } = useAuth()
   const [dashboardResult, setDashboardResult] = useState<ApiResult<DashboardPayload>>()
-  const version = Constants.expoConfig?.version ?? "0.4.0"
-  const build = Constants.expoConfig?.android?.versionCode ?? 8
+  const version = Constants.expoConfig?.version ?? "0.4.1"
+  const build = Constants.expoConfig?.android?.versionCode ?? 9
 
   useEffect(() => {
     if (!accessToken) return
@@ -95,6 +96,19 @@ export default function AccountScreen() {
         title="Mobile app release page"
         body="Download the latest APK, review app version details, or share the Android install page."
         onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/mobile-app`)}
+      />
+      <IconActionRow
+        icon={Share2}
+        title="Share the mobile app"
+        body="Send the Client Bureau Android install page to another business owner."
+        badge="Share"
+        onPress={shareClientBureauApp}
+      />
+      <IconActionRow
+        icon={UserPlus}
+        title="Invite a contractor"
+        body="Share the search-before-the-job workflow with another contractor."
+        onPress={inviteContractorToClientBureau}
       />
       <IconActionRow
         icon={LifeBuoy}

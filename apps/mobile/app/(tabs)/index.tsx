@@ -1,5 +1,5 @@
 import { router } from "expo-router"
-import { Bell, ClipboardCheck, FileSignature, FolderLock, Search, Siren, TrendingUp } from "lucide-react-native"
+import { Bell, ClipboardCheck, FileSignature, FolderLock, Search, Share2, Siren, TrendingUp, UserPlus } from "lucide-react-native"
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
@@ -24,6 +24,7 @@ import {
   styles,
 } from "@/components/ui"
 import { mobileFetch } from "@/lib/api"
+import { inviteContractorToClientBureau, shareClientBureauApp } from "@/lib/share"
 import type { ApiResult, DashboardPayload } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
 
@@ -164,6 +165,13 @@ export default function HomeScreen() {
           body="Submit a positive report or payment issue for moderation."
           onPress={() => router.push("/reports")}
         />
+        <IconActionRow
+          icon={UserPlus}
+          title="Invite another contractor"
+          body="Share Client Bureau with someone who should check clients before taking jobs."
+          badge="Share"
+          onPress={inviteContractorToClientBureau}
+        />
       </ActionDock>
 
       <InsightCard
@@ -201,6 +209,12 @@ export default function HomeScreen() {
         title="Review all tools"
         body="Search, contracts, reports, recovery, lien service, evidence, and watchlist."
         onPress={() => router.push("/tools")}
+      />
+      <IconActionRow
+        icon={Share2}
+        title="Share Client Bureau"
+        body="Send the mobile app page to another business owner."
+        onPress={shareClientBureauApp}
       />
 
       {dashboard.reports.length ? (

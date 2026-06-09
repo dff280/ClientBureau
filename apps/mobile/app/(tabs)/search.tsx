@@ -1,6 +1,6 @@
 import { router } from "expo-router"
 import * as WebBrowser from "expo-web-browser"
-import { Bell, Eye, FileText, Save, Search, ShieldCheck } from "lucide-react-native"
+import { Bell, Eye, FileText, Save, Search, Share2, ShieldCheck, UserPlus } from "lucide-react-native"
 import { useState } from "react"
 import { Text, View } from "react-native"
 
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui"
 import { jsonBody, mobileFetch } from "@/lib/api"
 import { siteUrl } from "@/lib/config"
+import { inviteContractorToClientBureau, shareClientBureauApp, shareClientProfile } from "@/lib/share"
 import type { ApiResult, MobileSearchResult } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
 
@@ -121,6 +122,13 @@ export default function SearchScreen() {
           title="Save or watch"
           body="Keep useful searches in your account and monitor profiles before accepting more work."
         />
+        <CommandCard
+          icon={Share2}
+          label="Growth"
+          title="Share the app"
+          body="Send Client Bureau to another contractor who should check clients before scheduling work."
+          onPress={shareClientBureauApp}
+        />
       </View>
 
       <BureauSearchBox
@@ -211,6 +219,12 @@ export default function SearchScreen() {
                 badge={watchedIds[item.id] ? "Saved" : "Watch"}
                 onPress={() => watchClient(item)}
               />
+              <IconActionRow
+                icon={Share2}
+                title="Share public profile"
+                body="Send the approved public profile link without exposing private evidence or identifiers."
+                onPress={() => shareClientProfile(item)}
+              />
             </Card>
           ))}
               {!result.data.results.length ? (
@@ -255,6 +269,13 @@ export default function SearchScreen() {
                 body="Create a report draft if you have a real project record and supporting context."
                 onPress={() => router.push("/reports")}
               />
+              <IconActionRow
+                icon={UserPlus}
+                title="Invite another contractor"
+                body="Know someone else who should check clients first? Share Client Bureau."
+                badge="Share"
+                onPress={inviteContractorToClientBureau}
+              />
             </>
           ) : (
             <IconActionRow
@@ -269,6 +290,15 @@ export default function SearchScreen() {
               onPress={() => saveSearch(result.data.results.length)}
             />
           )}
+          {result.data.results.length ? (
+            <IconActionRow
+              icon={UserPlus}
+              title="Invite another contractor"
+              body="Share the app with a contractor who should search before taking the job."
+              badge="Share"
+              onPress={inviteContractorToClientBureau}
+            />
+          ) : null}
         </>
       ) : result && !result.ok ? (
         <Message text={result.message} tone="error" />

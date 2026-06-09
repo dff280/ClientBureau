@@ -2,7 +2,7 @@
   "expo": {
     "name": "Client Bureau",
     "slug": "client-bureau",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "clientbureau",
@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "package": "com.clientbureau.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "predictiveBackGestureEnabled": false
     },
     "web": {

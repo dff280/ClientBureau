@@ -1,5 +1,5 @@
 import { Redirect, router } from "expo-router"
-import { useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 import type { TextInput } from "react-native"
 
 import {
@@ -33,8 +33,8 @@ export default function LoginScreen() {
 
   const canSubmit = configured && email.trim().length > 0 && password.length > 0 && !busy
 
-  async function submit() {
-    if (!canSubmit) return
+  const submit = useCallback(async () => {
+    if (!configured || !email.trim() || !password || busy) return
     setBusy(true)
     setError(undefined)
     setMessage(undefined)
@@ -48,7 +48,7 @@ export default function LoginScreen() {
     }
 
     setBusy(false)
-  }
+  }, [busy, configured, email, password, signIn])
 
   return (
     <AuthShell>
@@ -80,7 +80,7 @@ export default function LoginScreen() {
         <PasswordField
           ref={passwordRef}
           onChangeText={setPassword}
-          onSubmitEditing={canSubmit ? submit : undefined}
+          onSubmitEditing={submit}
           returnKeyType="done"
           submitBehavior="submit"
           value={password}

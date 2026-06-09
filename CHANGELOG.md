@@ -4,6 +4,25 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.4.1 - Android Login Fix and Viral Search
+
+Date: June 9, 2026
+
+### Fixed
+
+- Reworked mobile input refs and password-field press handling so Android login no longer jumps from password back to email while typing.
+- Kept password visibility toggles focused on the password field.
+
+### Improved
+
+- Added native app/profile sharing actions for Client Bureau, contractor invites, and public profile links.
+- Strengthened mobile Search as the core product surface with clearer share, save, watch, and no-result actions.
+- Bumped Android app metadata to `0.4.1` / versionCode `9`.
+
+### Verification
+
+- Pending local mobile checks and APK build.
+
 ## 0.4.0 - Android Daily Command Center
 
 Date: June 9, 2026

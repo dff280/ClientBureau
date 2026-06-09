@@ -1,4 +1,4 @@
-import { ComponentType, ForwardedRef, PropsWithChildren, forwardRef, useRef, useState } from "react"
+import { ComponentType, PropsWithChildren, forwardRef, useImperativeHandle, useRef, useState } from "react"
 import * as Haptics from "expo-haptics"
 import { LinearGradient } from "expo-linear-gradient"
 import { Eye, EyeOff } from "lucide-react-native"
@@ -24,17 +24,6 @@ type MobileIcon = ComponentType<{ color?: string; size?: number; strokeWidth?: n
 type MobileKeyboardType = TextInputProps["keyboardType"]
 type MobileReturnKeyType = TextInputProps["returnKeyType"]
 type MobileSubmitBehavior = TextInputProps["submitBehavior"]
-
-function assignTextInputRef(ref: ForwardedRef<TextInput>, value: TextInput | null) {
-  if (typeof ref === "function") {
-    ref(value)
-    return
-  }
-
-  if (ref) {
-    ref.current = value
-  }
-}
 
 function runPress(onPress?: () => void) {
   if (!onPress) return
@@ -354,7 +343,7 @@ export function LaunchChecklist({
       {items.map((item) => (
         <View key={item.label} style={styles.checkRow}>
           <View style={[styles.checkDot, item.done && styles.checkDotDone]}>
-            <Text style={[styles.checkMark, item.done && styles.checkMarkDone]}>{item.done ? "✓" : "•"}</Text>
+            <Text style={[styles.checkMark, item.done && styles.checkMarkDone]}>{item.done ? "OK" : "-"}</Text>
           </View>
           <Text style={styles.helper}>{item.label}</Text>
         </View>
@@ -793,7 +782,9 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field({
   autoFocus,
   importantForAutofill,
 }, ref) {
+  const inputRef = useRef<TextInput>(null)
   const [focused, setFocused] = useState(false)
+  useImperativeHandle(ref, () => inputRef.current as TextInput)
 
   return (
     <View style={styles.fieldWrap}>
@@ -813,7 +804,7 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field({
         onSubmitEditing={onSubmitEditing}
         placeholder={placeholder}
         placeholderTextColor="#98a2b3"
-        ref={(node) => assignTextInputRef(ref, node)}
+        ref={inputRef}
         returnKeyType={returnKeyType}
         secureTextEntry={secureTextEntry}
         submitBehavior={submitBehavior}
@@ -852,11 +843,21 @@ export const PasswordField = forwardRef<TextInput, PasswordFieldProps>(function 
   const [focused, setFocused] = useState(false)
   const [visible, setVisible] = useState(false)
   const Icon = visible ? EyeOff : Eye
+  useImperativeHandle(ref, () => inputRef.current as TextInput)
+
+  function focusPassword() {
+    requestAnimationFrame(() => inputRef.current?.focus())
+  }
 
   return (
     <View style={styles.fieldWrap}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <View style={[styles.passwordInputWrap, focused && styles.inputFocused]}>
+      <Pressable
+        accessibilityRole="none"
+        focusable={false}
+        onPressIn={focusPassword}
+        style={[styles.passwordInputWrap, focused && styles.inputFocused]}
+      >
         <TextInput
           accessibilityLabel={label}
           autoCapitalize="none"
@@ -869,10 +870,7 @@ export const PasswordField = forwardRef<TextInput, PasswordFieldProps>(function 
           onSubmitEditing={onSubmitEditing}
           placeholder={placeholder}
           placeholderTextColor="#98a2b3"
-          ref={(node) => {
-            inputRef.current = node
-            assignTextInputRef(ref, node)
-          }}
+          ref={inputRef}
           returnKeyType={returnKeyType}
           secureTextEntry={!visible}
           style={styles.passwordInput}
@@ -885,17 +883,18 @@ export const PasswordField = forwardRef<TextInput, PasswordFieldProps>(function 
           accessibilityRole="button"
           focusable={false}
           hitSlop={8}
+          onPressIn={(event) => event.stopPropagation()}
           onPress={() =>
             runPress(() => {
               setVisible((current) => !current)
-              requestAnimationFrame(() => inputRef.current?.focus())
+              focusPassword()
             })
           }
           style={styles.passwordToggle}
         >
           <Icon color={colors.slate} size={19} strokeWidth={2.2} />
         </Pressable>
-      </View>
+      </Pressable>
     </View>
   )
 })
@@ -1556,7 +1555,9 @@ export const styles = StyleSheet.create({
     borderColor: colors.line,
     borderRadius: radius.lg,
     borderWidth: 1,
+    flex: 1,
     gap: spacing.sm,
+    minWidth: "47%",
     padding: spacing.md,
     ...shadows.card,
   },
@@ -1609,7 +1610,7 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     height: 22,
     justifyContent: "center",
-    width: 22,
+    width: 28,
   },
   checkDotDone: {
     backgroundColor: colors.greenSoft,
@@ -1617,7 +1618,7 @@ export const styles = StyleSheet.create({
   },
   checkMark: {
     color: colors.slate,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "900",
     lineHeight: 14,
   },
