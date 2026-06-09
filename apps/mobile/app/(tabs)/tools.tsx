@@ -2,7 +2,7 @@ import { router } from "expo-router"
 import { Bell, ClipboardCheck, FileSignature, FolderLock, Landmark, Search, ShieldCheck, TrendingUp } from "lucide-react-native"
 import { Fragment } from "react"
 
-import { BureauHero, CommandCard, InsightCard, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge, styles } from "@/components/ui"
+import { BureauHero, CommandCard, InsightCard, LaunchChecklist, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge, styles } from "@/components/ui"
 import { View } from "react-native"
 
 const tools = [
@@ -88,6 +88,14 @@ export default function ToolsScreen() {
         title="Use the right tool at the right moment."
         body="Search before you accept. Contracts before you schedule. Evidence and recovery when payment or project facts need documentation."
         tone="gold"
+      />
+      <LaunchChecklist
+        title="Use tools in order"
+        items={[
+          { label: "Before the job: search, watch, and set contract terms", done: true },
+          { label: "During the job: preserve evidence and document facts", done: true },
+          { label: "After an issue: use recovery or Florida lien service when payment needs structure", done: true },
+        ]}
       />
       <View style={styles.metricGrid}>
         <CommandCard

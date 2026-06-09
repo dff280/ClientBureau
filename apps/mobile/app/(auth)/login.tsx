@@ -7,6 +7,7 @@ import {
   AuthShell,
   AuthSwitchCard,
   Field,
+  LaunchChecklist,
   LoadingState,
   Message,
   PasswordField,
@@ -88,6 +89,14 @@ export default function LoginScreen() {
         <Message tone="error" text={error} />
         <PrimaryButton loading={busy} onPress={canSubmit ? submit : undefined} title="Sign in" />
       </SecureFormCard>
+      <LaunchChecklist
+        title="What opens after sign in"
+        items={[
+          { label: "Daily command center with search, alerts, and next actions", done: true },
+          { label: "Private records for contracts, recovery, lien service, and evidence", done: true },
+          { label: "Mobile-safe views without raw evidence paths or internal notes", done: true },
+        ]}
+      />
       <AuthSwitchCard
         action="Create account"
         label="New to Client Bureau?"

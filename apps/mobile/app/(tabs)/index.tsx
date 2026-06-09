@@ -10,6 +10,7 @@ import {
   CommandCard,
   IconActionRow,
   InsightCard,
+  LaunchChecklist,
   LoadingState,
   MetricTile,
   PremiumEmptyState,
@@ -77,6 +78,16 @@ export default function HomeScreen() {
         <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} helper={`${counts?.alerts ?? 0} alert(s)`} />
         <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} helper="Resolution Desk" tone="gold" />
       </View>
+
+      <LaunchChecklist
+        title="Launch-ready workspace"
+        items={[
+          { label: "Search a lead before scheduling or buying materials", done: dashboard.stats.savedSearches > 0 },
+          { label: "Create contract packet before the job starts", done: (counts?.contractPackets ?? 0) > 0 },
+          { label: "Keep private evidence ready for reports or service cases", done: (counts?.evidenceItems ?? dashboard.stats.evidenceItems) > 0 },
+          { label: "Use recovery or lien service only when a payment issue needs structure", done: (counts?.managedRecoveryCases ?? 0) + (counts?.floridaLienCases ?? 0) > 0 },
+        ]}
+      />
 
       <SectionHeader
         title="Today's work"

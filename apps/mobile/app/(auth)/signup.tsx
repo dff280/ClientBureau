@@ -8,6 +8,7 @@ import {
   AuthSwitchCard,
   ChoiceRow,
   Field,
+  LaunchChecklist,
   LoadingState,
   Message,
   PasswordField,
@@ -47,11 +48,13 @@ export default function SignupScreen() {
     fullName.trim().length > 1 &&
     email.trim().length > 3 &&
     password.length >= 6
-  const canCreate =
-    canContinue &&
+  const businessComplete =
     businessName.trim().length > 1 &&
     trade.trim().length > 1 &&
-    city.trim().length > 1 &&
+    city.trim().length > 1
+  const canCreate =
+    canContinue &&
+    businessComplete &&
     !busy
 
   async function submit() {
@@ -88,6 +91,14 @@ export default function SignupScreen() {
       />
       <TrustProofStrip items={proofItems} />
       <SegmentedTabs options={["Account", "Business"]} value={step} onChange={setStep} />
+      <LaunchChecklist
+        title="Account setup"
+        items={[
+          { label: "Owner login details", done: canContinue },
+          { label: "Business name, trade, city, and state", done: businessComplete },
+          { label: "Ready for search, reports, contracts, and service workflows", done: canContinue && businessComplete },
+        ]}
+      />
       <SecureFormCard
         title={step === "Account" ? "Your account" : "Business details"}
         body={step === "Account" ? "Start with the owner account used to sign in." : "Add the business identity contractors and records should use."}

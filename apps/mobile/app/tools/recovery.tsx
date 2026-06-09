@@ -9,6 +9,7 @@ import {
   Field,
   FormStepPanel,
   IconActionRow,
+  LaunchChecklist,
   LoadingState,
   Message,
   MetricMini,
@@ -123,6 +124,14 @@ export default function RecoveryScreen() {
           <MetricMini label="Due" value={`$${totalDue.toLocaleString()}`} />
         </View>
       ) : null}
+      <LaunchChecklist
+        title="Recovery case readiness"
+        items={[
+          { label: "Client and location identified", done: form.clientName.trim().length > 0 && form.city.trim().length > 0 },
+          { label: "Amount due and invoice age entered", done: Number(form.amountDue || 0) > 0 && Number(form.invoiceAgeDays || 0) > 0 },
+          { label: "Factual case summary prepared", done: form.summary.trim().length > 10 },
+        ]}
+      />
       {showForm ? (
         <>
         <FormStepPanel

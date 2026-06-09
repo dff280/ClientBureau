@@ -4,7 +4,7 @@ import { Globe, LifeBuoy, LogOut, ShieldCheck, Smartphone, UserCheck } from "luc
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
-import { BureauHero, Card, IconActionRow, InsightCard, MetricMini, PrimaryButton, Screen, SectionHeader, StatusPill, TrustBadge, styles } from "@/components/ui"
+import { BureauHero, Card, IconActionRow, InsightCard, LaunchChecklist, MetricMini, PrimaryButton, Screen, SectionHeader, StatusPill, TrustBadge, styles } from "@/components/ui"
 import { mobileFetch } from "@/lib/api"
 import { siteUrl } from "@/lib/config"
 import type { ApiResult, DashboardPayload } from "@/lib/types"
@@ -73,6 +73,15 @@ export default function AccountScreen() {
           </View>
         </Card>
       ) : null}
+
+      <LaunchChecklist
+        title="Account health"
+        items={[
+          { label: "Authenticated mobile session", done: true },
+          { label: "Business profile available", done: Boolean(dashboard?.contractor.businessName) },
+          { label: "Full dashboard available for billing, uploads, and support", done: true },
+        ]}
+      />
 
       <SectionHeader title="Account actions" body="Use the web dashboard for deeper account settings and support." />
       <IconActionRow

@@ -10,6 +10,7 @@ import {
   Card,
   CommandCard,
   IconActionRow,
+  LaunchChecklist,
   Message,
   MetricMini,
   PremiumEmptyState,
@@ -143,6 +144,15 @@ export default function SearchScreen() {
         ))}
       </View>
       <SegmentedTabs options={stateOptions} value={state} onChange={setState} />
+
+      <LaunchChecklist
+        title="Search workflow"
+        items={[
+          { label: "Enter a name, business, city, phone, or email", done: query.trim().length > 0 },
+          { label: "Run a private match before taking the job", done: Boolean(result?.ok) },
+          { label: "Open a profile, save the search, or watch the client", done: currentQuerySaved || Object.values(watchedIds).some(Boolean) },
+        ]}
+      />
 
       <Message text={message} tone="success" />
 

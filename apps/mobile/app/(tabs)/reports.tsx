@@ -10,6 +10,7 @@ import {
   Field,
   FormStepPanel,
   IconActionRow,
+  LaunchChecklist,
   LoadingState,
   Message,
   MetricMini,
@@ -164,6 +165,14 @@ export default function ReportsScreen() {
         title={showForm ? "Close report form" : "Submit a report"}
         body="Use this for payment issues, positive experiences, disputes, and project context."
         onPress={() => setShowForm(!showForm)}
+      />
+      <LaunchChecklist
+        title="Before submitting"
+        items={[
+          { label: "Choose positive experience or payment/project issue", done: Boolean(form.reportCategory) },
+          { label: "Use neutral public wording and private detail fields", done: form.reportSummary.trim().length > 0 || form.detailedExperience.trim().length > 0 },
+          { label: "Attach supporting evidence later from the web dashboard when available", done: false },
+        ]}
       />
       <Message tone={message?.includes("correct") ? "error" : "success"} text={message} />
 

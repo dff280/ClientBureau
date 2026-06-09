@@ -341,6 +341,28 @@ export function ToolBrief({
   )
 }
 
+export function LaunchChecklist({
+  title,
+  items,
+}: {
+  title: string
+  items: Array<{ label: string; done?: boolean }>
+}) {
+  return (
+    <View style={styles.launchChecklist}>
+      <Text style={styles.cardTitle}>{title}</Text>
+      {items.map((item) => (
+        <View key={item.label} style={styles.checkRow}>
+          <View style={[styles.checkDot, item.done && styles.checkDotDone]}>
+            <Text style={[styles.checkMark, item.done && styles.checkMarkDone]}>{item.done ? "✓" : "•"}</Text>
+          </View>
+          <Text style={styles.helper}>{item.label}</Text>
+        </View>
+      ))}
+    </View>
+  )
+}
+
 export function PrimaryButton({
   title,
   onPress,
@@ -1565,6 +1587,42 @@ export const styles = StyleSheet.create({
     flex: 1,
     minWidth: "47%",
     padding: spacing.md,
+  },
+  launchChecklist: {
+    backgroundColor: colors.paper,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  checkRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+  checkDot: {
+    alignItems: "center",
+    backgroundColor: "#eef2f7",
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    height: 22,
+    justifyContent: "center",
+    width: 22,
+  },
+  checkDotDone: {
+    backgroundColor: colors.greenSoft,
+    borderColor: "#a6f4c5",
+  },
+  checkMark: {
+    color: colors.slate,
+    fontSize: 12,
+    fontWeight: "900",
+    lineHeight: 14,
+  },
+  checkMarkDone: {
+    color: colors.green,
   },
   metricValue: {
     color: colors.navy,

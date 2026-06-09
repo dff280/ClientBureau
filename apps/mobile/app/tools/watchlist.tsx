@@ -9,6 +9,7 @@ import {
   Field,
   FormStepPanel,
   IconActionRow,
+  LaunchChecklist,
   LoadingState,
   Message,
   MetricMini,
@@ -109,6 +110,14 @@ export default function WatchlistScreen() {
           <MetricMini label="Private match" value={privateMatches} />
         </View>
       ) : null}
+      <LaunchChecklist
+        title="Monitoring workflow"
+        items={[
+          { label: "Search a client before adding them to watchlist", done: watchlist.length > 0 },
+          { label: "Review high alerts before accepting more work", done: highAlerts === 0 },
+          { label: "Use private-match signals only inside your account", done: true },
+        ]}
+      />
       <IconActionRow
         icon={Bell}
         title={showForm ? "Close manual watch form" : "Add by profile ID"}

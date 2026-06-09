@@ -9,6 +9,7 @@ import {
   Field,
   FormStepPanel,
   IconActionRow,
+  LaunchChecklist,
   LoadingState,
   Message,
   MetricMini,
@@ -119,6 +120,14 @@ export default function ContractsScreen() {
           <MetricMini label="Links" value={linkReadyPackets} />
         </View>
       ) : null}
+      <LaunchChecklist
+        title="Agreement packet readiness"
+        items={[
+          { label: "Client and project identified", done: form.clientName.trim().length > 0 && form.projectType.trim().length > 0 },
+          { label: "Scope and included work summarized", done: form.scopeSummary.trim().length > 0 || form.includedWork.trim().length > 0 },
+          { label: "Payment terms and deposit recorded", done: form.paymentTerms.trim().length > 0 || Number(form.depositRequired || 0) > 0 },
+        ]}
+      />
       {showForm ? (
         <>
         <FormStepPanel

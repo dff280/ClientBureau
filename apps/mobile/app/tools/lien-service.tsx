@@ -9,6 +9,7 @@ import {
   Field,
   FormStepPanel,
   IconActionRow,
+  LaunchChecklist,
   LoadingState,
   Message,
   MetricMini,
@@ -131,6 +132,14 @@ export default function LienServiceScreen() {
           <MetricMini label="Deadlines" value={deadlineCases} />
         </View>
       ) : null}
+      <LaunchChecklist
+        title="Florida case readiness"
+        items={[
+          { label: "Workflow and party details selected", done: form.clientName.trim().length > 0 && form.ownerName.trim().length > 0 },
+          { label: "Florida property and last work date entered", done: form.propertyCounty.trim().length > 0 && form.lastWorkDate.trim().length > 0 },
+          { label: "Amount due and private summary prepared", done: Number(form.amountDue || 0) > 0 && form.privateSummary.trim().length > 10 },
+        ]}
+      />
       {showForm ? (
         <>
         <FormStepPanel

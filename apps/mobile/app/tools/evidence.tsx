@@ -6,6 +6,7 @@ import {
   BureauHero,
   Card,
   IconActionRow,
+  LaunchChecklist,
   LoadingState,
   Message,
   MetricMini,
@@ -86,6 +87,14 @@ export default function EvidenceScreen() {
             <MetricMini label="Reviewed" value={reviewedItems} />
             <MetricMini label="Needs review" value={needsReviewItems} />
           </View>
+          <LaunchChecklist
+            title="Evidence workflow"
+            items={[
+              { label: "Keep raw files private and upload from the web dashboard", done: true },
+              { label: "Review evidence status before submitting reports or service cases", done: reviewedItems > 0 },
+              { label: "Use approved summaries only on public records", done: true },
+            ]}
+          />
           <Card>
             <Text style={styles.cardTitle}>Privacy guardrail</Text>
             <Text style={styles.body}>{result.data.privacyNote}</Text>

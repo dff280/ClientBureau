@@ -7,6 +7,8 @@ export async function mobileFetch<T>(
   init: RequestInit = {},
 ): Promise<ApiResult<T>> {
   const headers = new Headers(init.headers)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 18000)
   headers.set("Accept", "application/json")
 
   if (init.body && !headers.has("Content-Type")) {
@@ -17,21 +19,33 @@ export async function mobileFetch<T>(
     headers.set("Authorization", `Bearer ${token}`)
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...init,
-    headers,
-  })
+  try {
+    const response = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      headers,
+      signal: controller.signal,
+    })
 
-  const payload = (await response.json().catch(() => ({
-    ok: false,
-    message: "Client Bureau returned an unreadable response.",
-  }))) as ApiResult<T>
+    const payload = (await response.json().catch(() => ({
+      ok: false,
+      message: "Client Bureau returned an unreadable response.",
+    }))) as ApiResult<T>
 
-  if (!response.ok && payload.ok) {
-    return { ok: false, message: "Request failed. Please try again." }
+    if (!response.ok && payload.ok) {
+      return { ok: false, message: "Request failed. Please try again." }
+    }
+
+    return payload
+  } catch (error) {
+    const offlineMessage =
+      error instanceof Error && error.name === "AbortError"
+        ? "Client Bureau took too long to respond. Check your connection and try again."
+        : "Could not reach Client Bureau. Check your connection and try again."
+
+    return { ok: false, message: offlineMessage }
+  } finally {
+    clearTimeout(timeout)
   }
-
-  return payload
 }
 
 export function jsonBody(value: unknown) {
