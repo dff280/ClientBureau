@@ -16,6 +16,7 @@ import {
   SectionHeader,
   StatusPill,
   TimelineItem,
+  ToolBrief,
   TrustBadge,
   styles,
 } from "@/components/ui"
@@ -85,6 +86,11 @@ export default function WatchlistScreen() {
         body="Add a public Client Bureau profile ID after search, then track new moderated signals."
         badge="Monitor"
         onPress={() => setShowForm(!showForm)}
+      />
+      <ToolBrief
+        useWhen="You may bid, schedule, or work with a client again and want to monitor new approved context."
+        privateNote="Watch reasons, private matches, and alerts stay in your account."
+        primaryAction="Search first, then watch a matched public profile from the results."
       />
       {showForm ? (
         <FormStepPanel

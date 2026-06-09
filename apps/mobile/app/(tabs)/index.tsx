@@ -7,6 +7,7 @@ import {
   ActionDock,
   BureauHero,
   Card,
+  CommandCard,
   IconActionRow,
   InsightCard,
   LoadingState,
@@ -56,7 +57,7 @@ export default function HomeScreen() {
     >
       <BureauHero
         eyebrow="Mobile command center"
-        title="Your job protection desk."
+        title="Check the client before you take the job."
         body="Check the client before you commit labor, materials, scheduling, or payment follow-up."
       >
         <StatusPill label={dashboard.subscription?.tier ?? "Free plan"} tone="gold" />
@@ -71,16 +72,40 @@ export default function HomeScreen() {
       </BureauHero>
 
       <View style={styles.metricGrid}>
-        <MetricTile label="Reports filed" value={dashboard.stats.reportsSubmitted} />
-        <MetricTile label="Saved searches" value={dashboard.stats.savedSearches} />
-        <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} />
-        <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} tone="gold" />
+        <MetricTile label="Searches saved" value={dashboard.stats.savedSearches} helper="Use before accepting work" />
+        <MetricTile label="Reports filed" value={dashboard.stats.reportsSubmitted} helper="Private until approved" />
+        <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} helper={`${counts?.alerts ?? 0} alert(s)`} />
+        <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} helper="Resolution Desk" tone="gold" />
+      </View>
+
+      <SectionHeader
+        title="Today's work"
+        body="The highest-value actions for a contractor checking a lead, setting terms, or protecting payment."
+      />
+      <View style={styles.metricGrid}>
+        <CommandCard
+          icon={Search}
+          label="Start here"
+          title="Check a Client"
+          body="Search names, businesses, cities, and private identifiers before you commit."
+          metric="01"
+          tone="gold"
+          onPress={() => router.push("/search")}
+        />
+        <CommandCard
+          icon={FileSignature}
+          label="Before scheduling"
+          title="Create contract"
+          body="Prepare scope, payment terms, and signing links before the job starts."
+          metric={counts?.contractPackets ?? 0}
+          onPress={() => router.push("/tools/contracts")}
+        />
       </View>
 
       <ActionDock>
-        <Text style={styles.cardTitle}>Start here</Text>
+        <Text style={styles.cardTitle}>Next best action</Text>
         <Text style={styles.body}>
-          Choose the action that matches the job in front of you. Everything here stays private unless a report is approved for public display.
+          Pick the workflow that matches where the job stands. Records stay private unless a report is approved for public display.
         </Text>
         <View style={styles.chipRail}>
           <SuggestionChip label="New lead" tone="gold" onPress={() => router.push("/search")} />
@@ -104,15 +129,15 @@ export default function HomeScreen() {
 
       <InsightCard
         icon={ClipboardCheck}
-        label="Protection posture"
+        label="How to use Client Bureau"
         title="Search before the job. Document during the job. Protect payment after."
         body="Client Bureau keeps the mobile workflow focused on the actions contractors take every day."
         tone="gold"
       />
 
       <SectionHeader
-        title="Next best actions"
-        body="Start with the tool that protects the job you are about to take or the payment issue you are already handling."
+        title="Job-stage tools"
+        body="Before, during, and after the job: use the right workflow at the right moment."
       />
       <IconActionRow
         icon={FileSignature}
@@ -131,6 +156,12 @@ export default function HomeScreen() {
         title="Start Florida lien service"
         body="Begin a private Florida notice or filing review workflow."
         onPress={() => router.push("/tools/lien-service")}
+      />
+      <IconActionRow
+        icon={Siren}
+        title="Review all tools"
+        body="Contracts, recovery, lien service, evidence, reports, and watchlist."
+        onPress={() => router.push("/tools")}
       />
 
       {dashboard.reports.length ? (
@@ -154,12 +185,6 @@ export default function HomeScreen() {
         />
       )}
 
-      <IconActionRow
-        icon={ClipboardCheck}
-        title="Open full tool list"
-        body="Contracts, recovery, lien service, evidence, and watchlist."
-        onPress={() => router.push("/tools")}
-      />
     </Screen>
   )
 }

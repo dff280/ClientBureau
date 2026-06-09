@@ -14,6 +14,7 @@ import {
   SectionHeader,
   StatusPill,
   TimelineItem,
+  ToolBrief,
   TrustBadge,
   styles,
 } from "@/components/ui"
@@ -71,6 +72,11 @@ export default function EvidenceScreen() {
             <StatusPill label="Private by default" tone="gold" />
             <TrustBadge label="Evidence on file" tone="green" />
           </BureauHero>
+          <ToolBrief
+            useWhen="You need invoices, screenshots, contracts, photos, or PDFs tied to a report or service case."
+            privateNote="Raw files and storage paths stay private. Public pages only show approved evidence summaries."
+            primaryAction="Review status here, then upload or attach files from the web dashboard."
+          />
           <Card>
             <Text style={styles.cardTitle}>Privacy guardrail</Text>
             <Text style={styles.body}>{result.data.privacyNote}</Text>

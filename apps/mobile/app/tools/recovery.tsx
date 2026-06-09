@@ -17,6 +17,7 @@ import {
   SectionHeader,
   StatusPill,
   TimelineItem,
+  ToolBrief,
   TrustBadge,
   styles,
 } from "@/components/ui"
@@ -103,12 +104,11 @@ export default function RecoveryScreen() {
         badge="Staff review"
         onPress={() => setShowForm(!showForm)}
       />
-      <Card>
-        <Text style={styles.cardTitle}>Plain-English guardrail</Text>
-        <Text style={styles.body}>
-          Recovery cases are private service records. Client Bureau helps document outreach and resolution options; payments remain contractor-direct.
-        </Text>
-      </Card>
+      <ToolBrief
+        useWhen="An invoice is overdue and you need documented follow-up, staff review, and a clear case timeline."
+        privateNote="Recovery cases are private service records. Payments remain contractor-direct."
+        primaryAction="Submit the case facts, then upload supporting documents from the web dashboard."
+      />
       {showForm ? (
         <>
         <FormStepPanel
@@ -117,7 +117,7 @@ export default function RecoveryScreen() {
           body="Give staff enough context to identify the case without publishing private identifiers."
         >
           <Field label="Client name" value={form.clientName} onChangeText={(v) => setForm({ ...form, clientName: v })} />
-          <Field keyboardType="email-address" label="Client email" value={form.clientEmail} onChangeText={(v) => setForm({ ...form, clientEmail: v })} />
+          <Field keyboardType="email-address" label="Client email (private)" value={form.clientEmail} onChangeText={(v) => setForm({ ...form, clientEmail: v })} />
           <Field label="City" value={form.city} onChangeText={(v) => setForm({ ...form, city: v })} />
           <ChoiceRow label="State" options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
         </FormStepPanel>

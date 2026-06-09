@@ -8,8 +8,10 @@ import {
   BureauHero,
   BureauSearchBox,
   Card,
+  CommandCard,
   IconActionRow,
   Message,
+  MetricMini,
   PremiumEmptyState,
   Screen,
   SectionHeader,
@@ -45,6 +47,10 @@ export default function SearchScreen() {
 
   async function runSearch() {
     if (!accessToken) return
+    if (!query.trim()) {
+      setMessage("Enter a client name, business, city, phone, or email to start a private search.")
+      return
+    }
     setBusy(true)
     setMessage(undefined)
     const params = new URLSearchParams()
@@ -93,6 +99,22 @@ export default function SearchScreen() {
         <TrustBadge label="Moderated profiles" tone="green" />
       </BureauHero>
 
+      <View style={styles.metricGrid}>
+        <CommandCard
+          icon={Search}
+          label="Search intent"
+          title="Name, business, city, phone, or email"
+          body="Private identifiers are used for matching only. Public profiles do not show raw contact details."
+          tone="gold"
+        />
+        <CommandCard
+          icon={Bell}
+          label="After search"
+          title="Save or watch"
+          body="Keep useful searches in your account and monitor profiles before accepting more work."
+        />
+      </View>
+
       <BureauSearchBox
         buttonLabel="Search a Client"
         loading={busy}
@@ -128,6 +150,7 @@ export default function SearchScreen() {
                   <Text style={styles.body}>
                     {item.city}, {item.state} / {item.reportCount} approved signal(s)
                   </Text>
+                  <Text style={styles.helper}>Match confidence: {Math.round(item.matchScore)} / 100</Text>
                 </View>
                 <StatusPill label={item.riskLevel} tone={item.riskLevel === "Low" ? "green" : item.riskLevel === "High" ? "red" : "gold"} />
               </View>
@@ -142,6 +165,11 @@ export default function SearchScreen() {
                 body={item.latestSummary ?? item.paymentContextLabel}
               />
               <Text style={styles.helper}>{item.matchedBy}</Text>
+              <View style={styles.metricGrid}>
+                <MetricMini label="Reports" value={item.reportCount} />
+                <MetricMini label="Resolved" value={item.resolvedReportCount} />
+                <MetricMini label="Positive" value={item.positiveSignalCount} />
+              </View>
               <IconActionRow
                 icon={Eye}
                 title="Open public profile"
@@ -156,7 +184,7 @@ export default function SearchScreen() {
               />
             </Card>
           ))}
-          {!result.data.results.length ? (
+              {!result.data.results.length ? (
             <>
               {result.data.suggestions.length ? (
                 <Card>
@@ -177,9 +205,15 @@ export default function SearchScreen() {
               ) : null}
               <PremiumEmptyState
                 title="No public profile found yet"
-                body="Save this search or submit a documented report if you have a real client experience."
+                body="Save this search, try a broader city/name search, or document a real client experience if you have project records."
                 actionTitle="Save this search"
                 onAction={() => saveSearch(0)}
+              />
+              <IconActionRow
+                icon={Bell}
+                title="Watch this search later"
+                body="Saved searches help you return to leads before scheduling or buying materials."
+                onPress={() => saveSearch(0)}
               />
               <IconActionRow
                 icon={FileText}

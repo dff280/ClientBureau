@@ -258,6 +258,89 @@ export function MetricTile({
   )
 }
 
+export function MetricMini({ label, value }: { label: string; value: string | number }) {
+  return (
+    <View style={styles.metricMini}>
+      <Text style={styles.metricMiniValue}>{value}</Text>
+      <Text style={styles.metricMiniLabel}>{label}</Text>
+    </View>
+  )
+}
+
+export function CommandCard({
+  label,
+  title,
+  body,
+  metric,
+  icon: Icon,
+  onPress,
+  tone = "light",
+}: {
+  label: string
+  title: string
+  body: string
+  metric?: string | number
+  icon?: MobileIcon
+  onPress?: () => void
+  tone?: "light" | "gold" | "dark"
+}) {
+  return (
+    <Pressable
+      accessibilityRole={onPress ? "button" : undefined}
+      onPress={() => runPress(onPress)}
+      style={({ pressed }) => [
+        styles.commandCard,
+        tone === "gold" && styles.commandCardGold,
+        tone === "dark" && styles.commandCardDark,
+        pressed && onPress && styles.pressed,
+      ]}
+    >
+      <View style={styles.rowBetween}>
+        <View style={styles.actionText}>
+          <Text style={[styles.sectionEyebrow, tone === "dark" && styles.textOnDarkMuted]}>{label}</Text>
+          <Text style={[styles.cardTitle, tone === "dark" && styles.textOnDark]}>{title}</Text>
+        </View>
+        {Icon ? (
+          <View style={[styles.iconBadge, tone === "dark" && styles.iconBadgeDark]}>
+            <Icon color={tone === "dark" ? colors.gold2 : colors.navy} size={20} strokeWidth={2.3} />
+          </View>
+        ) : null}
+      </View>
+      {metric !== undefined ? (
+        <Text style={[styles.commandMetric, tone === "dark" && styles.textOnDark]}>{metric}</Text>
+      ) : null}
+      <Text style={[styles.body, tone === "dark" && styles.textOnDarkMuted]}>{body}</Text>
+    </Pressable>
+  )
+}
+
+export function ToolBrief({
+  useWhen,
+  privateNote,
+  primaryAction,
+}: {
+  useWhen: string
+  privateNote: string
+  primaryAction: string
+}) {
+  return (
+    <View style={styles.briefGrid}>
+      <View style={styles.briefCell}>
+        <Text style={styles.sectionEyebrow}>Use when</Text>
+        <Text style={styles.helper}>{useWhen}</Text>
+      </View>
+      <View style={styles.briefCell}>
+        <Text style={styles.sectionEyebrow}>Private</Text>
+        <Text style={styles.helper}>{privateNote}</Text>
+      </View>
+      <View style={styles.briefCell}>
+        <Text style={styles.sectionEyebrow}>Next action</Text>
+        <Text style={styles.helper}>{primaryAction}</Text>
+      </View>
+    </View>
+  )
+}
+
 export function PrimaryButton({
   title,
   onPress,
@@ -1423,6 +1506,65 @@ export const styles = StyleSheet.create({
   metricTileGold: {
     backgroundColor: colors.goldSoft,
     borderColor: colors.goldLine,
+  },
+  metricMini: {
+    backgroundColor: colors.paper,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flex: 1,
+    minWidth: "30%",
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  metricMiniValue: {
+    color: colors.navy,
+    fontSize: 17,
+    fontWeight: "900",
+  },
+  metricMiniLabel: {
+    color: colors.slate,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.15,
+    textTransform: "uppercase",
+  },
+  commandCard: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.md,
+    ...shadows.card,
+  },
+  commandCardGold: {
+    backgroundColor: colors.ivory,
+    borderColor: colors.goldLine,
+  },
+  commandCardDark: {
+    backgroundColor: colors.navy,
+    borderColor: colors.navy3,
+  },
+  commandMetric: {
+    color: colors.navy,
+    fontSize: 30,
+    fontWeight: "900",
+    lineHeight: 34,
+  },
+  briefGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  briefCell: {
+    backgroundColor: colors.paper,
+    borderColor: colors.line,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    flex: 1,
+    minWidth: "47%",
+    padding: spacing.md,
   },
   metricValue: {
     color: colors.navy,

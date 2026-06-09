@@ -17,6 +17,7 @@ import {
   SectionHeader,
   StatusPill,
   TimelineItem,
+  ToolBrief,
   TrustBadge,
   styles,
 } from "@/components/ui"
@@ -111,12 +112,11 @@ export default function LienServiceScreen() {
         badge="Private"
         onPress={() => setShowForm(!showForm)}
       />
-      <Card>
-        <Text style={styles.cardTitle}>Important guardrail</Text>
-        <Text style={styles.body}>
-          This mobile intake is not legal advice and does not publish lien documents. Staff review, authorization, and vendor/attorney steps are tracked privately.
-        </Text>
-      </Card>
+      <ToolBrief
+        useWhen="A Florida project may need notice or claim-of-lien filing support before a deadline."
+        privateNote="This is not legal advice and does not publish lien documents or property details."
+        primaryAction="Submit intake facts, then complete document upload and authorization from the web dashboard."
+      />
       {showForm ? (
         <>
         <FormStepPanel

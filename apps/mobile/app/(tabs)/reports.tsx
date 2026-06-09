@@ -6,11 +6,13 @@ import {
   BureauHero,
   Card,
   ChoiceRow,
+  CommandCard,
   Field,
   FormStepPanel,
   IconActionRow,
   LoadingState,
   Message,
+  MetricMini,
   PremiumEmptyState,
   PrimaryButton,
   Screen,
@@ -29,7 +31,12 @@ type ReportsPayload = {
   drafts: Array<{ id: string; clientName: string; projectType: string; status: string; nextStep: string }>
 }
 
-const statusOptions = ["All", "Pending", "Approved", "Disputed", "Rejected"]
+const statusOptions = ["All", "Draft", "Pending", "Approved", "Published", "Needs info", "Disputed", "Rejected"]
+const positiveCategories = ["Positive experience", "Would work with again"]
+
+function normalizeStatus(value: string) {
+  return value.toLowerCase().replaceAll("_", " ").trim()
+}
 
 export default function ReportsScreen() {
   const { accessToken } = useAuth()
@@ -65,12 +72,14 @@ export default function ReportsScreen() {
   async function submit() {
     if (!accessToken) return
     setBusy(true)
+    const positive = positiveCategories.includes(form.reportCategory)
     const payload = {
       ...form,
       projectCity: form.city,
       projectState: form.state,
       contractAmount: Number(form.contractAmount || 0),
-      amountUnpaid: Number(form.amountUnpaid || 0),
+      amountUnpaid: positive ? 0 : Number(form.amountUnpaid || 0),
+      paymentStatus: positive ? "No issue reported" : form.paymentStatus,
       detailedExperience: form.detailedExperience,
       truthfulCertification: true,
       documentationCertification: true,
@@ -97,8 +106,12 @@ export default function ReportsScreen() {
   if (!result) return <LoadingState label="Loading reports..." />
 
   const visibleReports = result.ok
-    ? result.data.reports.filter((report) => statusFilter === "All" || report.status.toLowerCase() === statusFilter.toLowerCase())
+    ? result.data.reports.filter((report) => statusFilter === "All" || normalizeStatus(report.status) === normalizeStatus(statusFilter))
     : []
+  const approvedCount = result.ok ? result.data.reports.filter((report) => report.status === "approved").length : 0
+  const positiveCount = result.ok ? result.data.reports.filter((report) => positiveCategories.includes(report.reportCategory)).length : 0
+  const pendingCount = result.ok ? result.data.reports.filter((report) => report.status === "pending").length : 0
+  const isPositiveForm = positiveCategories.includes(form.reportCategory)
 
   return (
     <Screen
@@ -109,11 +122,29 @@ export default function ReportsScreen() {
     >
       <BureauHero
         eyebrow="Moderated reports"
-        title="Create a clear record, not a complaint post."
+        title="Document the experience clearly."
         body="Submit documented contractor experiences for review. Private evidence and sensitive details stay private."
       >
         <StatusPill label="Admin reviewed" tone="gold" />
       </BureauHero>
+
+      <View style={styles.metricGrid}>
+        <CommandCard
+          icon={ShieldCheck}
+          label="Positive"
+          title="Good clients count too"
+          body="Document clients you would work with again and keep positive signals visible."
+          metric={positiveCount}
+          tone="gold"
+        />
+        <CommandCard
+          icon={ClipboardCheck}
+          label="Moderation"
+          title="Track status"
+          body="Pending, approved, published, disputed, and rejected records stay easy to scan."
+          metric={pendingCount}
+        />
+      </View>
 
       <IconActionRow
         icon={FileText}
@@ -155,8 +186,13 @@ export default function ReportsScreen() {
           <FormStepPanel step="Step 2" title="Project and payment" body="Summarize the project and payment status in plain English.">
             <Field label="Project type" value={form.projectType} onChangeText={(v) => setForm({ ...form, projectType: v })} />
             <Field keyboardType="numeric" label="Contract amount" value={form.contractAmount} onChangeText={(v) => setForm({ ...form, contractAmount: v })} />
-            <Field keyboardType="numeric" label="Amount unpaid" value={form.amountUnpaid} onChangeText={(v) => setForm({ ...form, amountUnpaid: v })} />
-            <ChoiceRow label="Category" options={["Non-payment", "Late payment", "Positive experience", "Would work with again"]} value={form.reportCategory} onChange={(v) => setForm({ ...form, reportCategory: v })} />
+            {!isPositiveForm ? (
+              <Field keyboardType="numeric" label="Amount unpaid" value={form.amountUnpaid} onChangeText={(v) => setForm({ ...form, amountUnpaid: v })} />
+            ) : null}
+            <ChoiceRow label="Experience type" options={["Non-payment", "Late payment", "Positive experience", "Would work with again"]} value={form.reportCategory} onChange={(v) => setForm({ ...form, reportCategory: v })} />
+            {isPositiveForm ? (
+              <Message text="Positive reports publish as client experience signals without unpaid-amount language." tone="success" />
+            ) : null}
           </FormStepPanel>
           <FormStepPanel step="Step 3" title="Summary for moderation" body="Keep public wording factual, neutral, and response-aware.">
             <Field label="Public summary" multiline value={form.reportSummary} onChangeText={(v) => setForm({ ...form, reportSummary: v })} />
@@ -171,9 +207,17 @@ export default function ReportsScreen() {
           <>
             <SectionHeader title="Report status" body="Track what is pending, approved, disputed, rejected, or published." />
             <SegmentedTabs options={statusOptions} value={statusFilter} onChange={setStatusFilter} />
+            <View style={styles.metricGrid}>
+              <MetricMini label="Approved" value={approvedCount} />
+              <MetricMini label="Pending" value={pendingCount} />
+              <MetricMini label="Positive" value={positiveCount} />
+            </View>
             {visibleReports.map((report) => {
+              const positive = positiveCategories.includes(report.reportCategory)
               const paymentLabel =
-                report.amountUnpaid > 0
+                positive
+                  ? "Client experience: positive"
+                  : report.amountUnpaid > 0
                   ? `Reported unpaid: $${report.amountUnpaid.toLocaleString()}`
                   : "Payment issue: none reported"
 
@@ -187,7 +231,7 @@ export default function ReportsScreen() {
                     title={report.reportCategory}
                     body={`${report.paymentStatus} / ${report.projectCity}, ${report.projectState}`}
                     meta={paymentLabel}
-                    tone={report.status === "approved" ? "green" : "gold"}
+                    tone={positive || report.status === "approved" ? "green" : "gold"}
                   />
                 </Card>
               )

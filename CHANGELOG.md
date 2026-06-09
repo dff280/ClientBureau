@@ -4,6 +4,30 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.4.0 - Android Daily Command Center
+
+Date: June 9, 2026
+
+### Improved
+
+- Upgraded the Android app Home screen into a tighter contractor command center with stronger “Check a Client” positioning, daily work cards, and next-best actions.
+- Strengthened mobile Search with clearer private matching guidance, compact result metrics, match confidence, save-search/watch actions, and no-result guidance.
+- Reorganized the mobile Tools screen by job stage: before the job, during the job, and after an issue.
+- Improved Reports with positive-report support, clearer status filtering, compact counts, and positive-client language that avoids unpaid-amount framing.
+- Added plain-English `Use when`, `Private`, and `Next action` guidance to Contracts, Payment Recovery, Florida Lien Service, Evidence Vault, and Watchlist screens.
+- Masked account email display in the mobile Account screen and bumped the Android app to `0.4.0` / versionCode `8`.
+
+### Verification
+
+- `npm run mobile:typecheck`
+- `npm run mobile:lint`
+- `npm run mobile:doctor`
+- `npm run mobile:check`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+
 ## 0.3.11 - VPS Compose Project Deployment Fix
 
 Date: June 9, 2026

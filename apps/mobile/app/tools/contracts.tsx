@@ -17,6 +17,7 @@ import {
   SectionHeader,
   StatusPill,
   TimelineItem,
+  ToolBrief,
   TrustBadge,
   styles,
 } from "@/components/ui"
@@ -99,12 +100,11 @@ export default function ContractsScreen() {
         badge="E-sign ready"
         onPress={() => setShowForm(!showForm)}
       />
-      <Card>
-        <Text style={styles.cardTitle}>What stays private</Text>
-        <Text style={styles.body}>
-          Contract terms, client details, signing links, and payment terms stay off public Client Bureau profiles.
-        </Text>
-      </Card>
+      <ToolBrief
+        useWhen="You are about to schedule work, buy materials, collect a deposit, or approve a change order."
+        privateNote="Contract terms, client details, signing links, and payment terms stay off public profiles."
+        primaryAction="Create the packet, then use the web dashboard to copy the signing link."
+      />
       {showForm ? (
         <>
         <FormStepPanel

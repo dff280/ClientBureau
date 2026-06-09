@@ -1,10 +1,27 @@
 import { router } from "expo-router"
-import { Bell, FileSignature, FolderLock, Landmark, ShieldCheck, TrendingUp } from "lucide-react-native"
+import { Bell, ClipboardCheck, FileSignature, FolderLock, Landmark, Search, ShieldCheck, TrendingUp } from "lucide-react-native"
 import { Fragment } from "react"
 
-import { BureauHero, InsightCard, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge } from "@/components/ui"
+import { BureauHero, CommandCard, InsightCard, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge, styles } from "@/components/ui"
+import { View } from "react-native"
 
 const tools = [
+  {
+    group: "Before the job",
+    title: "Search Clients",
+    body: "Check public profiles and private-match signals before you accept work.",
+    href: "/search",
+    meta: "The first step for every new lead.",
+    icon: Search,
+  },
+  {
+    group: "Before the job",
+    title: "Watchlist",
+    body: "Track clients, saved searches, and private alerts before committing to new work.",
+    href: "/tools/watchlist",
+    meta: "Monitor leads before accepting the job.",
+    icon: Bell,
+  },
   {
     group: "Before the job",
     title: "Contracts",
@@ -12,6 +29,22 @@ const tools = [
     href: "/tools/contracts",
     meta: "Use before scheduling or buying materials.",
     icon: FileSignature,
+  },
+  {
+    group: "During the job",
+    title: "Evidence Vault",
+    body: "Review private evidence summaries without exposing storage files publicly.",
+    href: "/tools/evidence",
+    meta: "Invoices, documents, photos, and screenshots.",
+    icon: FolderLock,
+  },
+  {
+    group: "During the job",
+    title: "Reports",
+    body: "Document positive experiences, payment issues, disputes, and job context.",
+    href: "/reports",
+    meta: "Moderated before public display.",
+    icon: ClipboardCheck,
   },
   {
     group: "After an issue",
@@ -28,22 +61,6 @@ const tools = [
     href: "/tools/lien-service",
     meta: "Florida cases only in this release.",
     icon: Landmark,
-  },
-  {
-    group: "During the job",
-    title: "Evidence Vault",
-    body: "Review private evidence summaries without exposing storage files publicly.",
-    href: "/tools/evidence",
-    meta: "Invoices, documents, photos, and screenshots.",
-    icon: FolderLock,
-  },
-  {
-    group: "Before the job",
-    title: "Watchlist",
-    body: "Track clients, saved searches, and private alerts before committing to new work.",
-    href: "/tools/watchlist",
-    meta: "Monitor leads before accepting the job.",
-    icon: Bell,
   },
 ] as const
 
@@ -72,6 +89,23 @@ export default function ToolsScreen() {
         body="Search before you accept. Contracts before you schedule. Evidence and recovery when payment or project facts need documentation."
         tone="gold"
       />
+      <View style={styles.metricGrid}>
+        <CommandCard
+          icon={Search}
+          label="Before"
+          title="Check first"
+          body="Search and watch clients before you commit labor or materials."
+          onPress={() => router.push("/search")}
+        />
+        <CommandCard
+          icon={TrendingUp}
+          label="After"
+          title="Resolve faster"
+          body="Use recovery or Florida lien service when payment needs structure."
+          tone="gold"
+          onPress={() => router.push("/tools/recovery")}
+        />
+      </View>
       <SectionHeader
         title="Choose by job stage"
         body="Simple groups keep the app from becoming a wall of tools."

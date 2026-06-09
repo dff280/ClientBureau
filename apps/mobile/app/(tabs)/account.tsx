@@ -7,10 +7,17 @@ import { BureauHero, Card, IconActionRow, InsightCard, PrimaryButton, Screen, St
 import { siteUrl } from "@/lib/config"
 import { useAuth } from "@/providers/auth-provider"
 
+function maskEmail(email?: string) {
+  if (!email || !email.includes("@")) return "Signed-in Client Bureau account"
+  const [name, domain] = email.split("@")
+  const safeName = name.length <= 2 ? `${name.slice(0, 1)}***` : `${name.slice(0, 2)}***`
+  return `${safeName}@${domain}`
+}
+
 export default function AccountScreen() {
   const { user, signOut } = useAuth()
-  const version = Constants.expoConfig?.version ?? "0.3.6"
-  const build = Constants.expoConfig?.android?.versionCode ?? 7
+  const version = Constants.expoConfig?.version ?? "0.4.0"
+  const build = Constants.expoConfig?.android?.versionCode ?? 8
 
   return (
     <Screen
@@ -33,7 +40,7 @@ export default function AccountScreen() {
         label="Mobile release"
         title={`Version ${version}`}
         metric={`Build ${build}`}
-        body={user?.email ?? "Signed-in Client Bureau account"}
+        body={maskEmail(user?.email)}
         tone="gold"
       />
 
