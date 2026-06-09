@@ -4,6 +4,24 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.3.11 - VPS Compose Project Deployment Fix
+
+Date: June 9, 2026
+
+### Fixed
+
+- Updated the VPS deploy helper to reuse the live `clientbureau` Docker Compose project instead of creating a second `client-bureau` project.
+- Prevented duplicate Caddy startup attempts that fail when ports 80 and 443 are already owned by the live compose stack.
+
+### Verification
+
+- Git Bash syntax check for `scripts/vps-deploy.sh`
+- `npm run lint`
+- `npm test`
+- `npm run build`
+- `npm run seo:check`
+- `npm run mobile:check`
+
 ## 0.3.10 - VPS Active Directory Detection
 
 Date: June 9, 2026

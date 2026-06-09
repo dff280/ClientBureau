@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_URL="https://github.com/dff280/ClientBureau.git"
 BRANCH="${BRANCH:-main}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-clientbureau}"
 
 if [ -z "${APP_DIR:-}" ]; then
   if [ -d "/opt/ClientBureau/.git" ]; then
@@ -47,8 +48,8 @@ SITE_URL="${SITE_URL:-https://clientbureau.com}"
 upsert_env "GIT_COMMIT_SHA" "$RELEASE_COMMIT"
 upsert_env "GIT_BRANCH" "$BRANCH"
 
-docker compose up -d --build
-docker compose ps
+docker compose -p "$COMPOSE_PROJECT_NAME" up -d --build
+docker compose -p "$COMPOSE_PROJECT_NAME" ps
 docker image prune -f
 
 echo ""
