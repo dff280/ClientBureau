@@ -90,7 +90,12 @@ export default function LienServiceScreen() {
   if (!result) return <LoadingState label="Loading Florida lien service..." />
 
   return (
-    <Screen eyebrow="Florida only" title="Lien Service">
+    <Screen
+      eyebrow="Florida only"
+      title="Lien Service"
+      body="Start Florida notice or filing review cases with private facts, deadlines, and authorization steps."
+      badge="Review"
+    >
       <BureauHero
         eyebrow="Attorney/vendor review workflow"
         title="Start a private Florida lien notice or filing case."

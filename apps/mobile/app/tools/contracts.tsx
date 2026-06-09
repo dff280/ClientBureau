@@ -78,7 +78,12 @@ export default function ContractsScreen() {
   if (!result) return <LoadingState label="Loading contracts..." />
 
   return (
-    <Screen eyebrow="Contracts" title="Agreement packets">
+    <Screen
+      eyebrow="Contracts"
+      title="Agreement packets"
+      body="Create private signing packets with scope, terms, deposits, and next actions."
+      badge="E-sign"
+    >
       <BureauHero
         eyebrow="Private contract workspace"
         title="Create a signing packet before the job starts."

@@ -55,7 +55,12 @@ export default function EvidenceScreen() {
   if (!result) return <LoadingState label="Loading evidence vault..." />
 
   return (
-    <Screen eyebrow="Evidence Vault" title="Private documents">
+    <Screen
+      eyebrow="Evidence Vault"
+      title="Private documents"
+      body="Track evidence summaries and review status without exposing raw files."
+      badge="Private"
+    >
       {result.ok ? (
         <>
           <BureauHero

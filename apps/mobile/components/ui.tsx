@@ -30,8 +30,10 @@ function runPress(onPress?: () => void) {
 export function Screen({
   title,
   eyebrow,
+  body,
+  badge,
   children,
-}: PropsWithChildren<{ title: string; eyebrow?: string }>) {
+}: PropsWithChildren<{ title: string; eyebrow?: string; body?: string; badge?: string }>) {
   const insets = useSafeAreaInsets()
 
   return (
@@ -46,7 +48,7 @@ export function Screen({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <AppHeader eyebrow={eyebrow} title={title} />
+          <AppHeader eyebrow={eyebrow} title={title} body={body} badge={badge} />
           {children}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -431,6 +433,33 @@ export function StatusPill({
     >
       <Text style={[styles.statusText, tone === "dark" && styles.statusTextDark]}>{label}</Text>
     </View>
+  )
+}
+
+export function SuggestionChip({
+  label,
+  onPress,
+  tone = "light",
+}: {
+  label: string
+  onPress?: () => void
+  tone?: "light" | "dark" | "gold"
+}) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => runPress(onPress)}
+      style={({ pressed }) => [
+        styles.suggestionChip,
+        tone === "dark" && styles.suggestionChipDark,
+        tone === "gold" && styles.suggestionChipGold,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.suggestionChipText, tone === "dark" && styles.suggestionChipTextDark]}>
+        {label}
+      </Text>
+    </Pressable>
   )
 }
 
@@ -1375,6 +1404,41 @@ export const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   statusTextDark: {
+    color: colors.white,
+  },
+  chipRail: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  signalRail: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 7,
+  },
+  suggestionChip: {
+    backgroundColor: colors.panel,
+    borderColor: colors.line,
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    ...shadows.card,
+  },
+  suggestionChipDark: {
+    backgroundColor: colors.navy,
+    borderColor: colors.navy,
+  },
+  suggestionChipGold: {
+    backgroundColor: colors.goldSoft,
+    borderColor: colors.goldLine,
+  },
+  suggestionChipText: {
+    color: colors.navy,
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  suggestionChipTextDark: {
     color: colors.white,
   },
   iconActionRow: {

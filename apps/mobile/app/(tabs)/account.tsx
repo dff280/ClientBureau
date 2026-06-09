@@ -9,11 +9,16 @@ import { useAuth } from "@/providers/auth-provider"
 
 export default function AccountScreen() {
   const { user, signOut } = useAuth()
-  const version = Constants.expoConfig?.version ?? "0.3.3"
-  const build = Constants.expoConfig?.android?.versionCode ?? 4
+  const version = Constants.expoConfig?.version ?? "0.3.5"
+  const build = Constants.expoConfig?.android?.versionCode ?? 6
 
   return (
-    <Screen eyebrow="Account" title="Client Bureau account">
+    <Screen
+      eyebrow="Account"
+      title="Client Bureau account"
+      body="Manage your session, support links, and full dashboard access from this phone."
+      badge="Secure"
+    >
       <BureauHero
         eyebrow="Contractor workspace"
         title={user?.fullName ?? "Client Bureau user"}

@@ -65,7 +65,12 @@ export default function WatchlistScreen() {
   if (!result) return <LoadingState label="Loading watchlist..." />
 
   return (
-    <Screen eyebrow="Watchlist" title="Client monitoring">
+    <Screen
+      eyebrow="Watchlist"
+      title="Client monitoring"
+      body="Track clients, saved searches, and private alerts before you accept more work."
+      badge="Alerts"
+    >
       <BureauHero
         eyebrow="Search alerts"
         title="Watch clients you may work with again."

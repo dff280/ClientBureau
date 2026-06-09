@@ -101,7 +101,12 @@ export default function ReportsScreen() {
     : []
 
   return (
-    <Screen eyebrow="Reports" title="Document client experiences with moderation.">
+    <Screen
+      eyebrow="Reports"
+      title="Document client experiences."
+      body="Track drafts, pending reports, approved records, positive experiences, and disputes from one simple status view."
+      badge="Moderated"
+    >
       <BureauHero
         eyebrow="Moderated reports"
         title="Create a clear record, not a complaint post."
@@ -117,6 +122,27 @@ export default function ReportsScreen() {
         onPress={() => setShowForm(!showForm)}
       />
       <Message tone={message?.includes("correct") ? "error" : "success"} text={message} />
+
+      {result.ok && result.data.drafts.length ? (
+        <Card>
+          <View style={styles.rowBetween}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>Draft reports</Text>
+              <Text style={styles.body}>Continue reports that are not ready for moderation yet.</Text>
+            </View>
+            <StatusPill label={`${result.data.drafts.length} draft`} tone="blue" />
+          </View>
+          {result.data.drafts.slice(0, 3).map((draft) => (
+            <TimelineItem
+              key={draft.id}
+              title={draft.clientName}
+              body={draft.projectType}
+              meta={draft.nextStep}
+              tone="blue"
+            />
+          ))}
+        </Card>
+      ) : null}
 
       {showForm ? (
         <>

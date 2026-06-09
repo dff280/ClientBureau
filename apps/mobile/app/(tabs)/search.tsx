@@ -1,5 +1,5 @@
 import * as WebBrowser from "expo-web-browser"
-import { Eye, Save, Search, ShieldCheck } from "lucide-react-native"
+import { Bell, Eye, Save, Search, ShieldCheck } from "lucide-react-native"
 import { useState } from "react"
 import { Text, View } from "react-native"
 
@@ -14,6 +14,7 @@ import {
   SectionHeader,
   SegmentedTabs,
   StatusPill,
+  SuggestionChip,
   TrustBadge,
   TrustScoreCard,
   styles,
@@ -31,6 +32,7 @@ type SearchPayload = {
 }
 
 const stateOptions = ["FL", "GA", "AL", "SC", "NC", "TX"]
+const quickSearches = ["Homeowner Orlando", "Property owner Tampa", "Kitchen remodel", "Late payment"]
 
 export default function SearchScreen() {
   const { accessToken } = useAuth()
@@ -61,12 +63,30 @@ export default function SearchScreen() {
     setMessage(saved.message)
   }
 
+  async function watchClient(item: MobileSearchResult) {
+    if (!accessToken) return
+    const watched = await mobileFetch("/api/mobile/watchlist", accessToken, {
+      method: "POST",
+      body: jsonBody({
+        clientId: item.id,
+        watchReason: `Mobile watch from search: ${item.displayName}`,
+        alertLevel: item.riskLevel === "High" ? "high" : "normal",
+      }),
+    })
+    setMessage(watched.message)
+  }
+
   return (
-    <Screen eyebrow="Client search" title="Check a client before you take the job.">
+    <Screen
+      eyebrow="Client search"
+      title="Check a client before you take the job."
+      body="Search names, businesses, cities, and private identifiers. Sensitive matching details stay protected."
+      badge="Private"
+    >
       <BureauHero
         eyebrow="Search before you sign"
-        title="Look up the client, then decide the next move."
-        body="Search names, businesses, cities, and private identifiers without exposing sensitive matching details publicly."
+        title="Fast context before you commit."
+        body="Use search as the first step before labor, materials, scheduling, deposits, or payment follow-up."
       >
         <StatusPill label="Private matching" tone="gold" />
         <TrustBadge label="Moderated profiles" tone="green" />
@@ -80,6 +100,11 @@ export default function SearchScreen() {
         placeholder="John Smith Orlando"
         value={query}
       />
+      <View style={styles.chipRail}>
+        {quickSearches.map((item) => (
+          <SuggestionChip key={item} label={item} onPress={() => setQuery(item)} />
+        ))}
+      </View>
       <SegmentedTabs options={stateOptions} value={state} onChange={setState} />
 
       <Message text={message} tone="success" />
@@ -98,11 +123,17 @@ export default function SearchScreen() {
               <View style={styles.rowBetween}>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{item.displayName}</Text>
+                  {item.businessName ? <Text style={styles.helper}>{item.businessName}</Text> : null}
                   <Text style={styles.body}>
                     {item.city}, {item.state} / {item.reportCount} approved signal(s)
                   </Text>
                 </View>
                 <StatusPill label={item.riskLevel} tone={item.riskLevel === "Low" ? "green" : item.riskLevel === "High" ? "red" : "gold"} />
+              </View>
+              <View style={styles.signalRail}>
+                <StatusPill label={item.evidenceOnFile ? "Evidence on file" : "No evidence summary"} tone={item.evidenceOnFile ? "green" : "neutral"} />
+                <StatusPill label={`${item.positiveSignalCount} positive`} tone="blue" />
+                <StatusPill label={`${item.openDisputeCount} dispute`} tone={item.openDisputeCount ? "gold" : "neutral"} />
               </View>
               <TrustScoreCard
                 score={item.score}
@@ -115,6 +146,12 @@ export default function SearchScreen() {
                 title="Open public profile"
                 body="View approved report context and response status."
                 onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/client/${item.publicSlug}`)}
+              />
+              <IconActionRow
+                icon={Bell}
+                title="Watch this client"
+                body="Save this profile to monitor approved updates and response activity."
+                onPress={() => watchClient(item)}
               />
             </Card>
           ))}

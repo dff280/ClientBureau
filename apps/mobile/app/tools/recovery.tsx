@@ -82,7 +82,12 @@ export default function RecoveryScreen() {
   if (!result) return <LoadingState label="Loading recovery cases..." />
 
   return (
-    <Screen eyebrow="Resolution Desk" title="Payment Recovery">
+    <Screen
+      eyebrow="Resolution Desk"
+      title="Payment Recovery"
+      body="Open private service cases, track invoice age, and follow staff-reviewed next actions."
+      badge="Private"
+    >
       <BureauHero
         eyebrow="Managed recovery workflow"
         title="Get organized help on unpaid invoices."

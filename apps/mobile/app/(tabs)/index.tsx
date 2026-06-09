@@ -12,8 +12,10 @@ import {
   LoadingState,
   MetricTile,
   PremiumEmptyState,
+  PrimaryButton,
   Screen,
   SectionHeader,
+  SuggestionChip,
   StatusTimeline,
   StatusPill,
   TrustBadge,
@@ -46,11 +48,16 @@ export default function HomeScreen() {
   const counts = riskOps?.counts
 
   return (
-    <Screen eyebrow="Contractor command center" title={`Welcome${user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}.`}>
+    <Screen
+      eyebrow="Home"
+      title={`Welcome${user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}.`}
+      body="Start with a client search, then move into reports, contracts, recovery, or evidence when the job needs protection."
+      badge="Secure"
+    >
       <BureauHero
         eyebrow="Mobile command center"
-        title="Check, document, and protect the job."
-        body="Use Client Bureau before you commit labor, materials, scheduling, or payment follow-up."
+        title="Your job protection desk."
+        body="Check the client before you commit labor, materials, scheduling, or payment follow-up."
       >
         <StatusPill label={dashboard.subscription?.tier ?? "Free plan"} tone="gold" />
         <Text style={[styles.cardTitle, { color: "#ffffff", fontSize: 22 }]}>
@@ -60,26 +67,38 @@ export default function HomeScreen() {
           {dashboard.contractor.trade} / {dashboard.contractor.city}, {dashboard.contractor.state}
         </Text>
         <TrustBadge label={`Verification: ${dashboard.contractor.verificationStatus}`} tone="green" />
+        <PrimaryButton title="Check a Client" tone="light" onPress={() => router.push("/search")} />
       </BureauHero>
 
       <View style={styles.metricGrid}>
-        <MetricTile label="Reports" value={dashboard.stats.reportsSubmitted} />
+        <MetricTile label="Reports filed" value={dashboard.stats.reportsSubmitted} />
         <MetricTile label="Saved searches" value={dashboard.stats.savedSearches} />
         <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} />
         <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} tone="gold" />
       </View>
 
       <ActionDock>
-        <Text style={styles.cardTitle}>Today's work</Text>
+        <Text style={styles.cardTitle}>Start here</Text>
         <Text style={styles.body}>
-          Start with the client search, then document the job only when the facts are ready.
+          Choose the action that matches the job in front of you. Everything here stays private unless a report is approved for public display.
         </Text>
+        <View style={styles.chipRail}>
+          <SuggestionChip label="New lead" tone="gold" onPress={() => router.push("/search")} />
+          <SuggestionChip label="Need a contract" onPress={() => router.push("/tools/contracts")} />
+          <SuggestionChip label="Unpaid invoice" onPress={() => router.push("/tools/recovery")} />
+        </View>
         <IconActionRow
           icon={Search}
           title="Check a Client"
           body="Search public profiles, private matches, and saved signals."
           badge="Start here"
           onPress={() => router.push("/search")}
+        />
+        <IconActionRow
+          icon={ClipboardCheck}
+          title="Document a client experience"
+          body="Submit a positive report or payment issue for moderation."
+          onPress={() => router.push("/reports")}
         />
       </ActionDock>
 
