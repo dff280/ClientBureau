@@ -8,6 +8,7 @@ import {
   IconActionRow,
   LoadingState,
   Message,
+  MetricMini,
   PremiumEmptyState,
   PrimaryButton,
   Screen,
@@ -54,6 +55,9 @@ export default function EvidenceScreen() {
   }
 
   if (!result) return <LoadingState label="Loading evidence vault..." />
+  const evidenceItems = result.ok ? [...result.data.evidenceVault, ...result.data.reportEvidence] : []
+  const reviewedItems = evidenceItems.filter((item) => item.status === "reviewed").length
+  const needsReviewItems = evidenceItems.filter((item) => item.status !== "reviewed").length
 
   return (
     <Screen
@@ -77,6 +81,11 @@ export default function EvidenceScreen() {
             privateNote="Raw files and storage paths stay private. Public pages only show approved evidence summaries."
             primaryAction="Review status here, then upload or attach files from the web dashboard."
           />
+          <View style={styles.metricGrid}>
+            <MetricMini label="Items" value={evidenceItems.length} />
+            <MetricMini label="Reviewed" value={reviewedItems} />
+            <MetricMini label="Needs review" value={needsReviewItems} />
+          </View>
           <Card>
             <Text style={styles.cardTitle}>Privacy guardrail</Text>
             <Text style={styles.body}>{result.data.privacyNote}</Text>
@@ -87,10 +96,10 @@ export default function EvidenceScreen() {
               badge="Secure"
             />
           </Card>
-          {[...result.data.evidenceVault, ...result.data.reportEvidence].length ? (
+          {evidenceItems.length ? (
             <>
               <SectionHeader title="Evidence items" body="Private document summaries and review status." />
-              {[...result.data.evidenceVault, ...result.data.reportEvidence].map((item) => (
+              {evidenceItems.map((item) => (
                 <Card key={item.id}>
                   <View style={styles.rowBetween}>
                     <Text style={styles.cardTitle}>{item.label}</Text>

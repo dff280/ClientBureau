@@ -1,10 +1,13 @@
 import Constants from "expo-constants"
 import * as WebBrowser from "expo-web-browser"
-import { Globe, LifeBuoy, LogOut, ShieldCheck, Smartphone } from "lucide-react-native"
-import { Text } from "react-native"
+import { Globe, LifeBuoy, LogOut, ShieldCheck, Smartphone, UserCheck } from "lucide-react-native"
+import { useEffect, useState } from "react"
+import { Text, View } from "react-native"
 
-import { BureauHero, Card, IconActionRow, InsightCard, PrimaryButton, Screen, StatusPill, TrustBadge, styles } from "@/components/ui"
+import { BureauHero, Card, IconActionRow, InsightCard, MetricMini, PrimaryButton, Screen, SectionHeader, StatusPill, TrustBadge, styles } from "@/components/ui"
+import { mobileFetch } from "@/lib/api"
 import { siteUrl } from "@/lib/config"
+import type { ApiResult, DashboardPayload } from "@/lib/types"
 import { useAuth } from "@/providers/auth-provider"
 
 function maskEmail(email?: string) {
@@ -15,9 +18,17 @@ function maskEmail(email?: string) {
 }
 
 export default function AccountScreen() {
-  const { user, signOut } = useAuth()
+  const { accessToken, user, signOut } = useAuth()
+  const [dashboardResult, setDashboardResult] = useState<ApiResult<DashboardPayload>>()
   const version = Constants.expoConfig?.version ?? "0.4.0"
   const build = Constants.expoConfig?.android?.versionCode ?? 8
+
+  useEffect(() => {
+    if (!accessToken) return
+    mobileFetch<DashboardPayload>("/api/mobile/dashboard", accessToken).then(setDashboardResult)
+  }, [accessToken])
+
+  const dashboard = dashboardResult?.ok ? dashboardResult.data.dashboard : undefined
 
   return (
     <Screen
@@ -44,6 +55,26 @@ export default function AccountScreen() {
         tone="gold"
       />
 
+      {dashboard ? (
+        <Card>
+          <View style={styles.rowBetween}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.cardTitle}>{dashboard.contractor.businessName}</Text>
+              <Text style={styles.body}>
+                {dashboard.contractor.trade} / {dashboard.contractor.city}, {dashboard.contractor.state}
+              </Text>
+            </View>
+            <StatusPill label={dashboard.contractor.verificationStatus} tone="green" />
+          </View>
+          <View style={styles.metricGrid}>
+            <MetricMini label="Plan" value={dashboard.subscription?.tier ?? "Free"} />
+            <MetricMini label="Reports" value={dashboard.stats.reportsSubmitted} />
+            <MetricMini label="Searches" value={dashboard.stats.savedSearches} />
+          </View>
+        </Card>
+      ) : null}
+
+      <SectionHeader title="Account actions" body="Use the web dashboard for deeper account settings and support." />
       <IconActionRow
         icon={Globe}
         title="Open web dashboard"
@@ -61,6 +92,12 @@ export default function AccountScreen() {
         title="Support"
         body="Use the web dashboard for moderation, recovery, lien service, and billing questions."
         onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/contact`)}
+      />
+      <IconActionRow
+        icon={UserCheck}
+        title="Verification and plan"
+        body="Review business verification, usage, team access, and plan details in the full dashboard."
+        onPress={() => WebBrowser.openBrowserAsync(`${siteUrl}/dashboard/billing`)}
       />
       <IconActionRow
         icon={ShieldCheck}

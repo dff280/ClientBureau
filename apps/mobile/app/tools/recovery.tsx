@@ -11,6 +11,7 @@ import {
   IconActionRow,
   LoadingState,
   Message,
+  MetricMini,
   PremiumEmptyState,
   PrimaryButton,
   Screen,
@@ -77,10 +78,16 @@ export default function RecoveryScreen() {
     })
     setMessage(created.message)
     setBusy(false)
-    if (created.ok) load()
+    if (created.ok) {
+      setShowForm(false)
+      load()
+    }
   }
 
   if (!result) return <LoadingState label="Loading recovery cases..." />
+  const cases = result.ok ? result.data.managedRecoveryCases : []
+  const activeCases = cases.filter((item) => !["resolved", "closed"].includes(item.status)).length
+  const totalDue = cases.reduce((sum, item) => sum + item.amountDue, 0)
 
   return (
     <Screen
@@ -109,6 +116,13 @@ export default function RecoveryScreen() {
         privateNote="Recovery cases are private service records. Payments remain contractor-direct."
         primaryAction="Submit the case facts, then upload supporting documents from the web dashboard."
       />
+      {result.ok ? (
+        <View style={styles.metricGrid}>
+          <MetricMini label="Cases" value={cases.length} />
+          <MetricMini label="Active" value={activeCases} />
+          <MetricMini label="Due" value={`$${totalDue.toLocaleString()}`} />
+        </View>
+      ) : null}
       {showForm ? (
         <>
         <FormStepPanel
@@ -144,10 +158,10 @@ export default function RecoveryScreen() {
         <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
       )}
       {result.ok
-        ? result.data.managedRecoveryCases.length ? (
+        ? cases.length ? (
           <>
             <SectionHeader title="Recovery cases" body="Track amount due, age, status, and next action." />
-            {result.data.managedRecoveryCases.map((item) => (
+            {cases.map((item) => (
               <Card key={item.id}>
                 <View style={styles.rowBetween}>
                   <Text style={styles.cardTitle}>{item.clientName}</Text>

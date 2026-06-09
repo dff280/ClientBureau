@@ -1,5 +1,5 @@
 import { router } from "expo-router"
-import { ClipboardCheck, FileSignature, Search, Siren, TrendingUp } from "lucide-react-native"
+import { Bell, ClipboardCheck, FileSignature, FolderLock, Search, Siren, TrendingUp } from "lucide-react-native"
 import { useEffect, useState } from "react"
 import { Text, View } from "react-native"
 
@@ -58,7 +58,7 @@ export default function HomeScreen() {
       <BureauHero
         eyebrow="Mobile command center"
         title="Check the client before you take the job."
-        body="Check the client before you commit labor, materials, scheduling, or payment follow-up."
+        body="Start with search, then move into contracts, evidence, recovery, or lien service when the job needs structure."
       >
         <StatusPill label={dashboard.subscription?.tier ?? "Free plan"} tone="gold" />
         <Text style={[styles.cardTitle, { color: "#ffffff", fontSize: 22 }]}>
@@ -99,6 +99,34 @@ export default function HomeScreen() {
           body="Prepare scope, payment terms, and signing links before the job starts."
           metric={counts?.contractPackets ?? 0}
           onPress={() => router.push("/tools/contracts")}
+        />
+      </View>
+
+      <SectionHeader
+        title="Alerts and readiness"
+        body="A quick pulse on what needs attention before the next job moves forward."
+      />
+      <View style={styles.metricGrid}>
+        <CommandCard
+          icon={counts?.alerts ? Bell : ClipboardCheck}
+          label={counts?.alerts ? "Needs attention" : "Clear"}
+          title={counts?.alerts ? "Review alerts" : "No urgent alerts"}
+          body={
+            counts?.alerts
+              ? "Check watched clients and recent activity before accepting more work."
+              : "Your mobile workspace is clear. Start with a client search when a new lead comes in."
+          }
+          metric={counts?.alerts ?? 0}
+          tone={counts?.alerts ? "gold" : "light"}
+          onPress={() => router.push(counts?.alerts ? "/tools/watchlist" : "/search")}
+        />
+        <CommandCard
+          icon={FolderLock}
+          label="Documents"
+          title="Evidence status"
+          body="Keep invoices, screenshots, contracts, and photos organized privately."
+          metric={counts?.evidenceItems ?? dashboard.stats.evidenceItems}
+          onPress={() => router.push("/tools/evidence")}
         />
       </View>
 
@@ -160,7 +188,7 @@ export default function HomeScreen() {
       <IconActionRow
         icon={Siren}
         title="Review all tools"
-        body="Contracts, recovery, lien service, evidence, reports, and watchlist."
+        body="Search, contracts, reports, recovery, lien service, evidence, and watchlist."
         onPress={() => router.push("/tools")}
       />
 

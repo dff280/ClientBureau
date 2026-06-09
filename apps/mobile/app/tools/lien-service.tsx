@@ -11,6 +11,7 @@ import {
   IconActionRow,
   LoadingState,
   Message,
+  MetricMini,
   PremiumEmptyState,
   PrimaryButton,
   Screen,
@@ -85,10 +86,16 @@ export default function LienServiceScreen() {
     })
     setMessage(created.message)
     setBusy(false)
-    if (created.ok) load()
+    if (created.ok) {
+      setShowForm(false)
+      load()
+    }
   }
 
   if (!result) return <LoadingState label="Loading Florida lien service..." />
+  const cases = result.ok ? result.data.floridaLienCases : []
+  const filedCases = cases.filter((item) => ["filed", "recording_confirmed"].includes(item.status)).length
+  const deadlineCases = cases.filter((item) => item.filingDeadline).length
 
   return (
     <Screen
@@ -117,6 +124,13 @@ export default function LienServiceScreen() {
         privateNote="This is not legal advice and does not publish lien documents or property details."
         primaryAction="Submit intake facts, then complete document upload and authorization from the web dashboard."
       />
+      {result.ok ? (
+        <View style={styles.metricGrid}>
+          <MetricMini label="Cases" value={cases.length} />
+          <MetricMini label="Filed" value={filedCases} />
+          <MetricMini label="Deadlines" value={deadlineCases} />
+        </View>
+      ) : null}
       {showForm ? (
         <>
         <FormStepPanel
@@ -156,10 +170,10 @@ export default function LienServiceScreen() {
         <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
       )}
       {result.ok
-        ? result.data.floridaLienCases.length ? (
+        ? cases.length ? (
           <>
             <SectionHeader title="Florida cases" body="Track document review, authorization, vendor review, and filing status." />
-            {result.data.floridaLienCases.map((item) => (
+            {cases.map((item) => (
               <Card key={item.id}>
                 <View style={styles.rowBetween}>
                   <Text style={styles.cardTitle}>{item.clientName}</Text>

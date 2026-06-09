@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { router } from "expo-router"
 import { Text, View } from "react-native"
 import { Bell, Search, ShieldCheck } from "lucide-react-native"
 
@@ -10,6 +11,7 @@ import {
   IconActionRow,
   LoadingState,
   Message,
+  MetricMini,
   PremiumEmptyState,
   PrimaryButton,
   Screen,
@@ -60,10 +62,18 @@ export default function WatchlistScreen() {
       body: jsonBody({ clientId, watchReason, alertLevel: "normal" }),
     })
     setMessage(created.message)
-    if (created.ok) load()
+    if (created.ok) {
+      setShowForm(false)
+      setClientId("")
+      setWatchReason("")
+      load()
+    }
   }
 
   if (!result) return <LoadingState label="Loading watchlist..." />
+  const watchlist = result.ok ? result.data.watchlist : []
+  const privateMatches = watchlist.filter((item) => item.privateMatch).length
+  const highAlerts = watchlist.filter((item) => item.alertLevel === "high").length
 
   return (
     <Screen
@@ -81,16 +91,30 @@ export default function WatchlistScreen() {
         <TrustBadge label="Private monitoring" tone="green" />
       </BureauHero>
       <IconActionRow
-        icon={Bell}
-        title={showForm ? "Close watch form" : "Watch a client"}
-        body="Add a public Client Bureau profile ID after search, then track new moderated signals."
-        badge="Monitor"
-        onPress={() => setShowForm(!showForm)}
+        icon={Search}
+        title="Search first, then watch"
+        body="The easiest way to watch a client is from a search result card."
+        badge="Best path"
+        onPress={() => router.push("/search")}
       />
       <ToolBrief
         useWhen="You may bid, schedule, or work with a client again and want to monitor new approved context."
         privateNote="Watch reasons, private matches, and alerts stay in your account."
         primaryAction="Search first, then watch a matched public profile from the results."
+      />
+      {result.ok ? (
+        <View style={styles.metricGrid}>
+          <MetricMini label="Watched" value={watchlist.length} />
+          <MetricMini label="High alerts" value={highAlerts} />
+          <MetricMini label="Private match" value={privateMatches} />
+        </View>
+      ) : null}
+      <IconActionRow
+        icon={Bell}
+        title={showForm ? "Close manual watch form" : "Add by profile ID"}
+        body="Use only if support or the web dashboard gives you a Client Bureau profile ID."
+        badge="Advanced"
+        onPress={() => setShowForm(!showForm)}
       />
       {showForm ? (
         <FormStepPanel
@@ -105,10 +129,10 @@ export default function WatchlistScreen() {
       ) : null}
       <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
       {result.ok
-        ? result.data.watchlist.length ? (
+        ? watchlist.length ? (
           <>
             <SectionHeader title="Watched clients" body={`${result.data.alerts} alert(s) currently need attention.`} />
-            {result.data.watchlist.map((item) => (
+            {watchlist.map((item) => (
               <Card key={item.id}>
                 <View style={styles.rowBetween}>
                   <Text style={styles.cardTitle}>{item.clientId}</Text>
@@ -134,8 +158,8 @@ export default function WatchlistScreen() {
           <PremiumEmptyState
             title="No watched clients yet"
             body="Search a client first, then save profiles that matter to your pipeline."
-            actionTitle="Watch a client"
-            onAction={() => setShowForm(true)}
+            actionTitle="Search a client"
+            onAction={() => router.push("/search")}
           />
         )
         : <Message text={result.message} tone="error" />}

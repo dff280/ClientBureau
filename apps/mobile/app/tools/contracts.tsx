@@ -11,6 +11,7 @@ import {
   IconActionRow,
   LoadingState,
   Message,
+  MetricMini,
   PremiumEmptyState,
   PrimaryButton,
   Screen,
@@ -73,10 +74,16 @@ export default function ContractsScreen() {
     })
     setMessage(created.message)
     setBusy(false)
-    if (created.ok) load()
+    if (created.ok) {
+      setShowForm(false)
+      load()
+    }
   }
 
   if (!result) return <LoadingState label="Loading contracts..." />
+  const packets = result.ok ? result.data.contractPackets : []
+  const signedPackets = packets.filter((packet) => packet.status === "signed").length
+  const linkReadyPackets = packets.filter((packet) => packet.shareUrl || packet.shareStatus).length
 
   return (
     <Screen
@@ -105,6 +112,13 @@ export default function ContractsScreen() {
         privateNote="Contract terms, client details, signing links, and payment terms stay off public profiles."
         primaryAction="Create the packet, then use the web dashboard to copy the signing link."
       />
+      {result.ok ? (
+        <View style={styles.metricGrid}>
+          <MetricMini label="Packets" value={packets.length} />
+          <MetricMini label="Signed" value={signedPackets} />
+          <MetricMini label="Links" value={linkReadyPackets} />
+        </View>
+      ) : null}
       {showForm ? (
         <>
         <FormStepPanel
@@ -151,7 +165,7 @@ export default function ContractsScreen() {
         <SectionHeader title="Agreement packets" body="Track packet value, signing state, and the next action." />
       ) : null}
       {result.ok
-        ? result.data.contractPackets.length ? result.data.contractPackets.map((packet) => (
+        ? packets.length ? packets.map((packet) => (
             <Card key={packet.id}>
               <View style={styles.rowBetween}>
                 <Text style={styles.cardTitle}>{packet.clientName}</Text>

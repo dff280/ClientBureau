@@ -103,6 +103,17 @@ export default function ReportsScreen() {
     }
   }
 
+  function startReport(category: string, paymentStatus: string) {
+    setForm((current) => ({
+      ...current,
+      reportCategory: category,
+      paymentStatus,
+      amountUnpaid: positiveCategories.includes(category) ? "" : current.amountUnpaid,
+    }))
+    setShowForm(true)
+    setMessage(undefined)
+  }
+
   if (!result) return <LoadingState label="Loading reports..." />
 
   const visibleReports = result.ok
@@ -136,13 +147,15 @@ export default function ReportsScreen() {
           body="Document clients you would work with again and keep positive signals visible."
           metric={positiveCount}
           tone="gold"
+          onPress={() => startReport("Positive experience", "No issue reported")}
         />
         <CommandCard
           icon={ClipboardCheck}
-          label="Moderation"
-          title="Track status"
-          body="Pending, approved, published, disputed, and rejected records stay easy to scan."
+          label="Payment issue"
+          title="Document an issue"
+          body="Use factual summaries, payment context, and private evidence for moderation."
           metric={pendingCount}
+          onPress={() => startReport("Non-payment", "Unpaid")}
         />
       </View>
 
@@ -177,6 +190,20 @@ export default function ReportsScreen() {
 
       {showForm ? (
         <>
+          <Card>
+            <Text style={styles.cardTitle}>
+              {isPositiveForm ? "Positive client report" : "Payment or project issue report"}
+            </Text>
+            <Text style={styles.body}>
+              {isPositiveForm
+                ? "Positive reports help contractors recognize clients with clean, professional project history."
+                : "Payment issue reports should stay factual, documented, and tied to real project records."}
+            </Text>
+            <View style={styles.chipRail}>
+              <StatusPill label={isPositiveForm ? "No unpaid framing" : "Evidence encouraged"} tone={isPositiveForm ? "green" : "gold"} />
+              <StatusPill label="Admin reviewed" tone="blue" />
+            </View>
+          </Card>
           <FormStepPanel step="Step 1" title="Client identity" body="Use the client information you have from the real project record.">
             <Field label="Client first name" value={form.firstName} onChangeText={(v) => setForm({ ...form, firstName: v })} />
             <Field label="Client last name" value={form.lastName} onChangeText={(v) => setForm({ ...form, lastName: v })} />

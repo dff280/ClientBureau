@@ -44,6 +44,8 @@ export default function SearchScreen() {
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<ApiResult<SearchPayload>>()
   const [message, setMessage] = useState<string>()
+  const [savedQueryKey, setSavedQueryKey] = useState<string>()
+  const [watchedIds, setWatchedIds] = useState<Record<string, boolean>>({})
 
   async function runSearch() {
     if (!accessToken) return
@@ -58,6 +60,7 @@ export default function SearchScreen() {
     if (state) params.set("state", state)
     const next = await mobileFetch<SearchPayload>(`/api/mobile/search?${params.toString()}`, accessToken)
     setResult(next)
+    setSavedQueryKey(undefined)
     setBusy(false)
   }
 
@@ -68,6 +71,7 @@ export default function SearchScreen() {
       body: jsonBody({ query, state, resultCount }),
     })
     setMessage(saved.message)
+    if (saved.ok) setSavedQueryKey(`${query.trim().toLowerCase()}-${state}`)
   }
 
   async function watchClient(item: MobileSearchResult) {
@@ -81,7 +85,10 @@ export default function SearchScreen() {
       }),
     })
     setMessage(watched.message)
+    if (watched.ok) setWatchedIds((current) => ({ ...current, [item.id]: true }))
   }
+
+  const currentQuerySaved = savedQueryKey === `${query.trim().toLowerCase()}-${state}`
 
   return (
     <Screen
@@ -125,7 +132,14 @@ export default function SearchScreen() {
       />
       <View style={styles.chipRail}>
         {quickSearches.map((item) => (
-          <SuggestionChip key={item} label={item} onPress={() => setQuery(item)} />
+          <SuggestionChip
+            key={item}
+            label={item}
+            onPress={() => {
+              setQuery(item)
+              setMessage("Suggestion added. Tap Search a Client to run the lookup.")
+            }}
+          />
         ))}
       </View>
       <SegmentedTabs options={stateOptions} value={state} onChange={setState} />
@@ -178,8 +192,13 @@ export default function SearchScreen() {
               />
               <IconActionRow
                 icon={Bell}
-                title="Watch this client"
-                body="Save this profile to monitor approved updates and response activity."
+                title={watchedIds[item.id] ? "Client is on your watchlist" : "Watch this client"}
+                body={
+                  watchedIds[item.id]
+                    ? "You will see this client in your watchlist workspace."
+                    : "Save this profile to monitor approved updates and response activity."
+                }
+                badge={watchedIds[item.id] ? "Saved" : "Watch"}
                 onPress={() => watchClient(item)}
               />
             </Card>
@@ -206,13 +225,18 @@ export default function SearchScreen() {
               <PremiumEmptyState
                 title="No public profile found yet"
                 body="Save this search, try a broader city/name search, or document a real client experience if you have project records."
-                actionTitle="Save this search"
+                actionTitle={currentQuerySaved ? "Search saved" : "Save this search"}
                 onAction={() => saveSearch(0)}
               />
               <IconActionRow
                 icon={Bell}
-                title="Watch this search later"
-                body="Saved searches help you return to leads before scheduling or buying materials."
+                title={currentQuerySaved ? "Saved for follow-up" : "Save this search"}
+                body={
+                  currentQuerySaved
+                    ? "This lookup is saved in your account for later follow-up."
+                    : "Saved searches help you return to leads before scheduling or buying materials."
+                }
+                badge={currentQuerySaved ? "Saved" : undefined}
                 onPress={() => saveSearch(0)}
               />
               <IconActionRow
@@ -225,8 +249,13 @@ export default function SearchScreen() {
           ) : (
             <IconActionRow
               icon={Save}
-              title="Save this search"
-              body="Keep this client lookup in your account for later follow-up."
+              title={currentQuerySaved ? "Search saved" : "Save this search"}
+              body={
+                currentQuerySaved
+                  ? "This lookup is saved in your account for later follow-up."
+                  : "Keep this client lookup in your account for later follow-up."
+              }
+              badge={currentQuerySaved ? "Saved" : undefined}
               onPress={() => saveSearch(result.data.results.length)}
             />
           )}
