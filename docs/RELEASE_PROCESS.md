@@ -109,16 +109,18 @@ curl https://clientbureau.com/sitemap.xml
 Run the full live release verifier from your local machine after the VPS rebuild:
 
 ```powershell
-$env:LIVE_BASE_URL="https://clientbureau.com"
-$env:EXPECTED_APP_VERSION=(node -p "require('./package.json').version")
-$env:EXPECTED_GIT_COMMIT="$(git rev-parse HEAD)"
 npm run verify:live
-Remove-Item Env:LIVE_BASE_URL
-Remove-Item Env:EXPECTED_APP_VERSION
-Remove-Item Env:EXPECTED_GIT_COMMIT
 ```
 
-The verifier fails for a stale version or commit when expected values are provided, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet or advanced ops still requiring `PLATFORM_FEATURE_DATA_MODE=mock`.
+The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet or advanced ops still requiring `PLATFORM_FEATURE_DATA_MODE=mock`.
+
+To intentionally inspect production without comparing release identity, run:
+
+```powershell
+$env:SKIP_RELEASE_IDENTITY_CHECK="1"
+npm run verify:live
+Remove-Item Env:SKIP_RELEASE_IDENTITY_CHECK
+```
 
 ## Rollback
 

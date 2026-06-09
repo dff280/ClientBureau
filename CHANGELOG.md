@@ -4,6 +4,25 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.3.9 - One-Command Live Release Verification
+
+Date: June 9, 2026
+
+### Improved
+
+- `npm run verify:live` now automatically compares production against the local package version and Git commit.
+- Stale production checks now print the exact VPS deploy helper command when release identity fails.
+- Deployment docs now use the simplified verifier command and document the opt-out mode for release identity checks.
+
+### Verification
+
+- `node --check scripts/verify-live-release.mjs`
+- `npm run lint`
+- `npm test`
+- `npm run seo:check`
+- `npm run build`
+- `npm run mobile:check`
+
 ## 0.3.8 - VPS Deploy Helper Hardening
 
 Date: June 9, 2026

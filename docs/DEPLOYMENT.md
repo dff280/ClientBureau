@@ -293,20 +293,14 @@ powershell -ExecutionPolicy Bypass -File .\scripts\verify-launch.ps1
 After the VPS rebuild, run a full live release verification from your local machine:
 
 ```powershell
-$env:LIVE_BASE_URL="https://clientbureau.com"
-$env:EXPECTED_APP_VERSION=(node -p "require('./package.json').version")
-$env:EXPECTED_GIT_COMMIT="$(git rev-parse HEAD)"
 npm run verify:live
-Remove-Item Env:LIVE_BASE_URL
-Remove-Item Env:EXPECTED_APP_VERSION
-Remove-Item Env:EXPECTED_GIT_COMMIT
 
 $env:SEO_BASE_URL="https://clientbureau.com"
 npm run seo:check
 Remove-Item Env:SEO_BASE_URL
 ```
 
-The live release verification is expected to warn, not fail, while Stripe is unconfigured or `PLATFORM_FEATURE_DATA_MODE=mock` is still required. It should fail if the live build links to unavailable public client profiles, serves profile loading shells, loses core Supabase readiness, or exposes private identifiers on public profile pages.
+The live release verification automatically checks the deployed app version and Git commit against your local `main`. It is expected to warn, not fail, while Stripe is unconfigured or `PLATFORM_FEATURE_DATA_MODE=mock` is still required. It should fail if production is stale, links to unavailable public client profiles, serves profile loading shells, loses core Supabase readiness, or exposes private identifiers on public profile pages.
 
 Browser-check these routes on desktop and mobile:
 

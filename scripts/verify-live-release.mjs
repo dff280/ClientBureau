@@ -1,9 +1,35 @@
+import { execSync } from "node:child_process"
+import { readFileSync } from "node:fs"
+
 const baseUrl = (process.env.LIVE_BASE_URL || process.env.SEO_BASE_URL || "https://clientbureau.com").replace(/\/$/, "")
 const expectedSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || baseUrl).replace(/\/$/, "")
-const expectedAppVersion = process.env.EXPECTED_APP_VERSION || process.env.RELEASE_VERSION || ""
-const expectedCommit = process.env.EXPECTED_GIT_COMMIT || process.env.GIT_COMMIT_SHA || ""
+const skipReleaseIdentityCheck = process.env.SKIP_RELEASE_IDENTITY_CHECK === "1"
+
+function readLocalPackageVersion() {
+  try {
+    return JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")).version || ""
+  } catch {
+    return ""
+  }
+}
+
+function readLocalGitCommit() {
+  try {
+    return execSync("git rev-parse HEAD", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim()
+  } catch {
+    return ""
+  }
+}
+
+const expectedAppVersion = skipReleaseIdentityCheck
+  ? ""
+  : process.env.EXPECTED_APP_VERSION || process.env.RELEASE_VERSION || readLocalPackageVersion()
+const expectedCommit = skipReleaseIdentityCheck
+  ? ""
+  : process.env.EXPECTED_GIT_COMMIT || process.env.GIT_COMMIT_SHA || readLocalGitCommit()
 
 const checks = []
+const staleReleaseDetails = []
 
 function record(level, name, detail = "") {
   checks.push({ level, name, detail })
@@ -111,6 +137,7 @@ if (version.response.ok && version.json?.version) {
       pass("Expected app version", expectedAppVersion)
     } else {
       fail("Expected app version", `expected ${expectedAppVersion}, got ${version.json.version}`)
+      staleReleaseDetails.push(`version ${version.json.version} is live; ${expectedAppVersion} is expected`)
     }
   }
 
@@ -119,6 +146,7 @@ if (version.response.ok && version.json?.version) {
       pass("Expected Git commit", expectedCommit)
     } else {
       fail("Expected Git commit", `expected ${expectedCommit}, got ${version.json.commit || "not reported"}`)
+      staleReleaseDetails.push(`commit ${version.json.commit || "not reported"} is live; ${expectedCommit} is expected`)
     }
   }
 } else {
@@ -258,5 +286,19 @@ for (const check of checks) {
 }
 
 if (checks.some((check) => check.level === "FAIL")) {
+  if (staleReleaseDetails.length > 0) {
+    console.log("")
+    console.log("STALE RELEASE DETECTED")
+    for (const detail of staleReleaseDetails) {
+      console.log(`- ${detail}`)
+    }
+    console.log("")
+    console.log("Run this on the VPS:")
+    console.log("  curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash")
+    console.log("")
+    console.log("Then rerun locally:")
+    console.log("  npm run verify:live")
+  }
+
   process.exit(1)
 }
