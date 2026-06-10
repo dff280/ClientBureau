@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Eye, Search, ShieldCheck, UserRound } from "lucide-react"
 
-import { AdminFilterBar } from "@/components/admin/admin-crm-ui"
+import { AdminActionOutcomePanel, AdminFilterBar } from "@/components/admin/admin-crm-ui"
 import { AdminClientEditor } from "@/components/admin/admin-record-forms"
 import {
   AdminPageHeader,
@@ -86,6 +86,33 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
             <ProfileRule title="Preview public output" text="Open the public profile after edits and confirm only approved summaries and safe labels are visible." />
           </div>
         </DashboardSection>
+        <AdminActionOutcomePanel
+          title="After editing a client profile"
+          description="Profile edits should improve matching, SEO, rating context, and fairness without turning private records into public content."
+          items={[
+            {
+              detail: "The public slug, city, state, visibility, rating, risk level, and report count should be clear before a profile is public.",
+              label: "Profile health",
+              status: "Reviewed",
+              title: "Public fields should be intentional",
+              tone: "blue",
+            },
+            {
+              detail: "Phone hashes, email hashes, raw contact details, evidence paths, internal notes, and pending records must stay out of public cards.",
+              label: "Privacy",
+              status: "Sealed",
+              title: "Private identifiers should remain hidden",
+              tone: "emerald",
+            },
+            {
+              detail: "Visibility, rating, risk, identity, and merge-related edits should include a moderator note that another admin can understand later.",
+              label: "Audit",
+              status: "Required",
+              title: "The edit should be traceable",
+              tone: "amber",
+            },
+          ]}
+        />
         <AdminFilterBar
           title="Find a profile"
           description="Search by name, business, city, state, or slug. Filter to the records you need to review."

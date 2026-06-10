@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ClipboardCheck, FileSpreadsheet, ShieldAlert, UploadCloud } from "lucide-react"
 
+import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { BulkUploadPanel } from "@/components/admin/bulk-upload-panel"
 import { AdminPageHeader, HeaderActionButton, StatCard, StatusBadge } from "@/components/dashboard/dashboard-ui"
 import { getAdminModerationCrmDataService } from "@/lib/repositories/client-bureau-service"
@@ -44,6 +45,33 @@ export default async function AdminUploadsPage() {
           <StatCard label="Duplicate warnings" value={totals.duplicates} helper="Rows blocked for review" icon={ShieldAlert} tone={totals.duplicates > 0 ? "amber" : "slate"} />
           <StatCard label="Imported" value={totals.imported} helper="Records created as pending" icon={ClipboardCheck} tone="blue" />
         </div>
+        <AdminActionOutcomePanel
+          title="After importing CSV rows"
+          description="Bulk uploads should create clean pending records, not accidental public profiles or duplicate client records."
+          items={[
+            {
+              detail: "Rows with missing required fields, invalid state values, confusing dates, or unsafe summaries should remain blocked until corrected.",
+              label: "Validation",
+              status: "Checked",
+              title: "Bad rows should not import",
+              tone: "amber",
+            },
+            {
+              detail: "Potential duplicates should be reviewed before importing so client profile identity, city/state, and public slug quality stay clean.",
+              label: "Duplicates",
+              status: "Flagged",
+              title: "Duplicate warnings should stay visible",
+              tone: "blue",
+            },
+            {
+              detail: "Imported report records should start pending by default and require admin moderation before any public profile output changes.",
+              label: "Moderation",
+              status: "Pending",
+              title: "New records should enter review",
+              tone: "emerald",
+            },
+          ]}
+        />
         {moderationCrm ? (
           <div className="grid gap-4 md:grid-cols-2">
             {moderationCrm.importBatches.map((batch) => (

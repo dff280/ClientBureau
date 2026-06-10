@@ -4,6 +4,68 @@ import type { LucideIcon } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
+type AdminOutcomeTone = "slate" | "amber" | "emerald" | "rose" | "blue"
+
+const adminOutcomeToneClasses: Record<AdminOutcomeTone, string> = {
+  slate: "border-slate-200 bg-slate-50 text-slate-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-800",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  rose: "border-rose-200 bg-rose-50 text-rose-800",
+  blue: "border-sky-200 bg-sky-50 text-sky-800",
+}
+
+export function AdminActionOutcomePanel({
+  description,
+  eyebrow = "Action confidence",
+  footer = "Every admin action should leave the queue clearer, preserve private records, and be traceable in audit history.",
+  items,
+  title,
+}: {
+  description: string
+  eyebrow?: string
+  footer?: string
+  items: Array<{
+    detail: string
+    label: string
+    status: string
+    title: string
+    tone?: AdminOutcomeTone
+  }>
+  title: string
+}) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-white shadow-sm">
+      <div className="border-b border-slate-100 p-5">
+        <p className="text-xs font-semibold uppercase text-amber-700">{eyebrow}</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-normal text-slate-950">{title}</h2>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
+      </div>
+      <div className="grid gap-3 p-5 md:grid-cols-3">
+        {items.map((item) => (
+          <article key={item.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-xs font-semibold uppercase text-amber-700">{item.label}</p>
+              <span
+                className={cn(
+                  "shrink-0 rounded-md border px-2 py-1 text-xs font-semibold uppercase",
+                  adminOutcomeToneClasses[item.tone ?? "slate"],
+                )}
+              >
+                {item.status}
+              </span>
+            </div>
+            <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+          </article>
+        ))}
+      </div>
+      <div className="border-t border-slate-100 bg-slate-50 px-5 py-4">
+        <p className="text-sm leading-6 text-slate-600">{footer}</p>
+      </div>
+    </section>
+  )
+}
+
 export function AdminQueueHeader({
   eyebrow,
   title,

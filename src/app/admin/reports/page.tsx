@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import type { LucideIcon } from "lucide-react"
 import { ClipboardCheck, FileText, History, MessageSquareText, ShieldCheck, UploadCloud } from "lucide-react"
 
+import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
 import { AdminReviewPanel } from "@/components/admin/admin-review-panel"
 import { AdminPageHeader, DashboardSection, HeaderActionButton, StatCard } from "@/components/dashboard/dashboard-ui"
@@ -83,6 +84,33 @@ export default async function AdminReportsPage() {
             />
           </div>
         </DashboardSection>
+        <AdminActionOutcomePanel
+          title="After an approve, reject, delete, or needs-more-information decision"
+          description="Use this to confirm the moderation action worked and did not leave stale cards, unsafe public content, or missing audit context."
+          items={[
+            {
+              detail: "Approved, rejected, or deleted cards should leave the active review queue immediately so staff do not review the same item twice.",
+              label: "Queue state",
+              status: "Updated",
+              title: "The queue should change",
+              tone: "emerald",
+            },
+            {
+              detail: "Approved reports should refresh the public profile, sitemap surfaces, recent reports, and directory links without exposing raw evidence.",
+              label: "Publication",
+              status: "Public-safe",
+              title: "Public output should stay clean",
+              tone: "blue",
+            },
+            {
+              detail: "Every decision needs a clear moderator note or system audit event that explains why the report was approved, rejected, held, or deleted.",
+              label: "Audit",
+              status: "Traceable",
+              title: "The decision should be explainable",
+              tone: "amber",
+            },
+          ]}
+        />
         {moderationCrm ? <AdminModerationCrm data={moderationCrm} users={workspace.users} /> : null}
         <AdminReviewPanel items={reviews} />
       </div>

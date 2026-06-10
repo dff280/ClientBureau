@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ClipboardCheck, MessageSquareText, ShieldCheck, UserCheck } from "lucide-react"
 
+import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { DiscussionModerationPanel } from "@/components/admin/discussion-moderation-panel"
 import { AdminPageHeader, HeaderActionButton, StatCard } from "@/components/dashboard/dashboard-ui"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
@@ -44,6 +45,33 @@ export default async function AdminDiscussionsPage() {
           <StatCard label="Verified" value={verified} helper="Entries with verification context" icon={UserCheck} tone="blue" />
           <StatCard label="Total entries" value={data.discussions.length} helper="All discussion records" icon={MessageSquareText} tone="slate" />
         </div>
+        <AdminActionOutcomePanel
+          title="After moderating a discussion entry"
+          description="Discussion decisions should protect response rights, avoid public accusations, and keep pending or rejected content private."
+          items={[
+            {
+              detail: "Approved entries should show only moderated text, relationship context, verification labels, and public-safe profile/report links.",
+              label: "Public display",
+              status: "Safe",
+              title: "Approved comments should be neutral",
+              tone: "emerald",
+            },
+            {
+              detail: "Rejected or disputed entries should stay out of public profiles, directories, schema, and search-facing surfaces.",
+              label: "Privacy",
+              status: "Hidden",
+              title: "Rejected content should not leak",
+              tone: "blue",
+            },
+            {
+              detail: "The moderator decision should make clear whether the entry was verified, edited, rejected, or held for more context.",
+              label: "Audit",
+              status: "Logged",
+              title: "The reason should be understandable",
+              tone: "amber",
+            },
+          ]}
+        />
         <DiscussionModerationPanel discussions={data.discussions} clients={data.clients} reports={data.reports} />
       </div>
     </section>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { ClipboardCheck, History, ShieldCheck, Signature } from "lucide-react"
 
+import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { AdminOpsExpansion } from "@/components/admin/admin-ops-expansion"
 import {
   AdminPageHeader,
@@ -123,6 +124,33 @@ export default async function AdminContractsPage() {
             </div>
           </div>
         </DashboardSection>
+        <AdminActionOutcomePanel
+          title="After reviewing a contract packet"
+          description="Contract oversight should help staff confirm readiness, signing status, and audit history without making private agreement content public."
+          items={[
+            {
+              detail: "Packet status should reflect draft, sent, viewed, signed, payment-terms pending, expired, complete, or archived in the contractor workspace.",
+              label: "Status",
+              status: "Synced",
+              title: "The packet state should match reality",
+              tone: "blue",
+            },
+            {
+              detail: "Scope, payment terms, signer details, signed snapshots, and private share links must remain noindexed and account-only.",
+              label: "Privacy",
+              status: "Private",
+              title: "Contract content should stay sealed",
+              tone: "emerald",
+            },
+            {
+              detail: "Signature, share-link, payment-term, and staff review changes should leave a traceable private record.",
+              label: "Audit",
+              status: "Traceable",
+              title: "The change should be reviewable later",
+              tone: "amber",
+            },
+          ]}
+        />
 
         {moderationCrm ? (
           <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} focus="contracts" />

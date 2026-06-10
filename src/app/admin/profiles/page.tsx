@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { BadgeCheck, Eye, GitMerge, Search, ShieldCheck, UsersRound } from "lucide-react"
 
-import { AdminFilterBar, AdminProfileHealthCard } from "@/components/admin/admin-crm-ui"
+import { AdminActionOutcomePanel, AdminFilterBar, AdminProfileHealthCard } from "@/components/admin/admin-crm-ui"
 import { AdminProfileGraphActions } from "@/components/admin/admin-profile-graph-actions"
 import {
   AdminPageHeader,
@@ -107,6 +107,34 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
         </div>
 
         <AdminProfileGraphActions profiles={profiles} claims={claims} reports={data.reports} />
+
+        <AdminActionOutcomePanel
+          title="After changing unified profile graph records"
+          description="Profile graph actions should make identities cleaner, claims more accountable, and report assignment safer without exposing private records."
+          items={[
+            {
+              detail: "Claim approvals, rejections, disputes, duplicate grouping, and reassignment should leave the profile easier to understand.",
+              label: "Graph quality",
+              status: "Cleaner",
+              title: "The profile relationship should be clearer",
+              tone: "blue",
+            },
+            {
+              detail: "Report reassignment, merges, and redactions should never publish pending content, raw evidence, contact details, or internal notes.",
+              label: "Privacy",
+              status: "Sealed",
+              title: "Public output should remain safe",
+              tone: "emerald",
+            },
+            {
+              detail: "Each claim, merge, reassignment, or redaction needs a moderator note that explains the evidence and decision context.",
+              label: "Audit",
+              status: "Required",
+              title: "The action should be defensible",
+              tone: "amber",
+            },
+          ]}
+        />
 
         <AdminFilterBar
           title="Find public records and claim targets"

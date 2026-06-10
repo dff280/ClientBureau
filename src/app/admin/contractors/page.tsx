@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import { Search, ShieldCheck, UserCheck, UsersRound } from "lucide-react"
 
-import { AdminFilterBar } from "@/components/admin/admin-crm-ui"
+import { AdminActionOutcomePanel, AdminFilterBar } from "@/components/admin/admin-crm-ui"
 import { AdminContractorEditor } from "@/components/admin/admin-record-forms"
 import {
   AdminPageHeader,
@@ -61,6 +61,33 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
           <StatCard label="Verified" value={verified} helper="Accounts with verified business status" icon={UserCheck} tone="emerald" />
           <StatCard label="Pending verification" value={pending} helper="Accounts needing review" icon={ShieldCheck} tone={pending > 0 ? "amber" : "slate"} />
         </div>
+        <AdminActionOutcomePanel
+          title="After updating a business or user record"
+          description="Account edits should make the business workspace clearer without confusing roles, billing, verification, or public profile ownership."
+          items={[
+            {
+              detail: "Role, account type, business profile, verification status, trade, city, state, and plan context should still make sense together.",
+              label: "Account health",
+              status: "Aligned",
+              title: "The account should read correctly",
+              tone: "blue",
+            },
+            {
+              detail: "Business verification and profile edits should not expose private account email, billing details, internal notes, or raw documents publicly.",
+              label: "Privacy",
+              status: "Sealed",
+              title: "Private account context should stay private",
+              tone: "emerald",
+            },
+            {
+              detail: "Verification, role, business identity, and account-health changes should include enough audit context for staff review.",
+              label: "Audit",
+              status: "Logged",
+              title: "The update should be traceable",
+              tone: "amber",
+            },
+          ]}
+        />
 
         <AdminFilterBar
           title="Find an account"

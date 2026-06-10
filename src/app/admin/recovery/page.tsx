@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Landmark, PhoneCall, ShieldCheck, UploadCloud } from "lucide-react"
 
+import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { AdminOpsExpansion } from "@/components/admin/admin-ops-expansion"
 import {
   AdminPageHeader,
@@ -116,6 +117,33 @@ export default async function AdminRecoveryPage() {
             </div>
           </div>
         </DashboardSection>
+        <AdminActionOutcomePanel
+          title="After updating a recovery or lien service case"
+          description="Managed service changes should move the case forward while preserving authorization, deadline, fee, and evidence safeguards."
+          items={[
+            {
+              detail: "The case should show the current stage: fee due, under review, needs more information, contact in progress, approved to send/file, recorded, released, or closed.",
+              label: "Case state",
+              status: "Current",
+              title: "The next action should be obvious",
+              tone: "blue",
+            },
+            {
+              detail: "Contractor authorization, Florida county, deadline risk, pass-through costs, vendor/attorney status, and recording proof should be visible to staff.",
+              label: "Service gates",
+              status: "Checked",
+              title: "Required gates should be clear",
+              tone: "amber",
+            },
+            {
+              detail: "Recovery notes, lien drafts, contact details, filing records, and raw evidence must stay private and never appear on public client profile pages.",
+              label: "Privacy",
+              status: "Sealed",
+              title: "Private case records should not publish",
+              tone: "emerald",
+            },
+          ]}
+        />
 
         {moderationCrm ? (
           <AdminOpsExpansion moderationCrm={moderationCrm} riskOps={riskOps} focus="recovery" />
