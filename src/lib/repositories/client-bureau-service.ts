@@ -27,6 +27,7 @@ import {
   getPublicBusinessProfiles,
   getPublicEntityProfile,
   getPublicEntityProfiles,
+  getProfileClaims,
   getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
@@ -41,12 +42,16 @@ import {
   recordProfileShareEvent,
   recordSearchEvent,
   reviewCommunityDiscussion,
+  reviewProfileClaim,
   saveAdminQueueView,
   saveClientSearch,
   saveReportDraft,
   searchClients,
   searchProfiles,
   setMockModerationDecisionReason,
+  mergeEntityProfiles,
+  reassignReportProfile,
+  redactEntityProfileField,
   signContractShare,
   simulateSubmittedClientReport,
   signLienFilingAuthorization,
@@ -97,12 +102,14 @@ import {
   getPublicBusinessProfilesSupabase,
   getPublicEntityProfileSupabase,
   getPublicEntityProfilesSupabase,
+  getProfileClaimsSupabase,
   linkEvidenceToServiceCaseSupabase,
   logPaymentRecoveryAttemptSupabase,
   logResolutionDeskContactSupabase,
   markServiceFeePaidSupabase,
   markRecoveryResolvedSupabase,
   reviewCommunityDiscussionSupabase,
+  reviewProfileClaimSupabase,
   reviewRecoveryComplianceSupabase,
   reviewReportSupabase,
   reviewReportsBulkSupabase,
@@ -116,6 +123,9 @@ import {
   searchClientsSupabase,
   searchProfilesSupabase,
   setModerationDecisionReasonSupabase,
+  mergeEntityProfilesSupabase,
+  reassignReportProfileSupabase,
+  redactEntityProfileFieldSupabase,
   signLienFilingAuthorizationSupabase,
   signContractShareSupabase,
   submitFloridaLienCaseSupabase,
@@ -176,6 +186,10 @@ import type {
   UpdateEvidenceVaultStatusInput,
   WatchlistItemInput,
   ProfileClaimInput,
+  AdminProfileClaimReviewInput,
+  AdminProfileMergeInput,
+  AdminProfileRedactionInput,
+  AdminReportReassignmentInput,
 } from "@/lib/schemas/client-bureau"
 import type {
   ClientProfile,
@@ -187,8 +201,11 @@ import type {
   ModerationPriority,
   ProfileShareEvent,
   ProfileClaim,
+  ProfileMergeEvent,
+  ProfileRedactionEvent,
   ProfileType,
   PublicEntityProfile,
+  ReportReassignmentEvent,
   SavedClientSearch,
   SearchAnalyticsEvent,
   SearchFilters,
@@ -281,6 +298,15 @@ export async function searchProfilesService(query?: string, filters?: SearchFilt
   return searchProfiles(query, filters)
 }
 
+export async function getProfileClaimsService(): Promise<ProfileClaim[]> {
+  if (shouldUseSupabase()) {
+    const claims = await getProfileClaimsSupabase().catch(() => undefined)
+    if (claims) return claims
+  }
+
+  return getProfileClaims()
+}
+
 export async function submitProfileClaimService(
   userId: string | undefined,
   input: ProfileClaimInput,
@@ -307,6 +333,51 @@ export async function submitProfileClaimService(
     claimantName: input.claimantName,
     relationshipToProfile: input.relationshipToProfile,
     verificationSummary: input.verificationSummary,
+  })
+}
+
+export async function reviewProfileClaimService(
+  adminId: string,
+  input: AdminProfileClaimReviewInput,
+): Promise<ProfileClaim> {
+  if (shouldUseSupabase()) return reviewProfileClaimSupabase(adminId, input)
+
+  return reviewProfileClaim(input)
+}
+
+export async function mergeEntityProfilesService(
+  adminId: string,
+  input: AdminProfileMergeInput,
+): Promise<ProfileMergeEvent> {
+  if (shouldUseSupabase()) return mergeEntityProfilesSupabase(adminId, input)
+
+  return mergeEntityProfiles({
+    ...input,
+    adminId,
+  })
+}
+
+export async function reassignReportProfileService(
+  adminId: string,
+  input: AdminReportReassignmentInput,
+): Promise<ReportReassignmentEvent> {
+  if (shouldUseSupabase()) return reassignReportProfileSupabase(adminId, input)
+
+  return reassignReportProfile({
+    ...input,
+    adminId,
+  })
+}
+
+export async function redactEntityProfileFieldService(
+  adminId: string,
+  input: AdminProfileRedactionInput,
+): Promise<ProfileRedactionEvent> {
+  if (shouldUseSupabase()) return redactEntityProfileFieldSupabase(adminId, input)
+
+  return redactEntityProfileField({
+    ...input,
+    adminId,
   })
 }
 

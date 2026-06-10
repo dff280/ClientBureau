@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto"
 
-import type { Database } from "@/lib/database.types"
+import type { Database, Json } from "@/lib/database.types"
 import {
   agreementDefaults,
   buildSignedContractSnapshot,
@@ -125,9 +125,12 @@ import type {
   PublicBusinessProfile,
   PublicEntityProfile,
   ProfileClaim,
+  ProfileMergeEvent,
+  ProfileRedactionEvent,
   ProfileType,
   ProfileShareEvent,
   ProjectJob,
+  ReportReassignmentEvent,
   ReportEvidence,
   ReportDraft,
   ReportTimelineEvent,
@@ -1895,6 +1898,322 @@ export async function submitProfileClaimSupabase(
   if (error) throw new Error(error.message)
 
   return mapProfileClaim(data)
+}
+
+export async function getProfileClaimsSupabase(): Promise<ProfileClaim[]> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("profile_claims")
+    .select("*")
+    .order("created_at", { ascending: false })
+
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map(mapProfileClaim)
+}
+
+export async function reviewProfileClaimSupabase(
+  adminId: string,
+  input: {
+    claimId: string
+    decision: "approved" | "rejected" | "disputed"
+    moderatorNote: string
+  },
+): Promise<ProfileClaim> {
+  const supabase = createServiceClient()
+  const { data: existingClaim, error: claimError } = await supabase
+    .from("profile_claims")
+    .select("*")
+    .eq("id", input.claimId)
+    .maybeSingle()
+
+  if (claimError) throw new Error(claimError.message)
+  if (!existingClaim) throw new Error("Profile claim was not found.")
+
+  const { data, error } = await supabase
+    .from("profile_claims")
+    .update({
+      status: input.decision,
+      moderator_note: input.moderatorNote,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.claimId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  if (input.decision === "approved") {
+    const { error: profileError } = await supabase
+      .from("entity_profiles")
+      .update({
+        claimed_status: "verified",
+        owner_user_id: existingClaim.claimant_user_id,
+        verification_level: "admin_verified",
+        verification_badges: ["Profile claim reviewed", "Admin verified"],
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingClaim.profile_id)
+
+    if (profileError) throw new Error(profileError.message)
+  } else if (input.decision === "disputed") {
+    const { error: profileError } = await supabase
+      .from("entity_profiles")
+      .update({
+        claimed_status: "disputed",
+        redaction_note: input.moderatorNote,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingClaim.profile_id)
+
+    if (profileError) throw new Error(profileError.message)
+  }
+
+  const { error: auditError } = await supabase.from("audit_logs").insert({
+    actor_id: adminId,
+    action: `profile_claim_${input.decision}`,
+    entity_type: "profile_claim",
+    entity_id: input.claimId,
+    summary: input.moderatorNote,
+    metadata: {
+      decision: input.decision,
+      severity: input.decision === "approved" ? "info" : "warning",
+    },
+  })
+
+  if (auditError && !isMissingRelationError(auditError)) throw new Error(auditError.message)
+
+  return mapProfileClaim(data)
+}
+
+export async function mergeEntityProfilesSupabase(
+  adminId: string,
+  input: {
+    sourceProfileId: string
+    targetProfileId: string
+    reason: string
+    moveReports?: boolean
+  },
+): Promise<ProfileMergeEvent> {
+  const supabase = createServiceClient()
+  const { data: sourceProfile, error: sourceError } = await supabase
+    .from("entity_profiles")
+    .select("*")
+    .eq("id", input.sourceProfileId)
+    .maybeSingle()
+
+  if (sourceError) throw new Error(sourceError.message)
+  if (!sourceProfile) throw new Error("Source profile was not found.")
+
+  const { data: targetProfile, error: targetError } = await supabase
+    .from("entity_profiles")
+    .select("id")
+    .eq("id", input.targetProfileId)
+    .maybeSingle()
+
+  if (targetError) throw new Error(targetError.message)
+  if (!targetProfile) throw new Error("Target profile was not found.")
+
+  const { data, error } = await supabase
+    .from("profile_merge_events")
+    .insert({
+      source_profile_id: input.sourceProfileId,
+      target_profile_id: input.targetProfileId,
+      merged_by: adminId,
+      reason: input.reason,
+      metadata: {
+        moveReports: Boolean(input.moveReports),
+        sourceSlug: sourceProfile.slug,
+        sourceType: sourceProfile.profile_type,
+      },
+    })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  const { error: profileError } = await supabase
+    .from("entity_profiles")
+    .update({
+      merged_into_profile_id: input.targetProfileId,
+      is_public: false,
+      redaction_note: `Merged into canonical profile. ${input.reason}`,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.sourceProfileId)
+
+  if (profileError) throw new Error(profileError.message)
+
+  if (input.moveReports) {
+    const { error: reportsError } = await supabase
+      .from("client_reports")
+      .update({
+        subject_profile_id: input.targetProfileId,
+        redaction_note: `Subject profile merged. ${input.reason}`,
+      })
+      .eq("subject_profile_id", input.sourceProfileId)
+
+    if (reportsError) throw new Error(reportsError.message)
+
+    const { error: relationshipError } = await supabase
+      .from("profile_relationships")
+      .update({
+        target_profile_id: input.targetProfileId,
+        private_notes: `Relationship target merged by admin. ${input.reason}`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("target_profile_id", input.sourceProfileId)
+
+    if (relationshipError && !isMissingRelationError(relationshipError)) throw new Error(relationshipError.message)
+  }
+
+  return {
+    id: data.id,
+    sourceProfileId: data.source_profile_id,
+    targetProfileId: data.target_profile_id,
+    mergedBy: data.merged_by ?? undefined,
+    reason: data.reason,
+    metadata: typeof data.metadata === "object" && data.metadata ? data.metadata as Record<string, unknown> : undefined,
+    createdAt: data.created_at,
+  }
+}
+
+export async function reassignReportProfileSupabase(
+  adminId: string,
+  input: {
+    reportId: string
+    nextSubjectProfileId?: string
+    nextProjectJobId?: string
+    reason: string
+  },
+): Promise<ReportReassignmentEvent> {
+  const supabase = createServiceClient()
+  const { data: report, error: reportError } = await supabase
+    .from("client_reports")
+    .select("id, subject_profile_id, project_job_id")
+    .eq("id", input.reportId)
+    .maybeSingle()
+
+  if (reportError) throw new Error(reportError.message)
+  if (!report) throw new Error("Report was not found.")
+
+  const { data, error } = await supabase
+    .from("report_reassignment_events")
+    .insert({
+      report_id: input.reportId,
+      previous_subject_profile_id: report.subject_profile_id,
+      next_subject_profile_id: input.nextSubjectProfileId ?? report.subject_profile_id,
+      previous_project_job_id: report.project_job_id,
+      next_project_job_id: input.nextProjectJobId ?? report.project_job_id,
+      reassigned_by: adminId,
+      reason: input.reason,
+    })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  const { error: updateError } = await supabase
+    .from("client_reports")
+    .update({
+      subject_profile_id: input.nextSubjectProfileId ?? report.subject_profile_id,
+      project_job_id: input.nextProjectJobId ?? report.project_job_id,
+      redaction_note: `Report reassigned by admin. ${input.reason}`,
+    })
+    .eq("id", input.reportId)
+
+  if (updateError) throw new Error(updateError.message)
+
+  return {
+    id: data.id,
+    reportId: data.report_id,
+    previousSubjectProfileId: data.previous_subject_profile_id ?? undefined,
+    nextSubjectProfileId: data.next_subject_profile_id ?? undefined,
+    previousProjectJobId: data.previous_project_job_id ?? undefined,
+    nextProjectJobId: data.next_project_job_id ?? undefined,
+    reassignedBy: data.reassigned_by ?? undefined,
+    reason: data.reason,
+    createdAt: data.created_at,
+  }
+}
+
+export async function redactEntityProfileFieldSupabase(
+  adminId: string,
+  input: {
+    profileId: string
+    fieldName: "display_name" | "business_name" | "public_summary" | "city" | "state" | "slug"
+    reason: string
+    replacementValue?: string
+  },
+): Promise<ProfileRedactionEvent> {
+  const supabase = createServiceClient()
+  const { data: profile, error: profileError } = await supabase
+    .from("entity_profiles")
+    .select("*")
+    .eq("id", input.profileId)
+    .maybeSingle()
+
+  if (profileError) throw new Error(profileError.message)
+  if (!profile) throw new Error("Profile was not found.")
+
+  const previousValue = String(profile[input.fieldName] ?? "")
+  const previousPublicValueHash = previousValue
+    ? `sha256:${createHash("sha256").update(previousValue).digest("hex")}`
+    : undefined
+  const currentRedactions =
+    typeof profile.public_field_redactions === "object" && profile.public_field_redactions && !Array.isArray(profile.public_field_redactions)
+      ? profile.public_field_redactions as Record<string, unknown>
+      : {}
+  const currentRedactionsJson = JSON.parse(JSON.stringify(currentRedactions)) as Record<string, Json | undefined>
+  const publicFieldRedactions = {
+    ...currentRedactionsJson,
+    [input.fieldName]: {
+      reason: input.reason,
+      redactedAt: new Date().toISOString(),
+      replacementProvided: Boolean(input.replacementValue),
+    },
+  } satisfies Record<string, Json | undefined>
+  const allowedReplacementFields = ["display_name", "business_name", "public_summary"] as const
+  const replacementPatch =
+    input.replacementValue && allowedReplacementFields.includes(input.fieldName as (typeof allowedReplacementFields)[number])
+      ? { [input.fieldName]: input.replacementValue }
+      : {}
+
+  const { data, error } = await supabase
+    .from("profile_redaction_events")
+    .insert({
+      profile_id: input.profileId,
+      field_name: input.fieldName,
+      previous_public_value_hash: previousPublicValueHash ?? null,
+      redacted_by: adminId,
+      reason: input.reason,
+    })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  const { error: updateError } = await supabase
+    .from("entity_profiles")
+    .update({
+      ...replacementPatch,
+      public_field_redactions: publicFieldRedactions,
+      redaction_note: input.reason,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.profileId)
+
+  if (updateError) throw new Error(updateError.message)
+
+  return {
+    id: data.id,
+    profileId: data.profile_id,
+    fieldName: data.field_name,
+    previousPublicValueHash: data.previous_public_value_hash ?? undefined,
+    redactedBy: data.redacted_by ?? undefined,
+    reason: data.reason,
+    createdAt: data.created_at,
+  }
 }
 
 export async function searchClientsSupabase(

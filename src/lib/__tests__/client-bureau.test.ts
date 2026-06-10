@@ -25,6 +25,10 @@ import type { Database } from "@/lib/database.types"
 import {
   clientReportSchema,
   clientResponseSchema,
+  adminProfileClaimReviewSchema,
+  adminProfileMergeSchema,
+  adminProfileRedactionSchema,
+  adminReportReassignmentSchema,
   profileShareEventSchema,
   savedClientSearchSchema,
   searchAnalyticsEventSchema,
@@ -1160,6 +1164,37 @@ describe("schemas and mock actions", () => {
           "The client states payment timing was connected to a requested documentation review.",
         contactCertification: true,
         documentationCertification: true,
+      }).success,
+    ).toBe(true)
+  })
+
+  it("validates admin profile graph operations with audit reasons", () => {
+    expect(
+      adminProfileClaimReviewSchema.safeParse({
+        claimId: "claim_123",
+        decision: "approved",
+        moderatorNote: "Verification details support this profile claim.",
+      }).success,
+    ).toBe(true)
+    expect(
+      adminProfileMergeSchema.safeParse({
+        sourceProfileId: "profile_a",
+        targetProfileId: "profile_a",
+        reason: "Same profile selected twice.",
+      }).success,
+    ).toBe(false)
+    expect(
+      adminReportReassignmentSchema.safeParse({
+        reportId: "report_123",
+        reason: "Confirmed report belongs to the target profile after evidence review.",
+      }).success,
+    ).toBe(false)
+    expect(
+      adminProfileRedactionSchema.safeParse({
+        profileId: "profile_123",
+        fieldName: "public_summary",
+        reason: "Public summary contained private context and needs a safer replacement.",
+        replacementValue: "Public summary redacted pending additional moderation.",
       }).success,
     ).toBe(true)
   })

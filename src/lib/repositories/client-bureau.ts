@@ -128,7 +128,10 @@ import type {
   SearchAnalyticsEvent,
   ProfileShareEvent,
   ProfileClaim,
+  ProfileMergeEvent,
+  ProfileRedactionEvent,
   PublicEntityProfile,
+  ReportReassignmentEvent,
   Subscription,
 } from "@/lib/types"
 import {
@@ -146,6 +149,9 @@ const savedClientSearchRecords: SavedClientSearch[] = []
 const searchAnalyticsEvents: SearchAnalyticsEvent[] = []
 const profileShareEvents: ProfileShareEvent[] = []
 const profileClaims: ProfileClaim[] = []
+const profileMergeEvents: ProfileMergeEvent[] = []
+const reportReassignmentEvents: ReportReassignmentEvent[] = []
+const profileRedactionEvents: ProfileRedactionEvent[] = []
 
 type SimulatedClientReportInput = Partial<ClientReportInput> &
   Pick<
@@ -434,6 +440,110 @@ export function submitProfileClaim(input: {
 
 export function getProfileClaims() {
   return profileClaims
+}
+
+export function reviewProfileClaim(input: {
+  claimId: string
+  decision: "approved" | "rejected" | "disputed"
+  moderatorNote: string
+}): ProfileClaim {
+  const claim = profileClaims.find((item) => item.id === input.claimId) ?? {
+    id: input.claimId,
+    profileId: "mock_profile",
+    claimantEmailHash: "sha256:mock-private",
+    claimantName: "Mock claimant",
+    relationshipToProfile: "Owner or authorized representative",
+    verificationSummary: "Mock claim created for local admin workflow.",
+    status: "pending" as const,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  claim.status = input.decision
+  claim.moderatorNote = input.moderatorNote
+  claim.updatedAt = new Date().toISOString()
+
+  if (!profileClaims.some((item) => item.id === claim.id)) profileClaims.unshift(claim)
+
+  return claim
+}
+
+export function mergeEntityProfiles(input: {
+  sourceProfileId: string
+  targetProfileId: string
+  adminId?: string
+  reason: string
+  moveReports?: boolean
+}): ProfileMergeEvent {
+  const event: ProfileMergeEvent = {
+    id: `merge_mock_${Date.now()}`,
+    sourceProfileId: input.sourceProfileId,
+    targetProfileId: input.targetProfileId,
+    mergedBy: input.adminId,
+    reason: input.reason,
+    metadata: {
+      moveReports: Boolean(input.moveReports),
+      mode: "local-preview",
+    },
+    createdAt: new Date().toISOString(),
+  }
+
+  profileMergeEvents.unshift(event)
+
+  return event
+}
+
+export function reassignReportProfile(input: {
+  reportId: string
+  nextSubjectProfileId?: string
+  nextProjectJobId?: string
+  adminId?: string
+  reason: string
+}): ReportReassignmentEvent {
+  const report = clientReports.find((item) => item.id === input.reportId)
+  const event: ReportReassignmentEvent = {
+    id: `reassign_mock_${Date.now()}`,
+    reportId: input.reportId,
+    previousSubjectProfileId: report?.subjectProfileId,
+    nextSubjectProfileId: input.nextSubjectProfileId,
+    previousProjectJobId: report?.projectJobId,
+    nextProjectJobId: input.nextProjectJobId,
+    reassignedBy: input.adminId,
+    reason: input.reason,
+    createdAt: new Date().toISOString(),
+  }
+
+  if (report) {
+    report.subjectProfileId = input.nextSubjectProfileId ?? report.subjectProfileId
+    report.projectJobId = input.nextProjectJobId ?? report.projectJobId
+    report.moderationNote = `Reassigned by admin: ${input.reason}`
+  }
+
+  reportReassignmentEvents.unshift(event)
+
+  return event
+}
+
+export function redactEntityProfileField(input: {
+  profileId: string
+  fieldName: string
+  reason: string
+  replacementValue?: string
+  adminId?: string
+}): ProfileRedactionEvent {
+  const event: ProfileRedactionEvent = {
+    id: `redaction_mock_${Date.now()}`,
+    profileId: input.profileId,
+    fieldName: input.fieldName,
+    previousPublicValueHash: "sha256:local-preview-private",
+    redactedBy: input.adminId,
+    reason: input.reason,
+    createdAt: new Date().toISOString(),
+  }
+
+  profileRedactionEvents.unshift(event)
+
+  return event
 }
 
 function publicEvidenceLabel(item: { fileName: string; fileType: string }) {

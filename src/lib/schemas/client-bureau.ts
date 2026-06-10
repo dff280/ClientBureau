@@ -17,7 +17,6 @@ import {
   clientProfileSubtypes,
   contractorProfileSubtypes,
   isPositiveReportCategory,
-  profileClaimStatuses,
   profileTypes,
   reportCategories,
   reportRelationshipTypes,
@@ -372,8 +371,35 @@ export const profileClaimSchema = z.object({
 
 export const adminProfileClaimReviewSchema = z.object({
   claimId: requiredText("Claim ID"),
-  decision: z.enum(profileClaimStatuses),
-  moderatorNote: z.string().trim().max(700, "Keep moderator note under 700 characters.").optional(),
+  decision: z.enum(["approved", "rejected", "disputed"]),
+  moderatorNote: requiredText("Moderator note", 8).max(700, "Keep moderator note under 700 characters."),
+})
+
+export const adminProfileMergeSchema = z.object({
+  sourceProfileId: requiredText("Source profile ID"),
+  targetProfileId: requiredText("Target profile ID"),
+  reason: requiredText("Merge reason", 12).max(700, "Keep the merge reason under 700 characters."),
+  moveReports: z.coerce.boolean().optional(),
+}).refine((value) => value.sourceProfileId !== value.targetProfileId, {
+  path: ["targetProfileId"],
+  message: "Choose two different profiles before merging.",
+})
+
+export const adminReportReassignmentSchema = z.object({
+  reportId: requiredText("Report ID"),
+  nextSubjectProfileId: optionalText,
+  nextProjectJobId: optionalText,
+  reason: requiredText("Reassignment reason", 12).max(700, "Keep the reassignment reason under 700 characters."),
+}).refine((value) => Boolean(value.nextSubjectProfileId || value.nextProjectJobId), {
+  path: ["nextSubjectProfileId"],
+  message: "Choose a new profile, project/job, or both.",
+})
+
+export const adminProfileRedactionSchema = z.object({
+  profileId: requiredText("Profile ID"),
+  fieldName: z.enum(["display_name", "business_name", "public_summary", "city", "state", "slug"]),
+  reason: requiredText("Redaction reason", 12).max(700, "Keep the redaction reason under 700 characters."),
+  replacementValue: z.string().trim().max(240, "Keep the replacement value under 240 characters.").optional(),
 })
 
 export const savedClientSearchSchema = z.object({
@@ -883,6 +909,9 @@ export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
 export type ProfileClaimInput = z.infer<typeof profileClaimSchema>
 export type AdminProfileClaimReviewInput = z.infer<typeof adminProfileClaimReviewSchema>
+export type AdminProfileMergeInput = z.infer<typeof adminProfileMergeSchema>
+export type AdminReportReassignmentInput = z.infer<typeof adminReportReassignmentSchema>
+export type AdminProfileRedactionInput = z.infer<typeof adminProfileRedactionSchema>
 export type AdminReviewInput = z.infer<typeof adminReviewSchema>
 export type CommunityDiscussionInput = z.infer<typeof communityDiscussionSchema>
 export type WatchlistItemInput = z.infer<typeof watchlistItemSchema>

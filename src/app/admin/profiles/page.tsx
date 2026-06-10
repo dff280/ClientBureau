@@ -3,6 +3,7 @@ import Link from "next/link"
 import { BadgeCheck, Eye, GitMerge, Search, ShieldCheck, UsersRound } from "lucide-react"
 
 import { AdminFilterBar, AdminProfileHealthCard } from "@/components/admin/admin-crm-ui"
+import { AdminProfileGraphActions } from "@/components/admin/admin-profile-graph-actions"
 import {
   AdminPageHeader,
   EmptyState,
@@ -12,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { deriveEntityProfiles, entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
-import { getAdminWorkspaceDataService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
+import { getAdminWorkspaceDataService, getProfileClaimsService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
 export const metadata: Metadata = {
@@ -34,9 +35,10 @@ function toProfileType(value?: string): ProfileType | undefined {
 
 export default async function AdminProfilesPage({ searchParams }: { searchParams: AdminProfilesSearchParams }) {
   const params = await searchParams
-  const [data, businesses] = await Promise.all([
+  const [data, businesses, claims] = await Promise.all([
     getAdminWorkspaceDataService(),
     getPublicBusinessProfilesService().catch(() => []),
+    getProfileClaimsService().catch(() => []),
   ])
   const profiles = deriveEntityProfiles({
     clients: data.clients,
@@ -73,6 +75,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
   const publicCount = profiles.filter((profile) => profile.isPublic).length
   const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed").length
   const duplicateSignals = profiles.filter((profile) => profile.duplicateGroupKey).length
+  const pendingClaimCount = claims.filter((claim) => claim.status === "pending").length
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -99,8 +102,11 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
           <StatCard label="Unified profiles" value={profiles.length} helper="Clients, contractors, and subcontractors" icon={UsersRound} tone="slate" />
           <StatCard label="Public profiles" value={publicCount} helper="SEO-visible approved or business records" icon={Eye} tone="emerald" />
           <StatCard label="Claimed" value={claimedCount} helper="Owned or verified profile context" icon={BadgeCheck} tone="blue" />
-          <StatCard label="Graph signals" value={duplicateSignals} helper="Duplicate keys, claims, and reassignment context" icon={GitMerge} tone="amber" />
+          <StatCard label="Pending claims" value={pendingClaimCount} helper="Claims awaiting verification review" icon={BadgeCheck} tone="amber" />
+          <StatCard label="Graph signals" value={duplicateSignals} helper="Duplicate keys and reassignment context" icon={GitMerge} tone="slate" />
         </div>
+
+        <AdminProfileGraphActions profiles={profiles} claims={claims} reports={data.reports} />
 
         <AdminFilterBar
           title="Find public records and claim targets"

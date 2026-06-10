@@ -9,6 +9,10 @@ import {
   adminContractorUpdateSchema,
   adminDeleteRecordSchema,
   adminDiscussionReviewSchema,
+  adminProfileClaimReviewSchema,
+  adminProfileMergeSchema,
+  adminProfileRedactionSchema,
+  adminReportReassignmentSchema,
   adminReviewSchema,
   adminSavedViewSchema,
   bulkAdminReviewSchema,
@@ -92,6 +96,9 @@ import type {
   ServiceReadinessSummary,
   ProfileShareEvent,
   ProfileClaim,
+  ProfileMergeEvent,
+  ProfileRedactionEvent,
+  ReportReassignmentEvent,
   SavedClientSearch,
   SearchAnalyticsEvent,
   User,
@@ -148,6 +155,10 @@ import {
   submitClientReportService,
   submitClientResponseService,
   submitProfileClaimService,
+  reviewProfileClaimService,
+  mergeEntityProfilesService,
+  reassignReportProfileService,
+  redactEntityProfileFieldService,
   adminApproveLienFilingService,
   adminApproveLienNoticeService,
   adminRecordLienFiledService,
@@ -339,6 +350,16 @@ function revalidatePublicProfileDirectories(profile?: Pick<ClientProfile, "city"
     revalidatePath(getClientStateDirectoryHref(profile))
     revalidatePath(getClientCityDirectoryHref(profile))
   }
+}
+
+function revalidateGraphAdminPaths() {
+  revalidatePath("/admin")
+  revalidatePath("/admin/profiles")
+  revalidatePath("/admin/reports")
+  revalidatePath("/admin/audit-log")
+  revalidatePath("/search")
+  revalidatePath("/sitemap.xml")
+  revalidatePath("/llms.txt")
 }
 
 async function getAdminMutationUser(context: string, formData: FormData) {
@@ -550,6 +571,105 @@ export async function submitProfileClaimAction(
   revalidatePath("/admin/profiles")
 
   return ok(claim, "Profile claim received. Client Bureau will verify the relationship before changing public ownership.")
+}
+
+export async function reviewProfileClaimAction(
+  _previousState: ActionResult<ProfileClaim>,
+  formData: FormData,
+): Promise<ActionResult<ProfileClaim>> {
+  const parsed = adminProfileClaimReviewSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Complete the claim review decision and moderator note.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("profile claim review", formData)
+
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const claim = await reviewProfileClaimService(adminResult.admin.id, parsed.data)
+    revalidateGraphAdminPaths()
+
+    return ok(claim, `Profile claim ${parsed.data.decision}. Public profile status was updated when applicable.`)
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Profile claim review could not be saved."))
+  }
+}
+
+export async function mergeEntityProfilesAction(
+  _previousState: ActionResult<ProfileMergeEvent>,
+  formData: FormData,
+): Promise<ActionResult<ProfileMergeEvent>> {
+  const parsed = adminProfileMergeSchema.safeParse({
+    ...formDataToObject(formData),
+    moveReports: formData.has("moveReports"),
+  })
+
+  if (!parsed.success) {
+    return fail("Complete the source profile, target profile, and merge reason.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("profile merge", formData)
+
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const event = await mergeEntityProfilesService(adminResult.admin.id, parsed.data)
+    revalidateGraphAdminPaths()
+
+    return ok(event, "Profile merge recorded. The source profile is hidden and audit history was preserved.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Profile merge could not be saved."))
+  }
+}
+
+export async function reassignReportProfileAction(
+  _previousState: ActionResult<ReportReassignmentEvent>,
+  formData: FormData,
+): Promise<ActionResult<ReportReassignmentEvent>> {
+  const parsed = adminReportReassignmentSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Choose the report, reassignment target, and audit reason.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("report reassignment", formData)
+
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const event = await reassignReportProfileService(adminResult.admin.id, parsed.data)
+    revalidateGraphAdminPaths()
+
+    return ok(event, "Report reassignment recorded and connected profile/project context was updated.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Report reassignment could not be saved."))
+  }
+}
+
+export async function redactEntityProfileFieldAction(
+  _previousState: ActionResult<ProfileRedactionEvent>,
+  formData: FormData,
+): Promise<ActionResult<ProfileRedactionEvent>> {
+  const parsed = adminProfileRedactionSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Choose the profile field and provide a redaction reason.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("profile redaction", formData)
+
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const event = await redactEntityProfileFieldService(adminResult.admin.id, parsed.data)
+    revalidateGraphAdminPaths()
+
+    return ok(event, "Profile redaction recorded. Public/private field handling and audit history were updated.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Profile redaction could not be saved."))
+  }
 }
 
 export async function signupAction(
