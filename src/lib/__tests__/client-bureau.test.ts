@@ -585,6 +585,16 @@ describe("launch health gates", () => {
     expect(summary.platformCanUseSupabase).toBe(true)
     expect(summary.recommendedPlatformFeatureDataMode).toBe("supabase")
     expect(summary.readinessLabel).toBe("Ready to flip")
+    expect(summary.platformColumnCount).toEqual({
+      ready:
+        requiredContractPacketColumns.length +
+        requiredRevenueWorkflowColumns.length +
+        requiredMultiProfileColumns.length,
+      total:
+        requiredContractPacketColumns.length +
+        requiredRevenueWorkflowColumns.length +
+        requiredMultiProfileColumns.length,
+    })
   })
 
   it("keeps advanced ops mocked when platform tables are missing", () => {
@@ -698,6 +708,7 @@ describe("launch health gates", () => {
     expect(summary.platformCanUseSupabase).toBe(false)
     expect(summary.missingPlatformColumns).toContain("client_responses.entity_profile_id")
     expect(summary.missingPlatformColumns).toContain("client_responses.project_job_id")
+    expect(summary.platformColumnCount.ready).toBe(summary.platformColumnCount.total - 2)
   })
 })
 

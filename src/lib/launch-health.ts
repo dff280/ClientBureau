@@ -121,6 +121,9 @@ export const requiredMultiProfileColumns = [
   { table: "client_responses", name: "attachment_reference_private" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
+const requiredPlatformColumnTotal =
+  requiredContractPacketColumns.length + requiredRevenueWorkflowColumns.length + requiredMultiProfileColumns.length
+
 type LaunchColumnStatus = {
   table: RequiredTable
   name: string
@@ -310,8 +313,8 @@ export function summarizeLaunchHealth(input: {
       total: platformLaunchTables.length,
     },
     platformColumnCount: {
-      ready: requiredContractPacketColumns.length + requiredRevenueWorkflowColumns.length - missingPlatformColumns.length,
-      total: requiredContractPacketColumns.length + requiredRevenueWorkflowColumns.length,
+      ready: requiredPlatformColumnTotal - missingPlatformColumns.length,
+      total: requiredPlatformColumnTotal,
     },
   }
 }

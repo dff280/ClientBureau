@@ -37,6 +37,11 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0011_contractor_onboarding_fields.sql`
    - `supabase/migrations/0012_ratings_signup_report_intake.sql`
    - `supabase/migrations/0013_live_platform_schema_backfill.sql`
+   - `supabase/migrations/0014_multi_profile_schema.sql`
+   - `supabase/migrations/0015_multi_profile_backfill.sql`
+   - `supabase/migrations/0016_project_job_reputation_graph.sql`
+   - `supabase/migrations/0017_project_job_graph_backfill.sql`
+   - `supabase/migrations/0018_response_graph_links.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -73,7 +78,7 @@ Launch health is available at:
 https://clientbureau.com/api/health
 ```
 
-It returns non-secret readiness information for data mode, platform feature mode, Supabase connectivity, service-role availability, Stripe configuration, webhook configuration, and required table presence.
+It returns non-secret readiness information for data mode, platform feature mode, Supabase connectivity, service-role availability, Stripe configuration, webhook configuration, required table presence, and required platform column presence.
 
 ## 3. Stripe Billing
 
@@ -191,15 +196,15 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003` through `0013` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003` through `0018` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
 
-If `/api/health` reports missing contract, managed recovery, or Florida lien readiness columns, run:
+If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, or response graph columns, first confirm all migrations through `0018` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
 
 ```text
 supabase/migrations/0013_live_platform_schema_backfill.sql
 ```
 
-That migration is idempotent and exists as a production repair pass for databases that received only part of the platform schema rollout.
+That migration is idempotent and exists as a production repair pass for databases that received only part of the platform schema rollout. It does not replace the multi-profile and reputation graph migrations `0014` through `0018`.
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
 
@@ -363,6 +368,46 @@ order by column_name;
 ```
 
 Expected result: 9 rows.
+
+Then verify the unified profile and project/job graph tables:
+
+```sql
+select table_name
+from information_schema.tables
+where table_schema = 'public'
+  and table_name in (
+    'entity_profiles',
+    'profile_claims',
+    'project_jobs',
+    'project_job_profiles',
+    'profile_relationships',
+    'profile_merge_events',
+    'report_reassignment_events',
+    'profile_redaction_events'
+  )
+order by table_name;
+```
+
+Expected result: 8 rows.
+
+Finally verify response graph links so client response/dispute workflows can attach to profiles and projects without exposing private identifiers:
+
+```sql
+select column_name
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'client_responses'
+  and column_name in (
+    'entity_profile_id',
+    'project_job_id',
+    'request_type',
+    'verification_method',
+    'attachment_reference_private'
+  )
+order by column_name;
+```
+
+Expected result: 5 rows.
 
 Expected `/api/health` signal before the flip:
 
