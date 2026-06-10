@@ -36,7 +36,8 @@ import {
   buildRecoveryReadinessSummary,
   buildServiceReadinessSummaries,
 } from "@/lib/service-readiness"
-import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
+import { normalizeStateCode } from "@/lib/locations"
+import { buildClientSlug, ensureUniqueSlug, slugify } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
 import type {
   AdminSavedViewInput,
@@ -613,6 +614,44 @@ function mapAuditLog(row: AuditLogRow): AuditLogEntry {
     metadata,
     createdAt: row.created_at,
   }
+}
+
+function normalizeRedactionReplacement(fieldName: "display_name" | "business_name" | "public_summary" | "city" | "state" | "slug", value?: string) {
+  const trimmed = value?.trim()
+  if (!trimmed) return undefined
+
+  if (fieldName === "state") return normalizeStateCode(trimmed)
+  if (fieldName === "slug") return slugify(trimmed)
+
+  return trimmed
+}
+
+function redactionPatchForField(
+  fieldName: "display_name" | "business_name" | "public_summary" | "city" | "state" | "slug",
+  replacementValue?: string,
+) {
+  const replacement = normalizeRedactionReplacement(fieldName, replacementValue)
+
+  if (fieldName === "state" && replacement && replacement.length !== 2) {
+    throw new Error("State redaction replacement must be a valid two-letter state code.")
+  }
+
+  if (fieldName === "slug" && replacementValue && !replacement) {
+    throw new Error("Slug redaction replacement must contain at least one letter or number.")
+  }
+
+  if (replacement) return { patch: { [fieldName]: replacement }, profileHidden: false }
+
+  if (fieldName === "display_name") return { patch: { display_name: "Redacted profile" }, profileHidden: false }
+  if (fieldName === "business_name") return { patch: { business_name: null }, profileHidden: false }
+  if (fieldName === "public_summary") {
+    return {
+      patch: { public_summary: "Public summary redacted pending additional moderation." },
+      profileHidden: false,
+    }
+  }
+
+  return { patch: { is_public: false }, profileHidden: true }
 }
 
 function mapWatchlistItem(row: ContractorWatchlistRow): ContractorWatchlistItem {
@@ -2173,19 +2212,16 @@ export async function redactEntityProfileFieldSupabase(
       ? profile.public_field_redactions as Record<string, unknown>
       : {}
   const currentRedactionsJson = JSON.parse(JSON.stringify(currentRedactions)) as Record<string, Json | undefined>
+  const redactionPatch = redactionPatchForField(input.fieldName, input.replacementValue)
   const publicFieldRedactions = {
     ...currentRedactionsJson,
     [input.fieldName]: {
       reason: input.reason,
       redactedAt: new Date().toISOString(),
-      replacementProvided: Boolean(input.replacementValue),
+      replacementProvided: !redactionPatch.profileHidden && Boolean(normalizeRedactionReplacement(input.fieldName, input.replacementValue)),
+      profileHidden: redactionPatch.profileHidden,
     },
   } satisfies Record<string, Json | undefined>
-  const allowedReplacementFields = ["display_name", "business_name", "public_summary"] as const
-  const replacementPatch =
-    input.replacementValue && allowedReplacementFields.includes(input.fieldName as (typeof allowedReplacementFields)[number])
-      ? { [input.fieldName]: input.replacementValue }
-      : {}
 
   const { data, error } = await supabase
     .from("profile_redaction_events")
@@ -2204,9 +2240,11 @@ export async function redactEntityProfileFieldSupabase(
   const { error: updateError } = await supabase
     .from("entity_profiles")
     .update({
-      ...replacementPatch,
+      ...redactionPatch.patch,
       public_field_redactions: publicFieldRedactions,
-      redaction_note: input.reason,
+      redaction_note: redactionPatch.profileHidden
+        ? `${input.reason} Public profile hidden until a safe replacement is approved.`
+        : input.reason,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.profileId)

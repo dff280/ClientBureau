@@ -205,7 +205,7 @@ function RedactionCard({ profiles }: { profiles: EntityProfile[] }) {
     <GraphCard
       icon={<TextSearch className="size-5" aria-hidden="true" />}
       title="Redact public field"
-      text="Record why a public-facing field was redacted or replaced. Private identifiers and raw files remain sealed."
+      text="Replace a public-facing field or hide the profile when required routing/location details cannot be safely displayed. Private identifiers and raw files remain sealed."
     >
       <form action={action} className="space-y-3">
         <AdminActionTokenInput />
@@ -221,7 +221,10 @@ function RedactionCard({ profiles }: { profiles: EntityProfile[] }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="replacementValue">Replacement value optional</Label>
-          <Input id="replacementValue" name="replacementValue" placeholder="Use only for display name, business name, or public summary" />
+          <Input id="replacementValue" name="replacementValue" placeholder="Safe display value, city, two-letter state, or slug" />
+          <p className="text-xs leading-5 text-slate-500">
+            If city, state, or slug is redacted without a replacement, the profile is hidden from public pages until review.
+          </p>
           <FieldError name="replacementValue" errors={state.ok ? undefined : state.fieldErrors} />
         </div>
         <NoteField name="reason" label="Redaction reason" errorState={state} placeholder="Public field contained private, confusing, or unsupported context." />
