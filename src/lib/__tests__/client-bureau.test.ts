@@ -45,6 +45,12 @@ import {
   toSearchPreviewProfile,
 } from "@/lib/search-experience"
 import {
+  buildEntityProfileSlug,
+  deriveEntityProfiles,
+  entityProfileHref,
+  searchEntityProfiles,
+} from "@/lib/entity-profiles"
+import {
   getMockGrowthEngineData,
   networkGrowthScore,
   profileClaimCompletion,
@@ -201,6 +207,53 @@ const baseReport: ClientReport = {
   createdAt: "2026-01-01T00:00:00.000Z",
 }
 
+describe("Client Bureau unified profiles", () => {
+  const entityProfiles = deriveEntityProfiles({
+    clients: clientProfiles,
+    contractors: contractorProfiles,
+    reports: clientReports,
+  })
+
+  it("derives client and business profiles without exposing private identifiers", () => {
+    expect(entityProfiles.some((profile) => profile.profileType === "client")).toBe(true)
+    expect(entityProfiles.some((profile) => profile.profileType === "contractor")).toBe(true)
+
+    const serialized = JSON.stringify(entityProfiles)
+    expect(serialized).not.toContain("phoneHash")
+    expect(serialized).not.toContain("emailHash")
+    expect(serialized).not.toContain("businessPhone")
+  })
+
+  it("builds canonical unified profile hrefs", () => {
+    const clientProfile = entityProfiles.find((profile) => profile.profileType === "client")
+    expect(clientProfile).toBeTruthy()
+    expect(entityProfileHref(clientProfile!)).toBe(`/profiles/client/${clientProfile!.slug}`)
+  })
+
+  it("filters unified search by profile type and state", () => {
+    const results = searchEntityProfiles(entityProfiles, "Orlando", {
+      state: "FL",
+      profileType: "client",
+    })
+
+    expect(results.length).toBeGreaterThan(0)
+    expect(results.every((profile) => profile.profileType === "client")).toBe(true)
+    expect(results.every((profile) => profile.state === "FL")).toBe(true)
+  })
+
+  it("creates stable slugs for subcontractor profiles", () => {
+    expect(
+      buildEntityProfileSlug({
+        profileType: "subcontractor",
+        displayName: "Bright Line Electric",
+        businessName: "Bright Line Electric",
+        city: "Tampa",
+        state: "fl",
+      }),
+    ).toBe("bright-line-electric-tampa-fl")
+  })
+})
+
 describe("Client Bureau scoring", () => {
   it("maps scores to expected risk levels", () => {
     expect(scoreToRiskLevel(91)).toBe("Low")
@@ -330,6 +383,7 @@ describe("product positioning", () => {
       "Review Reports",
       "Review Discussions",
       "Client Responses",
+      "Unified Profiles",
       "Manage Client Profiles",
       "Businesses / Users",
       "All Reports",

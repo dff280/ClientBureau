@@ -120,6 +120,11 @@ export const accountTypeOptions = [
     description: "I perform work for clients and want to check client ratings, submit reports, and protect payment.",
   },
   {
+    value: "subcontractor",
+    label: "Subcontractor / Trade Pro",
+    description: "I work with contractors, builders, or businesses and want to document jobs, payment, contracts, and reliability.",
+  },
+  {
     value: "client",
     label: "Client / Homeowner / Customer",
     description: "I want to respond to a report, request a correction, or manage my profile.",

@@ -22,11 +22,25 @@ export const concernReportCategories = reportCategories.filter(
 
 export const riskLevels = ["Low", "Moderate", "Elevated", "High"] as const
 
-export const accountTypes = ["contractor", "client"] as const
+export const accountTypes = ["contractor", "subcontractor", "client"] as const
+export const profileTypes = ["client", "contractor", "subcontractor"] as const
+export const claimedStatuses = ["unclaimed", "claimed", "disputed"] as const
+export const profileClaimStatuses = ["pending", "approved", "rejected", "disputed"] as const
+export const reportRelationshipTypes = [
+  "contractor_to_client",
+  "subcontractor_to_contractor",
+  "contractor_to_subcontractor",
+  "client_to_contractor",
+  "business_to_business",
+] as const
 
 export type ReportCategory = (typeof reportCategories)[number]
 export type RiskLevel = (typeof riskLevels)[number]
 export type AccountType = (typeof accountTypes)[number]
+export type ProfileType = (typeof profileTypes)[number]
+export type ClaimedStatus = (typeof claimedStatuses)[number]
+export type ProfileClaimStatus = (typeof profileClaimStatuses)[number]
+export type ReportRelationshipType = (typeof reportRelationshipTypes)[number]
 export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
 export type ReportResolutionStatus =
   | "Unresolved"
@@ -191,6 +205,8 @@ export type AdminEntityType =
   | "user"
   | "contractor"
   | "client"
+  | "entity_profile"
+  | "profile_claim"
   | "report"
   | "discussion"
   | "evidence"
@@ -303,6 +319,69 @@ export interface ClientProfile {
   createdAt: string
   updatedAt: string
   isPublic: boolean
+}
+
+export interface EntityProfile {
+  id: string
+  profileType: ProfileType
+  displayName: string
+  legalNamePrivate?: string
+  businessName?: string
+  city: string
+  state: string
+  slug: string
+  legacyClientId?: string
+  legacyContractorId?: string
+  claimedStatus: ClaimedStatus
+  ownerUserId?: string
+  ratingScore: number
+  ratingBand: RiskLevel | BusinessRatingGrade | "Review Pending"
+  reportCount: number
+  positiveReportCount: number
+  disputedReportCount: number
+  resolvedReportCount: number
+  evidenceOnFileCount: number
+  responseCount: number
+  publicSummary?: string
+  isPublic: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PublicEntityProfile extends EntityProfile {
+  reports: ClientReport[]
+  relatedClient?: ClientProfile
+  relatedContractor?: PublicBusinessProfile
+  safeDescription: string
+  responseStatusLabel: string
+  evidenceSummaryLabel: string
+  profileHref: string
+}
+
+export interface EntityProfileSearchResult extends EntityProfile {
+  matchedBy: string
+  matchScore: number
+  profileHref: string
+  profileTypeLabel: string
+  latestSummary?: string
+  latestCategory?: ReportCategory
+  evidenceOnFile?: boolean
+  responseContext?: string
+  nextAction: string
+}
+
+export interface ProfileClaim {
+  id: string
+  profileId: string
+  claimantUserId?: string
+  claimantEmailHash: string
+  claimantName: string
+  relationshipToProfile: string
+  verificationSummary: string
+  status: ProfileClaimStatus
+  moderatorNote?: string
+  createdAt: string
+  updatedAt: string
 }
 
 export interface ContractorWatchlistItem {
@@ -837,6 +916,11 @@ export interface ClientReport {
   id: string
   contractorId: string
   clientId: string
+  reporterProfileId?: string
+  subjectProfileId?: string
+  subjectProfileType?: ProfileType
+  relationshipType?: ReportRelationshipType
+  legacyClientName?: string
   clientType?: string
   clientJobAddressPrivate?: string
   tradeCategory?: string
@@ -1217,6 +1301,7 @@ export interface SearchFilters {
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  profileType?: ProfileType
 }
 
 export interface ClientSearchResult extends ClientProfile {

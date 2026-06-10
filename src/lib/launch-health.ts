@@ -20,6 +20,8 @@ export const coreLaunchTables = [
 ] as const satisfies RequiredTable[]
 
 export const platformLaunchTables = [
+  "entity_profiles",
+  "profile_claims",
   "contractor_watchlist_items",
   "watchlist_alerts",
   "report_drafts",
@@ -86,6 +88,14 @@ export const requiredRevenueWorkflowColumns = [
   { table: "florida_lien_cases", name: "readiness_checked_at" },
   { table: "florida_lien_cases", name: "fee_paid_at" },
   { table: "florida_lien_cases", name: "submitted_for_review_at" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
+export const requiredMultiProfileColumns = [
+  { table: "client_reports", name: "reporter_profile_id" },
+  { table: "client_reports", name: "subject_profile_id" },
+  { table: "client_reports", name: "subject_profile_type" },
+  { table: "client_reports", name: "relationship_type" },
+  { table: "client_reports", name: "legacy_client_name" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
 type LaunchColumnStatus = {
@@ -174,7 +184,14 @@ async function checkRequiredColumns() {
       message: "Supabase service role is not configured.",
     }))
 
-    return [...contractColumns, ...revenueColumns]
+    const multiProfileColumns: LaunchColumnStatus[] = requiredMultiProfileColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+
+    return [...contractColumns, ...revenueColumns, ...multiProfileColumns]
   }
 
   const supabase = createServiceClient()
@@ -183,7 +200,7 @@ async function checkRequiredColumns() {
     table: "contract_packets" as const,
     name,
   }))
-  const requiredColumns = [...contractChecks, ...requiredRevenueWorkflowColumns]
+  const requiredColumns = [...contractChecks, ...requiredRevenueWorkflowColumns, ...requiredMultiProfileColumns]
 
   return Promise.all(
     requiredColumns.map(async ({ table, name }) => {
@@ -239,11 +256,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Keep advanced tools mocked"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0013 before flipping advanced tools."
+      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0015 before flipping advanced tools."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing or revenue workflow columns are missing. Apply migrations through 0013 before using Supabase-backed advanced workflows."
+      "Platform tables exist, but contract signing, revenue workflow, or unified profile columns are missing. Apply migrations through 0015 before using Supabase-backed advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin ops are configured for Supabase-backed persistence."

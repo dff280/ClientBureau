@@ -13,13 +13,27 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { submitClientReportAction } from "@/lib/actions/client-bureau"
 import { clientTypes, jobStatuses, paymentDisputeStatuses } from "@/lib/locations"
-import type { ActionResult, ClientReport, ReportCategory } from "@/lib/types"
-import { isPositiveReportCategory, positiveReportCategories, reportCategories } from "@/lib/types"
+import type { ActionResult, ClientReport, ProfileType, ReportCategory, ReportRelationshipType } from "@/lib/types"
+import { isPositiveReportCategory, positiveReportCategories, profileTypes, reportCategories, reportRelationshipTypes } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const initialState: ActionResult<ClientReport> = {
   ok: false,
   message: "",
+}
+
+const profileTypeLabels: Record<ProfileType, string> = {
+  client: "Client / homeowner / customer",
+  contractor: "Contractor / service business",
+  subcontractor: "Subcontractor / trade pro",
+}
+
+const relationshipLabels: Record<ReportRelationshipType, string> = {
+  contractor_to_client: "I am a contractor reporting a client/customer",
+  subcontractor_to_contractor: "I am a subcontractor reporting a contractor/business",
+  contractor_to_subcontractor: "I am a contractor reporting a subcontractor/trade pro",
+  client_to_contractor: "I am a client/customer reporting a contractor/business",
+  business_to_business: "Business-to-business project relationship",
 }
 
 interface ReportSubmissionFormProps {
@@ -43,6 +57,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
   return (
     <form action={action} className="grid gap-6">
       <input type="hidden" name="reportIntent" value={isPositiveReport ? "positive" : "concern"} />
+      {defaults.profileId ? <input type="hidden" name="subjectProfileId" value={defaults.profileId} /> : null}
       {state.ok ? (
         <Alert className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-950">
           <CheckCircle2 className="size-4" aria-hidden="true" />
@@ -60,10 +75,38 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
 
       <WorkflowStep
         step="1"
-        title="Client identity"
-        text="Use details from the contract, invoice, estimate, or written project record. More complete identity data improves private matching, but raw email and phone are never shown publicly."
+        title="Who is this experience about?"
+        text="Choose the role of the person or business connected to the job. More complete identity data improves private matching, but raw email and phone are never shown publicly."
       >
         <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="subjectProfileType">Profile type</Label>
+            <select
+              id="subjectProfileType"
+              name="subjectProfileType"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              defaultValue={profileTypes.includes(defaults.profileType as ProfileType) ? defaults.profileType : "client"}
+            >
+              {profileTypes.map((type) => (
+                <option key={type} value={type}>{profileTypeLabels[type]}</option>
+              ))}
+            </select>
+            <FieldError name="subjectProfileType" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="relationshipType">Relationship</Label>
+            <select
+              id="relationshipType"
+              name="relationshipType"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              defaultValue="contractor_to_client"
+            >
+              {reportRelationshipTypes.map((type) => (
+                <option key={type} value={type}>{relationshipLabels[type]}</option>
+              ))}
+            </select>
+            <FieldError name="relationshipType" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="clientType">Client type</Label>
             <select id="clientType" name="clientType" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue="Individual">
@@ -78,27 +121,27 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <Input id="businessName" name="businessName" defaultValue={defaults.businessName} placeholder="ABC Property Group" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="firstName">Client first name</Label>
+            <Label htmlFor="firstName">Reported party first name</Label>
             <Input id="firstName" name="firstName" defaultValue={defaults.firstName} placeholder="John" />
             <FieldError name="firstName" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="lastName">Client last name</Label>
+            <Label htmlFor="lastName">Reported party last name</Label>
             <Input id="lastName" name="lastName" defaultValue={defaults.lastName} placeholder="Smith" />
             <FieldError name="lastName" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="email">Client email for private matching</Label>
+            <Label htmlFor="email">Email for private matching</Label>
             <Input id="email" name="email" type="email" placeholder="Not shown publicly" />
             <FieldError name="email" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="phone">Client phone for private matching</Label>
+            <Label htmlFor="phone">Phone for private matching</Label>
             <Input id="phone" name="phone" placeholder="Not shown publicly" />
           </div>
           <div className="grid gap-3 md:col-span-2 md:grid-cols-[1fr_180px_120px]">
             <div className="space-y-2">
-              <Label htmlFor="city">Client city</Label>
+              <Label htmlFor="city">City</Label>
               <Input id="city" name="city" defaultValue={defaults.city} placeholder="Orlando" />
               <FieldError name="city" errors={state.ok ? undefined : state.fieldErrors} />
             </div>

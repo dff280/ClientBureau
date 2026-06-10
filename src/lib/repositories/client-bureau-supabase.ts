@@ -17,6 +17,10 @@ import {
   paymentReliabilityLabel,
 } from "@/lib/scoring"
 import {
+  buildPublicEntityProfile,
+  searchEntityProfiles,
+} from "@/lib/entity-profiles"
+import {
   buildBusinessSlug,
   calculateBusinessRating,
 } from "@/lib/business-rating"
@@ -95,6 +99,8 @@ import type {
   ContractorRiskOpsData,
   ContractorWatchlistItem,
   EvidenceReviewSummary,
+  EntityProfile,
+  EntityProfileSearchResult,
   EvidenceVaultItem,
   FloridaLienCase,
   LienFilingRecord,
@@ -115,6 +121,9 @@ import type {
   ContractorProfile,
   PublicClientProfile,
   PublicBusinessProfile,
+  PublicEntityProfile,
+  ProfileClaim,
+  ProfileType,
   ProfileShareEvent,
   ReportEvidence,
   ReportDraft,
@@ -177,6 +186,8 @@ type CaseDocumentLinkRow = Tables["case_document_links"]["Row"]
 type SavedClientSearchRow = Tables["saved_client_searches"]["Row"]
 type SearchAnalyticsEventRow = Tables["search_analytics_events"]["Row"]
 type ProfileShareEventRow = Tables["profile_share_events"]["Row"]
+type EntityProfileRow = Tables["entity_profiles"]["Row"]
+type ProfileClaimRow = Tables["profile_claims"]["Row"]
 
 const emptyHash = "sha256:empty-private"
 
@@ -214,7 +225,10 @@ function isMissingReportIntakeColumnError(error: { message?: string; code?: stri
     message.includes("deposit_requested") ||
     message.includes("secondary_category") ||
     message.includes("evidence_confidence") ||
-    message.includes("response_status")
+    message.includes("response_status") ||
+    message.includes("reporter_profile_id") ||
+    message.includes("subject_profile_id") ||
+    message.includes("relationship_type")
   )
 }
 
@@ -279,6 +293,51 @@ function mapProfileShareEvent(row: ProfileShareEventRow): ProfileShareEvent {
   }
 }
 
+function mapEntityProfile(row: EntityProfileRow): EntityProfile {
+  return {
+    id: row.id,
+    profileType: row.profile_type,
+    displayName: row.display_name,
+    legalNamePrivate: row.legal_name_private ?? undefined,
+    businessName: row.business_name ?? undefined,
+    city: row.city,
+    state: row.state,
+    slug: row.slug,
+    legacyClientId: row.legacy_client_id ?? undefined,
+    legacyContractorId: row.legacy_contractor_id ?? undefined,
+    claimedStatus: row.claimed_status,
+    ownerUserId: row.owner_user_id ?? undefined,
+    ratingScore: row.rating_score,
+    ratingBand: row.rating_band as EntityProfile["ratingBand"],
+    reportCount: row.report_count,
+    positiveReportCount: row.positive_report_count,
+    disputedReportCount: row.disputed_report_count,
+    resolvedReportCount: row.resolved_report_count,
+    evidenceOnFileCount: row.evidence_on_file_count,
+    responseCount: row.response_count,
+    publicSummary: row.public_summary ?? undefined,
+    isPublic: row.is_public,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function mapProfileClaim(row: ProfileClaimRow): ProfileClaim {
+  return {
+    id: row.id,
+    profileId: row.profile_id,
+    claimantUserId: row.claimant_user_id ?? undefined,
+    claimantEmailHash: row.claimant_email_hash,
+    claimantName: row.claimant_name,
+    relationshipToProfile: row.relationship_to_profile,
+    verificationSummary: row.verification_summary,
+    status: row.status,
+    moderatorNote: row.moderator_note ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
 function mapContractorProfile(row: ContractorProfileRow): ContractorProfile {
   return {
     id: row.id,
@@ -332,6 +391,11 @@ function mapClientReport(row: ClientReportRow): ClientReport {
     id: row.id,
     contractorId: row.contractor_id,
     clientId: row.client_id,
+    reporterProfileId: row.reporter_profile_id ?? undefined,
+    subjectProfileId: row.subject_profile_id ?? undefined,
+    subjectProfileType: row.subject_profile_type ?? "client",
+    relationshipType: row.relationship_type ?? "contractor_to_client",
+    legacyClientName: row.legacy_client_name ?? undefined,
     clientType: row.client_type ?? undefined,
     clientJobAddressPrivate: row.client_job_address_private ?? undefined,
     tradeCategory: row.trade_category ?? undefined,
@@ -1387,6 +1451,82 @@ async function findOrCreateClientProfile(input: ClientReportInput) {
   return data
 }
 
+async function ensureEntityProfileForClient(client: ClientProfileRow) {
+  const supabase = createServiceClient()
+  const displayName = [client.first_name, client.last_name].filter(Boolean).join(" ")
+  const { data, error } = await supabase
+    .from("entity_profiles")
+    .upsert(
+      {
+        profile_type: "client",
+        display_name: displayName,
+        business_name: client.business_name,
+        city: client.city,
+        state: client.state.toUpperCase(),
+        slug: client.public_slug,
+        legacy_client_id: client.id,
+        claimed_status: "unclaimed",
+        rating_score: client.client_bureau_score,
+        rating_band: client.risk_level,
+        report_count: client.report_count,
+        is_public: client.is_public,
+        public_summary: "Client Bureau profile with contractor-submitted, moderated report context.",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "profile_type,slug" },
+    )
+    .select("*")
+    .single()
+
+  if (error) {
+    if (isMissingRelationError(error) || isMissingReportIntakeColumnError(error)) return undefined
+    throw new Error(error.message)
+  }
+
+  return mapEntityProfile(data)
+}
+
+async function ensureEntityProfileForContractor(contractor: ContractorProfileRow, userId: string) {
+  const supabase = createServiceClient()
+  const { data: userRow } = await supabase.from("users").select("account_type").eq("id", userId).maybeSingle()
+  const profileType: ProfileType = userRow?.account_type === "subcontractor" ? "subcontractor" : "contractor"
+  const slug = buildBusinessSlug({
+    businessName: contractor.business_name,
+    city: contractor.city,
+    state: contractor.state,
+  })
+  const { data, error } = await supabase
+    .from("entity_profiles")
+    .upsert(
+      {
+        profile_type: profileType,
+        display_name: contractor.business_name,
+        business_name: contractor.business_name,
+        city: contractor.city,
+        state: contractor.state.toUpperCase(),
+        slug,
+        legacy_contractor_id: contractor.id,
+        claimed_status: "claimed",
+        owner_user_id: userId,
+        rating_score: contractor.verification_status === "verified" ? 88 : contractor.verification_status === "pending" ? 76 : 68,
+        rating_band: contractor.verification_status === "verified" ? "A" : "Review Pending",
+        is_public: true,
+        public_summary: "Business profile with verification context and moderated project activity.",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "profile_type,slug" },
+    )
+    .select("*")
+    .single()
+
+  if (error) {
+    if (isMissingRelationError(error) || isMissingReportIntakeColumnError(error)) return undefined
+    throw new Error(error.message)
+  }
+
+  return mapEntityProfile(data)
+}
+
 export async function getPublicClientProfilesSupabase() {
   const supabase = createServiceClient()
   const { data, error } = await supabase
@@ -1559,6 +1699,122 @@ export async function getPublicBusinessProfileSupabase(slug: string): Promise<Pu
   const profiles = await getPublicBusinessProfilesSupabase()
 
   return profiles.find((profile) => profile.publicSlug === slug)
+}
+
+export async function getPublicEntityProfilesSupabase(): Promise<EntityProfile[]> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("entity_profiles")
+    .select("*")
+    .eq("is_public", true)
+    .order("updated_at", { ascending: false })
+
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map(mapEntityProfile)
+}
+
+export async function getPublicEntityProfileSupabase(
+  profileType: ProfileType,
+  slug: string,
+): Promise<PublicEntityProfile | undefined> {
+  const supabase = createServiceClient()
+  const { data: profileRow, error } = await supabase
+    .from("entity_profiles")
+    .select("*")
+    .eq("profile_type", profileType)
+    .eq("slug", slug)
+    .eq("is_public", true)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!profileRow) return undefined
+
+  const profile = mapEntityProfile(profileRow)
+  let reports: ClientReport[] = []
+
+  if (profile.legacyClientId) {
+    reports = await getApprovedReportsForClient(profile.legacyClientId)
+  } else if (profile.legacyContractorId) {
+    const { data: reportRows, error: reportError } = await supabase
+      .from("client_reports")
+      .select("*")
+      .eq("contractor_id", profile.legacyContractorId)
+      .in("status", ["approved", "disputed"])
+      .order("created_at", { ascending: false })
+
+    if (reportError) throw new Error(reportError.message)
+    reports = (reportRows ?? []).map(mapClientReport)
+  } else {
+    const { data: reportRows, error: reportError } = await supabase
+      .from("client_reports")
+      .select("*")
+      .eq("subject_profile_id", profile.id)
+      .in("status", ["approved", "disputed"])
+      .order("created_at", { ascending: false })
+
+    if (reportError) throw new Error(reportError.message)
+    reports = (reportRows ?? []).map(mapClientReport)
+  }
+
+  const relatedClient = profile.legacyClientId
+    ? await supabase
+        .from("client_profiles")
+        .select("*")
+        .eq("id", profile.legacyClientId)
+        .maybeSingle()
+        .then(({ data }) => (data ? mapClientProfile(data) : undefined))
+    : undefined
+  const relatedContractor = profile.legacyContractorId
+    ? await getPublicBusinessProfileSupabase(profile.slug).catch(() => undefined)
+    : undefined
+
+  return buildPublicEntityProfile({
+    profile,
+    reports,
+    relatedClient,
+    relatedContractor,
+  })
+}
+
+export async function searchProfilesSupabase(
+  query = "",
+  filters: SearchFilters = {},
+): Promise<EntityProfileSearchResult[]> {
+  const profiles = await getPublicEntityProfilesSupabase()
+
+  return searchEntityProfiles(profiles, query, filters)
+}
+
+export async function submitProfileClaimSupabase(
+  userId: string | undefined,
+  input: {
+    profileId: string
+    claimantUserId?: string
+    claimantEmailHash: string
+    claimantName: string
+    relationshipToProfile: string
+    verificationSummary: string
+  },
+): Promise<ProfileClaim> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("profile_claims")
+    .insert({
+      profile_id: input.profileId,
+      claimant_user_id: userId ?? input.claimantUserId ?? null,
+      claimant_email_hash: input.claimantEmailHash,
+      claimant_name: input.claimantName,
+      relationship_to_profile: input.relationshipToProfile,
+      verification_summary: input.verificationSummary,
+      status: "pending",
+    })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  return mapProfileClaim(data)
 }
 
 export async function searchClientsSupabase(
@@ -2016,6 +2272,8 @@ export async function submitClientReportSupabase(
   const contractorRow = await getOrCreateContractorProfileForUser(userId)
 
   const clientRow = await findOrCreateClientProfile(input)
+  const reporterProfile = await ensureEntityProfileForContractor(contractorRow, userId)
+  const subjectProfile = await ensureEntityProfileForClient(clientRow)
   const baseReportInsert: Tables["client_reports"]["Insert"] = {
     contractor_id: contractorRow.id,
     client_id: clientRow.id,
@@ -2035,6 +2293,11 @@ export async function submitClientReportSupabase(
   }
   const extendedReportInsert: Tables["client_reports"]["Insert"] = {
     ...baseReportInsert,
+    reporter_profile_id: reporterProfile?.id ?? null,
+    subject_profile_id: input.subjectProfileId ?? subjectProfile?.id ?? null,
+    subject_profile_type: input.subjectProfileType ?? "client",
+    relationship_type: input.relationshipType ?? "contractor_to_client",
+    legacy_client_name: [input.firstName, input.lastName].filter(Boolean).join(" ") || null,
     client_type: input.clientType ?? null,
     client_job_address_private: input.jobAddress ?? null,
     trade_category: input.tradeCategory ?? null,
@@ -2321,6 +2584,7 @@ export async function reviewReportSupabase(
     if (profileUpdateError) throw new Error(profileUpdateError.message)
 
     publishedProfile = mapClientProfile(profileRow)
+    await ensureEntityProfileForClient(profileRow).catch(() => undefined)
   }
 
   const reviewPayload = {
@@ -2429,6 +2693,8 @@ export async function updateAdminClientRecordSupabase(input: {
 
   if (error) throw new Error(error.message)
 
+  await ensureEntityProfileForClient(data).catch(() => undefined)
+
   await logAdminAction({
     actorId: input.reviewer?.id,
     actorName: input.reviewer?.fullName,
@@ -2466,6 +2732,8 @@ export async function updateAdminContractorRecordSupabase(input: {
     .single()
 
   if (error) throw new Error(error.message)
+
+  await ensureEntityProfileForContractor(data, data.user_id).catch(() => undefined)
 
   await logAdminAction({
     actorId: input.reviewer?.id,

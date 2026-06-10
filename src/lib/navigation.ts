@@ -191,6 +191,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
   {
     title: "Records",
     links: [
+      { href: "/admin/profiles", label: "Unified Profiles", description: "Manage clients, contractors, subcontractors, claims, visibility, and duplicate signals." },
       { href: "/admin/clients", label: "Manage Client Profiles", description: "Manage client profiles, public visibility, and SEO-safe fields." },
       { href: "/admin/contractors", label: "Businesses / Users", description: "Review business profiles, user accounts, verification, and account health." },
       { href: "/admin/reports?view=all", label: "All Reports", description: "Review report records across statuses." },

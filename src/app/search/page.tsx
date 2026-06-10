@@ -3,14 +3,14 @@ import Link from "next/link"
 import { FilePlus2, LockKeyhole, Radar } from "lucide-react"
 
 import { SearchCommandCenter } from "@/components/search/search-command-center"
-import { SearchResultCard } from "@/components/search/search-result-card"
+import { EntityProfileResultCard } from "@/components/search/entity-profile-result-card"
 import { PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
-import { getContractorDashboardService, searchClientsService } from "@/lib/repositories/client-bureau-service"
+import { getContractorDashboardService, searchClientsService, searchProfilesService } from "@/lib/repositories/client-bureau-service"
 import { toSearchPreviewProfile } from "@/lib/search-experience"
-import { reportCategories, riskLevels, type ReportCategory, type RiskLevel } from "@/lib/types"
+import { profileTypes, reportCategories, riskLevels, type ProfileType, type ReportCategory, type RiskLevel } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Check a Client",
@@ -32,6 +32,7 @@ type SearchParams = Promise<{
   state?: string
   risk?: string
   category?: string
+  profileType?: string
 }>
 
 function toRiskLevel(value?: string): RiskLevel | undefined {
@@ -40,6 +41,10 @@ function toRiskLevel(value?: string): RiskLevel | undefined {
 
 function toReportCategory(value?: string): ReportCategory | undefined {
   return reportCategories.includes(value as ReportCategory) ? (value as ReportCategory) : undefined
+}
+
+function toProfileType(value?: string): ProfileType | undefined {
+  return profileTypes.includes(value as ProfileType) ? (value as ProfileType) : undefined
 }
 
 function reportPrefillHref(query: string, state?: string) {
@@ -71,15 +76,33 @@ function signupSearchHref(query: string, state?: string, riskLevel?: RiskLevel, 
   return `/signup?${params.toString()}`
 }
 
+function profileTypeFilterHref(input: {
+  query: string
+  state?: string
+  riskLevel?: RiskLevel
+  category?: ReportCategory
+  profileType?: ProfileType
+}) {
+  const params = new URLSearchParams()
+  if (input.query.trim()) params.set("q", input.query.trim())
+  if (input.state) params.set("state", input.state)
+  if (input.riskLevel) params.set("risk", input.riskLevel)
+  if (input.category) params.set("category", input.category)
+  if (input.profileType) params.set("profileType", input.profileType)
+
+  return `/search${params.size ? `?${params.toString()}` : ""}`
+}
+
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
   const query = params.q ?? ""
   const state = params.state?.trim().toUpperCase() || undefined
   const riskLevel = toRiskLevel(params.risk)
   const category = toReportCategory(params.category)
+  const profileType = toProfileType(params.profileType)
   const user = await getCurrentUser()
   const [results, previewResults, dashboard] = await Promise.all([
-    searchClientsService(query, { state, riskLevel, category }),
+    searchProfilesService(query, { state, riskLevel, category, profileType }),
     searchClientsService("", {}),
     user ? getContractorDashboardService(user.id).catch(() => undefined) : Promise.resolve(undefined),
   ])
@@ -151,7 +174,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           <div>
             <p className="text-sm font-semibold uppercase text-slate-500">Server-verified results</p>
             <p className="mt-1 text-sm font-medium text-slate-600">
-              {results.length} {results.length === 1 ? "profile" : "profiles"} found from approved public records
+          {results.length} {results.length === 1 ? "profile" : "profiles"} found across clients, contractors, and subcontractors
             </p>
           </div>
           <Button asChild variant="outline">
@@ -162,10 +185,30 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           </Button>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          {[
+            ["All profiles", undefined],
+            ["Clients", "client"],
+            ["Contractors", "contractor"],
+            ["Subcontractors", "subcontractor"],
+          ].map(([label, value]) => {
+            const typedValue = value as ProfileType | undefined
+            const active = profileType === typedValue || (!profileType && !typedValue)
+
+            return (
+              <Button key={label} asChild variant={active ? "default" : "outline"} className={active ? "bg-slate-950 text-white hover:bg-slate-800" : ""}>
+                <Link href={profileTypeFilterHref({ query, state, riskLevel, category, profileType: typedValue })}>
+                  {label}
+                </Link>
+              </Button>
+            )
+          })}
+        </div>
+
         {results.length > 0 ? (
           <div className="grid gap-4">
             {results.map((result) => (
-              <SearchResultCard key={result.id} result={result} />
+              <EntityProfileResultCard key={result.id} result={result} />
             ))}
           </div>
         ) : (

@@ -13,13 +13,14 @@ import {
 
 import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
+import { ProfileClaimForm } from "@/components/forms/profile-claim-form"
 import { StateSelect } from "@/components/forms/state-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
 type ClaimProfilePageProps = {
-  searchParams: Promise<{ profile?: string | string[] }>
+  searchParams: Promise<{ profile?: string | string[]; profileId?: string | string[] }>
 }
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ const faqs = [
 export default async function ClaimProfilePage({ searchParams }: ClaimProfilePageProps) {
   const params = await searchParams
   const profile = Array.isArray(params.profile) ? params.profile[0] : params.profile
+  const profileId = Array.isArray(params.profileId) ? params.profileId[0] : params.profileId
   const signupHref = profile
     ? `/signup?intent=claim-profile&profile=${encodeURIComponent(profile)}`
     : "/signup?intent=claim-profile"
@@ -147,35 +149,39 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
                     moderated profile context, service areas, rating factors, and approved public contributions.
                   </p>
                 </div>
-                <form action="/signup" className="space-y-5">
-                  <input type="hidden" name="intent" value="claim-profile" />
-                  {profile ? <input type="hidden" name="profile" value={profile} /> : null}
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <Input aria-label="Business name" name="businessName" placeholder="Business name" />
-                    <Input aria-label="Trade or service type" name="trade" placeholder="Trade or service type" />
-                    <Input aria-label="City" name="city" placeholder="City" />
-                    <StateSelect id="claimProfileState" name="state" ariaLabel="State" />
-                    <Input
-                      aria-label="Business email"
-                      className="md:col-span-2"
-                      name="email"
-                      placeholder="Business email"
-                      type="email"
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-3">
-                    <Button type="submit" className="bg-slate-950 text-white hover:bg-slate-800">
-                      Continue to account
-                      <MailCheck aria-hidden="true" />
-                    </Button>
-                    <Button asChild variant="outline">
-                      <Link href="/business-rating-methodology">
-                        <ClipboardCheck aria-hidden="true" />
-                        Rating methodology
-                      </Link>
-                    </Button>
-                  </div>
-                </form>
+                {profileId ? (
+                  <ProfileClaimForm profileId={profileId} />
+                ) : (
+                  <form action="/signup" className="space-y-5">
+                    <input type="hidden" name="intent" value="claim-profile" />
+                    {profile ? <input type="hidden" name="profile" value={profile} /> : null}
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Input aria-label="Business name" name="businessName" placeholder="Business name" />
+                      <Input aria-label="Trade or service type" name="trade" placeholder="Trade or service type" />
+                      <Input aria-label="City" name="city" placeholder="City" />
+                      <StateSelect id="claimProfileState" name="state" ariaLabel="State" />
+                      <Input
+                        aria-label="Business email"
+                        className="md:col-span-2"
+                        name="email"
+                        placeholder="Business email"
+                        type="email"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                      <Button type="submit" className="bg-slate-950 text-white hover:bg-slate-800">
+                        Continue to account
+                        <MailCheck aria-hidden="true" />
+                      </Button>
+                      <Button asChild variant="outline">
+                        <Link href="/business-rating-methodology">
+                          <ClipboardCheck aria-hidden="true" />
+                          Rating methodology
+                        </Link>
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </CardContent>
             </Card>
 

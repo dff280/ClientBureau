@@ -3,17 +3,20 @@ import { acquisitionPages } from "@/lib/acquisition-pages"
 import {
   getPublicBusinessProfilesService,
   getPublicClientProfilesService,
+  getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { getClientDirectory } from "@/lib/client-directory"
+import { entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   const siteUrl = getSiteUrl()
-  const [profiles, businesses] = await Promise.all([
+  const [profiles, businesses, entityProfiles] = await Promise.all([
     getPublicClientProfilesService(),
     getPublicBusinessProfilesService(),
+    getPublicEntityProfilesService(),
   ])
   const profileLinks = profiles
     .filter((profile) => profile.isPublic)
@@ -23,6 +26,10 @@ export async function GET() {
   const businessLinks = businesses
     .slice(0, 5)
     .map((profile) => `- [${profile.businessName} business profile](${siteUrl}/business/${profile.publicSlug})`)
+    .join("\n")
+  const entityLinks = entityProfiles
+    .slice(0, 8)
+    .map((profile) => `- [${profile.displayName} ${profileTypeLabel(profile.profileType)} profile](${siteUrl}${entityProfileHref(profile)})`)
     .join("\n")
   const directoryLinks = getClientDirectory(profiles)
     .flatMap((state) => [
@@ -88,9 +95,13 @@ ${profileLinks || "- Public client profiles are listed in the sitemap after admi
 
 ${businessLinks || "- Public business profiles are listed in the sitemap when business profiles are available."}
 
+## Unified Public Profile Examples
+
+${entityLinks || "- Unified client, contractor, and subcontractor profiles are listed after profiles become public."}
+
 ## Content Standard
 
-Public Client Bureau pages use careful language: documented contractor experiences, moderated summaries, evidence reviewed privately, private matching, client response, dispute context, business verification, and reported payment risk. Public pages should not display private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions.
+Public Client Bureau pages use careful language: documented contractor and business-owner experiences, moderated summaries, evidence reviewed privately, private matching, client response, dispute context, business verification, and reported payment risk. Public pages should not display private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions.
 `
 
   return new Response(body, {

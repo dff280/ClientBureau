@@ -25,6 +25,8 @@ import {
   getPublicClientProfiles,
   getPublicBusinessProfile,
   getPublicBusinessProfiles,
+  getPublicEntityProfile,
+  getPublicEntityProfiles,
   getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
@@ -43,6 +45,7 @@ import {
   saveClientSearch,
   saveReportDraft,
   searchClients,
+  searchProfiles,
   setMockModerationDecisionReason,
   signContractShare,
   simulateSubmittedClientReport,
@@ -51,6 +54,7 @@ import {
   submitManagedRecoveryCase,
   submitCommunityDiscussion,
   submitClientResponse,
+  submitProfileClaim,
   adminApproveLienFiling,
   adminApproveLienNotice,
   adminRecordLienFiled,
@@ -91,6 +95,8 @@ import {
   getPublicClientProfilesSupabase,
   getPublicBusinessProfileSupabase,
   getPublicBusinessProfilesSupabase,
+  getPublicEntityProfileSupabase,
+  getPublicEntityProfilesSupabase,
   linkEvidenceToServiceCaseSupabase,
   logPaymentRecoveryAttemptSupabase,
   logResolutionDeskContactSupabase,
@@ -108,6 +114,7 @@ import {
   saveClientSearchSupabase,
   saveReportDraftSupabase,
   searchClientsSupabase,
+  searchProfilesSupabase,
   setModerationDecisionReasonSupabase,
   signLienFilingAuthorizationSupabase,
   signContractShareSupabase,
@@ -116,6 +123,7 @@ import {
   submitCommunityDiscussionSupabase,
   submitClientReportSupabase,
   submitClientResponseSupabase,
+  submitProfileClaimSupabase,
   adminApproveLienFilingSupabase,
   adminApproveLienNoticeSupabase,
   adminRecordLienFiledSupabase,
@@ -167,6 +175,7 @@ import type {
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
   WatchlistItemInput,
+  ProfileClaimInput,
 } from "@/lib/schemas/client-bureau"
 import type {
   ClientProfile,
@@ -177,6 +186,9 @@ import type {
   ModerationDecisionReason,
   ModerationPriority,
   ProfileShareEvent,
+  ProfileClaim,
+  ProfileType,
+  PublicEntityProfile,
   SavedClientSearch,
   SearchAnalyticsEvent,
   SearchFilters,
@@ -233,10 +245,69 @@ export async function getPublicBusinessProfileService(slug: string) {
   return getPublicBusinessProfile(slug)
 }
 
+export async function getPublicEntityProfilesService() {
+  if (shouldUseSupabase()) {
+    const profiles = await getPublicEntityProfilesSupabase().catch(() => undefined)
+    if (profiles) return profiles
+  }
+
+  return getPublicEntityProfiles()
+}
+
+export async function getPublicEntityProfileService(
+  profileType: ProfileType,
+  slug: string,
+): Promise<PublicEntityProfile | undefined> {
+  if (shouldUseSupabase()) {
+    const profile = await getPublicEntityProfileSupabase(profileType, slug).catch(() => undefined)
+    if (profile) return profile
+  }
+
+  return getPublicEntityProfile(profileType, slug)
+}
+
 export async function searchClientsService(query?: string, filters?: SearchFilters) {
   if (shouldUseSupabase()) return searchClientsSupabase(query, filters)
 
   return searchClients(query, filters)
+}
+
+export async function searchProfilesService(query?: string, filters?: SearchFilters) {
+  if (shouldUseSupabase()) {
+    const profiles = await searchProfilesSupabase(query, filters).catch(() => undefined)
+    if (profiles) return profiles
+  }
+
+  return searchProfiles(query, filters)
+}
+
+export async function submitProfileClaimService(
+  userId: string | undefined,
+  input: ProfileClaimInput,
+): Promise<ProfileClaim> {
+  const claimantEmailHash = `sha256:${Buffer.from(input.claimantEmail.trim().toLowerCase()).toString("base64url")}-private`
+
+  if (shouldUseSupabase()) {
+    const claim = await submitProfileClaimSupabase(userId, {
+      profileId: input.profileId,
+      claimantUserId: userId,
+      claimantEmailHash,
+      claimantName: input.claimantName,
+      relationshipToProfile: input.relationshipToProfile,
+      verificationSummary: input.verificationSummary,
+    }).catch(() => undefined)
+
+    if (claim) return claim
+  }
+
+  return submitProfileClaim({
+    profileId: input.profileId,
+    claimantUserId: userId,
+    claimantEmailHash,
+    claimantName: input.claimantName,
+    relationshipToProfile: input.relationshipToProfile,
+    verificationSummary: input.verificationSummary,
+  })
 }
 
 export async function saveClientSearchService(

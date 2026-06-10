@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils"
 const adminIcons = {
   "/admin": ShieldCheck,
   "/admin/reports": ClipboardCheck,
+  "/admin/profiles": UsersRound,
   "/admin/clients": UserRound,
   "/admin/contractors": UsersRound,
   "/admin/discussions": MessageSquareText,

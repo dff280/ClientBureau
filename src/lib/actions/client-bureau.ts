@@ -40,6 +40,7 @@ import {
   savedClientSearchSchema,
   searchAnalyticsEventSchema,
   signupSchema,
+  profileClaimSchema,
   moderationCaseAssignmentSchema,
   moderationCaseUpdateSchema,
   moderationDecisionReasonSchema,
@@ -90,6 +91,7 @@ import type {
   ServiceFeeOrder,
   ServiceReadinessSummary,
   ProfileShareEvent,
+  ProfileClaim,
   SavedClientSearch,
   SearchAnalyticsEvent,
   User,
@@ -145,6 +147,7 @@ import {
   submitCommunityDiscussionService,
   submitClientReportService,
   submitClientResponseService,
+  submitProfileClaimService,
   adminApproveLienFilingService,
   adminApproveLienNoticeService,
   adminRecordLienFiledService,
@@ -160,6 +163,7 @@ import {
   updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
 import type { ClientReportInput } from "@/lib/schemas/client-bureau"
+import { buildEntityProfileSlug } from "@/lib/entity-profiles"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
 
@@ -262,7 +266,11 @@ function isMissingOnboardingColumn(error: { code?: string; message?: string } | 
     message.includes("service_area") ||
     message.includes("company_size") ||
     message.includes("years_in_business") ||
-    message.includes("primary_goal")
+    message.includes("primary_goal") ||
+    message.includes("entity_profiles") ||
+    message.includes("profile_type") ||
+    message.includes("claimed_status") ||
+    message.includes("schema cache")
   )
 }
 
@@ -278,6 +286,8 @@ function reportDetailLine(label: string, value?: string | number | boolean) {
 
 function buildPrivateReportTimeline(input: ClientReportInput) {
   const lines = [
+    reportDetailLine("Reported profile type", input.subjectProfileType),
+    reportDetailLine("Relationship type", input.relationshipType),
     reportDetailLine("Client type", input.clientType),
     reportDetailLine("Private job address provided", Boolean(input.jobAddress)),
     reportDetailLine("Trade or service category", input.tradeCategory),
@@ -520,6 +530,25 @@ export async function recordProfileShareAction(
   return ok(event, "Profile share recorded.")
 }
 
+export async function submitProfileClaimAction(
+  _previousState: ActionResult<ProfileClaim>,
+  formData: FormData,
+): Promise<ActionResult<ProfileClaim>> {
+  const parsed = profileClaimSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the highlighted claim fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await getCurrentUser().catch(() => undefined)
+  const claim = await submitProfileClaimService(user?.id, parsed.data)
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/profiles")
+
+  return ok(claim, "Profile claim received. Client Bureau will verify the relationship before changing public ownership.")
+}
+
 export async function signupAction(
   _previousState: ActionResult<User>,
   formData: FormData,
@@ -603,6 +632,48 @@ export async function signupAction(
         if (optionalProfileError && !isMissingOnboardingColumn(optionalProfileError)) {
           return fail(optionalProfileError.message)
         }
+      }
+
+      const { data: contractorProfileRow } = await service
+        .from("contractor_profiles")
+        .select("id")
+        .eq("user_id", data.user.id)
+        .maybeSingle()
+      const profileType = parsed.data.accountType === "client" ? "client" : parsed.data.accountType
+      const profileSlug = buildEntityProfileSlug({
+        profileType,
+        displayName: parsed.data.businessName,
+        businessName: profileType === "client" ? undefined : parsed.data.businessName,
+        city: parsed.data.city,
+        state: parsed.data.state,
+      })
+      const { error: entityProfileError } = await service
+        .from("entity_profiles")
+        .upsert(
+          {
+            profile_type: profileType,
+            display_name: parsed.data.businessName,
+            legal_name_private: parsed.data.fullName,
+            business_name: profileType === "client" ? null : parsed.data.businessName,
+            city: parsed.data.city,
+            state: parsed.data.state.toUpperCase(),
+            slug: profileSlug,
+            legacy_contractor_id: profileType === "client" ? null : (contractorProfileRow?.id ?? null),
+            claimed_status: "claimed",
+            owner_user_id: data.user.id,
+            rating_score: profileType === "client" ? 70 : 76,
+            rating_band: profileType === "client" ? "Moderate" : "Review Pending",
+            public_summary:
+              profileType === "client"
+                ? "Claimed client/customer profile. Public content appears only after moderation approval."
+                : "Business profile with verification context and moderated project activity.",
+            is_public: profileType !== "client",
+          },
+          { onConflict: "profile_type,slug" },
+        )
+
+      if (entityProfileError && !isMissingOnboardingColumn(entityProfileError)) {
+        return fail(entityProfileError.message)
       }
     }
 
@@ -690,6 +761,9 @@ export async function reviewReportAction(
 
   if (review.publishedProfileSlug) {
     revalidatePath(`/client/${review.publishedProfileSlug}`)
+    revalidatePath(`/profiles/client/${review.publishedProfileSlug}`)
+    revalidatePath("/sitemap.xml")
+    revalidatePath("/llms.txt")
     const publishedProfile = await getPublicClientProfileService(review.publishedProfileSlug).catch(() => undefined)
 
     revalidatePublicProfileDirectories(publishedProfile)
@@ -954,6 +1028,9 @@ export async function bulkUploadImportAction(
       await submitClientReportService(
         {
           ...emptyStructuredReportFields,
+          subjectProfileId: undefined,
+          subjectProfileType: "client",
+          relationshipType: "contractor_to_client",
           firstName: firstName || "Unknown",
           lastName: lastParts.join(" ") || "Client",
           businessName: undefined,

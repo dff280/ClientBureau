@@ -12,7 +12,15 @@ import {
   usStateCodes,
   yearsInBusinessOptions,
 } from "@/lib/locations"
-import { accountTypes, isPositiveReportCategory, reportCategories, riskLevels } from "@/lib/types"
+import {
+  accountTypes,
+  isPositiveReportCategory,
+  profileClaimStatuses,
+  profileTypes,
+  reportCategories,
+  reportRelationshipTypes,
+  riskLevels,
+} from "@/lib/types"
 
 export const discussionCategories = [
   "Contractor Experience",
@@ -95,6 +103,9 @@ function milestoneScheduleTotals(value?: string) {
 
 export const clientReportSchema = z
   .object({
+    subjectProfileId: optionalText,
+    subjectProfileType: z.enum(profileTypes).optional(),
+    relationshipType: z.enum(reportRelationshipTypes).optional(),
     clientType: z.enum(clientTypes).optional(),
     firstName: requiredText("Client first name"),
     lastName: requiredText("Client last name"),
@@ -331,6 +342,28 @@ export const searchSchema = z.object({
   state: stateCode("State").optional(),
   riskLevel: z.enum(riskLevels).optional(),
   category: z.enum(reportCategories).optional(),
+  profileType: z.enum(profileTypes).optional(),
+})
+
+export const profileClaimSchema = z.object({
+  profileId: requiredText("Profile ID"),
+  claimantName: requiredText("Your name"),
+  claimantEmail: z.email("Enter a valid email for verification."),
+  relationshipToProfile: requiredText("Relationship to profile"),
+  verificationSummary: requiredText("Verification summary", 20).max(
+    1200,
+    "Keep verification summary under 1,200 characters.",
+  ),
+  truthfulCertification: z.coerce.boolean().optional(),
+}).refine((value) => value.truthfulCertification === true, {
+  path: ["truthfulCertification"],
+  message: "Confirm that the claim information is accurate.",
+})
+
+export const adminProfileClaimReviewSchema = z.object({
+  claimId: requiredText("Claim ID"),
+  decision: z.enum(profileClaimStatuses),
+  moderatorNote: z.string().trim().max(700, "Keep moderator note under 700 characters.").optional(),
 })
 
 export const savedClientSearchSchema = z.object({
@@ -838,6 +871,8 @@ export type ClientReportInput = z.infer<typeof clientReportSchema>
 export type ClientResponseInput = z.infer<typeof clientResponseSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type ProfileClaimInput = z.infer<typeof profileClaimSchema>
+export type AdminProfileClaimReviewInput = z.infer<typeof adminProfileClaimReviewSchema>
 export type AdminReviewInput = z.infer<typeof adminReviewSchema>
 export type CommunityDiscussionInput = z.infer<typeof communityDiscussionSchema>
 export type WatchlistItemInput = z.infer<typeof watchlistItemSchema>

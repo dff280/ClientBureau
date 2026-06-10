@@ -1,4 +1,9 @@
 import {
+  buildPublicEntityProfile,
+  deriveEntityProfiles,
+  searchEntityProfiles,
+} from "@/lib/entity-profiles"
+import {
   adminReviews,
   adminModerationCrm,
   auditLogs,
@@ -89,6 +94,8 @@ import type {
   ContractorRiskOpsData,
   ContractorProfile,
   DiscussionStatus,
+  EntityProfile,
+  EntityProfileSearchResult,
   EvidenceVaultItem,
   FloridaLienCase,
   LienFilingRecord,
@@ -119,6 +126,8 @@ import type {
   SavedClientSearch,
   SearchAnalyticsEvent,
   ProfileShareEvent,
+  ProfileClaim,
+  PublicEntityProfile,
   Subscription,
 } from "@/lib/types"
 import {
@@ -135,6 +144,44 @@ function reviewableReportsForClient(clientId: string) {
 const savedClientSearchRecords: SavedClientSearch[] = []
 const searchAnalyticsEvents: SearchAnalyticsEvent[] = []
 const profileShareEvents: ProfileShareEvent[] = []
+const profileClaims: ProfileClaim[] = []
+
+type SimulatedClientReportInput = Partial<ClientReportInput> &
+  Pick<
+    ClientReportInput,
+    | "firstName"
+    | "lastName"
+    | "city"
+    | "state"
+    | "projectType"
+    | "projectCity"
+    | "projectState"
+    | "contractAmount"
+    | "amountUnpaid"
+    | "reportCategory"
+    | "paymentStatus"
+    | "reportSummary"
+    | "detailedExperience"
+  >
+
+type SimulatedFloridaLienCaseInput = Partial<FloridaLienCaseInput> &
+  Pick<
+    FloridaLienCaseInput,
+    | "workflowType"
+    | "clientName"
+    | "ownerName"
+    | "propertyCounty"
+    | "propertyCity"
+    | "state"
+    | "contractorRole"
+    | "projectType"
+    | "contractAmount"
+    | "amountDue"
+    | "firstWorkDate"
+    | "lastWorkDate"
+    | "noticeHistory"
+    | "privateSummary"
+  >
 
 function reportTimeline(report: ClientReport): ReportTimelineEvent[] {
   const events: ReportTimelineEvent[] = [
@@ -314,6 +361,78 @@ export function getPublicBusinessProfiles() {
 
 export function getPublicBusinessProfile(slug: string): PublicBusinessProfile | undefined {
   return getPublicBusinessProfiles().find((profile) => profile.publicSlug === slug)
+}
+
+export function getEntityProfiles(): EntityProfile[] {
+  return deriveEntityProfiles({
+    clients: clientProfiles,
+    contractors: contractorProfiles,
+    reports: clientReports,
+    publicBusinesses: getPublicBusinessProfiles(),
+  })
+}
+
+export function getPublicEntityProfiles(): EntityProfile[] {
+  return getEntityProfiles().filter((profile) => profile.isPublic)
+}
+
+export function getPublicEntityProfile(profileType: EntityProfile["profileType"], slug: string): PublicEntityProfile | undefined {
+  const profile = getPublicEntityProfiles().find((item) => item.profileType === profileType && item.slug === slug)
+  if (!profile) return undefined
+
+  const reports =
+    profile.profileType === "client" && profile.legacyClientId
+      ? reviewableReportsForClient(profile.legacyClientId)
+      : profile.legacyContractorId
+        ? clientReports.filter((report) => report.contractorId === profile.legacyContractorId && ["approved", "disputed"].includes(report.status))
+        : []
+  const relatedClient = profile.legacyClientId
+    ? clientProfiles.find((client) => client.id === profile.legacyClientId)
+    : undefined
+  const relatedContractor = profile.legacyContractorId
+    ? getPublicBusinessProfiles().find((business) => business.id === profile.legacyContractorId)
+    : undefined
+
+  return buildPublicEntityProfile({
+    profile,
+    reports,
+    relatedClient,
+    relatedContractor,
+  })
+}
+
+export function searchProfiles(query = "", filters: SearchFilters = {}): EntityProfileSearchResult[] {
+  return searchEntityProfiles(getPublicEntityProfiles(), query, filters)
+}
+
+export function submitProfileClaim(input: {
+  profileId: string
+  claimantUserId?: string
+  claimantEmailHash: string
+  claimantName: string
+  relationshipToProfile: string
+  verificationSummary: string
+}): ProfileClaim {
+  const claim: ProfileClaim = {
+    id: `claim_mock_${Date.now()}`,
+    profileId: input.profileId,
+    claimantUserId: input.claimantUserId,
+    claimantEmailHash: input.claimantEmailHash,
+    claimantName: input.claimantName,
+    relationshipToProfile: input.relationshipToProfile,
+    verificationSummary: input.verificationSummary,
+    status: "pending",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  profileClaims.unshift(claim)
+
+  return claim
+}
+
+export function getProfileClaims() {
+  return profileClaims
 }
 
 function publicEvidenceLabel(item: { fileName: string; fileType: string }) {
@@ -507,7 +626,7 @@ function formatRepositoryCurrency(value: number) {
   }).format(value)
 }
 
-export function simulateSubmittedClientReport(input: ClientReportInput): ClientReport {
+export function simulateSubmittedClientReport(input: SimulatedClientReportInput): ClientReport {
   const publicSlug = ensureUniqueSlug(
     buildClientSlug({
       firstName: input.firstName,
@@ -523,6 +642,10 @@ export function simulateSubmittedClientReport(input: ClientReportInput): ClientR
     id: `report_mock_${Date.now()}`,
     contractorId: contractorProfiles[0]?.id ?? "contractor_mock",
     clientId,
+    subjectProfileId: input.subjectProfileId,
+    subjectProfileType: input.subjectProfileType ?? "client",
+    relationshipType: input.relationshipType ?? "contractor_to_client",
+    legacyClientName: [input.firstName, input.lastName].filter(Boolean).join(" "),
     clientType: input.clientType,
     clientJobAddressPrivate: input.jobAddress,
     tradeCategory: input.tradeCategory,
@@ -1002,7 +1125,7 @@ export function createLienNoticeDraft(
 
 export function submitFloridaLienCase(
   contractorId: string,
-  input: FloridaLienCaseInput,
+  input: SimulatedFloridaLienCaseInput,
 ): FloridaLienCase {
   const now = new Date().toISOString()
 

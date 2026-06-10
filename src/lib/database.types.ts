@@ -41,6 +41,10 @@ import type {
   ServiceReadinessStatus,
   WatchlistAlertEventType,
   WatchlistStatus,
+  ClaimedStatus,
+  ProfileClaimStatus,
+  ProfileType,
+  ReportRelationshipType,
 } from "@/lib/types"
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
@@ -165,6 +169,11 @@ export interface Database {
           id: string
           contractor_id: string
           client_id: string
+          reporter_profile_id: string | null
+          subject_profile_id: string | null
+          subject_profile_type: ProfileType
+          relationship_type: ReportRelationshipType
+          legacy_client_name: string | null
           client_type: string | null
           client_job_address_private: string | null
           trade_category: string | null
@@ -213,6 +222,11 @@ export interface Database {
           id?: string
           contractor_id: string
           client_id: string
+          reporter_profile_id?: string | null
+          subject_profile_id?: string | null
+          subject_profile_type?: ProfileType
+          relationship_type?: ReportRelationshipType
+          legacy_client_name?: string | null
           client_type?: string | null
           client_job_address_private?: string | null
           trade_category?: string | null
@@ -258,6 +272,92 @@ export interface Database {
           approved_at?: string | null
         }
         Update: Partial<Database["public"]["Tables"]["client_reports"]["Insert"]>
+        Relationships: []
+      }
+      entity_profiles: {
+        Row: {
+          id: string
+          profile_type: ProfileType
+          display_name: string
+          legal_name_private: string | null
+          business_name: string | null
+          city: string
+          state: string
+          slug: string
+          legacy_client_id: string | null
+          legacy_contractor_id: string | null
+          claimed_status: ClaimedStatus
+          owner_user_id: string | null
+          rating_score: number
+          rating_band: string
+          report_count: number
+          positive_report_count: number
+          disputed_report_count: number
+          resolved_report_count: number
+          evidence_on_file_count: number
+          response_count: number
+          public_summary: string | null
+          is_public: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_type: ProfileType
+          display_name: string
+          legal_name_private?: string | null
+          business_name?: string | null
+          city: string
+          state: string
+          slug: string
+          legacy_client_id?: string | null
+          legacy_contractor_id?: string | null
+          claimed_status?: ClaimedStatus
+          owner_user_id?: string | null
+          rating_score?: number
+          rating_band?: string
+          report_count?: number
+          positive_report_count?: number
+          disputed_report_count?: number
+          resolved_report_count?: number
+          evidence_on_file_count?: number
+          response_count?: number
+          public_summary?: string | null
+          is_public?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["entity_profiles"]["Insert"]>
+        Relationships: []
+      }
+      profile_claims: {
+        Row: {
+          id: string
+          profile_id: string
+          claimant_user_id: string | null
+          claimant_email_hash: string
+          claimant_name: string
+          relationship_to_profile: string
+          verification_summary: string
+          status: ProfileClaimStatus
+          moderator_note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          claimant_user_id?: string | null
+          claimant_email_hash: string
+          claimant_name: string
+          relationship_to_profile: string
+          verification_summary: string
+          status?: ProfileClaimStatus
+          moderator_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["profile_claims"]["Insert"]>
         Relationships: []
       }
       report_evidence: {

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 type SubmitReportSearchParams = Promise<
-  Partial<Record<"firstName" | "lastName" | "city" | "state" | "businessName" | "intent", string>>
+  Partial<Record<"firstName" | "lastName" | "city" | "state" | "businessName" | "intent" | "profileType" | "profileId", string>>
 >
 
 const proof = [
