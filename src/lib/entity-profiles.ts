@@ -8,9 +8,15 @@ import {
   type ContractorProfile,
   type EntityProfile,
   type EntityProfileSearchResult,
+  type ProfileRelationship,
+  type ProfileSubtype,
   type ProfileType,
+  type ProjectJob,
   type PublicBusinessProfile,
   type PublicEntityProfile,
+  type PublicProjectJobSummary,
+  type ReportConfidenceLevel,
+  type ReportRelationshipType,
   type SearchFilters,
 } from "@/lib/types"
 
@@ -24,6 +30,53 @@ export function profileTypePluralLabel(type: ProfileType) {
   if (type === "client") return "Clients and customers"
   if (type === "subcontractor") return "Subcontractors and trade pros"
   return "Contractors and service businesses"
+}
+
+export function profileSubtypeLabel(profile: Pick<EntityProfile, "profileType" | "profileSubtype">) {
+  if (profile.profileSubtype) return profile.profileSubtype
+  return defaultProfileSubtype(profile.profileType)
+}
+
+export function defaultProfileSubtype(profileType: ProfileType): ProfileSubtype {
+  if (profileType === "client") return "Homeowner"
+  if (profileType === "subcontractor") return "Individual trade professional"
+  return "Service business"
+}
+
+export function duplicateGroupKey(input: { displayName: string; businessName?: string; city: string; state: string }) {
+  return [input.businessName || input.displayName, input.city, normalizeStateCode(input.state)]
+    .filter(Boolean)
+    .join("|")
+    .toLowerCase()
+    .replace(/[^a-z0-9|]+/g, "-")
+    .replace(/-{2,}/g, "-")
+}
+
+export function reportConfidenceLevel(report: ClientReport): ReportConfidenceLevel {
+  if (["Resolved", "Paid in full", "Settled", "Admin verified"].includes(report.resolutionStatus ?? "")) {
+    return "resolved_report"
+  }
+
+  if (report.responseStatus === "Response published" || report.responseStatus === "Disputed" || report.responseStatus === "Resolved") {
+    return "response_available"
+  }
+
+  if (report.evidenceConfidence === "Strong" || report.evidenceAttached) return "evidence_reviewed"
+  if (report.signedContract || Boolean(report.detailedTimelinePrivate)) return "documented_report"
+
+  return "basic_report"
+}
+
+export function reportConfidenceLabel(level: ReportConfidenceLevel) {
+  const labels: Record<ReportConfidenceLevel, string> = {
+    basic_report: "Basic report",
+    documented_report: "Documented report",
+    evidence_reviewed: "Evidence reviewed",
+    response_available: "Response available",
+    resolved_report: "Resolved report",
+  }
+
+  return labels[level]
 }
 
 export function entityProfileHref(profile: Pick<EntityProfile, "profileType" | "slug">) {
@@ -57,6 +110,96 @@ export function buildEntityProfileSlug(input: {
   })
 }
 
+function projectStatusForReport(report: ClientReport): ProjectJob["status"] {
+  if (["Resolved", "Paid in full", "Settled", "Admin verified"].includes(report.resolutionStatus ?? "")) return "resolved"
+  if (report.status === "disputed" || report.responseStatus === "Disputed") return "disputed"
+  if (report.amountUnpaid > 0 || report.reportCategory === "Non-payment" || report.reportCategory === "Late payment") {
+    return "payment_issue"
+  }
+  if (report.jobStatus?.toLowerCase().includes("complete")) return "completed"
+
+  return "active"
+}
+
+function reportProjectTitle(report: ClientReport) {
+  return report.jobType || report.projectType || report.tradeCategory || "Project record"
+}
+
+export function projectJobFromReport(report: ClientReport, profile?: EntityProfile): ProjectJob {
+  const confidence = report.reportConfidenceLevel ?? reportConfidenceLevel(report)
+
+  return {
+    id: report.projectJobId ?? `project_${report.id}`,
+    title: reportProjectTitle(report),
+    projectType: report.projectType,
+    status: projectStatusForReport(report),
+    city: report.projectCity,
+    state: normalizeStateCode(report.projectState),
+    startDate: report.jobStartDate,
+    completionDate: report.jobCompletionDate,
+    contractAmount: report.contractAmount,
+    amountDue: report.amountUnpaid,
+    primaryClientProfileId: report.subjectProfileType === "client" ? report.subjectProfileId : profile?.profileType === "client" ? profile.id : undefined,
+    primaryContractorProfileId:
+      report.subjectProfileType === "contractor" || report.subjectProfileType === "subcontractor"
+        ? report.subjectProfileId
+        : profile?.profileType === "contractor" || profile?.profileType === "subcontractor"
+          ? profile.id
+          : undefined,
+    publicSummary: `${reportConfidenceLabel(confidence)} connected to a moderated ${report.projectType} experience in ${report.projectCity}, ${normalizeStateCode(report.projectState)}.`,
+    isPublicSummaryAllowed: report.status === "approved",
+    createdAt: report.createdAt,
+    updatedAt: report.approvedAt ?? report.createdAt,
+  }
+}
+
+export function publicProjectSummaryFromReport(report: ClientReport): PublicProjectJobSummary {
+  const project = projectJobFromReport(report)
+  const confidenceLevel = report.reportConfidenceLevel ?? reportConfidenceLevel(report)
+
+  return {
+    id: project.id,
+    title: project.title,
+    projectType: project.projectType,
+    status: project.status,
+    city: project.city,
+    state: project.state,
+    contractAmount: project.contractAmount,
+    amountDue: project.amountDue,
+    publicSummary: project.publicSummary,
+    reportCount: 1,
+    confidenceLevel,
+    updatedAt: project.updatedAt,
+  }
+}
+
+export function relationshipFromReport(report: ClientReport): ProfileRelationship | undefined {
+  if (!report.reporterProfileId || !report.subjectProfileId) return undefined
+
+  return {
+    id: `relationship_${report.id}`,
+    sourceProfileId: report.reporterProfileId,
+    targetProfileId: report.subjectProfileId,
+    projectJobId: report.projectJobId,
+    relationshipType: report.relationshipType ?? "contractor_to_client",
+    status: report.status === "disputed" ? "disputed" : "active",
+    createdAt: report.createdAt,
+    updatedAt: report.approvedAt ?? report.createdAt,
+  }
+}
+
+export function relationshipLabel(type: ReportRelationshipType) {
+  const labels: Record<ReportRelationshipType, string> = {
+    contractor_to_client: "Contractor to client",
+    subcontractor_to_contractor: "Subcontractor to contractor",
+    contractor_to_subcontractor: "Contractor to subcontractor",
+    client_to_contractor: "Client to contractor",
+    business_to_business: "Business to business",
+  }
+
+  return labels[type]
+}
+
 export function deriveEntityProfiles(input: {
   clients: ClientProfile[]
   contractors: ContractorProfile[]
@@ -70,6 +213,7 @@ export function deriveEntityProfiles(input: {
     return {
       id: `entity_client_${client.id}`,
       profileType: "client" as const,
+      profileSubtype: client.businessName ? "Business client" : "Homeowner",
       displayName: [client.firstName, client.lastName].filter(Boolean).join(" "),
       businessName: client.businessName,
       city: client.city,
@@ -77,6 +221,12 @@ export function deriveEntityProfiles(input: {
       slug: client.publicSlug,
       legacyClientId: client.id,
       claimedStatus: "unclaimed" as const,
+      duplicateGroupKey: duplicateGroupKey({
+        displayName: [client.firstName, client.lastName].filter(Boolean).join(" "),
+        businessName: client.businessName,
+        city: client.city,
+        state: client.state,
+      }),
       ratingScore: client.clientBureauScore,
       ratingBand: client.riskLevel,
       reportCount: client.reportCount,
@@ -102,6 +252,7 @@ export function deriveEntityProfiles(input: {
     return {
       id: `entity_contractor_${contractor.id}`,
       profileType: isSubcontractor ? "subcontractor" : "contractor",
+      profileSubtype: isSubcontractor ? "Individual trade professional" : contractor.businessType ?? "Service business",
       displayName: contractor.businessName,
       businessName: contractor.businessName,
       city: contractor.city,
@@ -110,6 +261,14 @@ export function deriveEntityProfiles(input: {
       legacyContractorId: contractor.id,
       claimedStatus: "claimed",
       ownerUserId: contractor.userId,
+      verificationLevel: contractor.verificationStatus === "verified" ? "business_verified" : "email_verified",
+      verificationBadges: contractor.verificationStatus === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
+      duplicateGroupKey: duplicateGroupKey({
+        displayName: contractor.businessName,
+        businessName: contractor.businessName,
+        city: contractor.city,
+        state: contractor.state,
+      }),
       ratingScore: publicBusiness?.ratingScore ?? (contractor.verificationStatus === "verified" ? 88 : 76),
       ratingBand: publicBusiness?.ratingGrade ?? "Review Pending",
       reportCount: reports.length,
@@ -133,10 +292,22 @@ export function deriveEntityProfiles(input: {
 export function buildPublicEntityProfile(input: {
   profile: EntityProfile
   reports: ClientReport[]
+  projects?: PublicProjectJobSummary[]
+  relationships?: ProfileRelationship[]
   relatedClient?: ClientProfile
   relatedContractor?: PublicBusinessProfile
 }): PublicEntityProfile {
   const approvedReports = input.reports.filter((report) => report.status === "approved")
+  const projectSummaries =
+    input.projects ??
+    approvedReports
+      .map(publicProjectSummaryFromReport)
+      .filter((project, index, list) => list.findIndex((candidate) => candidate.id === project.id) === index)
+  const relationships =
+    input.relationships ??
+    approvedReports
+      .map(relationshipFromReport)
+      .filter((item): item is ProfileRelationship => Boolean(item))
   const responseStatusLabel =
     input.profile.responseCount > 0
       ? "Public response on file"
@@ -151,6 +322,8 @@ export function buildPublicEntityProfile(input: {
   return {
     ...input.profile,
     reports: approvedReports,
+    projects: projectSummaries,
+    relationships,
     relatedClient: input.relatedClient,
     relatedContractor: input.relatedContractor,
     safeDescription: `${profileTypeLabel(input.profile.profileType)} profile with moderated Client Bureau context. Public pages show approved summaries only.`,
@@ -176,6 +349,9 @@ export function searchEntityProfiles(
         profile.state,
         profile.slug,
         profile.profileType,
+        profile.profileSubtype,
+        profile.verificationLevel,
+        profile.verificationBadges?.join(" "),
         profile.ratingBand,
         profile.publicSummary,
       ]
@@ -221,7 +397,7 @@ export function searchEntityProfiles(
     .filter((profile) => {
       const matchesQuery =
         normalizedQuery.length === 0 ||
-        [profile.displayName, profile.businessName, profile.city, profile.state, profile.slug, profile.publicSummary]
+        [profile.displayName, profile.businessName, profile.city, profile.state, profile.slug, profile.profileSubtype, profile.publicSummary]
           .filter(Boolean)
           .join(" ")
           .toLowerCase()

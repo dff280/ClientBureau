@@ -287,7 +287,10 @@ function reportDetailLine(label: string, value?: string | number | boolean) {
 function buildPrivateReportTimeline(input: ClientReportInput) {
   const lines = [
     reportDetailLine("Reported profile type", input.subjectProfileType),
+    reportDetailLine("Reported profile subtype", input.subjectProfileSubtype),
     reportDetailLine("Relationship type", input.relationshipType),
+    reportDetailLine("Project/job record", input.projectJobTitle),
+    reportDetailLine("Existing project/job ID", input.projectJobId),
     reportDetailLine("Client type", input.clientType),
     reportDetailLine("Private job address provided", Boolean(input.jobAddress)),
     reportDetailLine("Trade or service category", input.tradeCategory),
@@ -1030,7 +1033,10 @@ export async function bulkUploadImportAction(
           ...emptyStructuredReportFields,
           subjectProfileId: undefined,
           subjectProfileType: "client",
+          subjectProfileSubtype: "Business client",
           relationshipType: "contractor_to_client",
+          projectJobId: undefined,
+          projectJobTitle: `${reportType} import for ${clientName || "client"}`,
           firstName: firstName || "Unknown",
           lastName: lastParts.join(" ") || "Client",
           businessName: undefined,

@@ -44,7 +44,12 @@ import type {
   ClaimedStatus,
   ProfileClaimStatus,
   ProfileType,
+  ProfileSubtype,
+  ProjectJobStatus,
+  ProjectProfileRole,
+  ReportConfidenceLevel,
   ReportRelationshipType,
+  VerificationLevel,
 } from "@/lib/types"
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
@@ -169,11 +174,14 @@ export interface Database {
           id: string
           contractor_id: string
           client_id: string
+          project_job_id: string | null
           reporter_profile_id: string | null
           subject_profile_id: string | null
           subject_profile_type: ProfileType
           relationship_type: ReportRelationshipType
           legacy_client_name: string | null
+          report_confidence_level: ReportConfidenceLevel
+          redaction_note: string | null
           client_type: string | null
           client_job_address_private: string | null
           trade_category: string | null
@@ -222,11 +230,14 @@ export interface Database {
           id?: string
           contractor_id: string
           client_id: string
+          project_job_id?: string | null
           reporter_profile_id?: string | null
           subject_profile_id?: string | null
           subject_profile_type?: ProfileType
           relationship_type?: ReportRelationshipType
           legacy_client_name?: string | null
+          report_confidence_level?: ReportConfidenceLevel
+          redaction_note?: string | null
           client_type?: string | null
           client_job_address_private?: string | null
           trade_category?: string | null
@@ -278,6 +289,7 @@ export interface Database {
         Row: {
           id: string
           profile_type: ProfileType
+          profile_subtype: ProfileSubtype | string | null
           display_name: string
           legal_name_private: string | null
           business_name: string | null
@@ -288,6 +300,12 @@ export interface Database {
           legacy_contractor_id: string | null
           claimed_status: ClaimedStatus
           owner_user_id: string | null
+          verification_level: VerificationLevel | null
+          verification_badges: string[]
+          duplicate_group_key: string | null
+          merged_into_profile_id: string | null
+          public_field_redactions: Json
+          redaction_note: string | null
           rating_score: number
           rating_band: string
           report_count: number
@@ -304,6 +322,7 @@ export interface Database {
         Insert: {
           id?: string
           profile_type: ProfileType
+          profile_subtype?: ProfileSubtype | string | null
           display_name: string
           legal_name_private?: string | null
           business_name?: string | null
@@ -314,6 +333,12 @@ export interface Database {
           legacy_contractor_id?: string | null
           claimed_status?: ClaimedStatus
           owner_user_id?: string | null
+          verification_level?: VerificationLevel | null
+          verification_badges?: string[]
+          duplicate_group_key?: string | null
+          merged_into_profile_id?: string | null
+          public_field_redactions?: Json
+          redaction_note?: string | null
           rating_score?: number
           rating_band?: string
           report_count?: number
@@ -360,21 +385,191 @@ export interface Database {
         Update: Partial<Database["public"]["Tables"]["profile_claims"]["Insert"]>
         Relationships: []
       }
+      project_jobs: {
+        Row: {
+          id: string
+          owner_user_id: string | null
+          title: string
+          project_type: string
+          status: ProjectJobStatus
+          city: string
+          state: string
+          project_address_private: string | null
+          start_date: string | null
+          completion_date: string | null
+          contract_amount: number
+          amount_due: number
+          primary_client_profile_id: string | null
+          primary_contractor_profile_id: string | null
+          public_summary: string | null
+          private_notes: string | null
+          is_public_summary_allowed: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          owner_user_id?: string | null
+          title: string
+          project_type: string
+          status?: ProjectJobStatus
+          city: string
+          state: string
+          project_address_private?: string | null
+          start_date?: string | null
+          completion_date?: string | null
+          contract_amount?: number
+          amount_due?: number
+          primary_client_profile_id?: string | null
+          primary_contractor_profile_id?: string | null
+          public_summary?: string | null
+          private_notes?: string | null
+          is_public_summary_allowed?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["project_jobs"]["Insert"]>
+        Relationships: []
+      }
+      project_job_profiles: {
+        Row: {
+          id: string
+          project_job_id: string
+          profile_id: string
+          role: ProjectProfileRole
+          relationship_label: string | null
+          is_primary: boolean
+          private_notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_job_id: string
+          profile_id: string
+          role: ProjectProfileRole
+          relationship_label?: string | null
+          is_primary?: boolean
+          private_notes?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["project_job_profiles"]["Insert"]>
+        Relationships: []
+      }
+      profile_relationships: {
+        Row: {
+          id: string
+          source_profile_id: string
+          target_profile_id: string
+          project_job_id: string | null
+          relationship_type: ReportRelationshipType
+          status: "active" | "ended" | "disputed" | "merged"
+          private_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          source_profile_id: string
+          target_profile_id: string
+          project_job_id?: string | null
+          relationship_type: ReportRelationshipType
+          status?: "active" | "ended" | "disputed" | "merged"
+          private_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["profile_relationships"]["Insert"]>
+        Relationships: []
+      }
+      profile_merge_events: {
+        Row: {
+          id: string
+          source_profile_id: string
+          target_profile_id: string
+          merged_by: string | null
+          reason: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          source_profile_id: string
+          target_profile_id: string
+          merged_by?: string | null
+          reason: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["profile_merge_events"]["Insert"]>
+        Relationships: []
+      }
+      report_reassignment_events: {
+        Row: {
+          id: string
+          report_id: string
+          previous_subject_profile_id: string | null
+          next_subject_profile_id: string | null
+          previous_project_job_id: string | null
+          next_project_job_id: string | null
+          reassigned_by: string | null
+          reason: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          report_id: string
+          previous_subject_profile_id?: string | null
+          next_subject_profile_id?: string | null
+          previous_project_job_id?: string | null
+          next_project_job_id?: string | null
+          reassigned_by?: string | null
+          reason: string
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["report_reassignment_events"]["Insert"]>
+        Relationships: []
+      }
+      profile_redaction_events: {
+        Row: {
+          id: string
+          profile_id: string
+          field_name: string
+          previous_public_value_hash: string | null
+          redacted_by: string | null
+          reason: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          field_name: string
+          previous_public_value_hash?: string | null
+          redacted_by?: string | null
+          reason: string
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["profile_redaction_events"]["Insert"]>
+        Relationships: []
+      }
       report_evidence: {
         Row: {
           id: string
           report_id: string
+          project_job_id: string | null
           file_name: string
           file_type: string
           storage_path: string
+          public_summary_label: string | null
           uploaded_at: string
         }
         Insert: {
           id?: string
           report_id: string
+          project_job_id?: string | null
           file_name: string
           file_type: string
           storage_path: string
+          public_summary_label?: string | null
           uploaded_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["report_evidence"]["Insert"]>

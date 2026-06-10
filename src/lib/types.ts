@@ -24,8 +24,74 @@ export const riskLevels = ["Low", "Moderate", "Elevated", "High"] as const
 
 export const accountTypes = ["contractor", "subcontractor", "client"] as const
 export const profileTypes = ["client", "contractor", "subcontractor"] as const
-export const claimedStatuses = ["unclaimed", "claimed", "disputed"] as const
+export const clientProfileSubtypes = [
+  "Homeowner",
+  "Business client",
+  "Property manager",
+  "Landlord",
+  "Real estate investor",
+  "HOA / condo association",
+  "Commercial property owner",
+  "Tenant",
+  "Other",
+] as const
+export const contractorProfileSubtypes = [
+  "General contractor",
+  "Specialty contractor",
+  "Service business",
+  "Freelancer",
+  "Agency",
+  "Property service company",
+  "Mobile service provider",
+  "Other",
+] as const
+export const subcontractorProfileSubtypes = [
+  "Individual trade professional",
+  "Licensed subcontractor",
+  "Crew",
+  "Installer",
+  "Labor provider",
+  "Specialty trade",
+  "Other",
+] as const
+export const claimedStatuses = ["unclaimed", "claim_pending", "claimed", "disputed", "verified"] as const
 export const profileClaimStatuses = ["pending", "approved", "rejected", "disputed"] as const
+export const reportConfidenceLevels = [
+  "basic_report",
+  "documented_report",
+  "evidence_reviewed",
+  "response_available",
+  "resolved_report",
+] as const
+export const verificationLevels = [
+  "email_verified",
+  "phone_verified",
+  "business_verified",
+  "license_verified",
+  "insurance_verified",
+  "admin_verified",
+] as const
+export const projectJobStatuses = [
+  "draft",
+  "screening",
+  "contract_pending",
+  "active",
+  "completed",
+  "payment_issue",
+  "disputed",
+  "resolved",
+  "archived",
+] as const
+export const projectProfileRoles = [
+  "client",
+  "contractor",
+  "subcontractor",
+  "owner",
+  "property_manager",
+  "reporter",
+  "subject",
+  "other",
+] as const
 export const reportRelationshipTypes = [
   "contractor_to_client",
   "subcontractor_to_contractor",
@@ -38,9 +104,17 @@ export type ReportCategory = (typeof reportCategories)[number]
 export type RiskLevel = (typeof riskLevels)[number]
 export type AccountType = (typeof accountTypes)[number]
 export type ProfileType = (typeof profileTypes)[number]
+export type ClientProfileSubtype = (typeof clientProfileSubtypes)[number]
+export type ContractorProfileSubtype = (typeof contractorProfileSubtypes)[number]
+export type SubcontractorProfileSubtype = (typeof subcontractorProfileSubtypes)[number]
+export type ProfileSubtype = ClientProfileSubtype | ContractorProfileSubtype | SubcontractorProfileSubtype
 export type ClaimedStatus = (typeof claimedStatuses)[number]
 export type ProfileClaimStatus = (typeof profileClaimStatuses)[number]
 export type ReportRelationshipType = (typeof reportRelationshipTypes)[number]
+export type ReportConfidenceLevel = (typeof reportConfidenceLevels)[number]
+export type VerificationLevel = (typeof verificationLevels)[number]
+export type ProjectJobStatus = (typeof projectJobStatuses)[number]
+export type ProjectProfileRole = (typeof projectProfileRoles)[number]
 export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
 export type ReportResolutionStatus =
   | "Unresolved"
@@ -207,6 +281,11 @@ export type AdminEntityType =
   | "client"
   | "entity_profile"
   | "profile_claim"
+  | "project_job"
+  | "profile_relationship"
+  | "profile_merge"
+  | "report_reassignment"
+  | "profile_redaction"
   | "report"
   | "discussion"
   | "evidence"
@@ -324,6 +403,7 @@ export interface ClientProfile {
 export interface EntityProfile {
   id: string
   profileType: ProfileType
+  profileSubtype?: ProfileSubtype | string
   displayName: string
   legalNamePrivate?: string
   businessName?: string
@@ -334,6 +414,12 @@ export interface EntityProfile {
   legacyContractorId?: string
   claimedStatus: ClaimedStatus
   ownerUserId?: string
+  verificationLevel?: VerificationLevel
+  verificationBadges?: string[]
+  duplicateGroupKey?: string
+  mergedIntoProfileId?: string
+  publicFieldRedactions?: Record<string, unknown>
+  redactionNote?: string
   ratingScore: number
   ratingBand: RiskLevel | BusinessRatingGrade | "Review Pending"
   reportCount: number
@@ -350,6 +436,8 @@ export interface EntityProfile {
 
 export interface PublicEntityProfile extends EntityProfile {
   reports: ClientReport[]
+  projects: PublicProjectJobSummary[]
+  relationships: ProfileRelationship[]
   relatedClient?: ClientProfile
   relatedContractor?: PublicBusinessProfile
   safeDescription: string
@@ -382,6 +470,98 @@ export interface ProfileClaim {
   moderatorNote?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface ProjectJob {
+  id: string
+  ownerUserId?: string
+  title: string
+  projectType: string
+  status: ProjectJobStatus
+  city: string
+  state: string
+  projectAddressPrivate?: string
+  startDate?: string
+  completionDate?: string
+  contractAmount: number
+  amountDue: number
+  primaryClientProfileId?: string
+  primaryContractorProfileId?: string
+  publicSummary?: string
+  privateNotes?: string
+  isPublicSummaryAllowed: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PublicProjectJobSummary {
+  id: string
+  title: string
+  projectType: string
+  status: ProjectJobStatus
+  city: string
+  state: string
+  contractAmount: number
+  amountDue: number
+  publicSummary?: string
+  reportCount: number
+  confidenceLevel: ReportConfidenceLevel
+  updatedAt: string
+}
+
+export interface ProjectJobProfile {
+  id: string
+  projectJobId: string
+  profileId: string
+  role: ProjectProfileRole
+  relationshipLabel?: string
+  isPrimary: boolean
+  privateNotes?: string
+  createdAt: string
+}
+
+export interface ProfileRelationship {
+  id: string
+  sourceProfileId: string
+  targetProfileId: string
+  projectJobId?: string
+  relationshipType: ReportRelationshipType
+  status: "active" | "ended" | "disputed" | "merged"
+  privateNotes?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ProfileMergeEvent {
+  id: string
+  sourceProfileId: string
+  targetProfileId: string
+  mergedBy?: string
+  reason: string
+  metadata?: Record<string, unknown>
+  createdAt: string
+}
+
+export interface ReportReassignmentEvent {
+  id: string
+  reportId: string
+  previousSubjectProfileId?: string
+  nextSubjectProfileId?: string
+  previousProjectJobId?: string
+  nextProjectJobId?: string
+  reassignedBy?: string
+  reason: string
+  createdAt: string
+}
+
+export interface ProfileRedactionEvent {
+  id: string
+  profileId: string
+  fieldName: string
+  previousPublicValueHash?: string
+  redactedBy?: string
+  reason: string
+  createdAt: string
 }
 
 export interface ContractorWatchlistItem {
@@ -916,11 +1096,14 @@ export interface ClientReport {
   id: string
   contractorId: string
   clientId: string
+  projectJobId?: string
   reporterProfileId?: string
   subjectProfileId?: string
   subjectProfileType?: ProfileType
   relationshipType?: ReportRelationshipType
   legacyClientName?: string
+  reportConfidenceLevel?: ReportConfidenceLevel
+  redactionNote?: string
   clientType?: string
   clientJobAddressPrivate?: string
   tradeCategory?: string
@@ -1020,9 +1203,11 @@ export interface PublicationAudit {
 export interface ReportEvidence {
   id: string
   reportId: string
+  projectJobId?: string
   fileName: string
   fileType: string
   storagePath: string
+  publicSummaryLabel?: string
   uploadedAt: string
 }
 

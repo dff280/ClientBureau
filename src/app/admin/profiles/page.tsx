@@ -55,7 +55,10 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
       profile.state,
       profile.slug,
       profile.profileType,
+      profile.profileSubtype,
       profile.claimedStatus,
+      profile.verificationLevel,
+      profile.duplicateGroupKey,
     ]
       .filter(Boolean)
       .join(" ")
@@ -69,7 +72,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
   })
   const publicCount = profiles.filter((profile) => profile.isPublic).length
   const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed").length
-  const evidenceCount = profiles.filter((profile) => profile.evidenceOnFileCount > 0).length
+  const duplicateSignals = profiles.filter((profile) => profile.duplicateGroupKey).length
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -96,7 +99,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
           <StatCard label="Unified profiles" value={profiles.length} helper="Clients, contractors, and subcontractors" icon={UsersRound} tone="slate" />
           <StatCard label="Public profiles" value={publicCount} helper="SEO-visible approved or business records" icon={Eye} tone="emerald" />
           <StatCard label="Claimed" value={claimedCount} helper="Owned or verified profile context" icon={BadgeCheck} tone="blue" />
-          <StatCard label="Evidence indicators" value={evidenceCount} helper="Private evidence-on-file labels" icon={ShieldCheck} tone="amber" />
+          <StatCard label="Graph signals" value={duplicateSignals} helper="Duplicate keys, claims, and reassignment context" icon={GitMerge} tone="amber" />
         </div>
 
         <AdminFilterBar
@@ -144,10 +147,14 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                 tone={profile.isPublic ? "emerald" : profile.claimedStatus === "disputed" ? "rose" : "slate"}
                 facts={[
                   { label: "Claim status", value: profile.claimedStatus },
+                  { label: "Subtype", value: String(profile.profileSubtype ?? "General profile") },
+                  { label: "Verification", value: profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : profile.verificationLevel ?? "Moderation only" },
                   { label: "Rating / band", value: `${profile.ratingScore} / ${profile.ratingBand}` },
                   { label: "Reports", value: profile.reportCount },
                   { label: "Positive reports", value: profile.positiveReportCount },
                   { label: "Evidence", value: profile.evidenceOnFileCount > 0 ? "Private evidence on file" : "No evidence label yet" },
+                  { label: "Duplicate key", value: profile.duplicateGroupKey ?? "Not generated" },
+                  { label: "Redaction", value: profile.redactionNote ? "Redaction note on file" : "No public redaction note" },
                   { label: "Slug", value: profile.slug },
                 ]}
                 actions={
@@ -188,13 +195,28 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
           ) : null}
         </div>
 
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-5">
-          <p className="text-sm font-semibold uppercase text-amber-800">Duplicate and claim workflow</p>
-          <p className="mt-2 text-sm leading-6 text-amber-950">
-            This workspace is the control surface for the unified profile layer. Duplicate merge, report reassignment,
-            and profile-claim approval should keep public records clear while preserving audit history and private matching.
-            Existing client and business editors remain the source for detailed record updates in this release.
-          </p>
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-5">
+            <p className="text-sm font-semibold uppercase text-amber-800">Duplicate review</p>
+            <p className="mt-2 text-sm leading-6 text-amber-950">
+              Use duplicate keys to group similar names, businesses, and cities before merging. Merges must preserve
+              audit history and keep reports connected to the correct project/job record.
+            </p>
+          </div>
+          <div className="rounded-md border border-blue-200 bg-blue-50 p-5">
+            <p className="text-sm font-semibold uppercase text-blue-800">Report reassignment</p>
+            <p className="mt-2 text-sm leading-6 text-blue-950">
+              Reassignment should move reports between profile and project records only after confirming relationship,
+              location, and evidence context. Public pages should update after moderation approval.
+            </p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-semibold uppercase text-slate-500">Public/private redaction</p>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Public records may show city, state, moderated summaries, confidence labels, and evidence-on-file
+              indicators. Emails, phones, street addresses, raw files, notes, contracts, invoices, and IDs stay private.
+            </p>
+          </div>
         </div>
       </div>
     </section>

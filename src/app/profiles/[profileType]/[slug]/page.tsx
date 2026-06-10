@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { JsonLd } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
-import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
+import { profileTypeLabel, profileTypePluralLabel, reportConfidenceLabel, relationshipLabel } from "@/lib/entity-profiles"
 import { getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
@@ -64,6 +64,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
 
   const siteUrl = getSiteUrl()
   const profileUrl = `${siteUrl}${profile.profileHref}`
+  const reportHref = `/submit-report?profileType=${profile.profileType}&profileSubtype=${encodeURIComponent(String(profile.profileSubtype ?? ""))}&profileId=${profile.id}&city=${encodeURIComponent(profile.city)}&state=${encodeURIComponent(profile.state)}`
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",
@@ -129,7 +130,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
         title={`${profile.displayName} in ${profile.city}, ${profile.state}`}
         description="This public profile shows approved Client Bureau context only: moderated summaries, response indicators, evidence-on-file labels, and public record status. Private identifiers and raw files stay sealed."
         primary={{ href: "/search", label: "Check Another Profile", icon: ShieldCheck }}
-        secondary={{ href: `/submit-report?profileType=${profile.profileType}&profileId=${profile.id}`, label: "Report an Experience", icon: FileText }}
+        secondary={{ href: reportHref, label: "Report an Experience", icon: FileText }}
         aside={
           <ProductMockupFrame
             dark
@@ -148,6 +149,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
         dark
         items={[
           { label: "Profile type", value: profileTypeLabel(profile.profileType), text: "Records are grouped by the role in the business relationship." },
+          { label: "Subtype", value: String(profile.profileSubtype ?? "General profile"), text: "Subtypes help organize homeowners, businesses, contractors, and trade professionals." },
           { label: "Public reports", value: String(profile.reportCount), text: "Only admin-approved summaries are shown on public pages." },
           { label: "Evidence", value: profile.evidenceOnFileCount > 0 ? "On file" : "Available", text: "Raw documents and uploads are private." },
           { label: "Response rights", value: profile.responseStatusLabel, text: "Reported parties can respond, dispute, or request correction." },
@@ -174,7 +176,9 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 </div>
                 <div className="grid gap-3 text-sm text-slate-700">
                   <ProfileFact label="City / state" value={`${profile.city}, ${profile.state}`} />
+                  <ProfileFact label="Subtype" value={String(profile.profileSubtype ?? "General profile")} />
                   <ProfileFact label="Claim status" value={profile.claimedStatus === "claimed" ? "Claimed profile" : "Unclaimed profile"} />
+                  <ProfileFact label="Verification" value={profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : "Moderation signals only"} />
                   <ProfileFact label="Evidence" value={profile.evidenceSummaryLabel} />
                   <ProfileFact label="Public visibility" value="Approved public content only" />
                 </div>
@@ -189,6 +193,64 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           </aside>
 
           <div className="space-y-6">
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="p-6">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Project/job graph</p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-950">Connected project records</h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+                      Project records connect reports, evidence indicators, responses, and resolution updates. Public pages show only approved summary context.
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase text-amber-800">
+                    {profile.projects.length} public-safe {profile.projects.length === 1 ? "project" : "projects"}
+                  </span>
+                </div>
+                <div className="mt-6 grid gap-3">
+                  {profile.projects.length > 0 ? profile.projects.slice(0, 6).map((project) => (
+                    <article key={project.id} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-slate-950">{project.title}</p>
+                          <p className="mt-1 text-sm text-slate-600">
+                            {project.projectType} · {project.city}, {project.state}
+                          </p>
+                        </div>
+                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase text-slate-600">
+                          {reportConfidenceLabel(project.confidenceLevel)}
+                        </span>
+                      </div>
+                      <p className="mt-3 text-sm leading-6 text-slate-700">
+                        {project.publicSummary ?? "A moderated project summary is available when approved report context supports publication."}
+                      </p>
+                      <div className="mt-4 grid gap-2 text-xs font-semibold uppercase text-slate-500 sm:grid-cols-3">
+                        <span>Status: {project.status.replace(/_/g, " ")}</span>
+                        <span>Reports: {project.reportCount}</span>
+                        <span>{project.amountDue > 0 ? "Payment context on file" : "No open amount shown"}</span>
+                      </div>
+                    </article>
+                  )) : (
+                    <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                      No public-safe project summaries are currently available for this profile.
+                    </div>
+                  )}
+                </div>
+                {profile.relationships.length > 0 ? (
+                  <div className="mt-5 rounded-md border border-slate-200 bg-white p-4">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Relationship context</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {profile.relationships.slice(0, 4).map((relationship) => (
+                        <span key={relationship.id} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
+                          {relationshipLabel(relationship.relationshipType)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardContent className="p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
@@ -219,6 +281,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                       <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold uppercase text-slate-500">
                         <span>Project: {report.projectType}</span>
                         <span>Location: {report.projectCity}, {report.projectState}</span>
+                        <span>{reportConfidenceLabel(report.reportConfidenceLevel ?? "basic_report")}</span>
                         <span>{report.evidenceAttached ? "Evidence on file" : "Evidence not public"}</span>
                       </div>
                     </article>

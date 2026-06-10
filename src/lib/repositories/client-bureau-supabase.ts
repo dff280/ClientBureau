@@ -18,6 +18,8 @@ import {
 } from "@/lib/scoring"
 import {
   buildPublicEntityProfile,
+  defaultProfileSubtype,
+  duplicateGroupKey,
   searchEntityProfiles,
 } from "@/lib/entity-profiles"
 import {
@@ -125,6 +127,7 @@ import type {
   ProfileClaim,
   ProfileType,
   ProfileShareEvent,
+  ProjectJob,
   ReportEvidence,
   ReportDraft,
   ReportTimelineEvent,
@@ -188,6 +191,7 @@ type SearchAnalyticsEventRow = Tables["search_analytics_events"]["Row"]
 type ProfileShareEventRow = Tables["profile_share_events"]["Row"]
 type EntityProfileRow = Tables["entity_profiles"]["Row"]
 type ProfileClaimRow = Tables["profile_claims"]["Row"]
+type ProjectJobRow = Tables["project_jobs"]["Row"]
 
 const emptyHash = "sha256:empty-private"
 
@@ -228,7 +232,13 @@ function isMissingReportIntakeColumnError(error: { message?: string; code?: stri
     message.includes("response_status") ||
     message.includes("reporter_profile_id") ||
     message.includes("subject_profile_id") ||
-    message.includes("relationship_type")
+    message.includes("relationship_type") ||
+    message.includes("project_job_id") ||
+    message.includes("report_confidence_level") ||
+    message.includes("redaction_note") ||
+    message.includes("profile_subtype") ||
+    message.includes("verification_level") ||
+    message.includes("duplicate_group_key")
   )
 }
 
@@ -293,10 +303,35 @@ function mapProfileShareEvent(row: ProfileShareEventRow): ProfileShareEvent {
   }
 }
 
+function mapProjectJob(row: ProjectJobRow): ProjectJob {
+  return {
+    id: row.id,
+    ownerUserId: row.owner_user_id ?? undefined,
+    title: row.title,
+    projectType: row.project_type,
+    status: row.status,
+    city: row.city,
+    state: row.state,
+    projectAddressPrivate: row.project_address_private ?? undefined,
+    startDate: row.start_date ?? undefined,
+    completionDate: row.completion_date ?? undefined,
+    contractAmount: row.contract_amount,
+    amountDue: row.amount_due,
+    primaryClientProfileId: row.primary_client_profile_id ?? undefined,
+    primaryContractorProfileId: row.primary_contractor_profile_id ?? undefined,
+    publicSummary: row.public_summary ?? undefined,
+    privateNotes: row.private_notes ?? undefined,
+    isPublicSummaryAllowed: row.is_public_summary_allowed,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
 function mapEntityProfile(row: EntityProfileRow): EntityProfile {
   return {
     id: row.id,
     profileType: row.profile_type,
+    profileSubtype: row.profile_subtype ?? defaultProfileSubtype(row.profile_type),
     displayName: row.display_name,
     legalNamePrivate: row.legal_name_private ?? undefined,
     businessName: row.business_name ?? undefined,
@@ -307,6 +342,14 @@ function mapEntityProfile(row: EntityProfileRow): EntityProfile {
     legacyContractorId: row.legacy_contractor_id ?? undefined,
     claimedStatus: row.claimed_status,
     ownerUserId: row.owner_user_id ?? undefined,
+    verificationLevel: row.verification_level ?? undefined,
+    verificationBadges: row.verification_badges ?? [],
+    duplicateGroupKey: row.duplicate_group_key ?? undefined,
+    mergedIntoProfileId: row.merged_into_profile_id ?? undefined,
+    publicFieldRedactions: typeof row.public_field_redactions === "object" && !Array.isArray(row.public_field_redactions) && row.public_field_redactions
+      ? row.public_field_redactions as Record<string, unknown>
+      : undefined,
+    redactionNote: row.redaction_note ?? undefined,
     ratingScore: row.rating_score,
     ratingBand: row.rating_band as EntityProfile["ratingBand"],
     reportCount: row.report_count,
@@ -391,11 +434,14 @@ function mapClientReport(row: ClientReportRow): ClientReport {
     id: row.id,
     contractorId: row.contractor_id,
     clientId: row.client_id,
+    projectJobId: row.project_job_id ?? undefined,
     reporterProfileId: row.reporter_profile_id ?? undefined,
     subjectProfileId: row.subject_profile_id ?? undefined,
     subjectProfileType: row.subject_profile_type ?? "client",
     relationshipType: row.relationship_type ?? "contractor_to_client",
     legacyClientName: row.legacy_client_name ?? undefined,
+    reportConfidenceLevel: row.report_confidence_level ?? undefined,
+    redactionNote: row.redaction_note ?? undefined,
     clientType: row.client_type ?? undefined,
     clientJobAddressPrivate: row.client_job_address_private ?? undefined,
     tradeCategory: row.trade_category ?? undefined,
@@ -458,34 +504,52 @@ function inferResolutionStatus(paymentStatus: string, reportStatus: ClientReport
   return amountUnpaid > 0 ? "Unresolved" as const : "Admin verified" as const
 }
 
+function inferInputReportConfidence(input: ClientReportInput, evidenceFileCount: number) {
+  if (input.issueResolved || input.resolutionSummary) return "resolved_report" as const
+  if (input.clientResponded) return "response_available" as const
+  if (input.evidenceAttached || evidenceFileCount > 0) return "evidence_reviewed" as const
+  if (input.signedContract || input.detailedExperience.length > 600) return "documented_report" as const
+
+  return "basic_report" as const
+}
+
 function mapEvidence(row: ReportEvidenceRow): ReportEvidence {
   return {
     id: row.id,
     reportId: row.report_id,
+    projectJobId: row.project_job_id ?? undefined,
     fileName: row.file_name,
     fileType: row.file_type,
     storagePath: row.storage_path,
+    publicSummaryLabel: row.public_summary_label ?? undefined,
     uploadedAt: row.uploaded_at,
   }
 }
 
-function mapPublicEvidence(row: ReportEvidenceRow): ReportEvidence {
-  const value = `${row.file_type} ${row.file_name}`.toLowerCase()
-  let fileName = "Evidence on file"
+function publicEvidenceSummaryLabel(fileName: string, fileType = "") {
+  const value = `${fileType} ${fileName}`.toLowerCase()
 
-  if (value.includes("invoice")) fileName = "Invoice evidence on file"
-  else if (value.includes("contract") || value.includes("pdf")) fileName = "Document evidence on file"
-  else if (value.includes("screenshot")) fileName = "Screenshot evidence on file"
-  else if (value.includes("png") || value.includes("jpg") || value.includes("image") || value.includes("photo")) {
-    fileName = "Photo evidence on file"
+  if (value.includes("invoice")) return "Invoice evidence on file"
+  if (value.includes("contract") || value.includes("pdf")) return "Document evidence on file"
+  if (value.includes("screenshot")) return "Screenshot evidence on file"
+  if (value.includes("png") || value.includes("jpg") || value.includes("jpeg") || value.includes("image") || value.includes("photo")) {
+    return "Photo evidence on file"
   }
+
+  return "Evidence on file"
+}
+
+function mapPublicEvidence(row: ReportEvidenceRow): ReportEvidence {
+  const fileName = row.public_summary_label ?? publicEvidenceSummaryLabel(row.file_name, row.file_type)
 
   return {
     id: row.id,
     reportId: row.report_id,
+    projectJobId: row.project_job_id ?? undefined,
     fileName,
     fileType: row.file_type,
     storagePath: "private",
+    publicSummaryLabel: row.public_summary_label ?? fileName,
     uploadedAt: row.uploaded_at,
   }
 }
@@ -1451,7 +1515,7 @@ async function findOrCreateClientProfile(input: ClientReportInput) {
   return data
 }
 
-async function ensureEntityProfileForClient(client: ClientProfileRow) {
+async function ensureEntityProfileForClient(client: ClientProfileRow, subtype?: string) {
   const supabase = createServiceClient()
   const displayName = [client.first_name, client.last_name].filter(Boolean).join(" ")
   const { data, error } = await supabase
@@ -1459,6 +1523,7 @@ async function ensureEntityProfileForClient(client: ClientProfileRow) {
     .upsert(
       {
         profile_type: "client",
+        profile_subtype: subtype ?? (client.business_name ? "Business client" : "Homeowner"),
         display_name: displayName,
         business_name: client.business_name,
         city: client.city,
@@ -1466,6 +1531,12 @@ async function ensureEntityProfileForClient(client: ClientProfileRow) {
         slug: client.public_slug,
         legacy_client_id: client.id,
         claimed_status: "unclaimed",
+        duplicate_group_key: duplicateGroupKey({
+          displayName,
+          businessName: client.business_name ?? undefined,
+          city: client.city,
+          state: client.state,
+        }),
         rating_score: client.client_bureau_score,
         rating_band: client.risk_level,
         report_count: client.report_count,
@@ -1500,6 +1571,7 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
     .upsert(
       {
         profile_type: profileType,
+        profile_subtype: profileType === "subcontractor" ? "Individual trade professional" : contractor.business_type ?? "Service business",
         display_name: contractor.business_name,
         business_name: contractor.business_name,
         city: contractor.city,
@@ -1508,6 +1580,14 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
         legacy_contractor_id: contractor.id,
         claimed_status: "claimed",
         owner_user_id: userId,
+        verification_level: contractor.verification_status === "verified" ? "business_verified" : "email_verified",
+        verification_badges: contractor.verification_status === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
+        duplicate_group_key: duplicateGroupKey({
+          displayName: contractor.business_name,
+          businessName: contractor.business_name,
+          city: contractor.city,
+          state: contractor.state,
+        }),
         rating_score: contractor.verification_status === "verified" ? 88 : contractor.verification_status === "pending" ? 76 : 68,
         rating_band: contractor.verification_status === "verified" ? "A" : "Review Pending",
         is_public: true,
@@ -2263,6 +2343,104 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
   }
 }
 
+async function maybeCreateProjectJobGraph(
+  input: ClientReportInput,
+  userId: string,
+  reporterProfile?: EntityProfile,
+  subjectProfile?: EntityProfile,
+) {
+  const supabase = createServiceClient()
+
+  if (input.projectJobId) return input.projectJobId
+
+  const projectTitle =
+    input.projectJobTitle ??
+    input.jobType ??
+    input.projectType ??
+    `${input.tradeCategory ?? "Project"} in ${input.projectCity}, ${input.projectState.toUpperCase()}`
+
+  const status =
+    input.amountUnpaid > 0
+      ? "payment_issue"
+      : input.jobStatus?.toLowerCase().includes("complete")
+        ? "completed"
+        : "active"
+
+  const { data, error } = await supabase
+    .from("project_jobs")
+    .insert({
+      owner_user_id: userId,
+      title: projectTitle,
+      project_type: input.projectType,
+      status,
+      city: input.projectCity,
+      state: input.projectState.toUpperCase(),
+      project_address_private: input.jobAddress ?? null,
+      start_date: input.jobStartDate ?? null,
+      completion_date: input.jobCompletionDate ?? null,
+      contract_amount: input.contractAmount,
+      amount_due: input.amountUnpaid,
+      primary_client_profile_id: subjectProfile?.profileType === "client" ? subjectProfile.id : null,
+      primary_contractor_profile_id: reporterProfile?.id ?? null,
+      public_summary: `${input.projectType} project record in ${input.projectCity}, ${input.projectState.toUpperCase()}. Public surfaces show approved summaries only.`,
+      private_notes: "Created from contractor report intake. Private address and evidence remain restricted.",
+      is_public_summary_allowed: false,
+    })
+    .select("*")
+    .single()
+
+  if (error) {
+    if (isMissingRelationError(error) || isMissingReportIntakeColumnError(error)) return undefined
+    throw new Error(error.message)
+  }
+
+  const project = mapProjectJob(data)
+  const graphRows: Tables["project_job_profiles"]["Insert"][] = []
+
+  if (reporterProfile) {
+    graphRows.push({
+      project_job_id: project.id,
+      profile_id: reporterProfile.id,
+      role: "reporter",
+      relationship_label: "Report submitter",
+      is_primary: true,
+    })
+  }
+
+  if (subjectProfile) {
+    graphRows.push({
+      project_job_id: project.id,
+      profile_id: subjectProfile.id,
+      role: input.subjectProfileType ?? "client",
+      relationship_label: "Reported party",
+      is_primary: true,
+    })
+  }
+
+  if (graphRows.length > 0) {
+    const { error: profileLinkError } = await supabase.from("project_job_profiles").upsert(graphRows, {
+      onConflict: "project_job_id,profile_id,role",
+    })
+
+    if (profileLinkError && !isMissingRelationError(profileLinkError)) throw new Error(profileLinkError.message)
+  }
+
+  if (reporterProfile && subjectProfile) {
+    const { error: relationshipError } = await supabase.from("profile_relationships").insert({
+      source_profile_id: reporterProfile.id,
+      target_profile_id: subjectProfile.id,
+      project_job_id: project.id,
+      relationship_type: input.relationshipType ?? "contractor_to_client",
+      status: "active",
+      private_notes: "Created from report intake. Internal relationship context is not public by default.",
+    })
+
+    if (relationshipError && !isMissingRelationError(relationshipError)) throw new Error(relationshipError.message)
+  }
+
+  return project.id
+}
+
 export async function submitClientReportSupabase(
   input: ClientReportInput,
   userId: string,
@@ -2273,7 +2451,9 @@ export async function submitClientReportSupabase(
 
   const clientRow = await findOrCreateClientProfile(input)
   const reporterProfile = await ensureEntityProfileForContractor(contractorRow, userId)
-  const subjectProfile = await ensureEntityProfileForClient(clientRow)
+  const subjectProfile = await ensureEntityProfileForClient(clientRow, input.subjectProfileSubtype)
+  const projectJobId = await maybeCreateProjectJobGraph(input, userId, reporterProfile, subjectProfile)
+  const reportConfidence = inferInputReportConfidence(input, evidenceFiles.length)
   const baseReportInsert: Tables["client_reports"]["Insert"] = {
     contractor_id: contractorRow.id,
     client_id: clientRow.id,
@@ -2293,11 +2473,14 @@ export async function submitClientReportSupabase(
   }
   const extendedReportInsert: Tables["client_reports"]["Insert"] = {
     ...baseReportInsert,
+    project_job_id: projectJobId ?? null,
     reporter_profile_id: reporterProfile?.id ?? null,
     subject_profile_id: input.subjectProfileId ?? subjectProfile?.id ?? null,
     subject_profile_type: input.subjectProfileType ?? "client",
     relationship_type: input.relationshipType ?? "contractor_to_client",
     legacy_client_name: [input.firstName, input.lastName].filter(Boolean).join(" ") || null,
+    report_confidence_level: reportConfidence,
+    redaction_note: "Private identifiers, raw evidence, addresses, and internal notes are excluded from public summaries.",
     client_type: input.clientType ?? null,
     client_job_address_private: input.jobAddress ?? null,
     trade_category: input.tradeCategory ?? null,
@@ -2359,14 +2542,25 @@ export async function submitClientReportSupabase(
 
         if (uploadError) throw new Error(uploadError.message)
 
-        const { error: evidenceError } = await supabase.from("report_evidence").insert({
+        let evidenceInsert = await supabase.from("report_evidence").insert({
           report_id: reportRow.id,
+          project_job_id: projectJobId ?? null,
           file_name: file.name,
           file_type: file.type || "application/octet-stream",
           storage_path: storagePath,
+          public_summary_label: publicEvidenceSummaryLabel(file.name, file.type),
         })
 
-        if (evidenceError) throw new Error(evidenceError.message)
+        if (evidenceInsert.error && isMissingReportIntakeColumnError(evidenceInsert.error)) {
+          evidenceInsert = await supabase.from("report_evidence").insert({
+            report_id: reportRow.id,
+            file_name: file.name,
+            file_type: file.type || "application/octet-stream",
+            storage_path: storagePath,
+          })
+        }
+
+        if (evidenceInsert.error) throw new Error(evidenceInsert.error.message)
       }),
     )
   }

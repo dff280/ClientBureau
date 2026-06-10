@@ -13,6 +13,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
       : result.profileType === "subcontractor"
         ? "border-blue-200 bg-blue-50 text-blue-800"
         : "border-emerald-200 bg-emerald-50 text-emerald-800"
+  const submitHref = `/submit-report?profileType=${result.profileType}&profileSubtype=${encodeURIComponent(String(result.profileSubtype ?? ""))}&profileId=${result.id}&city=${encodeURIComponent(result.city)}&state=${encodeURIComponent(result.state)}`
 
   return (
     <Card className="rounded-md border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
@@ -24,8 +25,11 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                 <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${tone}`}>
                   {result.profileTypeLabel}
                 </span>
+                <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold uppercase text-slate-600">
+                  {result.profileSubtype ?? "General profile"}
+                </span>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase text-slate-500">
-                  {result.claimedStatus === "claimed" ? "Claimed" : "Unclaimed"}
+                  {result.verificationLevel ? "Verified signal" : result.claimedStatus === "claimed" ? "Claimed" : "Unclaimed"}
                 </span>
               </div>
               <h2 className="mt-3 text-2xl font-black text-slate-950">{result.displayName}</h2>
@@ -64,7 +68,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
               </Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href={`/submit-report?profileType=${result.profileType}&profileId=${result.id}`}>
+              <Link href={submitHref}>
                 Report experience
                 <ArrowRight aria-hidden="true" />
               </Link>

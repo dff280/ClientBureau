@@ -14,12 +14,15 @@ import {
 } from "@/lib/locations"
 import {
   accountTypes,
+  clientProfileSubtypes,
+  contractorProfileSubtypes,
   isPositiveReportCategory,
   profileClaimStatuses,
   profileTypes,
   reportCategories,
   reportRelationshipTypes,
   riskLevels,
+  subcontractorProfileSubtypes,
 } from "@/lib/types"
 
 export const discussionCategories = [
@@ -105,6 +108,11 @@ export const clientReportSchema = z
   .object({
     subjectProfileId: optionalText,
     subjectProfileType: z.enum(profileTypes).optional(),
+    subjectProfileSubtype: z
+      .enum([...clientProfileSubtypes, ...contractorProfileSubtypes, ...subcontractorProfileSubtypes] as [string, ...string[]])
+      .optional()
+      .or(z.literal(""))
+      .transform((value) => value || undefined),
     relationshipType: z.enum(reportRelationshipTypes).optional(),
     clientType: z.enum(clientTypes).optional(),
     firstName: requiredText("Client first name"),
@@ -125,6 +133,8 @@ export const clientReportSchema = z
     jobStartDate: optionalDate,
     jobCompletionDate: optionalDate,
     jobStatus: z.enum(jobStatuses).optional().or(z.literal("")).transform((value) => value || undefined),
+    projectJobId: optionalText,
+    projectJobTitle: z.string().trim().max(120, "Keep the project/job label under 120 characters.").optional().transform((value) => value || undefined),
     projectType: requiredText("Project type"),
     projectCity: cityText("Project city"),
     projectState: stateCode("Project state"),

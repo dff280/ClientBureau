@@ -17,6 +17,7 @@ import {
   platformLaunchTables,
   requiredContractPacketColumns,
   requiredLaunchTables,
+  requiredMultiProfileColumns,
   requiredRevenueWorkflowColumns,
   summarizeLaunchHealth,
 } from "@/lib/launch-health"
@@ -46,8 +47,11 @@ import {
 } from "@/lib/search-experience"
 import {
   buildEntityProfileSlug,
+  defaultProfileSubtype,
   deriveEntityProfiles,
   entityProfileHref,
+  publicProjectSummaryFromReport,
+  reportConfidenceLevel as graphReportConfidenceLevel,
   searchEntityProfiles,
 } from "@/lib/entity-profiles"
 import {
@@ -251,6 +255,48 @@ describe("Client Bureau unified profiles", () => {
         state: "fl",
       }),
     ).toBe("bright-line-electric-tampa-fl")
+  })
+
+  it("assigns profile subtypes and makes them searchable", () => {
+    expect(defaultProfileSubtype("client")).toBe("Homeowner")
+    expect(defaultProfileSubtype("contractor")).toBe("Service business")
+    expect(defaultProfileSubtype("subcontractor")).toBe("Individual trade professional")
+
+    const results = searchEntityProfiles(entityProfiles, "Homeowner")
+    expect(results.some((profile) => profile.profileType === "client")).toBe(true)
+  })
+
+  it("derives public-safe project summaries from approved reports", () => {
+    const report = {
+      ...baseReport,
+      projectJobId: "project_safe",
+      evidenceAttached: true,
+      reportConfidenceLevel: "evidence_reviewed" as const,
+    }
+    const summary = publicProjectSummaryFromReport(report)
+
+    expect(summary.id).toBe("project_safe")
+    expect(summary.confidenceLevel).toBe("evidence_reviewed")
+    expect(JSON.stringify(summary)).not.toContain("projectAddressPrivate")
+    expect(JSON.stringify(summary)).not.toContain("privateNotes")
+  })
+
+  it("maps graph confidence without exposing evidence files", () => {
+    expect(graphReportConfidenceLevel({ ...baseReport, status: "approved", evidenceAttached: true })).toBe("evidence_reviewed")
+    expect(
+      graphReportConfidenceLevel({
+        ...baseReport,
+        status: "approved",
+        responseStatus: "Response published",
+      }),
+    ).toBe("response_available")
+    expect(
+      graphReportConfidenceLevel({
+        ...baseReport,
+        status: "approved",
+        resolutionStatus: "Resolved",
+      }),
+    ).toBe("resolved_report")
   })
 })
 
@@ -483,14 +529,21 @@ describe("launch health gates", () => {
       name: column.name,
       exists: !missing.includes(`${column.table}.${column.name}`),
     }))
+    const multiProfileColumns = requiredMultiProfileColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: !missing.includes(`${column.table}.${column.name}`),
+    }))
 
-    return [...contractColumns, ...revenueColumns]
+    return [...contractColumns, ...revenueColumns, ...multiProfileColumns]
   }
 
   it("keeps core and platform launch table groups distinct", () => {
     expect(new Set(requiredLaunchTables).size).toBe(requiredLaunchTables.length)
     expect(coreLaunchTables).toContain("client_reports")
     expect(platformLaunchTables).toContain("contract_packets")
+    expect(platformLaunchTables).toContain("project_jobs")
+    expect(platformLaunchTables).toContain("profile_relationships")
     expect(platformLaunchTables).not.toContain("client_reports")
   })
 
@@ -585,6 +638,25 @@ describe("launch health gates", () => {
     expect(summary.readinessLabel).toBe("Platform schema migration needed")
     expect(summary.missingPlatformColumns).toContain("managed_recovery_cases.readiness_status")
     expect(summary.recommendedPlatformFeatureDataMode).toBe("mock")
+  })
+
+  it("keeps unified profile graph workflows gated until project columns exist", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(["client_reports.project_job_id", "entity_profiles.profile_subtype"]),
+    })
+
+    expect(summary.platformTablesReady).toBe(true)
+    expect(summary.platformSchemaReady).toBe(false)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.missingPlatformColumns).toContain("client_reports.project_job_id")
+    expect(summary.missingPlatformColumns).toContain("entity_profiles.profile_subtype")
   })
 })
 

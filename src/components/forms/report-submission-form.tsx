@@ -14,7 +14,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { submitClientReportAction } from "@/lib/actions/client-bureau"
 import { clientTypes, jobStatuses, paymentDisputeStatuses } from "@/lib/locations"
 import type { ActionResult, ClientReport, ProfileType, ReportCategory, ReportRelationshipType } from "@/lib/types"
-import { isPositiveReportCategory, positiveReportCategories, profileTypes, reportCategories, reportRelationshipTypes } from "@/lib/types"
+import {
+  clientProfileSubtypes,
+  contractorProfileSubtypes,
+  isPositiveReportCategory,
+  positiveReportCategories,
+  profileTypes,
+  reportCategories,
+  reportRelationshipTypes,
+  subcontractorProfileSubtypes,
+} from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const initialState: ActionResult<ClientReport> = {
@@ -36,6 +45,12 @@ const relationshipLabels: Record<ReportRelationshipType, string> = {
   business_to_business: "Business-to-business project relationship",
 }
 
+const profileSubtypeOptions: Record<ProfileType, readonly string[]> = {
+  client: clientProfileSubtypes,
+  contractor: contractorProfileSubtypes,
+  subcontractor: subcontractorProfileSubtypes,
+}
+
 interface ReportSubmissionFormProps {
   defaults?: Partial<Record<string, string>>
 }
@@ -44,6 +59,8 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
   const [state, action] = useActionState(submitClientReportAction, initialState)
   const [files, setFiles] = useState<File[]>([])
   const initialCategory = defaults.intent === "positive" ? positiveReportCategories[0] : reportCategories[0]
+  const initialProfileType = profileTypes.includes(defaults.profileType as ProfileType) ? defaults.profileType as ProfileType : "client"
+  const [subjectProfileType, setSubjectProfileType] = useState<ProfileType>(initialProfileType)
   const [reportCategory, setReportCategory] = useState<ReportCategory>(initialCategory)
   const [amountUnpaid, setAmountUnpaid] = useState(defaults.amountUnpaid ?? "")
   const isPositiveReport = isPositiveReportCategory(reportCategory)
@@ -85,13 +102,30 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               id="subjectProfileType"
               name="subjectProfileType"
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              defaultValue={profileTypes.includes(defaults.profileType as ProfileType) ? defaults.profileType : "client"}
+              value={subjectProfileType}
+              onChange={(event) => setSubjectProfileType(event.target.value as ProfileType)}
             >
               {profileTypes.map((type) => (
                 <option key={type} value={type}>{profileTypeLabels[type]}</option>
               ))}
             </select>
             <FieldError name="subjectProfileType" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="subjectProfileSubtype">Profile subtype</Label>
+            <select
+              key={subjectProfileType}
+              id="subjectProfileSubtype"
+              name="subjectProfileSubtype"
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              defaultValue={defaults.profileSubtype ?? ""}
+            >
+              <option value="">Select best fit</option>
+              {profileSubtypeOptions[subjectProfileType].map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+            <FieldError name="subjectProfileSubtype" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="relationshipType">Relationship</Label>
@@ -167,6 +201,15 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
 
       <WorkflowStep step="2" title="Project details" text="Describe the contracted work and where it occurred. Use the project location, not a private street address.">
         <div className="grid gap-4 md:grid-cols-2">
+          {defaults.projectJobId ? <input type="hidden" name="projectJobId" value={defaults.projectJobId} /> : null}
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="projectJobTitle">Project/job label</Label>
+            <Input id="projectJobTitle" name="projectJobTitle" defaultValue={defaults.projectJobTitle} placeholder="Smith kitchen remodel, Orlando" />
+            <p className="text-xs leading-5 text-slate-500">
+              This creates a private job record that connects reports, evidence, contracts, responses, and future updates.
+            </p>
+            <FieldError name="projectJobTitle" errors={state.ok ? undefined : state.fieldErrors} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="tradeCategory">Trade or service category</Label>
             <Input id="tradeCategory" name="tradeCategory" placeholder="Painting, roofing, remodeling, HVAC" />

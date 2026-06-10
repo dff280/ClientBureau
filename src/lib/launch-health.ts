@@ -52,6 +52,12 @@ export const platformLaunchTables = [
   "case_staff_assignments",
   "case_audit_events",
   "case_document_links",
+  "project_jobs",
+  "project_job_profiles",
+  "profile_relationships",
+  "profile_merge_events",
+  "report_reassignment_events",
+  "profile_redaction_events",
 ] as const satisfies RequiredTable[]
 
 export const requiredLaunchTables = [
@@ -96,6 +102,18 @@ export const requiredMultiProfileColumns = [
   { table: "client_reports", name: "subject_profile_type" },
   { table: "client_reports", name: "relationship_type" },
   { table: "client_reports", name: "legacy_client_name" },
+  { table: "client_reports", name: "project_job_id" },
+  { table: "client_reports", name: "report_confidence_level" },
+  { table: "client_reports", name: "redaction_note" },
+  { table: "report_evidence", name: "project_job_id" },
+  { table: "report_evidence", name: "public_summary_label" },
+  { table: "entity_profiles", name: "profile_subtype" },
+  { table: "entity_profiles", name: "verification_level" },
+  { table: "entity_profiles", name: "verification_badges" },
+  { table: "entity_profiles", name: "duplicate_group_key" },
+  { table: "entity_profiles", name: "merged_into_profile_id" },
+  { table: "entity_profiles", name: "public_field_redactions" },
+  { table: "entity_profiles", name: "redaction_note" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
 type LaunchColumnStatus = {
@@ -256,11 +274,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Keep advanced tools mocked"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0015 before flipping advanced tools."
+      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0017 before flipping advanced tools."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing, revenue workflow, or unified profile columns are missing. Apply migrations through 0015 before using Supabase-backed advanced workflows."
+      "Platform tables exist, but contract signing, revenue workflow, unified profile, or project/job graph columns are missing. Apply migrations through 0017 before using Supabase-backed advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin ops are configured for Supabase-backed persistence."
