@@ -1,5 +1,15 @@
 import Link from "next/link"
-import { ArrowRight, FileCheck2, MapPin, MessageSquareWarning, ShieldCheck, Star, type LucideIcon } from "lucide-react"
+import {
+  ArrowRight,
+  Bell,
+  FileCheck2,
+  FilePlus2,
+  MapPin,
+  MessageSquareWarning,
+  ShieldCheck,
+  Star,
+  type LucideIcon,
+} from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
@@ -13,10 +23,17 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
   const evidenceLabel = result.evidenceOnFile ? "Evidence on file" : "No public evidence label"
   const paymentLabel = result.paymentContextLabel ?? "Payment context reviewed"
   const ratingBand = clientRatingBand(result.clientBureauScore, result.reportCount)
+  const reportHref = `/submit-report?${new URLSearchParams({
+    firstName: result.firstName,
+    lastName: result.lastName,
+    city: result.city,
+    state: result.state,
+    businessName: result.businessName ?? "",
+  }).toString()}`
 
   return (
     <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm transition hover:border-amber-300 hover:shadow-md">
-      <CardContent className="grid gap-6 p-5 lg:grid-cols-[190px_1fr_180px] lg:items-center">
+      <CardContent className="grid gap-6 p-5 lg:grid-cols-[190px_1fr_210px] lg:items-center">
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
           <ScoreGauge score={result.clientBureauScore} label="Client Bureau Rating" />
           <p className="mt-2 text-sm font-semibold text-slate-700">{ratingBand}</p>
@@ -42,6 +59,10 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
           <p className="text-sm leading-6 text-slate-700">
             {cleanPublicReportText(result.latestSummary) || "Approved profile with moderated contractor-submitted reports."}
           </p>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-700">
+            <span className="font-semibold text-slate-950">Why this result appears:</span> {result.matchedBy}.
+            Review the profile before scheduling work, ordering materials, sending contract terms, or extending credit.
+          </div>
           <div className="grid gap-2 text-xs font-medium text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
             <SearchFact icon={ShieldCheck} label={`${result.reportCount} approved signals`} />
             <SearchFact icon={FileCheck2} label={evidenceLabel} />
@@ -60,6 +81,18 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
             <Link href={`/client/${result.publicSlug}`}>
               View profile
               <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/dashboard/watchlist?client=${result.id}`}>
+              <Bell aria-hidden="true" />
+              Watch client
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={reportHref}>
+              <FilePlus2 aria-hidden="true" />
+              Report experience
             </Link>
           </Button>
           <p className="text-xs leading-5 text-slate-500">

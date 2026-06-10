@@ -61,8 +61,14 @@ export function SiteFooter() {
               {contact.city}, {contact.state} {contact.zip}
             </address>
           ) : (
-            <p>Public contact details are published when verified business information is configured.</p>
+            <p>
+              Need help with a report, response, correction, recovery case, or business account?
+              Contact Client Bureau support through the public contact page.
+            </p>
           )}
+          <Link href="/contact" className="inline-flex text-sm font-semibold text-amber-300 hover:text-amber-200">
+            Contact support
+          </Link>
         </div>
       </div>
       <div className="border-t border-white/10 py-4">

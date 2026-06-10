@@ -19,6 +19,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { useEffect, useMemo, useState, useTransition } from "react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
@@ -386,6 +387,27 @@ export function SearchCommandCenter({
                 </div>
               </form>
 
+              <div className="grid gap-3 md:grid-cols-3">
+                <SearchWorkflowStep
+                  icon={Search}
+                  label="Step 1"
+                  title="Match the client"
+                  text="Search by name, business, city, state, phone, or email. Private identifiers support matching without appearing publicly."
+                />
+                <SearchWorkflowStep
+                  icon={ShieldCheck}
+                  label="Step 2"
+                  title="Read the record"
+                  text="Review approved summaries, rating context, evidence-on-file labels, positive signals, and response status."
+                />
+                <SearchWorkflowStep
+                  icon={Bell}
+                  label="Step 3"
+                  title="Decide the next move"
+                  text="Watch the client, save the search, report a documented experience, or proceed with stronger contract terms."
+                />
+              </div>
+
               <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-4 shadow-inner">
                   <div className="flex items-center justify-between gap-3">
@@ -437,6 +459,16 @@ export function SearchCommandCenter({
                         <p className="mt-2 text-xs font-semibold uppercase text-amber-700">
                           {clientRatingBand(profile.clientBureauScore, profile.reportCount)}
                         </p>
+                        <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 sm:grid-cols-2">
+                          <span>
+                            <span className="block font-semibold uppercase text-slate-500">Match reason</span>
+                            {profile.matchedBy}
+                          </span>
+                          <span>
+                            <span className="block font-semibold uppercase text-slate-500">Recommended use</span>
+                            Open the profile before scheduling, quoting, or sending contract terms.
+                          </span>
+                        </div>
                         <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
                           {cleanPublicReportText(profile.latestSummary) || "Approved public profile with moderated contractor-submitted reports."}
                         </p>
@@ -592,6 +624,10 @@ export function SearchCommandCenter({
                   <span>Only admin-approved public profile information appears in results.</span>
                 </div>
                 <div className="flex gap-3">
+                  <FilePlus2 className="mt-1 size-4 shrink-0 text-amber-300" aria-hidden="true" />
+                  <span>If no profile appears, create a private file or submit a documented experience for moderation.</span>
+                </div>
+                <div className="flex gap-3">
                   <Bell className="mt-1 size-4 shrink-0 text-amber-300" aria-hidden="true" />
                   <span>Use watchlists to monitor profiles before you schedule, contract, or collect deposits.</span>
                 </div>
@@ -644,6 +680,33 @@ export function SearchCommandCenter({
             Report a Client Experience
           </Link>
         </Button>
+      </div>
+    </div>
+  )
+}
+
+function SearchWorkflowStep({
+  icon: Icon,
+  label,
+  text,
+  title,
+}: {
+  icon: LucideIcon
+  label: string
+  text: string
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <Icon className="size-4" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">{label}</p>
+          <h3 className="mt-1 font-semibold text-slate-950">{title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+        </div>
       </div>
     </div>
   )

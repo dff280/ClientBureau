@@ -20,6 +20,7 @@ import { ClientDashboardShell } from "@/components/dashboard/client-dashboard-sh
 import { EnterpriseDashboardOverview } from "@/components/dashboard/enterprise-dashboard-overview"
 import {
   DashboardSection,
+  GuidedActionPanel,
   QuickActionCard,
   StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
@@ -175,33 +176,39 @@ export default async function DashboardPage({
         title="Check first. Document when you have experience."
         description="Client Bureau is built around practical client intelligence. Start with a search before taking the job, then submit a documented report after a real client experience."
       >
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-          <QuickActionCard
+        <div className="grid gap-4 xl:grid-cols-3">
+          <GuidedActionPanel
             href="/search"
             icon={Search}
+            label="Daily first step"
             title="Check a Client"
-            description="Check a client before taking the job."
-            badge="Daily tool"
-            primary
+            description="Use this before quotes, contracts, scheduling, deposits, materials, or final invoice risk."
+            cta="Start client check"
+            tone="amber"
+            steps={["Search name, business, city, phone, or email", "Review rating, reports, evidence labels, and responses", "Save, watch, report, or move into contract terms"]}
           />
-          <QuickActionCard
+          <GuidedActionPanel
             href="/submit-report"
             icon={FilePlus2}
+            label="After real experience"
             title="Report a Client Experience"
-            description="Document a positive, resolved, or concerning client experience for moderation."
+            description="Submit positive, resolved, or payment-related experiences with careful moderation language."
+            cta="Open guided report"
+            tone="slate"
+            steps={["Identify the client and project", "Add timeline, payment context, and public summary", "Attach evidence privately and attest to accuracy"]}
           />
-          <QuickActionCard
-            href="/dashboard/growth"
-            icon={Gift}
-            title="Grow your network"
-            description="Invite contractors, claim your profile, and request client feedback after completed jobs."
-          />
-          <QuickActionCard
+          <GuidedActionPanel
             href="/dashboard/contracts"
             icon={Signature}
-            title="Create contract"
-            description="Prepare an agreement packet and private signing link."
+            label="Before work starts"
+            title="Create Agreement Packet"
+            description="Set scope, exclusions, milestones, payment terms, and signing status before work begins."
+            cta="Create agreement"
+            tone="blue"
+            steps={["Check the client first", "Build scope and payment terms", "Send a private signing link"]}
           />
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
           <QuickActionCard
             href="/dashboard/recovery"
             icon={PhoneCall}
@@ -213,6 +220,12 @@ export default async function DashboardPage({
             icon={Landmark}
             title="Florida lien service"
             description="Start a notice or claim-of-lien filing workflow."
+          />
+          <QuickActionCard
+            href="/dashboard/growth"
+            icon={Gift}
+            title="Grow your network"
+            description="Invite contractors, claim your profile, and request client feedback after completed jobs."
           />
         </div>
       </DashboardSection>

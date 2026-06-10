@@ -5,6 +5,7 @@ import { AdminFilterBar } from "@/components/admin/admin-crm-ui"
 import { AdminClientEditor } from "@/components/admin/admin-record-forms"
 import {
   AdminPageHeader,
+  DashboardSection,
   EmptyState,
   HeaderActionButton,
   StatCard,
@@ -74,6 +75,17 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
           <StatCard label="Private" value={privateCount} helper="Not visible on public pages" icon={ShieldCheck} tone="blue" />
           <StatCard label="Elevated or high" value={elevatedCount} helper="Profiles needing extra care" icon={ShieldCheck} tone={elevatedCount > 0 ? "amber" : "slate"} />
         </div>
+        <DashboardSection
+          eyebrow="Profile editing rules"
+          title="Keep public records clean and private data sealed"
+          description="Profile edits should improve identity clarity, public visibility, rating context, and response fairness without exposing private matching information."
+        >
+          <div className="grid gap-3 md:grid-cols-3">
+            <ProfileRule title="Use dropdown states" text="City and state should stay consistent for search, public profile URLs, and directory pages." />
+            <ProfileRule title="Require audit notes" text="Visibility, rating, risk, and identity edits need a clear moderator note before saving." />
+            <ProfileRule title="Preview public output" text="Open the public profile after edits and confirm only approved summaries and safe labels are visible." />
+          </div>
+        </DashboardSection>
         <AdminFilterBar
           title="Find a profile"
           description="Search by name, business, city, state, or slug. Filter to the records you need to review."
@@ -114,5 +126,14 @@ export default async function AdminClientsPage({ searchParams }: { searchParams:
         </div>
       </div>
     </section>
+  )
+}
+
+function ProfileRule({ text, title }: { text: string; title: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <p className="font-semibold text-slate-950">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
   )
 }

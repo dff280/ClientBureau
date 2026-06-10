@@ -22,6 +22,7 @@ import { AdminQueueHeader } from "@/components/admin/admin-crm-ui"
 import {
   DashboardPageHeader,
   DashboardSection,
+  GuidedActionPanel,
   HeaderActionButton,
   QuickActionCard,
   StatCard,
@@ -138,28 +139,45 @@ export default async function AdminHomePage() {
           title="What needs action today?"
           description="The command center is grouped by work type so staff can move from review to records to private service operations without hunting through the app."
         >
-          <div className="grid gap-4 lg:grid-cols-4">
-            <QuickActionCard
+          <div className="grid gap-4 xl:grid-cols-3">
+            <GuidedActionPanel
               href="/admin/reports"
               icon={ShieldCheck}
+              label={`${pendingReports} pending`}
               title="Review Reports"
-              description="Approve, reject, request more information, edit public summaries, and publish profiles."
-              badge={`${pendingReports} pending`}
-              primary
+              description="Move queued reports through safety review, public summary editing, and profile publication."
+              cta="Open report queue"
+              tone={pendingReports > 0 ? "amber" : "emerald"}
+              steps={["Review report details and evidence status", "Edit public summary for careful language", "Approve, reject, or request more information"]}
             />
-            <QuickActionCard
+            <GuidedActionPanel
               href="/admin/clients"
               icon={UserRound}
+              label={`${publicClients} public`}
               title="Manage Client Profiles"
-              description="Edit identity, state, rating, risk level, visibility, public slug, and audit notes."
-              badge={`${publicClients} public`}
+              description="Keep public profile identity, city/state, rating, response, and visibility fields clean."
+              cta="Manage profiles"
+              tone="slate"
+              steps={["Search the client profile", "Check public/private field boundaries", "Save visibility or rating changes with an audit note"]}
             />
-            <QuickActionCard
+            <GuidedActionPanel
               href="/admin/recovery"
               icon={PhoneCall}
-              title="Resolution Desk"
-              description="Review managed recovery cases, fee readiness, staff follow-up, and private evidence."
-              badge={`${recoveryCases} open`}
+              label={`${recoveryCases + lienCases} service items`}
+              title="Service Oversight"
+              description="Review Resolution Desk, Florida lien service, authorization, fee readiness, and private evidence."
+              cta="Open service queues"
+              tone={(recoveryCases + lienCases) > 0 ? "blue" : "slate"}
+              steps={["Check case readiness and private documents", "Confirm fee, authorization, and deadline status", "Record staff/vendor actions in the audit trail"]}
+            />
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-3">
+            <QuickActionCard
+              href="/admin/discussions"
+              icon={MessageSquareText}
+              title="Review Discussions"
+              description="Moderate public discussion entries, client responses, corrections, and dispute context."
+              badge={`${pendingDiscussions + pendingResponses} pending`}
             />
             <QuickActionCard
               href="/admin/contracts"
@@ -168,6 +186,25 @@ export default async function AdminHomePage() {
               description="Track agreement packets, signing links, signature status, and payment-term readiness."
               badge={`${contractPackets} active`}
             />
+            <QuickActionCard
+              href="/admin/audit-log"
+              icon={History}
+              title="Audit Trail"
+              description="Review recent approvals, edits, imports, deletes, and visibility changes."
+              badge={`${data.auditLog.length} events`}
+            />
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          eyebrow="Priority queues"
+          title="Fast triage"
+          description="Use this row as a quick operations scan before opening a detailed queue."
+        >
+          <div className="grid gap-3 md:grid-cols-3">
+            <PriorityQueue href="/admin/reports" label="Public content" value={pendingReports + pendingDiscussions + pendingResponses} detail="Reports, responses, and public discussion entries waiting for moderation." tone={(pendingReports + pendingDiscussions + pendingResponses) > 0 ? "amber" : "emerald"} />
+            <PriorityQueue href="/admin/clients" label="Profile health" value={elevatedClients} detail="Elevated or high-risk public profile records that deserve a clean review path." tone={elevatedClients > 0 ? "amber" : "slate"} />
+            <PriorityQueue href="/admin/recovery" label="Private services" value={recoveryCases + lienCases + contractPackets} detail="Recovery, lien service, and contract items that stay private to the account." tone={(recoveryCases + lienCases + contractPackets) > 0 ? "blue" : "slate"} />
           </div>
         </DashboardSection>
 
@@ -282,6 +319,33 @@ function OpsFact({
         <StatusBadge tone={tone}>Operational</StatusBadge>
       </div>
     </div>
+  )
+}
+
+function PriorityQueue({
+  detail,
+  href,
+  label,
+  tone,
+  value,
+}: {
+  detail: string
+  href: string
+  label: string
+  tone: "slate" | "amber" | "emerald" | "blue"
+  value: number
+}) {
+  return (
+    <Link href={href} className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-amber-300 hover:bg-white">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{value}</p>
+        </div>
+        <StatusBadge tone={tone}>{value > 0 ? "Review" : "Clear"}</StatusBadge>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{detail}</p>
+    </Link>
   )
 }
 

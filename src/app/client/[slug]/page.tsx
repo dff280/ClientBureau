@@ -168,17 +168,32 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 <p className="mt-1">Client response and dispute path included</p>
               </div>
             </div>
-            <div className="grid gap-3 rounded-md border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-slate-100 md:grid-cols-4">
+            <div className="grid gap-3 rounded-md border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-slate-100 sm:grid-cols-2 lg:grid-cols-5">
               <HeroFact label="Approved reports" value={String(profile.reports.length)} />
               <HeroFact label="Positive references" value={String(profile.positiveReports.length)} />
               <HeroFact label="Evidence review" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private only"} />
               <HeroFact label="Response status" value={responseStatus} />
               <HeroFact label="Resolution status" value={resolutionStatus} />
             </div>
+            <div className="rounded-md border border-white/10 bg-white/[0.06] p-4">
+              <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+                <div>
+                  <p className="text-xs font-semibold uppercase text-amber-300">Recommended next step</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-200">
+                    Use this profile as decision context, then document your own experience only after a real client interaction.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
+                    <Link href="/search">Check another client</Link>
+                  </Button>
+                  <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
+                    <Link href={`/dashboard/watchlist?client=${profile.id}`}>Watch this client</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
             <div className="flex flex-wrap gap-3">
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                <Link href="/search">Check another client</Link>
-              </Button>
               <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
                 <Link href="/submit-report">
                   <FilePlus2 aria-hidden="true" />
@@ -203,9 +218,6 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   <MessageSquareText aria-hidden="true" />
                   Respond or dispute
                 </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                <Link href={`/dashboard/watchlist?client=${profile.id}`}>Watch this client</Link>
               </Button>
             </div>
           </div>

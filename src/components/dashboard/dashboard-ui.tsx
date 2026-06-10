@@ -211,6 +211,62 @@ export function QuickActionCard({
   )
 }
 
+export function GuidedActionPanel({
+  cta,
+  description,
+  href,
+  icon: Icon,
+  label,
+  steps,
+  title,
+  tone = "slate",
+}: {
+  cta: string
+  description: string
+  href: string
+  icon: LucideIcon
+  label: string
+  steps: string[]
+  title: string
+  tone?: Tone
+}) {
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      className={cn(
+        "bureau-hover-lift group block h-full rounded-md border p-5 shadow-sm",
+        toneClasses[tone],
+      )}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+          <h3 className="mt-2 text-lg font-semibold tracking-normal">{title}</h3>
+          <p className="mt-2 text-sm leading-6 opacity-75">{description}</p>
+        </div>
+        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-md", iconToneClasses[tone])}>
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      </div>
+      <div className="mt-5 grid gap-2">
+        {steps.map((step, index) => (
+          <div key={step} className="flex items-start gap-2 text-sm leading-6 opacity-80">
+            <span className="mt-1 flex size-5 shrink-0 items-center justify-center rounded-full border border-current text-[10px] font-semibold">
+              {index + 1}
+            </span>
+            <span>{step}</span>
+          </div>
+        ))}
+      </div>
+      <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-amber-700 group-hover:text-amber-800">
+        {cta}
+        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </Link>
+  )
+}
+
 export function StatusBadge({
   children,
   tone = "slate",

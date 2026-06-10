@@ -189,7 +189,7 @@ export function SiteHeader() {
           {session.authenticated ? (
             <>
               <Badge variant="outline" className="hidden rounded-md border-amber-200 bg-amber-50 text-amber-900 md:inline-flex">
-                Free plan
+                Account active
               </Badge>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
