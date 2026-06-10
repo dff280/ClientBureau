@@ -284,6 +284,8 @@ export default async function AdminHomePage() {
           </DashboardSection>
         </div>
 
+        <ReleaseQaPanel health={health} />
+
         <LiveOpsReadinessPanel health={health} />
       </div>
     </section>
@@ -379,6 +381,86 @@ function ServiceRow({
         <StatusBadge tone={tone}>{value}</StatusBadge>
       </div>
     </Link>
+  )
+}
+
+function ReleaseQaPanel({ health }: { health: Awaited<ReturnType<typeof getLaunchHealth>> }) {
+  const qaItems = [
+    {
+      title: "Release identity",
+      detail: "Confirm the deployed version and commit match GitHub before staff starts QA.",
+      href: "/api/version",
+      action: "Open version",
+      ready: health.status === "ok",
+      icon: Database,
+    },
+    {
+      title: "Admin session",
+      detail: "Confirm this browser has a readable admin session before moderation actions.",
+      href: "/api/admin/session",
+      action: "Check session",
+      ready: health.serviceRoleConfigured,
+      icon: ShieldCheck,
+    },
+    {
+      title: "Workflow persistence",
+      detail: "Create or update one safe test record in dashboard tools, refresh, and verify it persists.",
+      href: "/dashboard",
+      action: "Open dashboard",
+      ready: health.readiness.platformCanUseSupabase,
+      icon: Activity,
+    },
+    {
+      title: "Public privacy",
+      detail: "Review profile pages after approval: approved summaries only, no private identifiers or raw evidence.",
+      href: "/clients",
+      action: "Review profiles",
+      ready: health.readiness.coreLiveReady,
+      icon: Search,
+    },
+  ]
+
+  return (
+    <DashboardSection
+      eyebrow="Release QA"
+      title="Before calling a deploy clean"
+      description="Use this short checklist after every release. The full runbook is in docs/LIVE_WORKFLOW_QA_RUNBOOK.md."
+      actions={
+        <HeaderActionButton href="/admin/settings" variant="outline">
+          <Settings aria-hidden="true" />
+          Readiness settings
+        </HeaderActionButton>
+      }
+    >
+      <div className="grid gap-3 lg:grid-cols-4">
+        {qaItems.map((item) => {
+          const Icon = item.icon
+
+          return (
+            <Link
+              key={item.title}
+              href={item.href}
+              prefetch={false}
+              className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-amber-300 hover:bg-white"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+                  <Icon className="size-5" aria-hidden="true" />
+                </span>
+                <StatusBadge tone={item.ready ? "emerald" : "amber"}>
+                  {item.ready ? "Ready" : "Check"}
+                </StatusBadge>
+              </div>
+              <h3 className="mt-4 font-semibold text-slate-950">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+              <span className="mt-4 inline-flex text-sm font-semibold text-amber-700">
+                {item.action}
+              </span>
+            </Link>
+          )
+        })}
+      </div>
+    </DashboardSection>
   )
 }
 

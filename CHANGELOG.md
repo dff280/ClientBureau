@@ -4,6 +4,10 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+### Improved
+
+- Added an admin command-center Release QA panel that links staff to release identity, admin session, dashboard persistence, and public privacy checks.
+
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
 Date: June 10, 2026
