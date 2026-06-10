@@ -4,6 +4,26 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ## Unreleased
 
+## 0.4.2 - Live Workflow QA and Graph Readiness Polish
+
+Date: June 10, 2026
+
+### Improved
+
+- Added a live workflow QA runbook for contractor, admin, public profile, privacy, and release verification checks.
+- Extended live release verification to check diagnostic no-store headers and unified profile graph routes.
+- Updated Admin Settings launch-health copy so it reflects Supabase-backed platform mode when live ops readiness is green.
+- Refreshed release and platform documentation now that the reputation graph schema and advanced platform mode are live.
+
+### Verification
+
+- `npm test`
+- `npm run lint`
+- `npm run build`
+- `SEO_BASE_URL=https://clientbureau.com npm run seo:check`
+- `SKIP_RELEASE_IDENTITY_CHECK=1 LIVE_BASE_URL=https://clientbureau.com npm run verify:live`
+- `npm run mobile:check`
+
 ## 0.4.1 - Android Login Fix and Viral Search
 
 Date: June 9, 2026

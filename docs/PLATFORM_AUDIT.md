@@ -1,6 +1,8 @@
 # Client Bureau Platform Audit
 
-Date: June 3, 2026
+Date: June 10, 2026
+
+Status note: production is live on Supabase with `DATA_MODE=supabase` and `PLATFORM_FEATURE_DATA_MODE=supabase`. The unified reputation graph schema is applied and `/api/health` reports live ops active.
 
 ## Core Positioning
 
@@ -21,6 +23,7 @@ Public and SEO-visible pages:
 - `/how-it-works`
 - `/search`
 - `/client/[slug]`
+- `/profiles/[profileType]/[slug]`
 - `/clients/[market]`
 - `/reports/[type]`
 - `/industries/[industry]`
@@ -46,10 +49,13 @@ Admin pages:
 - `/admin`
 - `/admin/reports`
 - `/admin/reviews`
+- `/admin/profiles`
 - `/admin/clients`
 - `/admin/contractors`
 - `/admin/discussions`
 - `/admin/uploads`
+- `/admin/recovery`
+- `/admin/contracts`
 - `/admin/audit-log`
 - `/admin/settings`
 
@@ -80,9 +86,7 @@ API and system routes:
 
 ## Missing Features
 
-- Dedicated contractor app routes for `/dashboard/contracts`, `/dashboard/evidence`, `/dashboard/payment`, `/dashboard/pipeline`, and `/dashboard/watchlist`; these exist as dashboard tabs but not as real URLs.
-- Dedicated admin routes for recovery and contract oversight; currently represented through the command center/settings/dashboard context.
-- Real Supabase feature adapters for the platform-expansion data. `PLATFORM_FEATURE_DATA_MODE=mock` is still the safe default.
+- Deeper live QA coverage for authenticated contractor and admin workflows. Public release verification is automated, but logged-in workflows still require the live QA runbook.
 - Real file upload flow for evidence vault and contract attachments in the new workflows.
 - Production e-signature audit details such as IP, timestamp, signer verification, and immutable PDF copy generation.
 - Payment middleman/escrow/payment collection logic. Current payment tooling is documentation and tracking only.
@@ -145,7 +149,7 @@ API and system routes:
 
 - Report moderation is the most complete admin workflow.
 - Discussion moderation exists but is lighter than report moderation.
-- Recovery, lien readiness, contract, and evidence oversight are represented as mock-first admin ops data, not full admin CRUD routes.
+- Recovery, lien readiness, contract, and evidence oversight are Supabase-backed, but need more hands-on live QA around every create/update/refresh path.
 - Admin action audit exists, but deeper entity-level timelines would help.
 - Bulk upload exists, but imports remain staging-oriented; duplicate resolution could be stronger.
 - Admin settings describe controls, but do not yet persist true rules configuration.
@@ -155,7 +159,7 @@ API and system routes:
 - One-page dashboard is powerful but scroll-heavy.
 - Key tools need URL-addressable entry points or separate subroutes.
 - Users need clearer labels: Contracts, Evidence Vault, Payment Tracking, Client Work Files, Watchlist, Reports.
-- Some features feel complete visually but are mock-first underneath; this is acceptable if kept private, but production labels must stay clear.
+- Advanced platform tools are live-backed, so the next product risk is workflow clarity, empty states, and admin confidence rather than database readiness.
 - Contract sharing is promising and should become a main workflow, not a lower-page feature.
 - Payment recovery should stay compliance-safe and framed as private documentation/tracking.
 

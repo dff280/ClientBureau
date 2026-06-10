@@ -114,6 +114,16 @@ function sitemapProfilePaths(xml) {
   return [...xml.matchAll(/<loc>https?:\/\/[^<]+(\/client\/[^<]+)<\/loc>/gi)].map((match) => match[1])
 }
 
+function sitemapEntityProfilePaths(xml) {
+  return [...xml.matchAll(/<loc>https?:\/\/[^<]+(\/profiles\/[^<]+)<\/loc>/gi)].map((match) => match[1])
+}
+
+function hasNoStoreHeader(response) {
+  const cacheControl = response.headers?.get?.("cache-control") ?? ""
+
+  return /no-store/i.test(cacheControl)
+}
+
 function visibleHtml(html) {
   return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ")
 }
@@ -181,6 +191,23 @@ if (health.json?.stripeConfigured && health.json?.stripeWebhookConfigured) {
   warn("Stripe test/live configuration", "Stripe secret or webhook is not configured yet.")
 }
 
+const diagnosticPaths = ["/api/version", "/api/health", "/api/session", "/api/admin/session"]
+
+for (const path of diagnosticPaths) {
+  const diagnostic = await read(path)
+
+  if (!diagnostic.response.ok) {
+    fail(`${path} diagnostic endpoint`, diagnostic.error || String(diagnostic.response.status))
+    continue
+  }
+
+  if (hasNoStoreHeader(diagnostic.response)) {
+    pass(`${path} no-store cache header`)
+  } else {
+    fail(`${path} no-store cache header`, diagnostic.response.headers?.get?.("cache-control") || "missing")
+  }
+}
+
 for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.json"]) {
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
@@ -199,10 +226,17 @@ if (home.response.ok) {
 
 const sitemap = await read("/sitemap.xml")
 const profiles = sitemap.response.ok ? sitemapProfilePaths(sitemap.text) : []
+const entityProfiles = sitemap.response.ok ? sitemapEntityProfilePaths(sitemap.text) : []
 if (profiles.length > 0) {
   pass("Sitemap includes public profiles", `${profiles.length} profile URL(s)`)
 } else {
   fail("Sitemap includes public profiles")
+}
+
+if (entityProfiles.length > 0) {
+  pass("Sitemap includes unified profile graph routes", `${entityProfiles.length} graph profile URL(s)`)
+} else {
+  fail("Sitemap includes unified profile graph routes")
 }
 
 for (const profilePath of profiles.slice(0, 5)) {
@@ -225,6 +259,36 @@ for (const profilePath of profiles.slice(0, 5)) {
     fail(`${profilePath} initial HTML`, "loading shell found")
   } else {
     pass(`${profilePath} initial HTML`, "profile content is server-visible")
+  }
+
+  if (containsPrivateIdentifier(profile.text)) {
+    fail(`${profilePath} public privacy scan`, "private identifier or evidence marker found")
+  } else {
+    pass(`${profilePath} public privacy scan`)
+  }
+
+  const profileCanonical = canonical(profile.text)
+  if (profileCanonical === `${expectedSiteUrl}${profilePath}`) {
+    pass(`${profilePath} canonical`, profileCanonical)
+  } else {
+    fail(`${profilePath} canonical`, profileCanonical)
+  }
+}
+
+for (const profilePath of entityProfiles.slice(0, 5)) {
+  const profile = await read(profilePath)
+
+  if (!profile.response.ok) {
+    fail(`${profilePath} returns 200`, profile.error || String(profile.response.status))
+    continue
+  }
+
+  pass(`${profilePath} returns 200`)
+
+  if (profile.text.includes("Loading public") || profile.text.includes("Profile Not Found")) {
+    fail(`${profilePath} renders real unified profile`, "loading shell or not-found text found")
+  } else {
+    pass(`${profilePath} renders real unified profile`)
   }
 
   if (containsPrivateIdentifier(profile.text)) {

@@ -2,6 +2,8 @@
 
 Version: `0.2.0`
 
+Current status note: this audit is historical. As of June 10, 2026, production is live on Supabase with `PLATFORM_FEATURE_DATA_MODE=supabase`, the reputation graph schema is applied, and `/api/health` reports live ops active. Use `docs/LIVE_WORKFLOW_QA_RUNBOOK.md` and `npm run verify:live` for the current release gate.
+
 ## Audit Scope
 
 This audit covers the current Client Bureau codebase before pushing the `codex/admin-ops-crm-upgrade` branch to GitHub.
@@ -254,7 +256,7 @@ Follow-up opportunities:
 ## Known Product Gaps
 
 - AI assistant features are not yet implemented.
-- Full live-backed advanced ops mode needs table/RLS verification before production flip.
+- Live-backed advanced ops mode was enabled after table/RLS readiness checks; continue verifying create/update/refresh paths with the live QA runbook.
 - Evidence upload and document parsing should be hardened before AI summarization.
 - Admin CRM can still be split into more focused entity pages over time.
 - Public city/state/programmatic pages should expand only where approved profile data or useful local content exists.

@@ -19,6 +19,48 @@ export default async function AdminSettingsPage() {
   const health = await getLaunchHealth()
   const readiness = health.readiness
   const missingTables = health.requiredTables.filter((table) => !table.exists)
+  const liveOpsActive = readiness.platformCanUseSupabase && health.platformFeatureDataMode === "supabase"
+  const readinessSteps = liveOpsActive
+    ? [
+        {
+          title: "Supabase live ops is active",
+          detail:
+            "Contractor dashboard tools, admin ops records, unified profiles, graph links, recovery, lien, contract, and evidence workflows are using Supabase-backed persistence.",
+          value: "PLATFORM_FEATURE_DATA_MODE=supabase",
+        },
+        {
+          title: "Run live workflow QA before each release",
+          detail:
+            "Verify contractor tool saves, admin moderation, profile graph actions, session stability, and public profile privacy after every deploy.",
+          value: "docs/LIVE_WORKFLOW_QA_RUNBOOK.md",
+        },
+        {
+          title: "Rollback remains available",
+          detail:
+            "If an advanced ops workflow needs review, switch feature data mode back to mock and rebuild. Core auth, reports, admin approval, public profiles, and SEO stay live.",
+          value: "PLATFORM_FEATURE_DATA_MODE=mock",
+        },
+      ]
+    : [
+        {
+          title: "Keep advanced tools in safe mode",
+          detail:
+            "Core auth, reports, admin review, public profiles, and search can stay live while advanced ops waits for database readiness.",
+          value: "PLATFORM_FEATURE_DATA_MODE=mock",
+        },
+        {
+          title: "Apply the platform backfill if health shows missing columns",
+          detail:
+            "Run this SQL after the earlier migrations when contract signing, recovery, lien readiness, or graph fields are missing.",
+          value: "supabase/migrations/manual-0014-0018-reputation-graph.sql",
+        },
+        {
+          title: "Flip only after health says ready",
+          detail:
+            "When platformCanUseSupabase is true, switch advanced workflows to Supabase and rebuild. Rollback is the same safe-mode value.",
+          value: "PLATFORM_FEATURE_DATA_MODE=supabase",
+        },
+      ]
   const settingsGroups = [
     {
       title: "Moderation Rules",
@@ -170,21 +212,9 @@ export default async function AdminSettingsPage() {
                 {readiness.readinessMessage}
               </p>
               <div className="mt-4 grid gap-3">
-                <ReadinessStep
-                  title="Keep advanced tools in safe mode"
-                  detail="Core auth, reports, admin review, public profiles, and search can stay live while advanced ops waits for the database finish."
-                  value="PLATFORM_FEATURE_DATA_MODE=mock"
-                />
-                <ReadinessStep
-                  title="Apply the platform backfill if health shows missing columns"
-                  detail="Run this SQL after the earlier migrations when contract signing, recovery, or lien readiness fields are missing."
-                  value="supabase/migrations/0013_live_platform_schema_backfill.sql"
-                />
-                <ReadinessStep
-                  title="Flip only after health says ready"
-                  detail="When platformCanUseSupabase is true, switch advanced workflows to Supabase and rebuild. Rollback is the same safe-mode value."
-                  value="PLATFORM_FEATURE_DATA_MODE=supabase"
-                />
+                {readinessSteps.map((step) => (
+                  <ReadinessStep key={step.title} {...step} />
+                ))}
               </div>
               {missingTables.length > 0 || readiness.missingPlatformColumns.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">

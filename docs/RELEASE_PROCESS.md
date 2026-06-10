@@ -81,14 +81,14 @@ git push origin v0.2.1
 The VPS deploys from `main`.
 
 ```bash
-cd /opt/client-bureau
+cd /opt/ClientBureau
 git fetch origin
 git checkout main
 git pull --ff-only origin main
 bash scripts/vps-deploy.sh
 ```
 
-If `/opt/client-bureau` does not exist yet, run the latest deploy script directly from GitHub:
+If `/opt/ClientBureau` does not exist yet, run the latest deploy script directly from GitHub:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
@@ -112,7 +112,7 @@ Run the full live release verifier from your local machine after the VPS rebuild
 npm run verify:live
 ```
 
-The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet or advanced ops still requiring `PLATFORM_FEATURE_DATA_MODE=mock`.
+The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, missing unified profile graph routes, missing diagnostic no-store headers, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet.
 
 To intentionally inspect production without comparing release identity, run:
 
@@ -139,12 +139,12 @@ If a release causes a production issue:
 3. Rebuild the VPS.
 
    ```bash
-   cd /opt/client-bureau
+   cd /opt/ClientBureau
    git pull --ff-only origin main
    docker compose up -d --build
    ```
 
-For advanced ops rollout issues, set `PLATFORM_FEATURE_DATA_MODE=mock`, rebuild, and keep core Supabase records untouched.
+For advanced ops rollout issues, set `PLATFORM_FEATURE_DATA_MODE=mock`, rebuild, and keep core Supabase auth, reports, admin approval, public profiles, and SEO records untouched.
 
 ## Hotfix Flow
 
@@ -164,7 +164,7 @@ After the fix passes checks, merge it into `main`, deploy, and add a patch chang
 - Do not put server passwords into shell commands or commit history.
 - Prefer SSH keys for deploy access.
 - Public pages must not expose raw emails, phone numbers, street addresses, raw evidence files, pending reports, rejected reports, private contract content, or internal admin notes.
-- `PLATFORM_FEATURE_DATA_MODE=supabase` should only be enabled after the required migrations and readiness checks pass.
+- `PLATFORM_FEATURE_DATA_MODE=supabase` is the production target after readiness checks pass. Roll back to `mock` only if an advanced ops workflow needs review.
 
 ## Release Checklist
 
@@ -174,9 +174,10 @@ Before pushing `main`:
 - `npm run lint` passes.
 - `npm test` passes.
 - `npm run build` passes.
-- `npm run seo:check` passes against a running local build.
+- `npm run seo:check` passes against a running local build, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.
 - `npm run mobile:check` passes.
 - `npm run verify:live` passes after the VPS rebuild.
+- Manual logged-in QA follows `docs/LIVE_WORKFLOW_QA_RUNBOOK.md`.
 - Browser QA covers the changed public/dashboard/admin routes.
 - No secrets or private data appear in `git diff`.
 - The release is intentionally approved for production.

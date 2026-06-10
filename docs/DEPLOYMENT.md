@@ -151,7 +151,7 @@ Clone the repo:
 mkdir -p /opt
 cd /opt
 git clone https://github.com/dff280/ClientBureau.git
-cd /opt/client-bureau
+cd /opt/ClientBureau
 ```
 
 Create the production environment file:
@@ -165,7 +165,7 @@ Minimum production values:
 
 ```text
 DATA_MODE=supabase
-PLATFORM_FEATURE_DATA_MODE=mock
+PLATFORM_FEATURE_DATA_MODE=supabase
 NEXT_PUBLIC_SITE_URL=https://clientbureau.com
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=...
@@ -196,7 +196,7 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Keep `PLATFORM_FEATURE_DATA_MODE=mock` until migrations `0003` through `0018` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. This keeps core live flows stable while advanced ops tools remain on safe feature data.
+Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0018` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Use `mock` only as a rollback if an advanced ops workflow needs review.
 
 If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, or response graph columns, first confirm all migrations through `0018` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
 
@@ -212,7 +212,7 @@ For the unified reputation graph rollout, use [GRAPH_MIGRATION_RUNBOOK.md](GRAPH
 npm run migrations:graph:file
 ```
 
-You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
+You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show Supabase-backed platform mode before a normal production release.
 
 After the required tables are verified, enable live-backed platform operations:
 
@@ -250,14 +250,14 @@ After pushing code changes to GitHub:
 
 ```bash
 ssh root@5.78.231.192
-cd /opt/client-bureau
+cd /opt/ClientBureau
 git fetch origin
 git checkout main
 git pull --ff-only origin main
 bash scripts/vps-deploy.sh
 ```
 
-If this is a fresh VPS or `/opt/client-bureau` is missing, run the latest deploy helper directly:
+If this is a fresh VPS or `/opt/ClientBureau` is missing, run the latest deploy helper directly:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
@@ -311,7 +311,7 @@ npm run seo:check
 Remove-Item Env:SEO_BASE_URL
 ```
 
-The live release verification automatically checks the deployed app version and Git commit against your local `main`. It is expected to warn, not fail, while Stripe is unconfigured or `PLATFORM_FEATURE_DATA_MODE=mock` is still required. It should fail if production is stale, links to unavailable public client profiles, serves profile loading shells, loses core Supabase readiness, or exposes private identifiers on public profile pages.
+The live release verification automatically checks the deployed app version and Git commit against your local `main`. It is expected to warn, not fail, while Stripe is unconfigured. It should fail if production is stale, links to unavailable public client profiles, lacks unified profile graph routes, misses diagnostic no-store headers, serves profile loading shells, loses Supabase readiness, or exposes private identifiers on public profile pages.
 
 Browser-check these routes on desktop and mobile:
 
@@ -342,7 +342,7 @@ https://clientbureau.com/api/admin/session
 
 If it returns `authenticated:false` and `authCookiePresent:false`, that browser is not logged in on `clientbureau.com`; use `https://clientbureau.com/login?next=/admin`. If it returns `adminEmailAllowlistConfigured:false`, update `.env.production`, rebuild, and log in again.
 
-Before switching `PLATFORM_FEATURE_DATA_MODE=supabase`, verify ops table readiness from Supabase SQL Editor:
+If platform readiness ever degrades, verify ops table readiness from Supabase SQL Editor:
 
 ```sql
 select table_name, exists
@@ -415,7 +415,7 @@ order by column_name;
 
 Expected result: 5 rows.
 
-Expected `/api/health` signal before the flip:
+Expected healthy `/api/health` signal for live-backed platform operations:
 
 ```json
 {
@@ -423,7 +423,7 @@ Expected `/api/health` signal before the flip:
     "platformCanUseSupabase": true,
     "platformSchemaReady": true,
     "recommendedPlatformFeatureDataMode": "supabase",
-    "readinessLabel": "Ready to flip"
+    "readinessLabel": "Live ops active"
   }
 }
 ```
