@@ -162,11 +162,6 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
         name,
         description:
           `Client Bureau public profile subject for ${name} in ${profile.city}, ${profile.state}. This page shows approved contractor-submitted report summaries and moderated response context only.`,
-        identifier: {
-          "@type": "PropertyValue",
-          name: "Client Bureau public profile slug",
-          value: profile.publicSlug,
-        },
         ...(profile.businessName
           ? {
               affiliation: {
@@ -228,7 +223,7 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
           position: index + 1,
           item: {
             "@type": "Article",
-            "@id": `${profileUrl}#report-${report.id}`,
+            "@id": `${profileUrl}#approved-summary-${index + 1}`,
             headline: `${report.reportCategory} contractor-submitted report summary`,
             articleBody: report.publicSummary,
             datePublished: report.approvedAt ?? report.createdAt,
