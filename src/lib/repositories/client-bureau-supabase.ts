@@ -250,6 +250,12 @@ function isMissingReportIntakeColumnError(error: { message?: string; code?: stri
   )
 }
 
+function isMissingClaimPendingStatusError(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return error?.code === "22P02" || message.includes("claim_pending") || message.includes("claimed_status")
+}
+
 function formatSupabaseCurrency(value: number) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -1944,6 +1950,19 @@ export async function submitProfileClaimSupabase(
 
   if (error) throw new Error(error.message)
 
+  const { error: profileStatusError } = await supabase
+    .from("entity_profiles")
+    .update({
+      claimed_status: "claim_pending",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.profileId)
+    .in("claimed_status", ["unclaimed", "claim_pending"])
+
+  if (profileStatusError && !isMissingClaimPendingStatusError(profileStatusError)) {
+    throw new Error(profileStatusError.message)
+  }
+
   return mapProfileClaim(data)
 }
 
@@ -2014,6 +2033,18 @@ export async function reviewProfileClaimSupabase(
       .eq("id", existingClaim.profile_id)
 
     if (profileError) throw new Error(profileError.message)
+  } else if (input.decision === "rejected") {
+    const { error: profileError } = await supabase
+      .from("entity_profiles")
+      .update({
+        claimed_status: "unclaimed",
+        redaction_note: input.moderatorNote,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", existingClaim.profile_id)
+      .eq("claimed_status", "claim_pending")
+
+    if (profileError && !isMissingClaimPendingStatusError(profileError)) throw new Error(profileError.message)
   }
 
   const { error: auditError } = await supabase.from("audit_logs").insert({

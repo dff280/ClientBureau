@@ -12,7 +12,7 @@ import {
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { deriveEntityProfiles, entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
+import { claimedStatusLabel, deriveEntityProfiles, entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
 import { getAdminWorkspaceDataService, getProfileClaimsService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
@@ -73,7 +73,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
     )
   })
   const publicCount = profiles.filter((profile) => profile.isPublic).length
-  const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed").length
+  const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed" || profile.claimedStatus === "verified").length
   const duplicateSignals = profiles.filter((profile) => profile.duplicateGroupKey).length
   const pendingClaimCount = claims.filter((claim) => claim.status === "pending").length
 
@@ -101,7 +101,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <StatCard label="Unified profiles" value={profiles.length} helper="Clients, contractors, and subcontractors" icon={UsersRound} tone="slate" />
           <StatCard label="Public profiles" value={publicCount} helper="SEO-visible approved or business records" icon={Eye} tone="emerald" />
-          <StatCard label="Claimed" value={claimedCount} helper="Owned or verified profile context" icon={BadgeCheck} tone="blue" />
+          <StatCard label="Claimed / verified" value={claimedCount} helper="Owned or verified profile context" icon={BadgeCheck} tone="blue" />
           <StatCard label="Pending claims" value={pendingClaimCount} helper="Claims awaiting verification review" icon={BadgeCheck} tone="amber" />
           <StatCard label="Graph signals" value={duplicateSignals} helper="Duplicate keys and reassignment context" icon={GitMerge} tone="slate" />
         </div>
@@ -125,8 +125,10 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
               <option value="public">Public</option>
               <option value="private">Private</option>
               <option value="claimed">Claimed</option>
+              <option value="claim_pending">Claim pending</option>
               <option value="unclaimed">Unclaimed</option>
               <option value="disputed">Disputed</option>
+              <option value="verified">Verified</option>
             </select>
             <Button className="bg-slate-950 text-white hover:bg-slate-800">
               <Search aria-hidden="true" />
@@ -152,7 +154,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                 badge={profile.isPublic ? "Public" : "Private"}
                 tone={profile.isPublic ? "emerald" : profile.claimedStatus === "disputed" ? "rose" : "slate"}
                 facts={[
-                  { label: "Claim status", value: profile.claimedStatus },
+                  { label: "Claim status", value: claimedStatusLabel(profile.claimedStatus) },
                   { label: "Subtype", value: String(profile.profileSubtype ?? "General profile") },
                   { label: "Verification", value: profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : profile.verificationLevel ?? "Moderation only" },
                   { label: "Rating / band", value: `${profile.ratingScore} / ${profile.ratingBand}` },

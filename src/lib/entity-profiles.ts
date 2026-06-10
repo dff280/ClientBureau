@@ -5,6 +5,7 @@ import {
   isPositiveReportCategory,
   type ClientProfile,
   type ClientReport,
+  type ClaimedStatus,
   type ContractorProfile,
   type EntityProfile,
   type EntityProfileSearchResult,
@@ -35,6 +36,18 @@ export function profileTypePluralLabel(type: ProfileType) {
 export function profileSubtypeLabel(profile: Pick<EntityProfile, "profileType" | "profileSubtype">) {
   if (profile.profileSubtype) return profile.profileSubtype
   return defaultProfileSubtype(profile.profileType)
+}
+
+export function claimedStatusLabel(status: ClaimedStatus) {
+  const labels: Record<ClaimedStatus, string> = {
+    unclaimed: "Unclaimed profile",
+    claim_pending: "Claim pending",
+    claimed: "Claimed profile",
+    disputed: "Disputed claim",
+    verified: "Verified profile",
+  }
+
+  return labels[status]
 }
 
 export function defaultProfileSubtype(profileType: ProfileType): ProfileSubtype {
@@ -311,8 +324,12 @@ export function buildPublicEntityProfile(input: {
   const responseStatusLabel =
     input.profile.responseCount > 0
       ? "Public response on file"
-      : input.profile.claimedStatus === "claimed"
-        ? "Profile claimed"
+      : input.profile.claimedStatus === "claim_pending"
+        ? "Claim in review"
+        : input.profile.claimedStatus === "claimed" || input.profile.claimedStatus === "verified"
+          ? claimedStatusLabel(input.profile.claimedStatus)
+          : input.profile.claimedStatus === "disputed"
+            ? "Claim disputed"
         : "Right of response available"
   const evidenceSummaryLabel =
     input.profile.evidenceOnFileCount > 0
@@ -385,8 +402,10 @@ export function searchEntityProfiles(
         responseContext:
           profile.responseCount > 0
             ? "Response on file"
-            : profile.claimedStatus === "claimed"
-              ? "Claimed profile"
+            : profile.claimedStatus === "claim_pending"
+              ? "Claim in review"
+              : profile.claimedStatus === "claimed" || profile.claimedStatus === "verified" || profile.claimedStatus === "disputed"
+                ? claimedStatusLabel(profile.claimedStatus)
               : "Response available",
         nextAction:
           profile.profileType === "client"

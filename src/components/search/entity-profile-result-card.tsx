@@ -4,6 +4,7 @@ import { ArrowRight, BadgeCheck, Eye, FileText, ShieldCheck } from "lucide-react
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { claimedStatusLabel } from "@/lib/entity-profiles"
 import type { EntityProfileSearchResult } from "@/lib/types"
 
 export function EntityProfileResultCard({ result }: { result: EntityProfileSearchResult }) {
@@ -29,7 +30,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                   {result.profileSubtype ?? "General profile"}
                 </span>
                 <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase text-slate-500">
-                  {result.verificationLevel ? "Verified signal" : result.claimedStatus === "claimed" ? "Claimed" : "Unclaimed"}
+                  {result.verificationLevel ? "Verified signal" : claimedStatusLabel(result.claimedStatus)}
                 </span>
               </div>
               <h2 className="mt-3 text-2xl font-black text-slate-950">{result.displayName}</h2>

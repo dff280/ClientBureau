@@ -115,11 +115,13 @@ import {
   getContractPacketByShareToken,
   getContractorDashboard,
   getContractorRiskOpsData,
+  getEntityProfiles,
   signLienFilingAuthorization,
   searchClients,
   signContractShare,
   simulateApprovalPublication,
   simulateSubmittedClientReport,
+  submitProfileClaim,
   submitFloridaLienCase,
   submitManagedRecoveryCase,
 } from "@/lib/repositories/client-bureau"
@@ -268,6 +270,22 @@ describe("Client Bureau unified profiles", () => {
 
     const results = searchEntityProfiles(entityProfiles, "Homeowner")
     expect(results.some((profile) => profile.profileType === "client")).toBe(true)
+  })
+
+  it("marks unclaimed public profiles as claim pending after a profile claim", () => {
+    const profile = getEntityProfiles().find((item) => item.profileType === "client" && item.claimedStatus === "unclaimed")
+    expect(profile).toBeTruthy()
+
+    submitProfileClaim({
+      profileId: profile!.id,
+      claimantEmailHash: "sha256:claimant-private",
+      claimantName: "Verified claimant",
+      relationshipToProfile: "Owner or authorized representative",
+      verificationSummary: "The claimant can provide business records for moderation review.",
+    })
+
+    const updatedProfile = getEntityProfiles().find((item) => item.id === profile!.id)
+    expect(updatedProfile?.claimedStatus).toBe("claim_pending")
   })
 
   it("derives public-safe project summaries from approved reports", () => {

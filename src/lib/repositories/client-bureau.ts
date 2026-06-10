@@ -371,11 +371,42 @@ export function getPublicBusinessProfile(slug: string): PublicBusinessProfile | 
 }
 
 export function getEntityProfiles(): EntityProfile[] {
-  return deriveEntityProfiles({
+  const profiles = deriveEntityProfiles({
     clients: clientProfiles,
     contractors: contractorProfiles,
     reports: clientReports,
     publicBusinesses: getPublicBusinessProfiles(),
+  })
+
+  return profiles.map((profile) => {
+    const claim = profileClaims.find((item) => item.profileId === profile.id)
+    if (!claim) return profile
+
+    if (claim.status === "approved") {
+      return {
+        ...profile,
+        claimedStatus: "verified",
+        verificationLevel: "admin_verified",
+        verificationBadges: [...(profile.verificationBadges ?? []), "Admin verified"].filter((value, index, list) => list.indexOf(value) === index),
+      }
+    }
+
+    if (claim.status === "disputed") {
+      return {
+        ...profile,
+        claimedStatus: "disputed",
+        redactionNote: claim.moderatorNote ?? profile.redactionNote,
+      }
+    }
+
+    if (claim.status === "pending" && profile.claimedStatus === "unclaimed") {
+      return {
+        ...profile,
+        claimedStatus: "claim_pending",
+      }
+    }
+
+    return profile
   })
 }
 

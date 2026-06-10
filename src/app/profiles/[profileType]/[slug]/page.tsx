@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { JsonLd } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
-import { profileTypeLabel, profileTypePluralLabel, reportConfidenceLabel, relationshipLabel } from "@/lib/entity-profiles"
+import { claimedStatusLabel, profileTypeLabel, profileTypePluralLabel, reportConfidenceLabel, relationshipLabel } from "@/lib/entity-profiles"
 import { getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
@@ -135,7 +135,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
             title={`${profile.ratingScore}/100 profile indicator`}
             description={`${profile.reportCount} approved public ${profile.reportCount === 1 ? "report" : "reports"} with ${profile.evidenceSummaryLabel.toLowerCase()}.`}
             points={[
-              `${profile.claimedStatus === "claimed" ? "Claimed" : "Unclaimed"} profile status`,
+              claimedStatusLabel(profile.claimedStatus),
               profile.responseStatusLabel,
               `${profile.resolvedReportCount} resolved or paid-in-full records`,
             ]}
@@ -174,7 +174,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 <div className="grid gap-3 text-sm text-slate-700">
                   <ProfileFact label="City / state" value={`${profile.city}, ${profile.state}`} />
                   <ProfileFact label="Subtype" value={String(profile.profileSubtype ?? "General profile")} />
-                  <ProfileFact label="Claim status" value={profile.claimedStatus === "claimed" ? "Claimed profile" : "Unclaimed profile"} />
+                  <ProfileFact label="Claim status" value={claimedStatusLabel(profile.claimedStatus)} />
                   <ProfileFact label="Verification" value={profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : "Moderation signals only"} />
                   <ProfileFact label="Evidence" value={profile.evidenceSummaryLabel} />
                   <ProfileFact label="Public visibility" value="Approved public content only" />
