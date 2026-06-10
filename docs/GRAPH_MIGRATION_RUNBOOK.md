@@ -32,6 +32,14 @@ The bundle contains migrations:
 - `0017_project_job_graph_backfill.sql`
 - `0018_response_graph_links.sql`
 
+If Supabase reports that the graph tables already exist but `/api/health` still shows missing graph columns, run this smaller repair file instead:
+
+```text
+supabase/migrations/manual-graph-column-repair.sql
+```
+
+That repair script avoids the table-creation section and only adds the missing columns, indexes, comments, and backfill links needed for the current production health warning.
+
 ## 3. Verify Health
 
 After Supabase finishes the SQL:
