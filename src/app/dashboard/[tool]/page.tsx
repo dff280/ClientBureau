@@ -32,6 +32,7 @@ import { getMockGrowthEngineData } from "@/lib/growth-engine"
 export const dynamic = "force-dynamic"
 
 type DashboardToolTab = DashboardWorkspaceTab | "growth"
+type ToolOutcomeKey = DashboardToolTab | "alerts"
 
 type DashboardToolConfig = {
   activeHref: string
@@ -609,6 +610,11 @@ export default async function DashboardToolPage({
         </div>
       </DashboardSection>
 
+      <ToolOutcomePanel
+        featureDataMode={featureDataMode}
+        outcomeKey={tool === "alerts" ? "alerts" : config.tab}
+      />
+
       {config.tab === "growth" ? (
         <ContractorGrowthEngine data={getMockGrowthEngineData(dashboard.contractor, getSiteUrl())} />
       ) : null}
@@ -701,4 +707,183 @@ export default async function DashboardToolPage({
       ) : null}
     </ClientDashboardShell>
   )
+}
+
+function ToolOutcomePanel({
+  featureDataMode,
+  outcomeKey,
+}: {
+  featureDataMode: string
+  outcomeKey: ToolOutcomeKey
+}) {
+  const outcomes = getToolOutcomeItems(outcomeKey)
+
+  return (
+    <DashboardSection
+      eyebrow="What should happen"
+      title="After you use this tool"
+      description="Use this as a quick confidence check. If something saves successfully, refresh the page and make sure it still appears here."
+    >
+      <div className="grid gap-3 md:grid-cols-3">
+        {outcomes.map((item) => (
+          <div key={item.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <p className="text-xs font-semibold uppercase text-amber-700">{item.label}</p>
+              <StatusBadge tone={item.tone}>{item.status}</StatusBadge>
+            </div>
+            <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
+        <p className="text-sm leading-6 text-slate-600">
+          {featureDataMode === "supabase"
+            ? "This tool is using live account persistence. Successful records should remain visible after refresh and stay private unless you submit content for moderation."
+            : "This tool is in safe mode. Use Search, report submission, and public profiles for production records until live persistence is enabled."}
+        </p>
+      </div>
+    </DashboardSection>
+  )
+}
+
+function getToolOutcomeItems(outcomeKey: ToolOutcomeKey) {
+  const common = [
+    {
+      label: "Private by default",
+      title: "Your workspace record stays sealed",
+      detail: "Client names, evidence, contract details, staff notes, and private matching signals do not appear on public profiles.",
+      status: "Private",
+      tone: "slate" as const,
+    },
+    {
+      label: "Refresh check",
+      title: "Saved work should persist",
+      detail: "After a successful save or update, refresh this page and confirm the record still appears in the correct section.",
+      status: "Live",
+      tone: "emerald" as const,
+    },
+  ]
+
+  const specific: Record<ToolOutcomeKey, { label: string; title: string; detail: string; status: string; tone: "slate" | "amber" | "emerald" | "rose" | "blue" }[]> = {
+    activity: [
+      {
+        label: "Daily review",
+        title: "New work should feed activity",
+        detail: "Reports, watched clients, contracts, recovery cases, and evidence changes should be easy to find in recent activity.",
+        status: "Review",
+        tone: "blue",
+      },
+    ],
+    alerts: [
+      {
+        label: "Monitoring",
+        title: "Watched-client changes create signals",
+        detail: "Important watched-client updates should show as alerts without exposing why you are monitoring the profile.",
+        status: "Monitor",
+        tone: "amber",
+      },
+    ],
+    billing: [
+      {
+        label: "Account",
+        title: "Plan and verification stay understandable",
+        detail: "Plan, usage, and verification status should be clear without developer or checkout-test language.",
+        status: "Account",
+        tone: "blue",
+      },
+    ],
+    account: [
+      {
+        label: "Account",
+        title: "Profile and plan updates stay account-only",
+        detail: "Business verification, plan context, usage, and team details should stay visible inside your workspace only.",
+        status: "Account",
+        tone: "blue",
+      },
+    ],
+    contracts: [
+      {
+        label: "Agreement packet",
+        title: "Signing status becomes trackable",
+        detail: "Created packets should show scope, payment terms, share status, viewed/signed state, and private audit context.",
+        status: "Track",
+        tone: "blue",
+      },
+    ],
+    evidence: [
+      {
+        label: "Evidence Vault",
+        title: "Files appear as private summaries",
+        detail: "Invoices, contracts, photos, screenshots, and PDFs should show status labels, not raw storage paths or public file links.",
+        status: "Sealed",
+        tone: "emerald",
+      },
+    ],
+    growth: [
+      {
+        label: "Referral loop",
+        title: "Invites and profile actions should feel safe",
+        detail: "Referral, profile-claim, and feedback-request actions should help grow the network without public accusations.",
+        status: "Growth",
+        tone: "amber",
+      },
+    ],
+    "lien-readiness": [
+      {
+        label: "Florida service",
+        title: "Case moves through review gates",
+        detail: "Lien service cases should show fee, authorization, document readiness, vendor/attorney review, recording proof, and release state.",
+        status: "Review",
+        tone: "amber",
+      },
+    ],
+    overview: [
+      {
+        label: "Command center",
+        title: "Daily work stays easy to scan",
+        detail: "Today’s alerts, recent activity, open reports, watched clients, and next actions should stay visible without hunting through every tool.",
+        status: "Overview",
+        tone: "blue",
+      },
+    ],
+    pipeline: [
+      {
+        label: "Client pipeline",
+        title: "Lead and job stages remain organized",
+        detail: "Client work files should move through screening, contract pending, active job, payment follow-up, and closed stages without public exposure.",
+        status: "Pipeline",
+        tone: "emerald",
+      },
+    ],
+    recovery: [
+      {
+        label: "Resolution Desk",
+        title: "Follow-up is tracked privately",
+        detail: "Recovery cases should show amount due, invoice age, contact attempts, response status, payment plan, and resolution state.",
+        status: "Resolve",
+        tone: "blue",
+      },
+    ],
+    reports: [
+      {
+        label: "Moderation",
+        title: "Submitted reports enter review",
+        detail: "Positive and payment-issue reports should move into a clear status: draft, submitted, review, published, rejected, disputed, or resolved.",
+        status: "Review",
+        tone: "amber",
+      },
+    ],
+    watchlist: [
+      {
+        label: "Client check",
+        title: "Saved searches and watched clients stay visible",
+        detail: "Searches and watched clients should remain available so you can review them before quotes, scheduling, deposits, or change orders.",
+        status: "Watch",
+        tone: "emerald",
+      },
+    ],
+  }
+
+  return [...specific[outcomeKey], ...common]
 }

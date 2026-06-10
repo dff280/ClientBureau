@@ -7,6 +7,7 @@ All notable Client Bureau product changes should be documented here before a rel
 ### Improved
 
 - Added an admin command-center Release QA panel that links staff to release identity, admin session, dashboard persistence, and public privacy checks.
+- Added focused dashboard confirmation guidance so contractors can quickly verify saved records, private evidence, contract status, recovery cases, lien service cases, alerts, and reports after using each tool.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
