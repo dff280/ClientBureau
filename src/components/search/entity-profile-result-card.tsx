@@ -13,7 +13,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
       : result.profileType === "subcontractor"
         ? "border-blue-200 bg-blue-50 text-blue-800"
         : "border-emerald-200 bg-emerald-50 text-emerald-800"
-  const submitHref = `/submit-report?profileType=${result.profileType}&profileSubtype=${encodeURIComponent(String(result.profileSubtype ?? ""))}&profileId=${result.id}&city=${encodeURIComponent(result.city)}&state=${encodeURIComponent(result.state)}`
+  const submitHref = `/submit-report?profileType=${result.profileType}&profileSubtype=${encodeURIComponent(String(result.profileSubtype ?? ""))}&profileSlug=${encodeURIComponent(result.slug)}&city=${encodeURIComponent(result.city)}&state=${encodeURIComponent(result.state)}`
 
   return (
     <Card className="rounded-md border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">

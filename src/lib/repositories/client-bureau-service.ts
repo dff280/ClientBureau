@@ -311,6 +311,8 @@ export async function submitProfileClaimService(
   userId: string | undefined,
   input: ProfileClaimInput,
 ): Promise<ProfileClaim> {
+  if (!input.profileId) throw new Error("Profile ID is required after public profile resolution.")
+
   const claimantEmailHash = `sha256:${Buffer.from(input.claimantEmail.trim().toLowerCase()).toString("base64url")}-private`
 
   if (shouldUseSupabase()) {

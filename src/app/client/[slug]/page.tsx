@@ -188,7 +188,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                     <Link href="/search">Check another client</Link>
                   </Button>
                   <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                    <Link href={`/dashboard/watchlist?client=${profile.id}`}>Watch this client</Link>
+                    <Link href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(profile.publicSlug)}`}>Watch this client</Link>
                   </Button>
                 </div>
               </div>

@@ -11,14 +11,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { submitProfileClaimAction } from "@/lib/actions/client-bureau"
-import type { ActionResult, ProfileClaim } from "@/lib/types"
+import type { ActionResult, ProfileClaim, ProfileType } from "@/lib/types"
 
 const initialState: ActionResult<ProfileClaim> = {
   ok: false,
   message: "",
 }
 
-export function ProfileClaimForm({ profileId }: { profileId: string }) {
+export function ProfileClaimForm({
+  profileId,
+  profileSlug,
+  profileType,
+}: {
+  profileId?: string
+  profileSlug?: string
+  profileType?: ProfileType
+}) {
   const [state, action] = useActionState(submitProfileClaimAction, initialState)
 
   useEffect(() => {
@@ -27,7 +35,9 @@ export function ProfileClaimForm({ profileId }: { profileId: string }) {
 
   return (
     <form action={action} className="space-y-5">
-      <input type="hidden" name="profileId" value={profileId} />
+      {profileId ? <input type="hidden" name="profileId" value={profileId} /> : null}
+      {profileType ? <input type="hidden" name="profileType" value={profileType} /> : null}
+      {profileSlug ? <input type="hidden" name="profileSlug" value={profileSlug} /> : null}
       {state.message ? (
         <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
           <CheckCircle2 className="size-4" aria-hidden="true" />

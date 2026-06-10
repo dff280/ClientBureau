@@ -130,6 +130,7 @@ import {
   deleteSavedClientSearchService,
   deleteReportDraftService,
   getPublicClientProfileService,
+  getPublicEntityProfileService,
   linkEvidenceToServiceCaseService,
   logPaymentRecoveryAttemptService,
   logResolutionDeskContactService,
@@ -564,8 +565,24 @@ export async function submitProfileClaimAction(
     return fail("Please correct the highlighted claim fields.", zodFieldErrors(parsed.error))
   }
 
+  let profileId = parsed.data.profileId
+
+  if (!profileId && parsed.data.profileType && parsed.data.profileSlug) {
+    const profile = await getPublicEntityProfileService(parsed.data.profileType, parsed.data.profileSlug).catch(() => undefined)
+    profileId = profile?.id
+  }
+
+  if (!profileId) {
+    return fail("We could not find the public profile connected to this claim request.", {
+      profileSlug: ["Open the public profile again and retry the claim request."],
+    })
+  }
+
   const user = await getCurrentUser().catch(() => undefined)
-  const claim = await submitProfileClaimService(user?.id, parsed.data)
+  const claim = await submitProfileClaimService(user?.id, {
+    ...parsed.data,
+    profileId,
+  })
 
   revalidatePath("/admin")
   revalidatePath("/admin/profiles")

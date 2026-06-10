@@ -355,7 +355,9 @@ export const searchSchema = z.object({
 })
 
 export const profileClaimSchema = z.object({
-  profileId: requiredText("Profile ID"),
+  profileId: optionalText,
+  profileType: z.enum(profileTypes).optional(),
+  profileSlug: optionalText,
   claimantName: requiredText("Your name"),
   claimantEmail: z.email("Enter a valid email for verification."),
   relationshipToProfile: requiredText("Relationship to profile"),
@@ -364,6 +366,9 @@ export const profileClaimSchema = z.object({
     "Keep verification summary under 1,200 characters.",
   ),
   truthfulCertification: z.coerce.boolean().optional(),
+}).refine((value) => Boolean(value.profileId || (value.profileType && value.profileSlug)), {
+  path: ["profileSlug"],
+  message: "Choose a public profile before submitting a claim.",
 }).refine((value) => value.truthfulCertification === true, {
   path: ["truthfulCertification"],
   message: "Confirm that the claim information is accurate.",

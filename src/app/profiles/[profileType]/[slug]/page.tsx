@@ -64,7 +64,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
 
   const siteUrl = getSiteUrl()
   const profileUrl = `${siteUrl}${profile.profileHref}`
-  const reportHref = `/submit-report?profileType=${profile.profileType}&profileSubtype=${encodeURIComponent(String(profile.profileSubtype ?? ""))}&profileId=${profile.id}&city=${encodeURIComponent(profile.city)}&state=${encodeURIComponent(profile.state)}`
+  const reportHref = `/submit-report?profileType=${profile.profileType}&profileSubtype=${encodeURIComponent(String(profile.profileSubtype ?? ""))}&profileSlug=${encodeURIComponent(profile.slug)}&city=${encodeURIComponent(profile.city)}&state=${encodeURIComponent(profile.state)}`
+  const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",
@@ -88,11 +89,6 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           addressLocality: profile.city,
           addressRegion: profile.state,
           addressCountry: "US",
-        },
-        identifier: {
-          "@type": "PropertyValue",
-          name: "Client Bureau public profile slug",
-          value: profile.slug,
         },
       },
       {
@@ -183,7 +179,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                   <ProfileFact label="Public visibility" value="Approved public content only" />
                 </div>
                 <Button asChild className="w-full bg-slate-950 text-white hover:bg-slate-800">
-                  <Link href={`/claim-profile?profileId=${profile.id}`}>
+                  <Link href={claimHref}>
                     <BadgeCheck aria-hidden="true" />
                     Claim or Correct Profile
                   </Link>

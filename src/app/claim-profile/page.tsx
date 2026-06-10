@@ -18,9 +18,15 @@ import { StateSelect } from "@/components/forms/state-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { profileTypes, type ProfileType } from "@/lib/types"
 
 type ClaimProfilePageProps = {
-  searchParams: Promise<{ profile?: string | string[]; profileId?: string | string[] }>
+  searchParams: Promise<{
+    profile?: string | string[]
+    profileId?: string | string[]
+    profileSlug?: string | string[]
+    profileType?: string | string[]
+  }>
 }
 
 export const metadata: Metadata = {
@@ -73,10 +79,16 @@ const faqs = [
   },
 ]
 
+function toProfileType(value?: string): ProfileType | undefined {
+  return profileTypes.includes(value as ProfileType) ? value as ProfileType : undefined
+}
+
 export default async function ClaimProfilePage({ searchParams }: ClaimProfilePageProps) {
   const params = await searchParams
   const profile = Array.isArray(params.profile) ? params.profile[0] : params.profile
   const profileId = Array.isArray(params.profileId) ? params.profileId[0] : params.profileId
+  const profileSlug = Array.isArray(params.profileSlug) ? params.profileSlug[0] : params.profileSlug
+  const profileType = toProfileType(Array.isArray(params.profileType) ? params.profileType[0] : params.profileType)
   const signupHref = profile
     ? `/signup?intent=claim-profile&profile=${encodeURIComponent(profile)}`
     : "/signup?intent=claim-profile"
@@ -149,8 +161,8 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
                     moderated profile context, service areas, rating factors, and approved public contributions.
                   </p>
                 </div>
-                {profileId ? (
-                  <ProfileClaimForm profileId={profileId} />
+                {profileId || (profileSlug && profileType) ? (
+                  <ProfileClaimForm profileId={profileId} profileSlug={profileSlug} profileType={profileType} />
                 ) : (
                   <form action="/signup" className="space-y-5">
                     <input type="hidden" name="intent" value="claim-profile" />

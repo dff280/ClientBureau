@@ -84,7 +84,7 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
             </Link>
           </Button>
           <Button asChild variant="outline">
-            <Link href={`/dashboard/watchlist?client=${result.id}`}>
+            <Link href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(result.publicSlug)}`}>
               <Bell aria-hidden="true" />
               Watch client
             </Link>
