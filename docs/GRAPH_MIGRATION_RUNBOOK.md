@@ -52,6 +52,14 @@ supabase/migrations/manual-graph-repair-chunks/05-comments.sql
 
 Do not select only part of a chunk. Open one chunk, select all of that chunk, run it, wait for success, then continue to the next chunk.
 
+Chunk `04-backfill.sql` only connects existing legacy records into the new graph. If it fails or Supabase SQL Editor has trouble with the larger paste, production can still run after chunks `01`, `02`, `03`, and `05` because the schema is complete. To backfill legacy data more carefully, run the smaller files in:
+
+```text
+supabase/migrations/manual-graph-repair-chunks/backfill-steps/
+```
+
+Run them in filename order from `04a-profile-defaults.sql` through `04k-profile-counts.sql`.
+
 ## 3. Verify Health
 
 After Supabase finishes the SQL:
