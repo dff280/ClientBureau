@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { FilePlus2, LockKeyhole, Radar } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import { Bell, ClipboardCheck, FilePlus2, LockKeyhole, Radar, SearchCheck, ShieldCheck } from "lucide-react"
 
 import { SearchCommandCenter } from "@/components/search/search-command-center"
 import { EntityProfileResultCard } from "@/components/search/entity-profile-result-card"
@@ -205,8 +206,17 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           })}
         </div>
 
+        <SearchActivationGuide
+          hasSearch={hasSearch}
+          isAuthenticated={isAuthenticated}
+          query={query}
+          resultCount={results.length}
+          state={state}
+          signupHref={signupSearchHref(query, state, riskLevel, category)}
+        />
+
         {results.length > 0 ? (
-          <div className="grid gap-4">
+          <div id="profile-results" className="scroll-mt-24 grid gap-4">
             {results.map((result) => (
               <EntityProfileResultCard key={result.id} result={result} />
             ))}
@@ -227,9 +237,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                 </p>
               </div>
               <div className="mx-auto flex flex-wrap justify-center gap-3">
-                <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                  <Link href={signupSearchHref(query, state, riskLevel, category)}>Create free account</Link>
-                </Button>
+                {isAuthenticated ? (
+                  <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                    <Link href="/dashboard/watchlist">Open Watchlist</Link>
+                  </Button>
+                ) : (
+                  <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                    <Link href={signupSearchHref(query, state, riskLevel, category)}>Create free account</Link>
+                  </Button>
+                )}
                 <Button asChild variant="outline">
                   <Link href={reportPrefillHref(query, state)}>Report a Client Experience</Link>
                 </Button>
@@ -240,5 +256,107 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       </div>
     </section>
     </>
+  )
+}
+
+function SearchActivationGuide({
+  hasSearch,
+  isAuthenticated,
+  query,
+  resultCount,
+  state,
+  signupHref,
+}: {
+  hasSearch: boolean
+  isAuthenticated: boolean
+  query: string
+  resultCount: number
+  state?: string
+  signupHref: string
+}) {
+  const searchedLabel = query.trim() ? `"${query.trim()}"` : "this search"
+  const resultTone = resultCount > 0 ? "text-emerald-800" : hasSearch ? "text-amber-800" : "text-slate-700"
+  const resultCopy =
+    resultCount > 0
+      ? `${resultCount} approved ${resultCount === 1 ? "profile" : "profiles"} matched. Open a profile before you quote, schedule, send contract terms, or order materials.`
+      : hasSearch
+        ? `No approved public profile is visible for ${searchedLabel} yet. That is not a clearance signal; save the search or document the experience.`
+        : "Run a client check before you commit labor, materials, scheduling, payment terms, or final invoice exposure."
+
+  const actions = [
+    {
+      detail: resultCount > 0
+        ? "Read approved summaries, response context, evidence labels, and profile history before deciding next terms."
+        : "Save the name or business so you can check again before the job moves forward.",
+      href: resultCount > 0 ? "#profile-results" : isAuthenticated ? "/dashboard/watchlist" : signupHref,
+      icon: resultCount > 0 ? SearchCheck : Bell,
+      label: resultCount > 0 ? "Review profile context" : isAuthenticated ? "Save to watchlist" : "Create account to save",
+      title: resultCount > 0 ? "Review the match" : "Keep the search warm",
+    },
+    {
+      detail: "If you have direct experience, submit a factual report with documentation for moderation.",
+      href: reportPrefillHref(query, state),
+      icon: FilePlus2,
+      label: "Report a Client Experience",
+      title: "Document what happened",
+    },
+    {
+      detail: "Use contracts, private evidence, payment recovery, or lien service tools when the job needs stronger protection.",
+      href: isAuthenticated ? "/dashboard" : "/how-it-works",
+      icon: ShieldCheck,
+      label: isAuthenticated ? "Open dashboard tools" : "See how it works",
+      title: "Choose the protection path",
+    },
+  ]
+
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="grid gap-5 p-5 lg:grid-cols-[280px_1fr]">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase text-amber-700">Search decision guide</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-950">What to do with this search</h2>
+          <p className={`mt-2 text-sm leading-6 ${resultTone}`}>{resultCopy}</p>
+          <div className="mt-4 flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
+            <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
+            <span>Public results show approved context only. Private identifiers, raw evidence, pending content, and internal notes stay hidden.</span>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {actions.map((action) => (
+            <SearchActivationAction key={action.title} {...action} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function SearchActivationAction({
+  detail,
+  href,
+  icon: Icon,
+  label,
+  title,
+}: {
+  detail: string
+  href: string
+  icon: LucideIcon
+  label: string
+  title: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex h-full flex-col justify-between rounded-md border border-slate-200 bg-slate-50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-white"
+    >
+      <div>
+        <span className="flex size-10 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <h3 className="mt-4 font-semibold text-slate-950">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+      </div>
+      <span className="mt-4 text-sm font-semibold text-amber-700 group-hover:text-amber-800">{label}</span>
+    </Link>
   )
 }
