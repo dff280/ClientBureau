@@ -40,6 +40,18 @@ supabase/migrations/manual-graph-column-repair.sql
 
 That repair script avoids the table-creation section and only adds the missing columns, indexes, comments, and backfill links needed for the current production health warning.
 
+If Supabase SQL Editor reports an "unterminated dollar-quoted string" error, it means the editor ran only part of a `do $$ ... end $$;` block. Use the smaller chunk files instead and run each file separately, in order:
+
+```text
+supabase/migrations/manual-graph-repair-chunks/01-types.sql
+supabase/migrations/manual-graph-repair-chunks/02-tables-policies.sql
+supabase/migrations/manual-graph-repair-chunks/03-columns-indexes.sql
+supabase/migrations/manual-graph-repair-chunks/04-backfill.sql
+supabase/migrations/manual-graph-repair-chunks/05-comments.sql
+```
+
+Do not select only part of a chunk. Open one chunk, select all of that chunk, run it, wait for success, then continue to the next chunk.
+
 ## 3. Verify Health
 
 After Supabase finishes the SQL:
