@@ -206,6 +206,12 @@ supabase/migrations/0013_live_platform_schema_backfill.sql
 
 That migration is idempotent and exists as a production repair pass for databases that received only part of the platform schema rollout. It does not replace the multi-profile and reputation graph migrations `0014` through `0018`.
 
+For the unified reputation graph rollout, use [GRAPH_MIGRATION_RUNBOOK.md](GRAPH_MIGRATION_RUNBOOK.md). It generates one paste-ready SQL bundle for migrations `0014` through `0018`:
+
+```bash
+npm run migrations:graph:file
+```
+
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show `Ready to flip` before changing the environment variable.
 
 After the required tables are verified, enable live-backed platform operations:
