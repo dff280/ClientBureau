@@ -76,7 +76,7 @@ import type {
   UpdateEvidenceVaultStatusInput,
   WatchlistItemInput,
 } from "@/lib/schemas/client-bureau"
-import { isPositiveReportCategory } from "@/lib/types"
+import { isPositiveReportCategory, profileTypes } from "@/lib/types"
 import type {
   AdminModerationCrmData,
   AdminReview,
@@ -241,7 +241,11 @@ function isMissingReportIntakeColumnError(error: { message?: string; code?: stri
     message.includes("redaction_note") ||
     message.includes("profile_subtype") ||
     message.includes("verification_level") ||
-    message.includes("duplicate_group_key")
+    message.includes("duplicate_group_key") ||
+    message.includes("entity_profile_id") ||
+    message.includes("request_type") ||
+    message.includes("verification_method") ||
+    message.includes("attachment_reference_private")
   )
 }
 
@@ -560,8 +564,12 @@ function mapPublicEvidence(row: ReportEvidenceRow): ReportEvidence {
 function mapResponse(row: ClientResponseRow): ClientResponse {
   return {
     id: row.id,
-    clientId: row.client_id,
+    clientId: row.client_id ?? undefined,
+    entityProfileId: row.entity_profile_id ?? undefined,
+    projectJobId: row.project_job_id ?? undefined,
     reportId: row.report_id ?? undefined,
+    requestType: row.request_type ?? undefined,
+    verificationMethod: row.verification_method ?? undefined,
     responseSummary: row.response_summary,
     status: row.status,
     createdAt: row.created_at,
@@ -2895,47 +2903,133 @@ export async function submitClientReportSupabase(
   return mapClientReport(reportRow)
 }
 
-function extractSlugFromProfileUrl(profileUrl: string) {
+function profilePathSegments(profileUrl: string) {
   try {
     const parsed = new URL(profileUrl)
-    const segments = parsed.pathname.split("/").filter(Boolean)
-    const clientIndex = segments.indexOf("client")
-
-    return clientIndex >= 0 ? segments[clientIndex + 1] : segments.at(-1)
+    return parsed.pathname.split("/").filter(Boolean)
   } catch {
-    const segments = profileUrl.split("/").filter(Boolean)
-    const clientIndex = segments.indexOf("client")
+    const path = profileUrl.split(/[?#]/)[0] ?? profileUrl
 
-    return clientIndex >= 0 ? segments[clientIndex + 1] : segments.at(-1)
+    return path.split("/").filter(Boolean)
+  }
+}
+
+function extractProfileTargetFromUrl(profileUrl: string): { profileType?: ProfileType; slug?: string; legacyRoute: "client" | "business" | "profile" | "unknown" } {
+  const segments = profilePathSegments(profileUrl)
+  const profileIndex = segments.indexOf("profiles")
+
+  if (profileIndex >= 0) {
+    const rawType = segments[profileIndex + 1]
+    const profileType = profileTypes.includes(rawType as ProfileType) ? (rawType as ProfileType) : undefined
+
+    return {
+      profileType,
+      slug: segments[profileIndex + 2],
+      legacyRoute: "profile",
+    }
+  }
+
+  const clientIndex = segments.indexOf("client")
+  if (clientIndex >= 0) return { profileType: "client", slug: segments[clientIndex + 1], legacyRoute: "client" }
+
+  const businessIndex = segments.indexOf("business")
+  if (businessIndex >= 0) return { profileType: "contractor", slug: segments[businessIndex + 1], legacyRoute: "business" }
+
+  return { slug: segments.at(-1), legacyRoute: "unknown" }
+}
+
+async function resolveResponseGraphTarget(
+  supabase: ReturnType<typeof createServiceClient>,
+  profileUrl: string,
+): Promise<{ clientId?: string; entityProfileId?: string; profileType?: ProfileType; slug: string }> {
+  const target = extractProfileTargetFromUrl(profileUrl)
+  if (!target.slug) throw new Error("A valid public profile URL is required.")
+
+  if (target.legacyRoute === "client") {
+    const { data: clientRow, error: clientError } = await supabase
+      .from("client_profiles")
+      .select("*")
+      .eq("public_slug", target.slug)
+      .maybeSingle()
+
+    if (clientError) throw new Error(clientError.message)
+    if (!clientRow) throw new Error("No Client Bureau profile was found for that URL.")
+
+    const { data: entityRow, error: entityError } = await supabase
+      .from("entity_profiles")
+      .select("id, profile_type")
+      .eq("profile_type", "client")
+      .eq("slug", target.slug)
+      .maybeSingle()
+
+    if (entityError && !isMissingRelationError(entityError) && !isMissingReportIntakeColumnError(entityError)) {
+      throw new Error(entityError.message)
+    }
+
+    return {
+      clientId: clientRow.id,
+      entityProfileId: entityRow?.id,
+      profileType: "client",
+      slug: target.slug,
+    }
+  }
+
+  const typeFilter = target.profileType ?? "contractor"
+  const { data: entityRow, error: entityError } = await supabase
+    .from("entity_profiles")
+    .select("*")
+    .eq("profile_type", typeFilter)
+    .eq("slug", target.slug)
+    .maybeSingle()
+
+  if (entityError) throw new Error(entityError.message)
+  if (!entityRow) throw new Error("No Client Bureau profile was found for that URL.")
+
+  return {
+    clientId: entityRow.legacy_client_id ?? undefined,
+    entityProfileId: entityRow.id,
+    profileType: entityRow.profile_type,
+    slug: target.slug,
   }
 }
 
 export async function submitClientResponseSupabase(input: ClientResponseInput) {
   const supabase = createServiceClient()
-  const slug = extractSlugFromProfileUrl(input.profileUrl)
+  const target = await resolveResponseGraphTarget(supabase, input.profileUrl)
 
-  if (!slug) {
-    throw new Error("A valid public profile URL is required.")
+  const insertPayload = {
+    client_id: target.clientId ?? null,
+    entity_profile_id: target.entityProfileId ?? null,
+    project_job_id: input.projectJobId ?? null,
+    report_id: input.reportId ?? null,
+    request_type: input.requestType,
+    verification_method: input.verificationMethod ?? null,
+    attachment_reference_private: input.attachmentUrl ?? null,
+    response_summary: `${input.requestType}: ${input.responseSummary}`,
+    status: "pending" as const,
   }
-
-  const { data: clientRow, error: clientError } = await supabase
-    .from("client_profiles")
-    .select("*")
-    .eq("public_slug", slug)
-    .maybeSingle()
-
-  if (clientError) throw new Error(clientError.message)
-  if (!clientRow) throw new Error("No Client Bureau profile was found for that URL.")
 
   const { data, error } = await supabase
     .from("client_responses")
-    .insert({
-      client_id: clientRow.id,
-      response_summary: `${input.requestType}: ${input.responseSummary}`,
-      status: "pending",
-    })
+    .insert(insertPayload)
     .select("*")
     .single()
+
+  if (error && isMissingReportIntakeColumnError(error) && target.clientId) {
+    const fallback = await supabase
+      .from("client_responses")
+      .insert({
+        client_id: target.clientId,
+        response_summary: `${input.requestType}: ${input.responseSummary}`,
+        status: "pending",
+      })
+      .select("*")
+      .single()
+
+    if (fallback.error) throw new Error(fallback.error.message)
+
+    return mapResponse(fallback.data)
+  }
 
   if (error) throw new Error(error.message)
 

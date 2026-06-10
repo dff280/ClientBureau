@@ -103,6 +103,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const location = `${profile.city}, ${profile.state}`
   const profileUrl = `${getSiteUrl()}/client/${profile.publicSlug}`
   const profileImageUrl = `${profileUrl}/opengraph-image`
+  const responseHref = `/client-response?profile=${encodeURIComponent(`/client/${profile.publicSlug}`)}`
   const structuredData = getClientProfileStructuredData(profile)
   const stateHref = getClientStateDirectoryHref(profile)
   const cityHref = getClientCityDirectoryHref(profile)
@@ -214,7 +215,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 </Link>
               </Button>
               <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                <Link href="/client-response">
+                <Link href={responseHref}>
                   <MessageSquareText aria-hidden="true" />
                   Respond or dispute
                 </Link>
@@ -451,7 +452,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   Approved context appears publicly after moderation.
                 </p>
                 <Button asChild variant="outline">
-                  <Link href="/client-response">Submit response or correction</Link>
+                  <Link href={responseHref}>Submit response or correction</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -528,7 +529,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                   </p>
                 )}
                 <Button asChild variant="outline" className="w-full">
-                  <Link href="/client-response">Are you this client?</Link>
+                  <Link href={responseHref}>Are you this client?</Link>
                 </Button>
               </CardContent>
             </Card>

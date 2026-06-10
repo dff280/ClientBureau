@@ -47,7 +47,17 @@ const proof = [
   { label: "Outcome", value: "Context", text: "Approved updates can add fair public context without declaring a winner." },
 ]
 
-export default async function ClientResponsePage() {
+type ClientResponsePageProps = {
+  searchParams: Promise<{
+    profile?: string
+    reportId?: string
+    projectJobId?: string
+  }>
+}
+
+export default async function ClientResponsePage({ searchParams }: ClientResponsePageProps) {
+  const params = await searchParams
+
   return (
     <main className="bg-slate-100">
       <PremiumHero
@@ -86,7 +96,11 @@ export default async function ClientResponsePage() {
                 <CardTitle>Response request</CardTitle>
               </CardHeader>
               <CardContent>
-                <ClientResponseForm />
+                <ClientResponseForm
+                  defaultProfileUrl={params.profile}
+                  defaultProjectJobId={params.projectJobId}
+                  defaultReportId={params.reportId}
+                />
               </CardContent>
             </Card>
 

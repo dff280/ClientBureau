@@ -226,6 +226,8 @@ export const clientResponseSchema = z.object({
   email: z.email("Enter a valid email for review contact."),
   phone: optionalText,
   profileUrl: requiredText("Profile URL", 6),
+  reportId: optionalText,
+  projectJobId: optionalText,
   requestType: z.enum(["Publish a response", "Dispute a report", "Request correction", "Resolution update"]),
   verificationMethod: z.enum(["Email verification", "Phone verification", "Business documentation"]).optional(),
   attachmentUrl: optionalText,

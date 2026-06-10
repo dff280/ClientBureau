@@ -662,6 +662,25 @@ describe("launch health gates", () => {
     expect(summary.missingPlatformColumns).toContain("client_reports.project_job_id")
     expect(summary.missingPlatformColumns).toContain("entity_profiles.profile_subtype")
   })
+
+  it("keeps response graph workflows gated until response link columns exist", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(["client_responses.entity_profile_id", "client_responses.project_job_id"]),
+    })
+
+    expect(summary.platformTablesReady).toBe(true)
+    expect(summary.platformSchemaReady).toBe(false)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.missingPlatformColumns).toContain("client_responses.entity_profile_id")
+    expect(summary.missingPlatformColumns).toContain("client_responses.project_job_id")
+  })
 })
 
 describe("mobile app readiness", () => {
@@ -1162,6 +1181,20 @@ describe("schemas and mock actions", () => {
         verificationMethod: "Email verification",
         responseSummary:
           "The client states payment timing was connected to a requested documentation review.",
+        contactCertification: true,
+        documentationCertification: true,
+      }).success,
+    ).toBe(true)
+    expect(
+      clientResponseSchema.safeParse({
+        name: "Orlando Roofing LLC",
+        email: "owner@example.com",
+        profileUrl: "/profiles/contractor/orlando-roofing-orlando-fl",
+        projectJobId: "project_123",
+        requestType: "Resolution update",
+        verificationMethod: "Business documentation",
+        responseSummary:
+          "The business states the project was resolved after a documented payment-plan update and can provide supporting records for moderation.",
         contactCertification: true,
         documentationCertification: true,
       }).success,

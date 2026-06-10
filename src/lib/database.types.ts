@@ -578,8 +578,13 @@ export interface Database {
       client_responses: {
         Row: {
           id: string
-          client_id: string
+          client_id: string | null
+          entity_profile_id: string | null
+          project_job_id: string | null
           report_id: string | null
+          request_type: string | null
+          verification_method: string | null
+          attachment_reference_private: string | null
           response_summary: string
           status: "pending" | "published" | "rejected"
           created_at: string
@@ -587,8 +592,13 @@ export interface Database {
         }
         Insert: {
           id?: string
-          client_id: string
+          client_id?: string | null
+          entity_profile_id?: string | null
+          project_job_id?: string | null
           report_id?: string | null
+          request_type?: string | null
+          verification_method?: string | null
+          attachment_reference_private?: string | null
           response_summary: string
           status?: "pending" | "published" | "rejected"
           created_at?: string

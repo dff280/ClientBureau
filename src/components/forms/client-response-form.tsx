@@ -18,7 +18,17 @@ const initialState: ActionResult<ClientResponse> = {
   message: "",
 }
 
-export function ClientResponseForm() {
+type ClientResponseFormProps = {
+  defaultProfileUrl?: string
+  defaultReportId?: string
+  defaultProjectJobId?: string
+}
+
+export function ClientResponseForm({
+  defaultProfileUrl,
+  defaultProjectJobId,
+  defaultReportId,
+}: ClientResponseFormProps = {}) {
   const [state, action] = useActionState(submitClientResponseAction, initialState)
 
   useEffect(() => {
@@ -62,9 +72,11 @@ export function ClientResponseForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="profileUrl">Profile URL</Label>
-          <Input id="profileUrl" name="profileUrl" placeholder="/client/john-smith-orlando-fl" />
+          <Input id="profileUrl" name="profileUrl" defaultValue={defaultProfileUrl} placeholder="/client/john-smith-orlando-fl" />
           <FieldError name="profileUrl" errors={state.ok ? undefined : state.fieldErrors} />
         </div>
+        {defaultReportId ? <input type="hidden" name="reportId" value={defaultReportId} /> : null}
+        {defaultProjectJobId ? <input type="hidden" name="projectJobId" value={defaultProjectJobId} /> : null}
         <div className="space-y-2">
           <Label htmlFor="requestType">Request type</Label>
           <select

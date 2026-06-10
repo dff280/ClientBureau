@@ -66,6 +66,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const profileUrl = `${siteUrl}${profile.profileHref}`
   const reportHref = `/submit-report?profileType=${profile.profileType}&profileSubtype=${encodeURIComponent(String(profile.profileSubtype ?? ""))}&profileSlug=${encodeURIComponent(profile.slug)}&city=${encodeURIComponent(profile.city)}&state=${encodeURIComponent(profile.state)}`
   const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
+  const responseHref = `/client-response?profile=${encodeURIComponent(profile.profileHref)}`
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",
@@ -295,7 +296,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 icon={<MessageSquare className="size-5" aria-hidden="true" />}
                 title="Response and correction path"
                 text="Reported parties can submit a response, dispute, correction request, or resolution update for moderation review."
-                href="/client-response"
+                href={responseHref}
                 cta="Submit response"
               />
               <ProfileModule

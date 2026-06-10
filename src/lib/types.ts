@@ -1213,8 +1213,12 @@ export interface ReportEvidence {
 
 export interface ClientResponse {
   id: string
-  clientId: string
+  clientId?: string
+  entityProfileId?: string
+  projectJobId?: string
   reportId?: string
+  requestType?: string
+  verificationMethod?: string
   responseSummary: string
   status: "pending" | "published" | "rejected"
   createdAt: string
