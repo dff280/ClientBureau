@@ -44,6 +44,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added live release checks for indexable client directories, report directories, and business profile indexes so key SEO surfaces stay crawlable, canonical, privacy-safe, and present in the sitemap.
 - Added live release checks for service and conversion pages including payment recovery, Florida lien services, contract templates, change orders, and the mobile app page.
 - Added canonical metadata and release checks for auth, signup, and client response pages so noindex workflow surfaces stay explicit, safe, and query-aware.
+- Cleaned up profile-claim privacy wording and added the indexable claim-profile page to the sitemap.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

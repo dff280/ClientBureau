@@ -202,7 +202,7 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
                 <ShieldCheck className="size-8 text-amber-800" aria-hidden="true" />
                 <h2 className="text-xl font-semibold text-amber-950">Private by default</h2>
                 <p className="text-sm leading-6 text-amber-950">
-                  Claiming a profile does not expose private emails, phone numbers, billing details,
+                  Claiming a profile does not publish private emails, phone numbers, billing details,
                   street addresses, raw evidence, private contract files, or internal moderation notes.
                 </p>
               </CardContent>
