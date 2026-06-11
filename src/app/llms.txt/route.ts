@@ -51,6 +51,8 @@ export async function GET() {
 
 Client Bureau is a moderated client-risk intelligence platform for contractors. Contractors use it to search client profiles, review approved contractor-submitted report summaries, submit documented reports, and understand client response or dispute context before accepting work.
 
+Core positioning: Check the client before you take the job.
+
 ## Key Pages
 
 - [Home](${siteUrl}/)

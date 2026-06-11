@@ -182,6 +182,21 @@ function sitemapLocs(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((match) => match[1])
 }
 
+function isPrivateCrawlPath(pathname) {
+  return [
+    "/admin",
+    "/api",
+    "/auth",
+    "/dashboard",
+    "/login",
+    "/signup",
+    "/search",
+    "/submit-report",
+    "/client-response",
+    "/contract/",
+  ].some((prefix) => pathname === prefix || pathname.startsWith(prefix))
+}
+
 function hasNoStoreHeader(response) {
   const cacheControl = response.headers?.get?.("cache-control") ?? ""
 
@@ -500,18 +515,7 @@ if (sitemapForCrawlRules.response.ok) {
     try {
       const pathname = new URL(loc).pathname
 
-      return [
-        "/admin",
-        "/api",
-        "/auth",
-        "/dashboard",
-        "/login",
-        "/signup",
-        "/search",
-        "/submit-report",
-        "/client-response",
-        "/contract/",
-      ].some((prefix) => pathname === prefix || pathname.startsWith(prefix))
+      return isPrivateCrawlPath(pathname)
     } catch {
       return true
     }
@@ -536,6 +540,128 @@ if (sitemapForCrawlRules.response.ok) {
   }
 } else {
   fail("/sitemap.xml crawl privacy checks", sitemapForCrawlRules.error || String(sitemapForCrawlRules.response.status))
+}
+
+const llmsTxt = await read("/llms.txt")
+if (llmsTxt.response.ok) {
+  if (headerContains(llmsTxt.response, "content-type", "text/plain")) {
+    pass("/llms.txt content type", llmsTxt.response.headers?.get?.("content-type") ?? "")
+  } else {
+    fail("/llms.txt content type", llmsTxt.response.headers?.get?.("content-type") || "missing")
+  }
+
+  const llmsRequiredTexts = [
+    "# Client Bureau",
+    "Check the client before you take the job.",
+    `${expectedSiteUrl}/pricing`,
+    `${expectedSiteUrl}/how-it-works`,
+    `${expectedSiteUrl}/clients`,
+    `${expectedSiteUrl}/mobile-app`,
+    `${expectedSiteUrl}/payment-recovery-service`,
+    `${expectedSiteUrl}/florida-lien-filing-service`,
+    "documented contractor and business-owner experiences",
+    "private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions",
+  ]
+
+  for (const expectedText of llmsRequiredTexts) {
+    if (llmsTxt.text.includes(expectedText)) {
+      pass(`/llms.txt content ${expectedText.slice(0, 60)}`)
+    } else {
+      fail(`/llms.txt content ${expectedText.slice(0, 60)}`, "missing")
+    }
+  }
+
+  const privateLlmsLinks = [...llmsTxt.text.matchAll(/https:\/\/clientbureau\.com([^\s)]+)/g)]
+    .map((match) => match[1])
+    .filter((pathname) => isPrivateCrawlPath(pathname))
+
+  if (privateLlmsLinks.length === 0) {
+    pass("/llms.txt excludes private links")
+  } else {
+    fail("/llms.txt excludes private links", privateLlmsLinks.slice(0, 5).join(", "))
+  }
+} else {
+  fail("/llms.txt content checks", llmsTxt.error || String(llmsTxt.response.status))
+}
+
+const aiIndex = await readJson("/ai-index.json")
+if (aiIndex.response.ok && aiIndex.json) {
+  pass("/ai-index.json parses as JSON")
+
+  if (headerContains(aiIndex.response, "content-type", "application/json")) {
+    pass("/ai-index.json content type", aiIndex.response.headers?.get?.("content-type") ?? "")
+  } else {
+    fail("/ai-index.json content type", aiIndex.response.headers?.get?.("content-type") || "missing")
+  }
+
+  const aiPublicPages = Array.isArray(aiIndex.json.publicPages) ? aiIndex.json.publicPages : []
+  const aiUrls = aiPublicPages.map((page) => String(page?.url ?? "")).filter(Boolean)
+
+  const aiRequiredFields = [
+    ["name", "Client Bureau"],
+    ["url", expectedSiteUrl],
+    ["positioning", "Check the client before you take the job."],
+  ]
+
+  for (const [field, expectedValue] of aiRequiredFields) {
+    if (aiIndex.json[field] === expectedValue) {
+      pass(`/ai-index.json field ${field}`, expectedValue)
+    } else {
+      fail(`/ai-index.json field ${field}`, `expected ${expectedValue}, got ${aiIndex.json[field] ?? "missing"}`)
+    }
+  }
+
+  for (const requiredPhrase of ["documented contractor experiences", "moderated summaries", "evidence reviewed privately"]) {
+    if (aiIndex.json.safeLanguage?.includes?.(requiredPhrase)) {
+      pass(`/ai-index.json safe language ${requiredPhrase}`)
+    } else {
+      fail(`/ai-index.json safe language ${requiredPhrase}`, "missing")
+    }
+  }
+
+  const privacyRulesText = Array.isArray(aiIndex.json.privacyRules) ? aiIndex.json.privacyRules.join(" ") : ""
+  for (const requiredPhrase of ["raw emails", "phone numbers", "private addresses", "raw evidence files", "pending reports", "internal admin notes"]) {
+    if (privacyRulesText.includes(requiredPhrase)) {
+      pass(`/ai-index.json privacy rule ${requiredPhrase}`)
+    } else {
+      fail(`/ai-index.json privacy rule ${requiredPhrase}`, "missing")
+    }
+  }
+
+  for (const requiredUrl of [`${expectedSiteUrl}/`, `${expectedSiteUrl}/pricing`, `${expectedSiteUrl}/clients`, `${expectedSiteUrl}/mobile-app`]) {
+    if (aiUrls.includes(requiredUrl)) {
+      pass(`/ai-index.json public page ${requiredUrl}`)
+    } else {
+      fail(`/ai-index.json public page ${requiredUrl}`, "missing")
+    }
+  }
+
+  const nonCanonicalAiUrls = aiUrls.filter((url) => !url.startsWith(expectedSiteUrl))
+  const privateAiUrls = aiPublicPages.filter((page) => {
+    try {
+      const pathname = new URL(String(page?.url ?? "")).pathname
+
+      if (pathname === "/search" && page?.indexable === false) return false
+
+      return isPrivateCrawlPath(pathname)
+    } catch {
+      return true
+    }
+  })
+
+  if (nonCanonicalAiUrls.length === 0) {
+    pass("/ai-index.json canonical host URLs")
+  } else {
+    fail("/ai-index.json canonical host URLs", nonCanonicalAiUrls.slice(0, 5).join(", "))
+  }
+
+  if (privateAiUrls.length === 0) {
+    pass("/ai-index.json excludes private indexed pages")
+  } else {
+    fail("/ai-index.json excludes private indexed pages", privateAiUrls.slice(0, 5).map((page) => page.url).join(", "))
+  }
+} else {
+  fail("/ai-index.json parses as JSON", aiIndex.error || String(aiIndex.response.status))
 }
 
 const securityTxt = await read("/.well-known/security.txt")
