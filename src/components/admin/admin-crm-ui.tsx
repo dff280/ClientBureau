@@ -139,6 +139,7 @@ export function AdminProfileHealthCard({
   tone = "slate",
   facts,
   actions,
+  children,
 }: {
   title: string
   subtitle: string
@@ -146,6 +147,7 @@ export function AdminProfileHealthCard({
   tone?: "slate" | "amber" | "emerald" | "rose" | "blue"
   facts: Array<{ label: string; value: ReactNode }>
   actions?: ReactNode
+  children?: ReactNode
 }) {
   const badgeTone = {
     slate: "border-slate-200 bg-slate-50 text-slate-700",
@@ -170,10 +172,11 @@ export function AdminProfileHealthCard({
         {facts.map((fact) => (
           <div key={fact.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
             <dt className="text-xs font-semibold uppercase text-slate-500">{fact.label}</dt>
-            <dd className="mt-1 text-sm font-semibold text-slate-950">{fact.value}</dd>
+            <dd className="mt-1 break-words text-sm font-semibold text-slate-950">{fact.value}</dd>
           </div>
         ))}
       </dl>
+      {children ? <div className="mt-4">{children}</div> : null}
       {actions ? <div className="mt-5 flex flex-wrap gap-2">{actions}</div> : null}
     </article>
   )

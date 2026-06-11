@@ -49,6 +49,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved the contractor Reports dashboard with mobile-first status cards, visible status counts, clearer empty states, and softer privacy-safe workflow copy.
 - Improved the admin report moderation queue with filter counts, richer queue cards, checklist progress, review-age context, and a clearer review path before approval decisions.
 - Fixed the admin app shell sidebar offset to prevent desktop horizontal overflow across admin pages.
+- Improved admin client profile management with prioritized review signals, publication-readiness cards, report/evidence context, and a cleaner grouped editor drawer.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

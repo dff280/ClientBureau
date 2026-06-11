@@ -1,8 +1,20 @@
 "use client"
 
 import Link from "next/link"
+import type { ReactNode } from "react"
 import { useActionState, useEffect } from "react"
-import { CheckCircle2, ExternalLink, Pencil, ShieldCheck, Trash2 } from "lucide-react"
+import {
+  BadgeCheck,
+  CheckCircle2,
+  Clock3,
+  ExternalLink,
+  FileCheck2,
+  LockKeyhole,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+  type LucideIcon,
+} from "lucide-react"
 import { toast } from "sonner"
 
 import { AdminProfileHealthCard } from "@/components/admin/admin-crm-ui"
@@ -31,16 +43,36 @@ import { buildBusinessSlug } from "@/lib/business-rating"
 import { clientRatingBand } from "@/lib/client-rating"
 import type { ActionResult, AuditLogEntry, ClientProfile, ContractorProfile } from "@/lib/types"
 import { riskLevels } from "@/lib/types"
+import { cn } from "@/lib/utils"
 
 const clientState: ActionResult<ClientProfile> = { ok: false, message: "" }
 const contractorState: ActionResult<ContractorProfile> = { ok: false, message: "" }
 const deleteState: ActionResult<AuditLogEntry | boolean> = { ok: false, message: "" }
 
-export function AdminClientEditor({ client }: { client: ClientProfile }) {
+export type ClientProfileReportMetrics = {
+  approved: number
+  disputed: number
+  evidence: number
+  lastReportAt?: string
+  pending: number
+  positive: number
+  rejected: number
+  resolved: number
+  total: number
+}
+
+export function AdminClientEditor({
+  client,
+  metrics = emptyClientMetrics,
+}: {
+  client: ClientProfile
+  metrics?: ClientProfileReportMetrics
+}) {
   const [state, action] = useActionState(adminUpdateClientAction, clientState)
   const [deleteResult, deleteAction] = useActionState(adminDeleteRecordAction, deleteState)
   const name = `${client.firstName} ${client.lastName}`
   const ratingBand = clientRatingBand(client.clientBureauScore, client.reportCount)
+  const publicationState = getPublicationState(client, metrics)
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
@@ -61,9 +93,11 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
           { label: "Client Bureau Rating", value: `${client.clientBureauScore}/100` },
           { label: "Rating band", value: ratingBand },
           { label: "Risk level", value: client.riskLevel },
-          { label: "Reports", value: client.reportCount },
+          { label: "Approved / total reports", value: `${metrics.approved} / ${metrics.total}` },
+          { label: "Pending / disputed", value: `${metrics.pending} pending / ${metrics.disputed} disputed` },
+          { label: "Evidence status", value: metrics.evidence > 0 ? `${metrics.evidence} evidence-backed report${metrics.evidence === 1 ? "" : "s"}` : "No evidence label yet" },
           { label: "Public slug", value: client.publicSlug },
-          { label: "Private identifiers", value: "Hashed/private match only" },
+          { label: "Last report activity", value: metrics.lastReportAt ? ageLabel(metrics.lastReportAt) : "No report activity" },
         ]}
         actions={
           <>
@@ -83,7 +117,34 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
             ) : null}
           </>
         }
-      />
+      >
+        <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2">
+          <ReadinessItem
+            icon={publicationState.icon}
+            label="Publication"
+            text={publicationState.text}
+            tone={publicationState.tone}
+          />
+          <ReadinessItem
+            icon={LockKeyhole}
+            label="Private match"
+            text="Phone and email remain hashed"
+            tone="emerald"
+          />
+          <ReadinessItem
+            icon={FileCheck2}
+            label="Evidence"
+            text={metrics.evidence > 0 ? "Private evidence on file" : "Evidence not labeled yet"}
+            tone={metrics.evidence > 0 ? "blue" : "slate"}
+          />
+          <ReadinessItem
+            icon={Clock3}
+            label="Review age"
+            text={ageLabel(client.updatedAt)}
+            tone={isOlderThanDays(client.updatedAt, 45) ? "amber" : "slate"}
+          />
+        </div>
+      </AdminProfileHealthCard>
       <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-2xl">
         <SheetHeader className="border-b border-slate-200 p-5">
           <SheetTitle>Edit client profile</SheetTitle>
@@ -93,6 +154,11 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-5 p-5">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <EditorSummaryTile label="Publication state" value={publicationState.text} tone={publicationState.tone} />
+            <EditorSummaryTile label="Approved reports" value={String(metrics.approved)} tone={metrics.approved > 0 ? "emerald" : "slate"} />
+            <EditorSummaryTile label="Open disputes" value={String(metrics.disputed)} tone={metrics.disputed > 0 ? "amber" : "slate"} />
+          </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Publication preview</p>
             <p className="mt-2 text-sm font-semibold text-slate-950">{name} in {client.city}, {client.state}</p>
@@ -100,47 +166,62 @@ export function AdminClientEditor({ client }: { client: ClientProfile }) {
               Public URL: /client/{client.publicSlug}. Private matching fields are stored as hashes and are not shown publicly.
             </p>
           </div>
-          <form action={action} className="grid gap-4">
+          <form action={action} className="grid gap-5">
             <AdminActionTokenInput />
             <input type="hidden" name="clientId" value={client.id} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <LabeledInput label="First name" name="firstName" defaultValue={client.firstName} errors={state.ok ? undefined : state.fieldErrors} />
-              <LabeledInput label="Last name" name="lastName" defaultValue={client.lastName} errors={state.ok ? undefined : state.fieldErrors} />
-              <LabeledInput label="Business optional" name="businessName" defaultValue={client.businessName ?? ""} />
-              <LabeledInput label="City" name="city" defaultValue={client.city} errors={state.ok ? undefined : state.fieldErrors} />
-              <LabeledState label="State" id={`${client.id}-state`} name="state" defaultValue={client.state} errors={state.ok ? undefined : state.fieldErrors} />
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${client.id}-risk`}>
-                  Risk level
-                </label>
-                <select
-                  id={`${client.id}-risk`}
-                  name="riskLevel"
-                  defaultValue={client.riskLevel}
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  {riskLevels.map((risk) => (
-                    <option key={risk}>{risk}</option>
-                  ))}
-                </select>
+            <EditorFormSection
+              title="Identity and directory fields"
+              description="These fields power admin matching, public profile headings, profile URLs, and city/state directory pages."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledInput label="First name" name="firstName" defaultValue={client.firstName} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="Last name" name="lastName" defaultValue={client.lastName} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="Business optional" name="businessName" defaultValue={client.businessName ?? ""} />
+                <LabeledInput label="City" name="city" defaultValue={client.city} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledState label="State" id={`${client.id}-state`} name="state" defaultValue={client.state} errors={state.ok ? undefined : state.fieldErrors} />
               </div>
-              <LabeledInput label="Client Bureau Rating" name="clientBureauScore" defaultValue={String(client.clientBureauScore)} type="number" />
-            </div>
-            <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
-              <Checkbox name="isPublic" defaultChecked={client.isPublic} />
-              <span>
-                <span className="block font-semibold text-slate-950">Make profile public</span>
-                <span className="mt-1 block text-xs leading-5 text-slate-600">
-                  Only public-safe identity, rating context, approved reports, and response context can appear on public pages.
+            </EditorFormSection>
+            <EditorFormSection
+              title="Rating, risk, and public visibility"
+              description="Only public-safe identity, score context, approved summaries, response context, and evidence indicators should appear publicly."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${client.id}-risk`}>
+                    Risk level
+                  </label>
+                  <select
+                    id={`${client.id}-risk`}
+                    name="riskLevel"
+                    defaultValue={client.riskLevel}
+                    className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                  >
+                    {riskLevels.map((risk) => (
+                      <option key={risk}>{risk}</option>
+                    ))}
+                  </select>
+                </div>
+                <LabeledInput label="Client Bureau Rating" name="clientBureauScore" defaultValue={String(client.clientBureauScore)} type="number" />
+              </div>
+              <label className="mt-4 flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700">
+                <Checkbox name="isPublic" defaultChecked={client.isPublic} />
+                <span>
+                  <span className="block font-semibold text-slate-950">Make profile public</span>
+                  <span className="mt-1 block text-xs leading-5 text-slate-600">
+                    Only public-safe identity, rating context, approved reports, and response context can appear on public pages.
+                  </span>
                 </span>
-              </span>
-            </label>
-            <div>
-              <Textarea name="moderatorNote" required placeholder="Required moderator note for audit log" className="min-h-24" />
+              </label>
+            </EditorFormSection>
+            <EditorFormSection
+              title="Moderator note"
+              description="Explain why identity, visibility, risk, or rating changed so the next admin can understand the decision."
+            >
+              <Textarea name="moderatorNote" required placeholder="Required moderator note for audit log" className="min-h-24 bg-white" />
               <p className="mt-2 text-xs leading-5 text-slate-500">
-                Note why the profile, visibility, risk, or rating display changed.
+                Keep notes factual and internal. Do not paste private evidence paths or raw contact details.
               </p>
-            </div>
+            </EditorFormSection>
             <PendingSubmitButton pendingText="Saving..." className="bg-slate-950 text-white hover:bg-slate-800">
               <CheckCircle2 aria-hidden="true" />
               Save profile changes
@@ -276,6 +357,135 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
       </SheetContent>
     </Sheet>
   )
+}
+
+const emptyClientMetrics: ClientProfileReportMetrics = {
+  approved: 0,
+  disputed: 0,
+  evidence: 0,
+  pending: 0,
+  positive: 0,
+  rejected: 0,
+  resolved: 0,
+  total: 0,
+}
+
+type ReadinessTone = "slate" | "amber" | "emerald" | "blue"
+
+const readinessToneClasses: Record<ReadinessTone, string> = {
+  slate: "border-slate-200 bg-white text-slate-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-800",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-800",
+  blue: "border-sky-200 bg-sky-50 text-sky-800",
+}
+
+function getPublicationState(client: ClientProfile, metrics: ClientProfileReportMetrics): {
+  icon: LucideIcon
+  text: string
+  tone: ReadinessTone
+} {
+  if (client.isPublic) {
+    return {
+      icon: BadgeCheck,
+      text: "Public and searchable",
+      tone: "emerald",
+    }
+  }
+
+  if (metrics.approved > 0) {
+    return {
+      icon: FileCheck2,
+      text: "Approved report ready",
+      tone: "blue",
+    }
+  }
+
+  if (metrics.pending > 0 || metrics.disputed > 0) {
+    return {
+      icon: Clock3,
+      text: "Review before publishing",
+      tone: "amber",
+    }
+  }
+
+  return {
+    icon: LockKeyhole,
+    text: "Private record only",
+    tone: "slate",
+  }
+}
+
+function ReadinessItem({
+  icon: Icon,
+  label,
+  text,
+  tone = "slate",
+}: {
+  icon: LucideIcon
+  label: string
+  text: string
+  tone?: ReadinessTone
+}) {
+  return (
+    <div className={cn("flex items-start gap-2 rounded-md border p-3", readinessToneClasses[tone])}>
+      <Icon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+        <p className="mt-1 text-sm font-semibold leading-5">{text}</p>
+      </div>
+    </div>
+  )
+}
+
+function EditorSummaryTile({
+  label,
+  value,
+  tone = "slate",
+}: {
+  label: string
+  value: string
+  tone?: ReadinessTone
+}) {
+  return (
+    <div className={cn("rounded-md border p-3", readinessToneClasses[tone])}>
+      <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+      <p className="mt-1 text-sm font-semibold leading-5">{value}</p>
+    </div>
+  )
+}
+
+function EditorFormSection({
+  children,
+  description,
+  title,
+}: {
+  children: ReactNode
+  description: string
+  title: string
+}) {
+  return (
+    <section className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <h3 className="font-semibold text-slate-950">{title}</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{description}</p>
+      <div className="mt-4">{children}</div>
+    </section>
+  )
+}
+
+function ageLabel(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Date unavailable"
+
+  const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000))
+  if (days === 0) return "Updated today"
+  if (days === 1) return "Updated 1 day ago"
+  return `Updated ${days} days ago`
+}
+
+function isOlderThanDays(value: string, days: number) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return false
+  return Date.now() - date.getTime() > days * 86_400_000
 }
 
 function LabeledInput({
