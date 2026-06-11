@@ -114,6 +114,22 @@ npm run verify:live
 
 The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, missing unified profile graph routes, missing diagnostic no-store headers, unsafe logged-out protected-route behavior, missing protected-route return paths, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet.
 
+When disposable QA credentials are available, also run:
+
+```powershell
+$env:CONTRACTOR_QA_EMAIL="contractor-qa@example.com"
+$env:CONTRACTOR_QA_PASSWORD="private-password"
+$env:ADMIN_QA_EMAIL="admin-qa@example.com"
+$env:ADMIN_QA_PASSWORD="private-password"
+npm run verify:live:auth
+Remove-Item Env:CONTRACTOR_QA_EMAIL
+Remove-Item Env:CONTRACTOR_QA_PASSWORD
+Remove-Item Env:ADMIN_QA_EMAIL
+Remove-Item Env:ADMIN_QA_PASSWORD
+```
+
+The authenticated verifier logs in through the real `/api/auth/login` route, checks session JSON, opens key contractor/admin pages with the returned cookies, verifies private pages are no-store, and confirms a contractor account cannot enter `/admin`. It skips cleanly when QA credentials are not configured.
+
 To intentionally inspect production without comparing release identity, run:
 
 ```powershell
@@ -177,6 +193,7 @@ Before pushing `main`:
 - `npm run seo:check:local` passes after `npm run build`, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.
 - `npm run mobile:check` passes.
 - `npm run verify:live` passes after the VPS rebuild.
+- `npm run verify:live:auth` passes when disposable QA credentials are configured, or reports skipped checks when they are not.
 - Manual logged-in QA follows `docs/LIVE_WORKFLOW_QA_RUNBOOK.md`.
 - Browser QA covers the changed public/dashboard/admin routes.
 - No secrets or private data appear in `git diff`.

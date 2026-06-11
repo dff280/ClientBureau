@@ -16,6 +16,24 @@ npm run seo:check
 Remove-Item Env:SEO_BASE_URL
 ```
 
+Optional authenticated smoke test, using disposable QA accounts only:
+
+```powershell
+$env:LIVE_BASE_URL="https://clientbureau.com"
+$env:CONTRACTOR_QA_EMAIL="contractor-qa@example.com"
+$env:CONTRACTOR_QA_PASSWORD="use-a-private-password-manager-value"
+$env:ADMIN_QA_EMAIL="admin-qa@example.com"
+$env:ADMIN_QA_PASSWORD="use-a-private-password-manager-value"
+npm run verify:live:auth
+Remove-Item Env:LIVE_BASE_URL
+Remove-Item Env:CONTRACTOR_QA_EMAIL
+Remove-Item Env:CONTRACTOR_QA_PASSWORD
+Remove-Item Env:ADMIN_QA_EMAIL
+Remove-Item Env:ADMIN_QA_PASSWORD
+```
+
+Do not commit QA credentials. If no QA credentials are configured, `npm run verify:live:auth` exits with skipped checks.
+
 Required result:
 
 - `/api/version` shows the expected package version and Git commit.
@@ -27,6 +45,7 @@ Required result:
 - Public pages pass production-copy safety checks: no MVP/demo/mock/test-checkout wording, internal environment names, API/auth implementation terms, or inflammatory blacklist-style language.
 - SEO verification covers core marketing pages, policy pages, service pages, directories, report pages, industry pages, mobile app page, and sampled public profiles.
 - Public profile checks do not expose raw emails, phone numbers, street addresses, raw evidence, private contract snapshots, pending/rejected content, or admin notes.
+- Optional authenticated QA confirms contractor/admin login, session endpoints, route-to-route stability, no-store private pages, and contractor denial from the admin area.
 
 Stripe warnings are acceptable until billing is intentionally enabled.
 

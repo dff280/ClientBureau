@@ -23,6 +23,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added `npm run seo:check:local` to start the standalone Next.js build, run SEO verification, and shut down automatically.
 - Added live release checks for logged-out dashboard, submit-report, and admin route protection so protected pages must redirect to safe internal login URLs with no-store cache headers and the expected return path.
 - Preserved dashboard and submit-report return paths when logged-out users open protected tools, so login can return them to the exact workspace or form they requested.
+- Added optional authenticated live QA verification for contractor/admin login, session endpoints, private page no-store headers, route stability, and contractor denial from admin routes.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
