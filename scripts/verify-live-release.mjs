@@ -110,6 +110,27 @@ function extract(html, pattern) {
   return match?.[1]?.trim() ?? ""
 }
 
+function decodeHtmlAttribute(value) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+}
+
+function hiddenInputValue(html, name) {
+  const inputs = [...html.matchAll(/<input\b[^>]*>/gi)].map((match) => match[0])
+  const input = inputs.find((tag) => {
+    const inputName = extract(tag, /\bname=["']([^"']+)["']/i)
+
+    return inputName === name
+  })
+
+  return input ? decodeHtmlAttribute(extract(input, /\bvalue=["']([^"']*)["']/i)) : ""
+}
+
 function canonical(html) {
   return extract(html, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
 }
@@ -331,6 +352,33 @@ for (const { path, expectedNext } of protectedRoutes) {
   } else {
     fail(`${path} protected no-store cache header`, result.response.headers?.get?.("cache-control") || "missing")
   }
+}
+
+const signupSafeNext = "/search?q=John&state=FL"
+const signupWithSafeNext = await read(`/signup?next=${encodeURIComponent(signupSafeNext)}`)
+if (signupWithSafeNext.response.ok) {
+  const nextValue = hiddenInputValue(signupWithSafeNext.text, "next")
+
+  if (nextValue === signupSafeNext) {
+    pass("/signup preserves safe product return path", nextValue)
+  } else {
+    fail("/signup preserves safe product return path", `expected ${signupSafeNext}, got ${nextValue || "missing"}`)
+  }
+} else {
+  fail("/signup preserves safe product return path", signupWithSafeNext.error || String(signupWithSafeNext.response.status))
+}
+
+const signupWithAdminNext = await read(`/signup?next=${encodeURIComponent("/admin/reports")}`)
+if (signupWithAdminNext.response.ok) {
+  const nextValue = hiddenInputValue(signupWithAdminNext.text, "next")
+
+  if (nextValue === "/dashboard") {
+    pass("/signup blocks privileged return path", nextValue)
+  } else {
+    fail("/signup blocks privileged return path", `expected /dashboard, got ${nextValue || "missing"}`)
+  }
+} else {
+  fail("/signup blocks privileged return path", signupWithAdminNext.error || String(signupWithAdminNext.response.status))
 }
 
 const mobileApp = await read("/mobile-app")
