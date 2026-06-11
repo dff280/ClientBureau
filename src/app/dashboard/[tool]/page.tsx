@@ -442,7 +442,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
       {
         title: "What stays private",
-        text: "Private-match signals and your watchlist choices are never exposed on public profile pages.",
+        text: "Private-match signals and your watchlist choices are never shown on public profile pages.",
       },
     ],
     primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
@@ -843,7 +843,7 @@ function getToolOutcomeItems(outcomeKey: ToolOutcomeKey) {
       {
         label: "Command center",
         title: "Daily work stays easy to scan",
-        detail: "Today’s alerts, recent activity, open reports, watched clients, and next actions should stay visible without hunting through every tool.",
+        detail: "Today's alerts, recent activity, open reports, watched clients, and next actions should stay visible without hunting through every tool.",
         status: "Overview",
         tone: "blue",
       },

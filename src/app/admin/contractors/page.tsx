@@ -73,7 +73,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
               tone: "blue",
             },
             {
-              detail: "Business verification and profile edits should not expose private account email, billing details, internal notes, or raw documents publicly.",
+              detail: "Business verification and profile edits should not publish private account email, billing details, internal notes, or raw documents publicly.",
               label: "Privacy",
               status: "Sealed",
               title: "Private account context should stay private",
