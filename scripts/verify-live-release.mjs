@@ -65,9 +65,10 @@ function fail(name, detail = "") {
 async function read(path, options = {}) {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 15000)
+  const url = /^https?:\/\//i.test(path) ? path : `${baseUrl}${path}`
 
   try {
-    const response = await fetch(`${baseUrl}${path}`, {
+    const response = await fetch(url, {
       method: options.method ?? "GET",
       headers: {
         "User-Agent": "ClientBureauReleaseVerifier/1.0",
@@ -187,6 +188,10 @@ function headerContains(response, headerName, expectedValue) {
   const value = response.headers?.get?.(headerName) ?? ""
 
   return value.toLowerCase().includes(expectedValue.toLowerCase())
+}
+
+function hasHeader(response, headerName) {
+  return Boolean(response.headers?.get?.(headerName))
 }
 
 function isRedirectResponse(response) {
@@ -426,8 +431,32 @@ if (homepageForHeaders.response.ok) {
       )
     }
   }
+
+  for (const headerName of ["Server", "X-Powered-By"]) {
+    if (hasHeader(homepageForHeaders.response, headerName)) {
+      fail(`Sensitive header ${headerName}`, homepageForHeaders.response.headers?.get?.(headerName) ?? "present")
+    } else {
+      pass(`Sensitive header ${headerName}`, "not exposed")
+    }
+  }
 } else {
   fail("Security header source page", homepageForHeaders.error || String(homepageForHeaders.response.status))
+}
+
+const siteUrlForRedirects = new URL(expectedSiteUrl)
+if (siteUrlForRedirects.protocol === "https:" && siteUrlForRedirects.hostname === "clientbureau.com") {
+  const wwwRedirectPath = "/search?q=John"
+  const wwwRedirect = await read(`https://www.clientbureau.com${wwwRedirectPath}`, { redirect: "manual" })
+  const location = wwwRedirect.response.headers?.get?.("location") ?? ""
+
+  if (isRedirectResponse(wwwRedirect.response) && location === `${expectedSiteUrl}${wwwRedirectPath}`) {
+    pass("Canonical www redirect", location)
+  } else {
+    fail(
+      "Canonical www redirect",
+      `status=${wwwRedirect.response.status}; location=${location || "missing"}`,
+    )
+  }
 }
 
 const protectedRoutes = [

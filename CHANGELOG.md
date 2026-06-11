@@ -34,6 +34,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Extended live release verification to prove login/logout auth transition redirects are explicit no-store responses.
 - Aligned Caddy and app security headers and added live verification for CSP, HSTS, permissions policy, frame protection, referrer policy, and origin isolation headers.
 - Updated the VPS deploy script to recreate Caddy after rebuilds so mounted edge header changes take effect during normal releases.
+- Extended live release verification to prove `www.clientbureau.com` redirects to the apex host and that sensitive `Server`/`X-Powered-By` headers are not exposed.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
