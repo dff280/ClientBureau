@@ -393,6 +393,35 @@ for (const check of authTransitionChecks) {
   }
 }
 
+const mobilePrivatePaths = [
+  "/api/mobile/me",
+  "/api/mobile/dashboard",
+  "/api/mobile/search",
+  "/api/mobile/saved-searches",
+  "/api/mobile/reports",
+  "/api/mobile/contracts",
+  "/api/mobile/recovery",
+  "/api/mobile/lien-service",
+  "/api/mobile/evidence",
+  "/api/mobile/watchlist",
+]
+
+for (const path of mobilePrivatePaths) {
+  const result = await read(path)
+
+  if (result.response.status === 401) {
+    pass(`${path} bearer-token protection`, "401 without mobile token")
+  } else {
+    fail(`${path} bearer-token protection`, `expected 401, got ${result.response.status}`)
+  }
+
+  if (hasNoStoreHeader(result.response)) {
+    pass(`${path} mobile no-store cache header`)
+  } else {
+    fail(`${path} mobile no-store cache header`, result.response.headers?.get?.("cache-control") || "missing")
+  }
+}
+
 for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.json"]) {
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
