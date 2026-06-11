@@ -1,5 +1,8 @@
+import { readFileSync } from "node:fs"
+
 const baseUrl = (process.env.SEO_BASE_URL || "http://localhost:4000").replace(/\/$/, "")
 const expectedSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://clientbureau.com").replace(/\/$/, "")
+const mobileConfig = JSON.parse(readFileSync(new URL("../apps/mobile/app.json", import.meta.url), "utf8"))
 
 const checks = []
 
@@ -152,6 +155,39 @@ for (const path of publicContentPages) {
     pass(`${path} FAQ schema present`)
   } else {
     fail(`${path} FAQ schema present`)
+  }
+}
+
+const mobileAppPage = await read("/mobile-app")
+if (mobileAppPage.response.ok) {
+  const mobileAppVisibleText = visibleText(mobileAppPage.text)
+  const expectedMobileVersion = mobileConfig.expo.version
+  const expectedAndroidBuild = String(mobileConfig.expo.android.versionCode)
+
+  if (mobileAppVisibleText.includes(expectedMobileVersion)) {
+    pass("/mobile-app current app version", expectedMobileVersion)
+  } else {
+    fail("/mobile-app current app version", expectedMobileVersion)
+  }
+
+  if (mobileAppVisibleText.includes(`Release build: ${expectedAndroidBuild}`)) {
+    pass("/mobile-app current Android build", expectedAndroidBuild)
+  } else {
+    fail("/mobile-app current Android build", expectedAndroidBuild)
+  }
+
+  const staleMobileMarkers = [
+    "vg42czKjtB79CQnxdg3JBr.apk",
+    "pQPHajdAPswqN8UikHR5e8.aab",
+    "0.3.6",
+    "versionCode 7",
+  ]
+  const staleMobileMarkersFound = staleMobileMarkers.filter((marker) => mobileAppPage.text.includes(marker))
+
+  if (staleMobileMarkersFound.length === 0) {
+    pass("/mobile-app avoids stale Android release artifacts")
+  } else {
+    fail("/mobile-app avoids stale Android release artifacts", staleMobileMarkersFound.join(", "))
   }
 }
 

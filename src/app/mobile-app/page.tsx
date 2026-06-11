@@ -25,14 +25,19 @@ import { Button } from "@/components/ui/button"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import mobileAppConfig from "../../../apps/mobile/app.json"
 
-const apkUrl =
-  process.env.NEXT_PUBLIC_ANDROID_APK_URL ??
-  "https://expo.dev/artifacts/eas/vg42czKjtB79CQnxdg3JBr.apk"
-const aabUrl =
-  process.env.NEXT_PUBLIC_ANDROID_AAB_URL ??
-  "https://expo.dev/artifacts/eas/pQPHajdAPswqN8UikHR5e8.aab"
+const configuredApkUrl = process.env.NEXT_PUBLIC_ANDROID_APK_URL
+const configuredAabUrl = process.env.NEXT_PUBLIC_ANDROID_AAB_URL
+const androidAccessHref = "/contact?topic=android-app"
 const mobileReleaseVersion = mobileAppConfig.expo.version
 const androidVersionCode = mobileAppConfig.expo.android.versionCode
+const hasDirectApk = Boolean(configuredApkUrl)
+const hasDirectAab = Boolean(configuredAabUrl)
+const primaryMobileCta = {
+  href: configuredApkUrl ?? androidAccessHref,
+  label: hasDirectApk ? "Download Android APK" : "Request Android access",
+  icon: hasDirectApk ? Download : Smartphone,
+}
+const PrimaryMobileIcon = primaryMobileCta.icon
 
 export const metadata: Metadata = {
   title: "Client Bureau Android App",
@@ -44,7 +49,13 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Current APK", value: mobileReleaseVersion, text: "Direct Android install for contractors and service business owners." },
+  {
+    label: "Current release",
+    value: mobileReleaseVersion,
+    text: hasDirectApk
+      ? "Direct Android install for contractors and service business owners."
+      : "Release access is routed through Client Bureau support until a fresh APK link is configured.",
+  },
   { label: "Android build", value: String(androidVersionCode), text: "Login focus fix, premium auth, and mobile tool polish." },
   { label: "Core tools", value: "8", text: "Search, reports, contracts, recovery, lien service, evidence, watchlist, account." },
   { label: "Private first", value: "Yes", text: "No public exposure of private documents or raw identifiers." },
@@ -120,7 +131,7 @@ export default function MobileAppPage() {
         eyebrow="Client Bureau Android"
         title="Client checks and job-protection tools from the field."
         description="Download the Client Bureau Android app to search clients, track reports, manage contract packets, open recovery cases, start Florida lien service workflows, review evidence status, and monitor alerts from one secure mobile workspace."
-        primary={{ href: apkUrl, label: "Download Android APK", icon: Download }}
+        primary={primaryMobileCta}
         secondary={{ href: "/signup", label: "Create Account", icon: Smartphone }}
         aside={
           <div className="space-y-5 text-white">
@@ -138,7 +149,11 @@ export default function MobileAppPage() {
             <div className="grid gap-2 text-sm text-slate-300">
               <span>Android app: Client Bureau</span>
               <span>Release build: {androidVersionCode}</span>
-              <span>Direct APK install now; Play Store package stays ready for release.</span>
+              <span>
+                {hasDirectApk
+                  ? "Direct APK install now; Play Store package stays ready for release."
+                  : "Request access while the latest APK link is prepared."}
+              </span>
             </div>
           </div>
         }
@@ -183,23 +198,28 @@ export default function MobileAppPage() {
               Install note
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-700">
-              The APK is for direct Android installation. Android may ask you to allow installation
-              from your browser or file manager. Use the Play-ready AAB for Google Play Console
-              upload, not direct phone installation.
+              {hasDirectApk
+                ? "The APK is for direct Android installation. Android may ask you to allow installation from your browser or file manager."
+                : "A fresh APK link is published here when a release artifact is configured. Until then, request Android access and we will route you to the right install path."}
+              {hasDirectAab
+                ? " Use the Play-ready AAB for Google Play Console upload, not direct phone installation."
+                : null}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                <a href={apkUrl}>
-                  Download APK
-                  <Download aria-hidden="true" />
-                </a>
+                <Link href={primaryMobileCta.href}>
+                  {primaryMobileCta.label}
+                  <PrimaryMobileIcon aria-hidden="true" />
+                </Link>
               </Button>
-              <Button asChild variant="outline">
-                <a href={aabUrl}>
-                  Download AAB
-                  <Download aria-hidden="true" />
-                </a>
-              </Button>
+              {configuredAabUrl ? (
+                <Button asChild variant="outline">
+                  <a href={configuredAabUrl}>
+                    Download AAB
+                    <Download aria-hidden="true" />
+                  </a>
+                </Button>
+              ) : null}
               <Button asChild variant="outline">
                 <Link href="/resources">Read resources</Link>
               </Button>
@@ -212,7 +232,7 @@ export default function MobileAppPage() {
         eyebrow="Use it in the field"
         title="Check the client before you take the job."
         description="Create an account, install the Android app, and keep Client Bureau close when you are screening leads, documenting projects, and protecting payment."
-        primary={{ href: apkUrl, label: "Download Android APK", icon: Download }}
+        primary={primaryMobileCta}
         secondary={{ href: "/signup", label: "Create Account", icon: Smartphone }}
       />
     </main>
