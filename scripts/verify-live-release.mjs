@@ -981,7 +981,11 @@ if (searchPage.response.ok) {
 const mobileApp = await read("/mobile-app")
 if (mobileApp.response.ok) {
   pass("/mobile-app returns 200")
-  assertProductionCopySafety("/mobile-app", mobileApp.text)
+  assertPublicIndexablePage("/mobile-app", mobileApp.text, [
+    "Client Bureau Android",
+    "Client checks and job-protection tools from the field.",
+    "Release access is routed through Client Bureau support",
+  ])
 
   const mobileVisible = visiblePageText(mobileApp.text)
 
@@ -1075,6 +1079,54 @@ const publicIndexablePages = [
       "Business trust profiles",
       "Find verified contractors and service business owners.",
       "not customer star reviews or guarantees",
+    ],
+  },
+  {
+    path: "/payment-recovery-service",
+    requiredTexts: [
+      "Managed Resolution Desk",
+      "Get help recovering payment without turning the dispute public.",
+      "Contractor-direct payment tracking",
+    ],
+  },
+  {
+    path: "/florida-lien-notice-service",
+    requiredTexts: [
+      "Florida lien notice workflow",
+      "Prepare Florida lien notices with review, authorization, and delivery tracking.",
+      "Delivery proof tracking",
+    ],
+  },
+  {
+    path: "/florida-lien-filing-service",
+    requiredTexts: [
+      "Florida claim of lien filing",
+      "File Florida lien cases through a managed, review-gated workflow.",
+      "Attorney/vendor review",
+    ],
+  },
+  {
+    path: "/contractor-contract-template",
+    requiredTexts: [
+      "Agreement packets",
+      "Contractor Contract Template and E-Signature Workflow",
+      "scope, payment terms, exclusions",
+    ],
+  },
+  {
+    path: "/change-order-template",
+    requiredTexts: [
+      "Scope protection",
+      "Contractor Change Order Template",
+      "Scope changes are where many jobs become payment disputes.",
+    ],
+  },
+  {
+    path: "/mobile-app",
+    requiredTexts: [
+      "Client Bureau Android",
+      "Client checks and job-protection tools from the field.",
+      "Current mobile release",
     ],
   },
 ]
