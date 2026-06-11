@@ -52,6 +52,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved admin client profile management with prioritized review signals, publication-readiness cards, report/evidence context, and a cleaner grouped editor drawer.
 - Improved admin Businesses / Users with account-operations metrics, safer masked user cards, role/account filters, verification priority, and business profile completeness cues.
 - Improved admin discussion moderation with queue health signals, filter counts, response-safety cues, private attachment guidance, and clearer approve/verify/reject decision panels.
+- Improved admin CSV Intake with clearer batch health, private-import guardrails, validation and duplicate readiness summaries, and a more tolerant quoted-CSV preview parser.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
