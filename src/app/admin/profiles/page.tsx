@@ -1,20 +1,35 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { BadgeCheck, Eye, GitMerge, Search, ShieldCheck, UsersRound } from "lucide-react"
+import {
+  AlertTriangle,
+  BadgeCheck,
+  ClipboardCheck,
+  Eye,
+  EyeOff,
+  FileCheck2,
+  GitMerge,
+  Search,
+  ShieldCheck,
+  UserCheck,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react"
 
 import { AdminActionOutcomePanel, AdminFilterBar, AdminProfileHealthCard } from "@/components/admin/admin-crm-ui"
 import { AdminProfileGraphActions } from "@/components/admin/admin-profile-graph-actions"
 import {
   AdminPageHeader,
+  DashboardSection,
   EmptyState,
   HeaderActionButton,
   StatCard,
+  StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { claimedStatusLabel, deriveEntityProfiles, entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
 import { getAdminWorkspaceDataService, getProfileClaimsService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
-import { profileTypes, type ProfileType } from "@/lib/types"
+import { profileTypes, type EntityProfile, type ProfileClaim, type ProfileType } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Admin Unified Profiles",
@@ -74,8 +89,32 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
   })
   const publicCount = profiles.filter((profile) => profile.isPublic).length
   const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed" || profile.claimedStatus === "verified").length
-  const duplicateSignals = profiles.filter((profile) => profile.duplicateGroupKey).length
+  const duplicateGroups = profiles.reduce<Record<string, EntityProfile[]>>((groups, profile) => {
+    if (!profile.duplicateGroupKey) return groups
+    groups[profile.duplicateGroupKey] = [...(groups[profile.duplicateGroupKey] ?? []), profile]
+    return groups
+  }, {})
+  const duplicateGroupCount = Object.values(duplicateGroups).filter((group) => group.length > 1).length
+  const duplicateSignals = profiles.filter((profile) => {
+    if (!profile.duplicateGroupKey) return false
+    return (duplicateGroups[profile.duplicateGroupKey]?.length ?? 0) > 1
+  }).length
   const pendingClaimCount = claims.filter((claim) => claim.status === "pending").length
+  const disputedClaimCount = claims.filter((claim) => claim.status === "disputed").length
+  const disputedProfileCount = profiles.filter((profile) => profile.claimedStatus === "disputed" || profile.disputedReportCount > 0).length
+  const privateProfileCount = profiles.filter((profile) => !profile.isPublic).length
+  const redactionCount = profiles.filter(
+    (profile) => profile.redactionNote || Object.keys(profile.publicFieldRedactions ?? {}).length > 0,
+  ).length
+  const evidenceGapCount = profiles.filter((profile) => profile.reportCount > 0 && profile.evidenceOnFileCount === 0).length
+  const responseGapCount = profiles.filter(
+    (profile) => profile.profileType === "client" && profile.isPublic && profile.responseCount === 0,
+  ).length
+  const pendingClaims = claims.filter((claim) => ["pending", "disputed"].includes(claim.status)).slice(0, 4)
+  const priorityProfiles = [...profiles]
+    .filter((profile) => profilePriority(profile, duplicateGroups) > 0)
+    .sort((a, b) => profilePriority(b, duplicateGroups) - profilePriority(a, duplicateGroups))
+    .slice(0, 6)
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -103,7 +142,120 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
           <StatCard label="Public profiles" value={publicCount} helper="SEO-visible approved or business records" icon={Eye} tone="emerald" />
           <StatCard label="Claimed / verified" value={claimedCount} helper="Owned or verified profile context" icon={BadgeCheck} tone="blue" />
           <StatCard label="Pending claims" value={pendingClaimCount} helper="Claims awaiting verification review" icon={BadgeCheck} tone="amber" />
-          <StatCard label="Graph signals" value={duplicateSignals} helper="Duplicate keys and reassignment context" icon={GitMerge} tone="slate" />
+          <StatCard label="Graph signals" value={duplicateSignals} helper={`${duplicateGroupCount} duplicate group${duplicateGroupCount === 1 ? "" : "s"} need review`} icon={GitMerge} tone={duplicateSignals > 0 ? "amber" : "slate"} />
+        </div>
+
+        <DashboardSection
+          eyebrow="Daily identity queue"
+          title="What needs profile staff attention today"
+          description="A fast operator view for claim verification, duplicate cleanup, private/public visibility, redactions, evidence gaps, and response/dispute context."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <IdentityQueueCard
+              icon={UserCheck}
+              title="Claims to verify"
+              value={pendingClaimCount}
+              detail="Ownership or relationship claims waiting for staff review and a moderator note."
+              tone={pendingClaimCount > 0 ? "amber" : "emerald"}
+            />
+            <IdentityQueueCard
+              icon={GitMerge}
+              title="Duplicate groups"
+              value={duplicateGroupCount}
+              detail="Groups with more than one matching profile signal that may need merge or reassignment review."
+              tone={duplicateGroupCount > 0 ? "amber" : "slate"}
+            />
+            <IdentityQueueCard
+              icon={AlertTriangle}
+              title="Dispute context"
+              value={disputedProfileCount + disputedClaimCount}
+              detail="Profiles or claims with dispute context that should be reviewed before public changes."
+              tone={disputedProfileCount + disputedClaimCount > 0 ? "rose" : "slate"}
+            />
+            <IdentityQueueCard
+              icon={EyeOff}
+              title="Private profiles"
+              value={privateProfileCount}
+              detail="Profiles not currently visible in public directories or SEO surfaces."
+              tone={privateProfileCount > 0 ? "blue" : "slate"}
+            />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <IdentityQueueCard
+              icon={FileCheck2}
+              title="Evidence gaps"
+              value={evidenceGapCount}
+              detail="Profiles with reports but no evidence-on-file label yet."
+              tone={evidenceGapCount > 0 ? "amber" : "emerald"}
+              compact
+            />
+            <IdentityQueueCard
+              icon={ClipboardCheck}
+              title="Response opportunities"
+              value={responseGapCount}
+              detail="Public client profiles with no approved response or correction context."
+              tone={responseGapCount > 0 ? "blue" : "slate"}
+              compact
+            />
+            <IdentityQueueCard
+              icon={ShieldCheck}
+              title="Redaction records"
+              value={redactionCount}
+              detail="Profiles with public-field redaction or private display notes on file."
+              tone={redactionCount > 0 ? "amber" : "slate"}
+              compact
+            />
+          </div>
+        </DashboardSection>
+
+        <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <DashboardSection
+            eyebrow="Claim verification"
+            title="Profile claims needing a decision"
+            description="Claims should be approved, rejected, or disputed only after identity, business relationship, and verification details are reviewed."
+          >
+            <div className="grid gap-3">
+              {pendingClaims.map((claim) => (
+                <ClaimQueueCard
+                  key={claim.id}
+                  claim={claim}
+                  profile={profiles.find((profile) => profile.id === claim.profileId)}
+                />
+              ))}
+              {pendingClaims.length === 0 ? (
+                <EmptyState
+                  icon={BadgeCheck}
+                  title="No profile claims need review"
+                  description="Pending or disputed profile ownership claims will appear here with verification context."
+                />
+              ) : null}
+            </div>
+          </DashboardSection>
+
+          <DashboardSection
+            eyebrow="Profile cleanup"
+            title="Identity records to inspect"
+            description="Prioritize records with duplicate groups, disputes, evidence gaps, redaction notes, or report context that is not ready for public visibility."
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              {priorityProfiles.map((profile) => (
+                <ProfilePriorityCard
+                  key={profile.id}
+                  profile={profile}
+                  duplicateCount={profile.duplicateGroupKey ? duplicateGroups[profile.duplicateGroupKey]?.length ?? 0 : 0}
+                />
+              ))}
+              {priorityProfiles.length === 0 ? (
+                <div className="md:col-span-2">
+                  <EmptyState
+                    icon={ShieldCheck}
+                    title="No profile cleanup priorities"
+                    description="Duplicate, redaction, evidence, dispute, or visibility-priority profiles will appear here."
+                  />
+                </div>
+              ) : null}
+            </div>
+          </DashboardSection>
         </div>
 
         <AdminProfileGraphActions profiles={profiles} claims={claims} reports={data.reports} />
@@ -257,4 +409,153 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
       </div>
     </section>
   )
+}
+
+function IdentityQueueCard({
+  icon: Icon,
+  title,
+  value,
+  detail,
+  tone,
+  compact = false,
+}: {
+  icon: LucideIcon
+  title: string
+  value: number
+  detail: string
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+  compact?: boolean
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-slate-50 text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    rose: "border-rose-200 bg-rose-50 text-rose-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950",
+  }[tone]
+
+  return (
+    <article className={`rounded-md border p-4 ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase opacity-70">{title}</p>
+          <p className={compact ? "mt-2 text-2xl font-semibold" : "mt-2 text-3xl font-semibold"}>{value}</p>
+        </div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/70">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-6 opacity-75">{detail}</p>
+    </article>
+  )
+}
+
+function ClaimQueueCard({
+  claim,
+  profile,
+}: {
+  claim: ProfileClaim
+  profile?: EntityProfile
+}) {
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge tone={claim.status === "pending" ? "amber" : "rose"}>{claim.status}</StatusBadge>
+            <StatusBadge tone="slate">{claim.relationshipToProfile}</StatusBadge>
+          </div>
+          <h3 className="mt-3 font-semibold text-slate-950">{claim.claimantName}</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {profile ? `${profile.displayName} / ${profileTypeLabel(profile.profileType)}` : "Profile record not loaded"}
+          </p>
+        </div>
+        <StatusBadge tone={profile?.isPublic ? "emerald" : "slate"}>{profile?.isPublic ? "Public" : "Private"}</StatusBadge>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-slate-600">{claim.verificationSummary}</p>
+      <p className="mt-2 text-xs text-slate-500">Updated {formatProfileDate(claim.updatedAt)}. Claimant email remains private.</p>
+    </article>
+  )
+}
+
+function ProfilePriorityCard({
+  profile,
+  duplicateCount,
+}: {
+  profile: EntityProfile
+  duplicateCount: number
+}) {
+  const reasons = profilePriorityReasons(profile, duplicateCount)
+
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-slate-950">{profile.displayName}</p>
+          <p className="mt-1 text-sm text-slate-600">
+            {profileTypeLabel(profile.profileType)} / {profile.city}, {profile.state}
+          </p>
+        </div>
+        <StatusBadge tone={profile.isPublic ? "emerald" : "slate"}>{profile.isPublic ? "Public" : "Private"}</StatusBadge>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {reasons.map((reason) => (
+          <StatusBadge key={reason.label} tone={reason.tone}>{reason.label}</StatusBadge>
+        ))}
+      </div>
+      <dl className="mt-4 grid gap-2 sm:grid-cols-2">
+        <ProfileFact label="Reports" value={profile.reportCount} />
+        <ProfileFact label="Evidence" value={profile.evidenceOnFileCount > 0 ? "On file" : "Needs label"} />
+        <ProfileFact label="Responses" value={profile.responseCount} />
+        <ProfileFact label="Updated" value={formatProfileDate(profile.updatedAt)} />
+      </dl>
+    </article>
+  )
+}
+
+function ProfileFact({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-md border border-white bg-white p-3">
+      <dt className="text-xs font-semibold uppercase text-slate-500">{label}</dt>
+      <dd className="mt-1 text-sm font-semibold text-slate-950">{value}</dd>
+    </div>
+  )
+}
+
+function profilePriority(profile: EntityProfile, duplicateGroups: Record<string, EntityProfile[]>) {
+  let score = 0
+  const duplicateCount = profile.duplicateGroupKey ? duplicateGroups[profile.duplicateGroupKey]?.length ?? 0 : 0
+  if (profile.claimedStatus === "claim_pending") score += 12
+  if (profile.claimedStatus === "disputed" || profile.disputedReportCount > 0) score += 11
+  if (duplicateCount > 1) score += 9
+  if (profile.redactionNote || Object.keys(profile.publicFieldRedactions ?? {}).length > 0) score += 7
+  if (profile.reportCount > 0 && profile.evidenceOnFileCount === 0) score += 5
+  if (!profile.isPublic && profile.reportCount > 0) score += 4
+  if (daysSince(profile.updatedAt) >= 30) score += 2
+  return score
+}
+
+function profilePriorityReasons(profile: EntityProfile, duplicateCount: number) {
+  const reasons: Array<{ label: string; tone: "slate" | "amber" | "emerald" | "rose" | "blue" }> = []
+  if (profile.claimedStatus === "claim_pending") reasons.push({ label: "claim pending", tone: "amber" })
+  if (profile.claimedStatus === "disputed" || profile.disputedReportCount > 0) reasons.push({ label: "dispute context", tone: "rose" })
+  if (duplicateCount > 1) reasons.push({ label: `${duplicateCount} duplicate signals`, tone: "amber" })
+  if (profile.redactionNote || Object.keys(profile.publicFieldRedactions ?? {}).length > 0) reasons.push({ label: "redaction note", tone: "blue" })
+  if (profile.reportCount > 0 && profile.evidenceOnFileCount === 0) reasons.push({ label: "evidence label needed", tone: "amber" })
+  if (!profile.isPublic && profile.reportCount > 0) reasons.push({ label: "private with reports", tone: "slate" })
+  if (reasons.length === 0) reasons.push({ label: "review", tone: "slate" })
+  return reasons
+}
+
+function daysSince(value: string) {
+  const time = new Date(value).getTime()
+  if (Number.isNaN(time)) return 0
+  return Math.floor((Date.now() - time) / 86_400_000)
+}
+
+function formatProfileDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+  }).format(new Date(value))
 }
