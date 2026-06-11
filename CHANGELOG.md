@@ -51,6 +51,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Fixed the admin app shell sidebar offset to prevent desktop horizontal overflow across admin pages.
 - Improved admin client profile management with prioritized review signals, publication-readiness cards, report/evidence context, and a cleaner grouped editor drawer.
 - Improved admin Businesses / Users with account-operations metrics, safer masked user cards, role/account filters, verification priority, and business profile completeness cues.
+- Improved admin discussion moderation with queue health signals, filter counts, response-safety cues, private attachment guidance, and clearer approve/verify/reject decision panels.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
