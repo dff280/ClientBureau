@@ -1,7 +1,33 @@
 import type { Metadata } from "next"
-import { Activity, ArrowRight, Database, FileCode2, Settings, ShieldCheck, Signature } from "lucide-react"
+import Link from "next/link"
+import {
+  Activity,
+  ArrowRight,
+  Bell,
+  ClipboardCheck,
+  Database,
+  EyeOff,
+  FileCheck2,
+  FileCode2,
+  Globe2,
+  Landmark,
+  LockKeyhole,
+  Receipt,
+  SearchCheck,
+  Settings,
+  ShieldCheck,
+  Signature,
+  UserCheck,
+  type LucideIcon,
+} from "lucide-react"
 
-import { AdminPageHeader, DashboardSection, StatCard } from "@/components/dashboard/dashboard-ui"
+import {
+  AdminPageHeader,
+  DashboardSection,
+  HeaderActionButton,
+  StatCard,
+  StatusBadge,
+} from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getLaunchHealth } from "@/lib/launch-health"
@@ -21,6 +47,9 @@ export default async function AdminSettingsPage() {
   const coreRecordsLabel = health.dataMode === "supabase" ? "Live" : "Needs review"
   const advancedRecordsLabel = liveOpsActive ? "Live" : "Guided"
   const recommendedRecordsLabel = readiness.platformCanUseSupabase ? "Live" : "Guided"
+  const releaseGateStatus = health.status === "ok" && readiness.coreLiveReady && readiness.platformCanUseSupabase
+  const privacyGateStatus = readiness.platformSchemaReady && health.serviceRoleConfigured
+  const stripeStatus = health.stripeConfigured && health.stripeWebhookConfigured
   const readinessSteps = liveOpsActive
     ? [
         {
@@ -62,7 +91,129 @@ export default async function AdminSettingsPage() {
           value: "Live records after readiness",
         },
       ]
-  const settingsGroups = [
+  const controlCenterCards = [
+    {
+      title: "Moderation and publication",
+      status: "Review gated",
+      detail:
+        "Reports, discussions, responses, disputes, and public profile changes should require staff review before any public display.",
+      href: "/admin/reports",
+      cta: "Review queues",
+      icon: ClipboardCheck,
+      tone: "blue" as const,
+    },
+    {
+      title: "Privacy and evidence",
+      status: "Private by default",
+      detail:
+        "Raw evidence, storage paths, private identifiers, signed snapshots, and internal notes stay inside authenticated workspaces.",
+      href: "/admin/uploads",
+      cta: "Evidence intake",
+      icon: LockKeyhole,
+      tone: "emerald" as const,
+    },
+    {
+      title: "Recovery and lien service",
+      status: "Review required",
+      detail:
+        "Managed recovery and Florida lien workflows need fee status, authorization, document readiness, and staff notes before action.",
+      href: "/admin/recovery",
+      cta: "Service desk",
+      icon: Landmark,
+      tone: "amber" as const,
+    },
+    {
+      title: "Contract packets",
+      status: "Noindexed",
+      detail:
+        "Agreement packets, signing links, payment terms, signed digests, and client invite records remain private business records.",
+      href: "/admin/contracts",
+      cta: "Contract desk",
+      icon: Signature,
+      tone: "blue" as const,
+    },
+    {
+      title: "Public SEO surfaces",
+      status: "Approved only",
+      detail:
+        "Sitemaps, directories, recent reports, profile schema, and crawler assets should only link to moderated public records.",
+      href: "/clients",
+      cta: "Public directory",
+      icon: Globe2,
+      tone: "slate" as const,
+    },
+    {
+      title: "Release safety",
+      status: releaseGateStatus ? "Ready" : "Needs review",
+      detail:
+        "Health, version identity, auth boundaries, no-store diagnostics, privacy scans, and crawl assets are checked before deploys.",
+      href: "/api/health",
+      cta: "Health JSON",
+      icon: Activity,
+      tone: releaseGateStatus ? ("emerald" as const) : ("amber" as const),
+    },
+  ]
+  const launchGateCards = [
+    {
+      title: "Core platform",
+      value: readiness.coreLiveReady ? "Ready" : "Review",
+      detail: "Auth, reports, admin approval, public profiles, search, directories, and diagnostics.",
+      icon: ShieldCheck,
+      tone: readiness.coreLiveReady ? ("emerald" as const) : ("amber" as const),
+    },
+    {
+      title: "Advanced operations",
+      value: readiness.platformCanUseSupabase ? "Live" : "Guided",
+      detail: "Watchlist, contracts, recovery, lien service, evidence, profile graph, and admin ops records.",
+      icon: Database,
+      tone: liveOpsActive ? ("emerald" as const) : ("amber" as const),
+    },
+    {
+      title: "Privacy gates",
+      value: privacyGateStatus ? "Sealed" : "Review",
+      detail: "Private identifiers, evidence, signed snapshots, internal notes, pending and rejected content.",
+      icon: EyeOff,
+      tone: privacyGateStatus ? ("emerald" as const) : ("amber" as const),
+    },
+    {
+      title: "Billing readiness",
+      value: stripeStatus ? "Configured" : "Deferred",
+      detail: "Stripe checkout and webhook configuration. Product can operate while billing remains deferred.",
+      icon: Receipt,
+      tone: stripeStatus ? ("emerald" as const) : ("slate" as const),
+    },
+  ]
+  const operatorChecklist = [
+    {
+      title: "Before publishing public content",
+      detail:
+        "Confirm approved status, neutral summary wording, no private identifiers, evidence labels only, and response/dispute context.",
+      icon: FileCheck2,
+      tone: "blue" as const,
+    },
+    {
+      title: "Before staff service action",
+      detail:
+        "Confirm fee status, contractor authorization, documents, deadline context, respectful communication notes, and next action.",
+      icon: UserCheck,
+      tone: "amber" as const,
+    },
+    {
+      title: "Before release",
+      detail:
+        "Run build, tests, SEO check, live verification, session checks, and public privacy scan after deploy.",
+      icon: SearchCheck,
+      tone: "emerald" as const,
+    },
+    {
+      title: "When something looks wrong",
+      detail:
+        "Use guided fallback for advanced tools, keep core records live, review audit events, and avoid public exposure.",
+      icon: Bell,
+      tone: "rose" as const,
+    },
+  ]
+  const settingsGroups: Array<{ title: string; items: Array<[string, string]> }> = [
     {
       title: "Moderation Rules",
       items: [
@@ -135,6 +286,18 @@ export default async function AdminSettingsPage() {
           eyebrow="Platform"
           title="Settings"
           description="Review moderation rules, publication defaults, evidence privacy, recovery review requirements, contract workflow defaults, and launch readiness."
+          actions={
+            <>
+              <HeaderActionButton href="/api/health" variant="outline">
+                <Activity aria-hidden="true" />
+                Health
+              </HeaderActionButton>
+              <HeaderActionButton href="/admin/audit-log" variant="outline">
+                <ClipboardCheck aria-hidden="true" />
+                Audit log
+              </HeaderActionButton>
+            </>
+          }
         />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
@@ -174,6 +337,35 @@ export default async function AdminSettingsPage() {
             tone={readiness.platformSchemaReady ? "emerald" : "amber"}
           />
         </div>
+
+        <DashboardSection
+          eyebrow="Control center"
+          title="Admin operating defaults"
+          description="The settings page should tell staff what is live, what is private, what requires moderation, and where to go next."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {controlCenterCards.map((card) => (
+              <ControlCenterCard key={card.title} {...card} />
+            ))}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          eyebrow="Release gates"
+          title="What must stay true"
+          description="A quick safety read before publishing, reviewing service cases, or pushing another release."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {launchGateCards.map((card) => (
+              <LaunchGateCard key={card.title} {...card} />
+            ))}
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {operatorChecklist.map((item) => (
+              <OperatorChecklistItem key={item.title} {...item} />
+            ))}
+          </div>
+        </DashboardSection>
 
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
@@ -240,24 +432,148 @@ export default async function AdminSettingsPage() {
           </CardContent>
         </Card>
 
-        {settingsGroups.map((group) => (
-          <DashboardSection
-            key={group.title}
-            title={group.title}
-            description="Plain-English rules admins should be able to verify before publishing, importing, or changing records."
-          >
-            <div className="grid gap-4 md:grid-cols-2">
-              {group.items.map(([title, text]) => (
-                <div key={title} className="rounded-md border border-slate-200 bg-slate-50 p-5">
-                  <h3 className="font-semibold text-slate-950">{title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
-                </div>
-              ))}
-            </div>
-          </DashboardSection>
-        ))}
+        <DashboardSection
+          eyebrow="Rulebook"
+          title="Plain-English policy defaults"
+          description="Compact defaults admins should be able to verify before publishing, importing, editing, sending, filing, or changing records."
+        >
+          <div className="grid gap-4 lg:grid-cols-2">
+            {settingsGroups.map((group) => (
+              <SettingsRuleGroup key={group.title} title={group.title} items={group.items} />
+            ))}
+          </div>
+        </DashboardSection>
       </div>
     </section>
+  )
+}
+
+function ControlCenterCard({
+  title,
+  status,
+  detail,
+  href,
+  cta,
+  icon: Icon,
+  tone,
+}: {
+  title: string
+  status: string
+  detail: string
+  href: string
+  cta: string
+  icon: LucideIcon
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-slate-50 text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    rose: "border-rose-200 bg-rose-50 text-rose-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950",
+  }[tone]
+
+  return (
+    <Link href={href} className={`group block rounded-md border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/75">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <StatusBadge tone={tone}>{status}</StatusBadge>
+      </div>
+      <h3 className="mt-4 font-semibold">{title}</h3>
+      <p className="mt-2 text-sm leading-6 opacity-75">{detail}</p>
+      <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold">
+        {cta}
+        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </Link>
+  )
+}
+
+function LaunchGateCard({
+  title,
+  value,
+  detail,
+  icon: Icon,
+  tone,
+}: {
+  title: string
+  value: string
+  detail: string
+  icon: LucideIcon
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+}) {
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">{title}</p>
+          <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
+        </div>
+        <StatusBadge tone={tone}>
+          <Icon className="mr-1 size-3.5" aria-hidden="true" />
+          {tone === "emerald" ? "clear" : tone === "rose" ? "urgent" : "watch"}
+        </StatusBadge>
+      </div>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+    </article>
+  )
+}
+
+function OperatorChecklistItem({
+  title,
+  detail,
+  icon: Icon,
+  tone,
+}: {
+  title: string
+  detail: string
+  icon: LucideIcon
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+}) {
+  return (
+    <article className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-semibold text-slate-950">{title}</h3>
+            <StatusBadge tone={tone}>check</StatusBadge>
+          </div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function SettingsRuleGroup({
+  title,
+  items,
+}: {
+  title: string
+  items: Array<[string, string]>
+}) {
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-5">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="font-semibold text-slate-950">{title}</h3>
+        <Badge variant="outline" className="rounded-md bg-white">
+          {items.length} rules
+        </Badge>
+      </div>
+      <div className="mt-4 grid gap-3">
+        {items.map(([itemTitle, text]) => (
+          <div key={itemTitle} className="rounded-md border border-white bg-white p-3">
+            <p className="text-sm font-semibold text-slate-950">{itemTitle}</p>
+            <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+          </div>
+        ))}
+      </div>
+    </article>
   )
 }
 
