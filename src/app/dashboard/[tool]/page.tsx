@@ -789,7 +789,7 @@ function getToolOutcomeItems(outcomeKey: ToolOutcomeKey) {
       {
         label: "Account",
         title: "Plan and verification stay understandable",
-        detail: "Plan, usage, and verification status should be clear without developer or checkout-test language.",
+        detail: "Plan, usage, and verification status should be clear without confusing billing language.",
         status: "Account",
         tone: "blue",
       },

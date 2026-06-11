@@ -24,6 +24,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added live release checks for logged-out dashboard, submit-report, and admin route protection so protected pages must redirect to safe internal login URLs with no-store cache headers and the expected return path.
 - Preserved dashboard and submit-report return paths when logged-out users open protected tools, so login can return them to the exact workspace or form they requested.
 - Added optional authenticated live QA verification for contractor/admin login, session endpoints, private page no-store headers, route stability, and contractor denial from admin routes.
+- Polished login, signup, dashboard billing, and mobile app copy to remove technical phrasing and keep customer-facing screens clearer.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

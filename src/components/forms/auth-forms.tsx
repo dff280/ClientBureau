@@ -54,8 +54,8 @@ export function LoginForm({
         <Label htmlFor="password">Password</Label>
         <Input id="password" name="password" type="password" placeholder="Password" />
       </div>
-      <PendingSubmitButton pendingText="Starting session..." className="bg-slate-950 text-white hover:bg-slate-800">
-        Login
+      <PendingSubmitButton pendingText="Signing in..." className="bg-slate-950 text-white hover:bg-slate-800">
+        Sign in
       </PendingSubmitButton>
       <p className="text-center text-sm text-slate-600">
         New contractor?{" "}

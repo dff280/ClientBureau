@@ -6,8 +6,8 @@ import { PremiumFeatureCard } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
-  title: "Login",
-  description: "Login to Client Bureau for client checks, documented reports, evidence records, contracts, recovery workflows, and account management.",
+  title: "Sign In",
+  description: "Sign in to Client Bureau for client checks, documented reports, evidence records, contracts, recovery workflows, and account management.",
   robots: {
     index: false,
     follow: false,
@@ -46,9 +46,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <Card className="rounded-md border-white/10 bg-white/[0.06] text-white shadow-none">
             <CardContent className="space-y-4 p-5">
               <ShieldCheck className="size-8 text-amber-300" aria-hidden="true" />
-              <p className="text-xl font-semibold">Session-safe redirect handling.</p>
+              <p className="text-xl font-semibold">Return to the work you opened.</p>
               <p className="text-sm leading-6 text-slate-300">
-                Login keeps internal return paths safe and sends you back to the dashboard, admin area, or workflow you requested.
+                Sign in and continue with the dashboard, admin area, report form, or workflow you were trying to reach.
               </p>
             </CardContent>
           </Card>
@@ -59,7 +59,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="space-y-3">
             <LockKeyhole className="size-8 text-slate-950" aria-hidden="true" />
-            <CardTitle className="text-2xl">Login to Client Bureau</CardTitle>
+            <CardTitle className="text-2xl">Sign in to Client Bureau</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
               Access your dashboard, searches, reports, contracts, evidence records, service cases, and account settings.
             </p>

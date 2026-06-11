@@ -35,9 +35,9 @@ export default function SignupPage() {
           <Card className="rounded-md border-white/10 bg-white/[0.06] text-white shadow-none">
             <CardContent className="space-y-4 p-5">
               <LockKeyhole className="size-8 text-amber-300" aria-hidden="true" />
-              <p className="text-xl font-semibold">Structured onboarding prevents messy records.</p>
+              <p className="text-xl font-semibold">Clean setup makes better records.</p>
               <p className="text-sm leading-6 text-slate-300">
-                Business type, state, service area, account role, and goal fields help keep searches, reports, and directories clean.
+                Business type, state, service area, account role, and goals help keep searches, reports, and directories easy to trust.
               </p>
             </CardContent>
           </Card>
@@ -67,7 +67,7 @@ export default function SignupPage() {
           <PremiumFeatureCard
             icon={Building2}
             title="Organize business details"
-            text="State dropdowns, business type, trade, and service area fields reduce database mismatches."
+            text="State dropdowns, business type, trade, and service area fields keep your records consistent."
           />
           <PremiumFeatureCard
             icon={LockKeyhole}

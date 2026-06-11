@@ -180,8 +180,8 @@ export default function MobileAppPage() {
               <BureauMetricCard
                 icon={ShieldCheck}
                 label="Security posture"
-                value="Secure session"
-                text="Private mobile requests use authenticated sessions and no-store responses."
+                value="Account-protected"
+                text="Mobile access is tied to your account, and private workspace details stay out of public pages."
               />
               <BureauMetricCard
                 icon={Bell}
