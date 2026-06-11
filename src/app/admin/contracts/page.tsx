@@ -1,19 +1,36 @@
 import type { Metadata } from "next"
-import { ClipboardCheck, History, ShieldCheck, Signature } from "lucide-react"
+import {
+  AlertTriangle,
+  CalendarClock,
+  ClipboardCheck,
+  FileCheck2,
+  History,
+  Link2,
+  LockKeyhole,
+  Receipt,
+  Send,
+  ShieldCheck,
+  Signature,
+  UserCheck,
+  type LucideIcon,
+} from "lucide-react"
 
 import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { AdminOpsExpansion } from "@/components/admin/admin-ops-expansion"
 import {
   AdminPageHeader,
   DashboardSection,
+  EmptyState,
   HeaderActionButton,
   StatCard,
+  StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
 import {
   getAdminModerationCrmDataService,
   getAdminWorkspaceDataService,
   getContractorRiskOpsDataService,
 } from "@/lib/repositories/client-bureau-service"
+import type { ContractPacket } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Admin Contracts",
@@ -51,6 +68,34 @@ export default async function AdminContractsPage() {
       packet.shareStatus === "payment_pending" ||
       (packet.paymentMode !== undefined && packet.paymentMode !== "none" && packet.status === "sent"),
   ).length
+  const draftOrReviewCount = packets.filter((packet) =>
+    ["draft", "review_ready"].includes(packet.status),
+  ).length
+  const inviteNeededCount = packets.filter((packet) =>
+    packet.clientInviteStatus === "not_invited" || packet.signatureStatus === "not_sent",
+  ).length
+  const signatureInProgressCount = packets.filter((packet) =>
+    ["sent", "viewed", "client_joined"].includes(packet.shareStatus ?? "") ||
+    ["awaiting_client", "client_signed", "contractor_signed"].includes(packet.signatureStatus ?? ""),
+  ).length
+  const auditGapCount = packets.filter((packet) =>
+    isPacketSigned(packet) && (!packet.signedDigest || !packet.signedRecordAt || !packet.signedSnapshot),
+  ).length
+  const staleDraftCount = packets.filter((packet) =>
+    ["draft", "review_ready"].includes(packet.status) && daysSince(packet.updatedAt) >= 10,
+  ).length
+  const privateLinkCount = packets.filter((packet) => packet.shareToken || packet.shareUrl).length
+  const milestonePacketCount = packets.filter((packet) => packet.paymentMode === "milestone_schedule").length
+  const packetsNeedingAttention = [...packets]
+    .filter((packet) =>
+      packet.status === "review_ready" ||
+      packet.status === "draft" ||
+      packet.shareStatus === "payment_pending" ||
+      ["awaiting_client", "client_signed", "contractor_signed"].includes(packet.signatureStatus ?? "") ||
+      (isPacketSigned(packet) && (!packet.signedDigest || !packet.signedRecordAt)),
+    )
+    .sort((a, b) => contractPriority(b) - contractPriority(a))
+    .slice(0, 5)
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -102,6 +147,120 @@ export default async function AdminContractsPage() {
             icon={History}
             tone={paymentTermsPending > 0 ? "amber" : "slate"}
           />
+        </div>
+
+        <DashboardSection
+          eyebrow="Daily contract desk"
+          title="What needs staff attention today"
+          description="A compact operations board for private agreement packets. Staff can see readiness, invite state, signing progress, payment-term context, and audit gaps without exposing contract content publicly."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <ContractLaneCard
+              icon={FileCheck2}
+              title="Draft or review"
+              value={draftOrReviewCount}
+              detail="Packets that still need scope, terms, or staff review before sending."
+              tone={draftOrReviewCount > 0 ? "amber" : "slate"}
+            />
+            <ContractLaneCard
+              icon={Send}
+              title="Invite needed"
+              value={inviteNeededCount}
+              detail="Packets without a client invite or signature request in motion."
+              tone={inviteNeededCount > 0 ? "blue" : "slate"}
+            />
+            <ContractLaneCard
+              icon={Signature}
+              title="Signing in progress"
+              value={signatureInProgressCount}
+              detail="Sent, viewed, joined, or partially signed packets waiting on completion."
+              tone={signatureInProgressCount > 0 ? "amber" : "emerald"}
+            />
+            <ContractLaneCard
+              icon={AlertTriangle}
+              title="Audit gaps"
+              value={auditGapCount}
+              detail="Signed packets missing digest, snapshot, or recorded signature metadata."
+              tone={auditGapCount > 0 ? "rose" : "emerald"}
+            />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <ContractLaneCard
+              icon={Receipt}
+              title="Payment terms"
+              value={paymentTermsPending}
+              detail="Packets waiting on deposit, milestone, or payment-term confirmation."
+              tone={paymentTermsPending > 0 ? "amber" : "slate"}
+              compact
+            />
+            <ContractLaneCard
+              icon={Link2}
+              title="Private links"
+              value={privateLinkCount}
+              detail="Tokenized contract links that must remain noindexed and account-bound."
+              tone={privateLinkCount > 0 ? "blue" : "slate"}
+              compact
+            />
+            <ContractLaneCard
+              icon={CalendarClock}
+              title="Stale drafts"
+              value={staleDraftCount}
+              detail="Draft or review-ready packets with no update in ten or more days."
+              tone={staleDraftCount > 0 ? "amber" : "emerald"}
+              compact
+            />
+          </div>
+        </DashboardSection>
+
+        <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+          <DashboardSection
+            eyebrow="Packet queue"
+            title="Agreement packets needing review"
+            description="Prioritize packets with review-ready scope, payment-term gates, active signing, or missing signature audit records."
+          >
+            <div className="grid gap-3">
+              {packetsNeedingAttention.map((packet) => (
+                <ContractPacketCard key={packet.id} packet={packet} />
+              ))}
+              {packetsNeedingAttention.length === 0 ? (
+                <EmptyState
+                  icon={ShieldCheck}
+                  title="No contract packets need attention"
+                  description="Review-ready, payment-pending, partially signed, or audit-gap packets will appear here."
+                />
+              ) : null}
+            </div>
+          </DashboardSection>
+
+          <DashboardSection
+            eyebrow="Contract health"
+            title="Private signing system"
+            description="A staff view of the controls that keep agreement packets useful, private, and traceable."
+          >
+            <div className="grid gap-3">
+              <ContractHealthCard
+                icon={LockKeyhole}
+                title="Private by design"
+                value={`${privateLinkCount}/${packets.length || 0}`}
+                detail="Packets with tokenized private links. Contract pages stay noindexed and should never appear in public directories."
+                tone={privateLinkCount > 0 ? "blue" : "slate"}
+              />
+              <ContractHealthCard
+                icon={Receipt}
+                title="Milestone billing context"
+                value={milestonePacketCount}
+                detail="Packets documenting deposits, milestone schedules, or payment terms without processing or holding funds."
+                tone={milestonePacketCount > 0 ? "amber" : "slate"}
+              />
+              <ContractHealthCard
+                icon={UserCheck}
+                title="Completed signatures"
+                value={signedPackets}
+                detail="Fully signed packets should have signed snapshots, digest records, and timestamped signature state."
+                tone={signedPackets > 0 ? "emerald" : "slate"}
+              />
+            </div>
+          </DashboardSection>
         </div>
 
         <DashboardSection
@@ -158,4 +317,205 @@ export default async function AdminContractsPage() {
       </div>
     </section>
   )
+}
+
+function ContractLaneCard({
+  icon: Icon,
+  title,
+  value,
+  detail,
+  tone,
+  compact = false,
+}: {
+  icon: LucideIcon
+  title: string
+  value: number
+  detail: string
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+  compact?: boolean
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-slate-50 text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    rose: "border-rose-200 bg-rose-50 text-rose-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950",
+  }[tone]
+
+  return (
+    <article className={`rounded-md border p-4 ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase opacity-70">{title}</p>
+          <p className={compact ? "mt-2 text-2xl font-semibold" : "mt-2 text-3xl font-semibold"}>{value}</p>
+        </div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/70">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-6 opacity-75">{detail}</p>
+    </article>
+  )
+}
+
+function ContractPacketCard({ packet }: { packet: ContractPacket }) {
+  const depositPercent = packet.packetValue > 0 ? Math.round((packet.depositRequired / packet.packetValue) * 100) : 0
+
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge tone={statusTone(packet.status)}>{formatStatus(packet.status)}</StatusBadge>
+            <StatusBadge tone={signatureTone(packet.signatureStatus)}>{formatStatus(packet.signatureStatus ?? "not_sent")}</StatusBadge>
+            {packet.shareStatus ? (
+              <StatusBadge tone={shareTone(packet.shareStatus)}>{formatStatus(packet.shareStatus)}</StatusBadge>
+            ) : null}
+          </div>
+          <h3 className="mt-3 font-semibold text-slate-950">{packet.clientName}</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {packet.projectType} / {formatStatus(packet.templateType)}
+          </p>
+        </div>
+        <StatusBadge tone={packet.clientInviteStatus === "joined" ? "emerald" : "amber"}>
+          {formatStatus(packet.clientInviteStatus ?? "not_invited")}
+        </StatusBadge>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <ContractFact label="Packet value" value={money(packet.packetValue)} />
+        <ContractFact label="Deposit" value={`${money(packet.depositRequired)} (${depositPercent}%)`} />
+        <ContractFact label="Milestones" value={packet.milestoneCount} />
+      </div>
+
+      <div className="mt-4 rounded-md border border-white bg-white p-3">
+        <p className="text-xs font-semibold uppercase text-slate-500">Next action</p>
+        <p className="mt-1 text-sm leading-6 text-slate-700">{packet.nextAction}</p>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
+        {packet.paymentMode ? <StatusBadge tone="blue">{formatStatus(packet.paymentMode)}</StatusBadge> : null}
+        {packet.clientEmailMasked ? <StatusBadge tone="slate">Masked client contact</StatusBadge> : null}
+        {packet.signedDigest ? <StatusBadge tone="emerald">Signed digest</StatusBadge> : null}
+        {packet.signedRecordAt ? <StatusBadge tone="emerald">Recorded {formatContractDate(packet.signedRecordAt)}</StatusBadge> : null}
+      </div>
+    </article>
+  )
+}
+
+function ContractHealthCard({
+  icon: Icon,
+  title,
+  value,
+  detail,
+  tone,
+}: {
+  icon: LucideIcon
+  title: string
+  value: number | string
+  detail: string
+  tone: "slate" | "amber" | "emerald" | "blue"
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-slate-50 text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950",
+  }[tone]
+
+  return (
+    <article className={`rounded-md border p-4 ${toneClass}`}>
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/70">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <p className="text-xs font-semibold uppercase opacity-70">{title}</p>
+          <p className="mt-1 text-2xl font-semibold">{value}</p>
+          <p className="mt-2 text-sm leading-6 opacity-75">{detail}</p>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function ContractFact({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-md border border-white bg-white p-3">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-1 font-semibold text-slate-950">{value}</p>
+    </div>
+  )
+}
+
+function isPacketSigned(packet: ContractPacket) {
+  return (
+    packet.status === "signed" ||
+    packet.signatureStatus === "fully_signed" ||
+    packet.shareStatus === "signed" ||
+    packet.shareStatus === "completed"
+  )
+}
+
+function contractPriority(packet: ContractPacket) {
+  let score = 0
+  if (packet.status === "review_ready") score += 10
+  if (packet.status === "draft") score += 5
+  if (packet.shareStatus === "payment_pending") score += 8
+  if (packet.signatureStatus === "client_signed" || packet.signatureStatus === "contractor_signed") score += 7
+  if (packet.signatureStatus === "awaiting_client") score += 4
+  if (isPacketSigned(packet) && (!packet.signedDigest || !packet.signedRecordAt)) score += 12
+  if (daysSince(packet.updatedAt) >= 10) score += 3
+  return score
+}
+
+function statusTone(status: ContractPacket["status"]) {
+  return {
+    draft: "slate",
+    review_ready: "amber",
+    sent: "blue",
+    signed: "emerald",
+    expired: "rose",
+    archived: "slate",
+  }[status] as "slate" | "amber" | "blue" | "emerald" | "rose"
+}
+
+function signatureTone(status: ContractPacket["signatureStatus"]) {
+  if (status === "fully_signed") return "emerald"
+  if (status === "declined") return "rose"
+  if (status === "client_signed" || status === "contractor_signed" || status === "awaiting_client") return "amber"
+  return "slate"
+}
+
+function shareTone(status: ContractPacket["shareStatus"]) {
+  if (status === "completed" || status === "signed") return "emerald"
+  if (status === "expired") return "rose"
+  if (status === "payment_pending" || status === "viewed" || status === "client_joined") return "amber"
+  if (status === "sent") return "blue"
+  return "slate"
+}
+
+function daysSince(value: string) {
+  const time = new Date(value).getTime()
+  if (Number.isNaN(time)) return 0
+  return Math.floor((Date.now() - time) / 86_400_000)
+}
+
+function money(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    currency: "USD",
+    maximumFractionDigits: 0,
+    style: "currency",
+  }).format(value)
+}
+
+function formatStatus(value: string) {
+  return value.replaceAll("_", " ")
+}
+
+function formatContractDate(value: string) {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+  }).format(new Date(value))
 }
