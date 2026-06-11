@@ -29,6 +29,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Preserved safe signup return paths so contractors can create an account from search/report/profile flows and continue where they started.
 - Added test coverage for signup return-path safety, including product-path preservation and blocked admin/API/auth destinations.
 - Extended live release verification to prove signup preserves safe product return paths and blocks privileged signup destinations.
+- Refined signup page handling so blocked return paths are omitted until the chosen account type can determine the correct default workspace.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

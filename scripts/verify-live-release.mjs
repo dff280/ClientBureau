@@ -372,10 +372,10 @@ const signupWithAdminNext = await read(`/signup?next=${encodeURIComponent("/admi
 if (signupWithAdminNext.response.ok) {
   const nextValue = hiddenInputValue(signupWithAdminNext.text, "next")
 
-  if (nextValue === "/dashboard") {
-    pass("/signup blocks privileged return path", nextValue)
+  if (!nextValue) {
+    pass("/signup blocks privileged return path", "no hidden next preserved")
   } else {
-    fail("/signup blocks privileged return path", `expected /dashboard, got ${nextValue || "missing"}`)
+    fail("/signup blocks privileged return path", `expected no hidden next, got ${nextValue}`)
   }
 } else {
   fail("/signup blocks privileged return path", signupWithAdminNext.error || String(signupWithAdminNext.response.status))

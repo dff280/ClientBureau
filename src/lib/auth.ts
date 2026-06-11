@@ -283,9 +283,8 @@ export function getSafeInternalPath(value?: unknown) {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined
 }
 
-export function getPostSignupRedirectPath(accountType: User["accountType"], requestedNext?: unknown) {
+export function getSafePostSignupReturnPath(requestedNext?: unknown) {
   const safeNext = getSafeInternalPath(requestedNext)
-  const defaultPath = accountType === "client" ? "/client-response" : "/dashboard"
 
   if (
     !safeNext ||
@@ -297,10 +296,14 @@ export function getPostSignupRedirectPath(accountType: User["accountType"], requ
     safeNext === "/signup" ||
     safeNext.startsWith("/signup?")
   ) {
-    return defaultPath
+    return undefined
   }
 
   return safeNext
+}
+
+export function getPostSignupRedirectPath(accountType: User["accountType"], requestedNext?: unknown) {
+  return getSafePostSignupReturnPath(requestedNext) ?? (accountType === "client" ? "/client-response" : "/dashboard")
 }
 
 export async function getCurrentUser(role: UserRole = "contractor"): Promise<User | null> {

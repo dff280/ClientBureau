@@ -4,7 +4,7 @@ import { formDataToObject } from "@/lib/actions/result"
 import sitemap from "@/app/sitemap"
 import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
 import { generateMetadata as generateBusinessProfileMetadata } from "@/app/business/[slug]/page"
-import { getPostSignupRedirectPath, getSafeInternalPath } from "@/lib/auth"
+import { getPostSignupRedirectPath, getSafeInternalPath, getSafePostSignupReturnPath } from "@/lib/auth"
 import {
   buildBusinessSlug,
   businessRatingGrade,
@@ -532,6 +532,7 @@ describe("deployment URL helpers", () => {
   })
 
   it("preserves safe post-signup product paths", () => {
+    expect(getSafePostSignupReturnPath("/search?q=John&state=FL")).toBe("/search?q=John&state=FL")
     expect(getPostSignupRedirectPath("contractor", "/search?q=John&state=FL")).toBe(
       "/search?q=John&state=FL",
     )
@@ -541,6 +542,12 @@ describe("deployment URL helpers", () => {
   })
 
   it("blocks privileged or self-referential post-signup paths", () => {
+    expect(getSafePostSignupReturnPath("/admin/reports")).toBeUndefined()
+    expect(getSafePostSignupReturnPath("/api/health")).toBeUndefined()
+    expect(getSafePostSignupReturnPath("/auth/callback?next=/admin")).toBeUndefined()
+    expect(getSafePostSignupReturnPath("/login?next=/admin")).toBeUndefined()
+    expect(getSafePostSignupReturnPath("/signup?next=/search")).toBeUndefined()
+    expect(getSafePostSignupReturnPath("https://evil.example/search")).toBeUndefined()
     expect(getPostSignupRedirectPath("contractor", "/admin/reports")).toBe("/dashboard")
     expect(getPostSignupRedirectPath("contractor", "/api/health")).toBe("/dashboard")
     expect(getPostSignupRedirectPath("contractor", "/auth/callback?next=/admin")).toBe("/dashboard")
