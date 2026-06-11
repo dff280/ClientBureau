@@ -52,26 +52,28 @@ export function ClientResponseForm({
       ) : null}
 
       <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
-        Use this form to submit a response, dispute, correction request, or resolution update. Public display is never automatic; every submission is reviewed for relevance, privacy, and documentation.
+        Use this form to submit a response, dispute, correction request, or resolution update.
+        Public display is never automatic; every submission is reviewed for relevance, privacy,
+        profile match, tone, and documentation.
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="name">Your name</Label>
-          <Input id="name" name="name" placeholder="Name on profile" />
+          <Input id="name" name="name" placeholder="Name for moderator verification" />
           <FieldError name="name" errors={state.ok ? undefined : state.fieldErrors} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" type="email" placeholder="review contact" />
+          <Label htmlFor="email">Email for moderator contact</Label>
+          <Input id="email" name="email" type="email" placeholder="you@example.com" />
           <FieldError name="email" errors={state.ok ? undefined : state.fieldErrors} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone optional</Label>
-          <Input id="phone" name="phone" placeholder="Used only for verification" />
+          <Input id="phone" name="phone" placeholder="Used only if verification needs it" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="profileUrl">Profile URL</Label>
+          <Label htmlFor="profileUrl">Client Bureau profile URL</Label>
           <Input id="profileUrl" name="profileUrl" defaultValue={defaultProfileUrl} placeholder="/client/john-smith-orlando-fl" />
           <FieldError name="profileUrl" errors={state.ok ? undefined : state.fieldErrors} />
         </div>
@@ -89,6 +91,9 @@ export function ClientResponseForm({
             <option>Request correction</option>
             <option>Resolution update</option>
           </select>
+          <p className="text-xs leading-5 text-slate-500">
+            Choose the closest match. Moderators may relabel the public context during review.
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="verificationMethod">Preferred verification</Label>
@@ -101,6 +106,9 @@ export function ClientResponseForm({
             <option>Phone verification</option>
             <option>Business documentation</option>
           </select>
+          <p className="text-xs leading-5 text-slate-500">
+            Verification details are used for review and are not displayed publicly.
+          </p>
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor="attachmentUrl">Optional documentation link</Label>
@@ -112,13 +120,16 @@ export function ClientResponseForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="responseSummary">Response summary</Label>
+        <Label htmlFor="responseSummary">What should moderators know?</Label>
         <Textarea
           id="responseSummary"
           name="responseSummary"
           className="min-h-36"
           placeholder="Example: I am requesting a correction because the report date appears to reference a different project. I can provide the signed scope and payment confirmation for moderator review."
         />
+        <p className="text-xs leading-5 text-slate-500">
+          Keep this factual and specific. Avoid private contact details, threats, insults, or unsupported accusations.
+        </p>
         <FieldError name="responseSummary" errors={state.ok ? undefined : state.fieldErrors} />
       </div>
 

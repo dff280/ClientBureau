@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import type { LucideIcon } from "lucide-react"
 import { CheckCircle2, Clock3, FileText, MessageSquareText, Scale, ShieldCheck } from "lucide-react"
 
 import { ClientResponseForm } from "@/components/forms/client-response-form"
@@ -47,6 +48,36 @@ const proof = [
   { label: "Outcome", value: "Context", text: "Approved updates can add fair public context without declaring a winner." },
 ]
 
+const responsePaths = [
+  {
+    icon: MessageSquareText,
+    title: "Publish a response",
+    text: "Use this when you want a moderated public response attached to profile or report context.",
+  },
+  {
+    icon: Scale,
+    title: "Dispute a report",
+    text: "Use this when you believe published context is incomplete, mismatched, or needs formal dispute labeling.",
+  },
+  {
+    icon: FileText,
+    title: "Request correction",
+    text: "Use this for identity, date, location, project, payment, or factual-context corrections.",
+  },
+  {
+    icon: CheckCircle2,
+    title: "Resolution update",
+    text: "Use this when payment, communication, project status, or a dispute has been resolved or materially changed.",
+  },
+]
+
+const readinessChecks = [
+  "The Client Bureau profile URL or report reference is included.",
+  "Your name and review contact email are accurate.",
+  "The summary explains what should be corrected, disputed, or added.",
+  "Any documentation link is appropriate for private moderator review.",
+]
+
 type ClientResponsePageProps = {
   searchParams: Promise<{
     profile?: string
@@ -93,7 +124,25 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
 
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
+                <CardTitle>Choose the right request type</CardTitle>
+                <p className="text-sm leading-6 text-slate-600">
+                  Pick the path that best matches what you need moderators to review. Every path stays private until approved.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-3 md:grid-cols-2">
+                {responsePaths.map((path) => (
+                  <ResponsePathCard key={path.title} {...path} />
+                ))}
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardHeader>
                 <CardTitle>Response request</CardTitle>
+                <p className="text-sm leading-6 text-slate-600">
+                  Complete the fields below so moderators can match the request to the right profile, verify contact,
+                  and decide what public context, if any, should be shown.
+                </p>
               </CardHeader>
               <CardContent>
                 <ClientResponseForm
@@ -125,6 +174,20 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
           <aside className="space-y-5">
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardContent className="space-y-4 p-6">
+                <ShieldCheck className="size-8 text-slate-950" aria-hidden="true" />
+                <h2 className="text-xl font-semibold text-slate-950">Before you submit</h2>
+                <div className="grid gap-3 text-sm leading-6 text-slate-600">
+                  {readinessChecks.map((check) => (
+                    <div key={check} className="flex gap-3">
+                      <CheckCircle2 className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                      <span>{check}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="space-y-4 p-6">
                 <MessageSquareText className="size-8 text-slate-950" aria-hidden="true" />
                 <h2 className="text-xl font-semibold text-slate-950">Right of response</h2>
                 <p className="text-sm leading-6 text-slate-600">
@@ -151,5 +214,29 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
         </div>
       </section>
     </main>
+  )
+}
+
+function ResponsePathCard({
+  icon: Icon,
+  text,
+  title,
+}: {
+  icon: LucideIcon
+  text: string
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h3 className="font-semibold text-slate-950">{title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+        </div>
+      </div>
+    </div>
   )
 }
