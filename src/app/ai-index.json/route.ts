@@ -24,6 +24,21 @@ export async function GET() {
       intent: "Indexable state and city directory for approved public client profiles.",
     },
     {
+      title: "Unified Profile Directory",
+      url: `${siteUrl}/profiles`,
+      intent: "Indexable public directory for client, contractor, service business, subcontractor, and trade professional profiles.",
+    },
+    {
+      title: "Contractor Profiles",
+      url: `${siteUrl}/profiles/contractor`,
+      intent: "Indexable public directory for contractor and service business profiles.",
+    },
+    {
+      title: "Subcontractor Profiles",
+      url: `${siteUrl}/profiles/subcontractor`,
+      intent: "Indexable public directory for subcontractor, installer, crew, and specialty trade professional profiles.",
+    },
+    {
       title: "Pricing",
       url: `${siteUrl}/pricing`,
       intent: "Plan comparison for contractors, service businesses, teams, and enterprise buyers.",

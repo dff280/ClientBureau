@@ -210,7 +210,7 @@ function sitemapProfilePaths(xml) {
 }
 
 function sitemapEntityProfilePaths(xml) {
-  return [...xml.matchAll(/<loc>https?:\/\/[^<]+(\/profiles\/[^<]+)<\/loc>/gi)].map((match) => match[1])
+  return [...xml.matchAll(/<loc>https?:\/\/[^<]+(\/profiles\/(?:client|contractor|subcontractor)\/[^<\/]+)<\/loc>/gi)].map((match) => match[1])
 }
 
 function sitemapLocs(xml) {
@@ -593,6 +593,7 @@ if (robots.response.ok) {
     "Allow: /clients",
     "Allow: /business/",
     "Allow: /businesses",
+    "Allow: /profiles",
     "Disallow: /dashboard",
     "Disallow: /submit-report",
     "Disallow: /client-response",
@@ -663,6 +664,8 @@ if (llmsTxt.response.ok) {
     `${expectedSiteUrl}/pricing`,
     `${expectedSiteUrl}/how-it-works`,
     `${expectedSiteUrl}/clients`,
+    `${expectedSiteUrl}/profiles`,
+    `${expectedSiteUrl}/profiles/contractor`,
     `${expectedSiteUrl}/mobile-app`,
     `${expectedSiteUrl}/payment-recovery-service`,
     `${expectedSiteUrl}/florida-lien-filing-service`,
@@ -1166,6 +1169,30 @@ const publicIndexablePages = [
       "Business trust profiles",
       "Find verified contractors and service business owners.",
       "not customer star reviews or guarantees",
+    ],
+  },
+  {
+    path: "/profiles",
+    requiredTexts: [
+      "Unified profile directory",
+      "Search public profiles for clients, contractors, and subcontractors.",
+      "All public profiles",
+    ],
+  },
+  {
+    path: "/profiles/contractor",
+    requiredTexts: [
+      "Contractor profiles",
+      "Find contractor and service business profiles.",
+      "Contractors and service businesses",
+    ],
+  },
+  {
+    path: "/profiles/subcontractor",
+    requiredTexts: [
+      "Subcontractor profiles",
+      "Find subcontractor and trade professional profiles.",
+      "Subcontractors and trade pros",
     ],
   },
   {

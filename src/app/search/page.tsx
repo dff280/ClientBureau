@@ -16,7 +16,7 @@ import { profileTypes, reportCategories, riskLevels, type ProfileType, type Repo
 export const metadata: Metadata = {
   title: "Check a Client",
   description:
-    "Search Client Bureau for moderated client profiles, contractor-submitted reports, private matching, and approved public summaries.",
+    "Search Client Bureau for client, contractor, subcontractor, and service-business profiles with moderated public context.",
   alternates: {
     canonical: "/search",
   },
@@ -150,8 +150,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       <PremiumProofStrip
         items={[
           { label: "Search by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
+          { label: "Profile types", value: "All roles", text: "Clients, contractors, subcontractors, and trade businesses can appear when approved." },
           { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
-          { label: "Next action", value: "Watch or report", text: "Save the search, watch a profile, or submit a documented experience." },
           { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
         ]}
         dark

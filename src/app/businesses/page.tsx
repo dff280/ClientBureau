@@ -84,6 +84,39 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
 
       <section className="bureau-section">
         <div className="bureau-container space-y-6">
+          <div className="grid gap-3 md:grid-cols-3">
+            <Link
+              href="/profiles/contractor"
+              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
+            >
+              <p className="text-xs font-semibold uppercase text-amber-700">Contractors</p>
+              <h2 className="mt-2 font-semibold text-slate-950">Contractor and service business profiles</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Browse the broader public profile graph for contractors and service businesses.
+              </p>
+            </Link>
+            <Link
+              href="/profiles/subcontractor"
+              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
+            >
+              <p className="text-xs font-semibold uppercase text-amber-700">Subcontractors</p>
+              <h2 className="mt-2 font-semibold text-slate-950">Subcontractor and trade pro profiles</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Review subcontractor, installer, crew, and specialty trade professional records.
+              </p>
+            </Link>
+            <Link
+              href="/profiles"
+              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
+            >
+              <p className="text-xs font-semibold uppercase text-amber-700">All profiles</p>
+              <h2 className="mt-2 font-semibold text-slate-950">Unified profile directory</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Search clients, contractors, subcontractors, and public project relationship context.
+              </p>
+            </Link>
+          </div>
+
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="p-4">
               <form className="grid gap-2 sm:grid-cols-[1fr_140px_140px_auto]">

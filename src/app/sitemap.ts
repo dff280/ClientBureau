@@ -10,6 +10,7 @@ import { entityProfileHref } from "@/lib/entity-profiles"
 import { getClientDirectory } from "@/lib/client-directory"
 import { acquisitionPages } from "@/lib/acquisition-pages"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
+import { profileTypes } from "@/lib/types"
 
 const siteUrl = getSiteUrl()
 
@@ -54,6 +55,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.7,
     },
+    {
+      url: `${siteUrl}/profiles`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.74,
+    },
+    ...profileTypes.map((profileType) => ({
+      url: `${siteUrl}/profiles/${profileType}`,
+      lastModified: now,
+      changeFrequency: "weekly" as const,
+      priority: profileType === "client" ? 0.72 : 0.7,
+    })),
     {
       url: `${siteUrl}/claim-profile`,
       lastModified: now,

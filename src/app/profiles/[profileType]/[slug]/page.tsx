@@ -97,7 +97,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
         "@id": `${profileUrl}#breadcrumb`,
         itemListElement: [
           { "@type": "ListItem", position: 1, name: "Client Bureau", item: siteUrl },
-          { "@type": "ListItem", position: 2, name: profileTypePluralLabel(profile.profileType), item: `${siteUrl}/search` },
+          { "@type": "ListItem", position: 2, name: profileTypePluralLabel(profile.profileType), item: `${siteUrl}/profiles/${profile.profileType}` },
           { "@type": "ListItem", position: 3, name: profile.displayName, item: profileUrl },
         ],
       },

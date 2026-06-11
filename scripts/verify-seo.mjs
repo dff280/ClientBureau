@@ -108,6 +108,10 @@ function sitemapProfilePath(xml) {
   return match?.[1] ?? ""
 }
 
+function sitemapLocs(xml) {
+  return [...xml.matchAll(/<loc>(.*?)<\/loc>/gi)].map((match) => match[1])
+}
+
 const home = await read("/")
 if (home.response.ok) pass("Homepage returns 200")
 else fail("Homepage returns 200", String(home.response.status))
@@ -155,6 +159,10 @@ const publicContentPages = [
   "/dispute-policy",
   "/moderation-policy",
   "/clients",
+  "/profiles",
+  "/profiles/client",
+  "/profiles/contractor",
+  "/profiles/subcontractor",
   "/clients/orlando-fl",
   "/clients/florida/orlando",
   "/reports/non-payment",
@@ -441,9 +449,17 @@ if (businessesPageForClaim.response.ok) {
 
 const sitemap = await read("/sitemap.xml")
 const profilePath = sitemapProfilePath(sitemap.text)
+const sitemapPublicLocs = sitemap.response.ok ? sitemapLocs(sitemap.text) : []
 
 if (profilePath) pass("Sitemap includes at least one public client profile", profilePath)
 else fail("Sitemap includes at least one public client profile")
+
+for (const path of ["/profiles", "/profiles/client", "/profiles/contractor", "/profiles/subcontractor"]) {
+  const expectedLoc = `${expectedSiteUrl}${path}`
+
+  if (sitemapPublicLocs.includes(expectedLoc)) pass(`Sitemap includes ${path}`, expectedLoc)
+  else fail(`Sitemap includes ${path}`, "missing")
+}
 
 const publicProfile = profilePath ? await read(profilePath) : { response: { ok: false, status: "missing" }, text: "" }
 if (publicProfile.response.ok) {
