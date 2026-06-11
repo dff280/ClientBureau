@@ -112,7 +112,7 @@ Run the full live release verifier from your local machine after the VPS rebuild
 npm run verify:live
 ```
 
-The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, missing unified profile graph routes, missing diagnostic no-store headers, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet.
+The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, missing unified profile graph routes, missing diagnostic no-store headers, unsafe logged-out protected-route behavior, missing protected-route return paths, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet.
 
 To intentionally inspect production without comparing release identity, run:
 

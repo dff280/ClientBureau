@@ -53,7 +53,7 @@ export default async function SubmitReportPage({
 }: {
   searchParams: SubmitReportSearchParams
 }) {
-  await requireContractorAccess()
+  await requireContractorAccess("/submit-report")
 
   const defaults = await searchParams
 

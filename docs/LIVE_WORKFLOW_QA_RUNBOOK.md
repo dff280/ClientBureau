@@ -21,6 +21,7 @@ Required result:
 - `/api/version` shows the expected package version and Git commit.
 - `/api/health` reports `coreLiveReady: true`, `platformCanUseSupabase: true`, and `recommendedPlatformFeatureDataMode: supabase`.
 - `/api/version`, `/api/health`, `/api/session`, and `/api/admin/session` include `Cache-Control: no-store`.
+- Logged-out dashboard, submit-report, and admin routes redirect to safe internal `/login` URLs, preserve the expected `next` return path, and include `Cache-Control: no-store`.
 - Sitemap includes approved `/client/...` pages and unified `/profiles/...` graph pages.
 - `/mobile-app` returns 200, shows the current native app version/build from `apps/mobile/app.json`, and does not show stale APK/AAB artifact links.
 - Public pages pass production-copy safety checks: no MVP/demo/mock/test-checkout wording, internal environment names, API/auth implementation terms, or inflammatory blacklist-style language.

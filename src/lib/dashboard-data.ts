@@ -5,8 +5,8 @@ import {
   getPublicClientProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 
-export async function getClientDashboardData() {
-  const user = await requireContractorAccess()
+export async function getClientDashboardData(next = "/dashboard") {
+  const user = await requireContractorAccess(next)
   const [dashboard, clientProfiles, riskOps] = await Promise.all([
     getContractorDashboardService(user.id),
     getPublicClientProfilesService(),

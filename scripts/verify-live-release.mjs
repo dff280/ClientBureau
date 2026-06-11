@@ -69,6 +69,7 @@ async function read(path, options = {}) {
   try {
     const response = await fetch(`${baseUrl}${path}`, {
       headers: { "User-Agent": "ClientBureauReleaseVerifier/1.0" },
+      redirect: options.redirect ?? "follow",
       signal: controller.signal,
     })
     const text = await response.text()
@@ -137,6 +138,62 @@ function hasNoStoreHeader(response) {
   const cacheControl = response.headers?.get?.("cache-control") ?? ""
 
   return /no-store/i.test(cacheControl)
+}
+
+function streamedRedirectTarget(html) {
+  const digestMatch = html.match(/NEXT_REDIRECT;replace;([^;]+);(?:30[2378]);/i)
+  if (digestMatch?.[1]) return digestMatch[1]
+
+  const refreshMatch = html.match(/http-equiv=["']refresh["'][^>]+content=["'][^"']*url=([^"']+)["']/i)
+  if (refreshMatch?.[1]) return refreshMatch[1]
+
+  return ""
+}
+
+function isSafeLoginRedirect(value) {
+  if (!value) return false
+
+  try {
+    const target = new URL(value, expectedSiteUrl)
+
+    if (target.origin !== expectedSiteUrl) return false
+    if (target.pathname !== "/login") return false
+
+    const next = target.searchParams.get("next")
+
+    return !next || (next.startsWith("/") && !next.startsWith("//"))
+  } catch {
+    return false
+  }
+}
+
+function loginRedirectNext(value) {
+  if (!value) return ""
+
+  try {
+    const target = new URL(value, expectedSiteUrl)
+
+    return target.searchParams.get("next") ?? ""
+  } catch {
+    return ""
+  }
+}
+
+function protectedRouteRedirectDetail(result) {
+  const status = Number(result.response.status)
+  const location = result.response.headers?.get?.("location") ?? ""
+
+  if ([301, 302, 303, 307, 308].includes(status)) {
+    return isSafeLoginRedirect(location) ? location : ""
+  }
+
+  if (status === 200) {
+    const target = streamedRedirectTarget(result.text)
+
+    return isSafeLoginRedirect(target) ? target : ""
+  }
+
+  return ""
 }
 
 function visibleHtml(html) {
@@ -237,6 +294,43 @@ for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
   else fail(`${path} returns 200`, result.error || String(result.response.status))
+}
+
+const protectedRoutes = [
+  { path: "/dashboard", expectedNext: "/dashboard" },
+  { path: "/dashboard/reports", expectedNext: "/dashboard/reports" },
+  { path: "/dashboard/contracts", expectedNext: "/dashboard/contracts" },
+  { path: "/dashboard/recovery", expectedNext: "/dashboard/recovery" },
+  { path: "/submit-report", expectedNext: "/submit-report" },
+  { path: "/admin", expectedNext: "/admin" },
+  { path: "/admin/reports", expectedNext: "/admin" },
+]
+
+for (const { path, expectedNext } of protectedRoutes) {
+  const result = await read(path, { redirect: "manual" })
+  const detail = protectedRouteRedirectDetail(result)
+
+  if (detail) {
+    pass(`${path} logged-out protection`, detail)
+
+    const next = loginRedirectNext(detail)
+    if (next === expectedNext) {
+      pass(`${path} logged-out return path`, next)
+    } else {
+      fail(`${path} logged-out return path`, `expected ${expectedNext}, got ${next || "missing"}`)
+    }
+  } else {
+    fail(
+      `${path} logged-out protection`,
+      `status=${result.response.status}; location=${result.response.headers?.get?.("location") ?? "none"}`,
+    )
+  }
+
+  if (hasNoStoreHeader(result.response)) {
+    pass(`${path} protected no-store cache header`)
+  } else {
+    fail(`${path} protected no-store cache header`, result.response.headers?.get?.("cache-control") || "missing")
+  }
 }
 
 const mobileApp = await read("/mobile-app")

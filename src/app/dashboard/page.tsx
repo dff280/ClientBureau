@@ -75,7 +75,7 @@ export default async function DashboardPage({
     redirect(workspaceRedirects[requestedWorkspace] ?? "/dashboard")
   }
 
-  const { dashboard, clientProfiles, riskOps } = await getClientDashboardData()
+  const { dashboard, clientProfiles, riskOps } = await getClientDashboardData("/dashboard")
 
   if (!dashboard) {
     return (

@@ -504,7 +504,7 @@ export default async function DashboardToolPage({
 
   if (!config) notFound()
 
-  const { dashboard, clientProfiles, riskOps } = await getClientDashboardData()
+  const { dashboard, clientProfiles, riskOps } = await getClientDashboardData(`/dashboard/${tool}`)
   const featureDataMode = getPlatformFeatureDataMode()
   const liveBacked = featureDataMode === "supabase"
 

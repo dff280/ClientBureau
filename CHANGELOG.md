@@ -21,6 +21,8 @@ All notable Client Bureau product changes should be documented here before a rel
 - Expanded SEO verification across core public marketing pages and added private-marker checks for storage paths, evidence buckets, signed snapshots, raw hashes, and internal-note markers.
 - Sanitized public profile community-discussion props so private author email hashes are not serialized into client-side page payloads.
 - Added `npm run seo:check:local` to start the standalone Next.js build, run SEO verification, and shut down automatically.
+- Added live release checks for logged-out dashboard, submit-report, and admin route protection so protected pages must redirect to safe internal login URLs with no-store cache headers and the expected return path.
+- Preserved dashboard and submit-report return paths when logged-out users open protected tools, so login can return them to the exact workspace or form they requested.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
