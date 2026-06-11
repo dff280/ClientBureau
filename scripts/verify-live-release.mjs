@@ -458,6 +458,55 @@ for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.
   else fail(`${path} returns 200`, result.error || String(result.response.status))
 }
 
+const securityTxt = await read("/.well-known/security.txt")
+if (securityTxt.response.ok) {
+  pass("/.well-known/security.txt returns 200")
+
+  if (headerContains(securityTxt.response, "content-type", "text/plain")) {
+    pass("/.well-known/security.txt content type", securityTxt.response.headers?.get?.("content-type") ?? "")
+  } else {
+    fail(
+      "/.well-known/security.txt content type",
+      securityTxt.response.headers?.get?.("content-type") || "missing",
+    )
+  }
+
+  const securityTxtChecks = [
+    ["security contact email", "Contact: mailto:admin@clientbureau.com"],
+    ["security contact page", `Contact: ${expectedSiteUrl}/contact`],
+    ["security preferred language", "Preferred-Languages: en"],
+    ["security canonical", `Canonical: ${expectedSiteUrl}/.well-known/security.txt`],
+    ["security policy", `Policy: ${expectedSiteUrl}/privacy`],
+  ]
+
+  for (const [label, expectedText] of securityTxtChecks) {
+    if (securityTxt.text.includes(expectedText)) {
+      pass(`/.well-known/security.txt ${label}`)
+    } else {
+      fail(`/.well-known/security.txt ${label}`, `${expectedText} missing`)
+    }
+  }
+
+  const expiresText = extract(securityTxt.text, /^Expires:\s*(.+)$/im)
+  const expiresTime = Date.parse(expiresText)
+  if (expiresText && Number.isFinite(expiresTime) && expiresTime > Date.now()) {
+    pass("/.well-known/security.txt future expiry", expiresText)
+  } else {
+    fail("/.well-known/security.txt future expiry", expiresText || "missing")
+  }
+
+  if (headerContains(securityTxt.response, "cache-control", "max-age=86400")) {
+    pass("/.well-known/security.txt cache policy", securityTxt.response.headers?.get?.("cache-control") ?? "")
+  } else {
+    fail(
+      "/.well-known/security.txt cache policy",
+      securityTxt.response.headers?.get?.("cache-control") || "missing",
+    )
+  }
+} else {
+  fail("/.well-known/security.txt returns 200", securityTxt.error || String(securityTxt.response.status))
+}
+
 const homepageForHeaders = await read("/")
 if (homepageForHeaders.response.ok) {
   const securityHeaderChecks = [

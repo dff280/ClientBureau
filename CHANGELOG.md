@@ -37,6 +37,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Extended live release verification to prove `www.clientbureau.com` redirects to the apex host and that sensitive `Server`/`X-Powered-By` headers are not exposed.
 - Added live release checks proving private mobile API endpoints require bearer-token access and return no-store responses when unauthenticated.
 - Added live release checks proving private mobile mutation endpoints reject unauthenticated POST requests before accepting payloads.
+- Added live release checks for `/.well-known/security.txt` contact, canonical, policy, expiry, content type, and cache metadata.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
