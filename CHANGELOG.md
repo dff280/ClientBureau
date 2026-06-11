@@ -31,6 +31,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Extended live release verification to prove signup preserves safe product return paths and blocks privileged signup destinations.
 - Refined signup page handling so blocked return paths are omitted until the chosen account type can determine the correct default workspace.
 - Centralized login return-path sanitization and extended live release verification for login form and create-account handoff safety.
+- Extended live release verification to prove login/logout auth transition redirects are explicit no-store responses.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

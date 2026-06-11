@@ -68,7 +68,12 @@ async function read(path, options = {}) {
 
   try {
     const response = await fetch(`${baseUrl}${path}`, {
-      headers: { "User-Agent": "ClientBureauReleaseVerifier/1.0" },
+      method: options.method ?? "GET",
+      headers: {
+        "User-Agent": "ClientBureauReleaseVerifier/1.0",
+        ...(options.headers ?? {}),
+      },
+      body: options.body,
       redirect: options.redirect ?? "follow",
       signal: controller.signal,
     })
@@ -176,6 +181,12 @@ function hasNoStoreHeader(response) {
   const cacheControl = response.headers?.get?.("cache-control") ?? ""
 
   return /no-store/i.test(cacheControl)
+}
+
+function isRedirectResponse(response) {
+  const status = Number(response.status)
+
+  return status >= 300 && status < 400
 }
 
 function streamedRedirectTarget(html) {
@@ -325,6 +336,49 @@ for (const path of diagnosticPaths) {
     pass(`${path} no-store cache header`)
   } else {
     fail(`${path} no-store cache header`, diagnostic.response.headers?.get?.("cache-control") || "missing")
+  }
+}
+
+const authTransitionChecks = [
+  {
+    name: "/api/auth/login invalid credentials",
+    path: "/api/auth/login",
+    method: "POST",
+    body: new URLSearchParams({
+      email: "release-verifier@example.invalid",
+      password: "invalid-release-verifier-password",
+      next: "/dashboard",
+    }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  },
+  {
+    name: "/api/auth/logout",
+    path: "/api/auth/logout",
+    method: "GET",
+  },
+]
+
+for (const check of authTransitionChecks) {
+  const result = await read(check.path, {
+    method: check.method,
+    headers: check.headers,
+    body: check.body,
+    redirect: "manual",
+  })
+
+  if (isRedirectResponse(result.response)) {
+    pass(`${check.name} redirects safely`, result.response.headers?.get?.("location") ?? "redirect")
+  } else {
+    fail(
+      `${check.name} redirects safely`,
+      `status=${result.response.status}; location=${result.response.headers?.get?.("location") ?? "none"}`,
+    )
+  }
+
+  if (hasNoStoreHeader(result.response)) {
+    pass(`${check.name} no-store cache header`)
+  } else {
+    fail(`${check.name} no-store cache header`, result.response.headers?.get?.("cache-control") || "missing")
   }
 }
 
