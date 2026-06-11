@@ -33,7 +33,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Centralized login return-path sanitization and extended live release verification for login form and create-account handoff safety.
 - Extended live release verification to prove login/logout auth transition redirects are explicit no-store responses.
 - Aligned Caddy and app security headers and added live verification for CSP, HSTS, permissions policy, frame protection, referrer policy, and origin isolation headers.
-- Updated the VPS deploy script to reload Caddy after rebuilds so edge header changes take effect during normal releases.
+- Updated the VPS deploy script to recreate Caddy after rebuilds so mounted edge header changes take effect during normal releases.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
