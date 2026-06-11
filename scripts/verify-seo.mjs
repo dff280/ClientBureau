@@ -28,6 +28,27 @@ function extract(html, pattern) {
   return match?.[1]?.trim() ?? ""
 }
 
+function decodeHtmlAttribute(value) {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+}
+
+function metaContent(html, name) {
+  const metas = [...html.matchAll(/<meta\b[^>]*>/gi)].map((match) => match[0])
+  const meta = metas.find((tag) => {
+    const metaName = extract(tag, /\bname=["']([^"']+)["']/i)
+
+    return metaName.toLowerCase() === name.toLowerCase()
+  })
+
+  return meta ? decodeHtmlAttribute(extract(meta, /\bcontent=["']([^"']*)["']/i)) : ""
+}
+
 function wordCount(html) {
   const text = visiblePageText(html)
 
@@ -120,6 +141,7 @@ const corePublicPages = [
   "/contact",
   "/enterprise",
   "/resources",
+  "/claim-profile",
   "/score-methodology",
   "/business-rating-methodology",
   "/businesses",
@@ -187,6 +209,61 @@ async function verifyPublicPage(path, options = {}) {
   }
 }
 
+async function verifyNoindexWorkflowPage(path, options = {}) {
+  const { requestPath = path, requiredText = [] } = options
+  const page = await read(requestPath)
+
+  if (!page.response.ok) {
+    fail(`${path} returns 200`, String(page.response.status))
+    return
+  }
+
+  pass(`${path} returns 200`)
+
+  const pageTitle = extract(page.text, /<title>(.*?)<\/title>/is)
+  const pageDescription = metaContent(page.text, "description")
+  const pageCanonical = extract(page.text, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
+  const pageRobots = metaContent(page.text, "robots").toLowerCase()
+
+  if (pageTitle.length > 0) pass(`${path} title present`, pageTitle)
+  else fail(`${path} title present`)
+
+  if (pageDescription.length >= 90 && pageDescription.length <= 170) {
+    pass(`${path} meta description length`, `${pageDescription.length} characters`)
+  } else {
+    fail(`${path} meta description length`, `${pageDescription.length}: ${pageDescription}`)
+  }
+
+  if (pageCanonical === `${expectedSiteUrl}${path}`) pass(`${path} canonical`, pageCanonical)
+  else fail(`${path} canonical`, pageCanonical || "missing")
+
+  if (pageRobots.includes("noindex") && pageRobots.includes("nofollow")) {
+    pass(`${path} noindex/nofollow`, pageRobots)
+  } else {
+    fail(`${path} noindex/nofollow`, pageRobots || "missing")
+  }
+
+  const visibleText = visiblePageText(page.text)
+  for (const text of requiredText) {
+    if (visibleText.includes(text)) pass(`${path} visible copy ${text.slice(0, 60)}`)
+    else fail(`${path} visible copy ${text.slice(0, 60)}`, "missing")
+  }
+
+  const productionCopyLeaks = findProductionCopyLeaks(page.text)
+  if (productionCopyLeaks.length === 0) {
+    pass(`${path} production copy safety`)
+  } else {
+    fail(`${path} production copy safety`, productionCopyLeaks.join(", "))
+  }
+
+  const privateDataLeaks = findPublicPrivateDataLeaks(page.text)
+  if (privateDataLeaks.length === 0) {
+    pass(`${path} private-data marker safety`)
+  } else {
+    fail(`${path} private-data marker safety`, privateDataLeaks.join(", "))
+  }
+}
+
 const publicPageChecks = new Map()
 
 for (const path of corePublicPages) {
@@ -200,6 +277,22 @@ for (const path of publicContentPages) {
 for (const [path, options] of publicPageChecks.entries()) {
   await verifyPublicPage(path, options)
 }
+
+await verifyNoindexWorkflowPage("/login", {
+  requestPath: "/login?next=%2Fdashboard%2Freports",
+  requiredText: ["Secure account access", "Return to your business protection workspace.", "Sign in to Client Bureau"],
+})
+await verifyNoindexWorkflowPage("/signup", {
+  requestPath: "/signup?next=%2Fsearch%3Fq%3DJohn%26state%3DFL",
+  requiredText: ["Business protection account", "Create the account that helps protect your next job.", "Create your Client Bureau account"],
+})
+await verifyNoindexWorkflowPage("/search", {
+  requestPath: "/search?q=John&state=FL",
+  requiredText: ["Check a Client Before You Take the Job.", "Server-verified results", "Search decision guide"],
+})
+await verifyNoindexWorkflowPage("/client-response", {
+  requiredText: ["Client response", "Respond, dispute, correct, or update a Client Bureau profile.", "Fairness is part of the product."],
+})
 
 const mobileAppPage = await read("/mobile-app")
 if (mobileAppPage.response.ok) {
