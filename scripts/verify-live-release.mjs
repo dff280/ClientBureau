@@ -178,6 +178,10 @@ function sitemapEntityProfilePaths(xml) {
   return [...xml.matchAll(/<loc>https?:\/\/[^<]+(\/profiles\/[^<]+)<\/loc>/gi)].map((match) => match[1])
 }
 
+function sitemapLocs(xml) {
+  return [...xml.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((match) => match[1])
+}
+
 function hasNoStoreHeader(response) {
   const cacheControl = response.headers?.get?.("cache-control") ?? ""
 
@@ -456,6 +460,82 @@ for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
   else fail(`${path} returns 200`, result.error || String(result.response.status))
+}
+
+const robots = await read("/robots.txt")
+if (robots.response.ok) {
+  const robotsRequiredRules = [
+    "User-Agent: *",
+    "Allow: /",
+    "Allow: /client/",
+    "Allow: /clients",
+    "Allow: /business/",
+    "Allow: /businesses",
+    "Disallow: /dashboard",
+    "Disallow: /submit-report",
+    "Disallow: /client-response",
+    "Disallow: /login",
+    "Disallow: /signup",
+    "Disallow: /admin/",
+    "Disallow: /search",
+    `Sitemap: ${expectedSiteUrl}/sitemap.xml`,
+  ]
+
+  for (const rule of robotsRequiredRules) {
+    if (robots.text.includes(rule)) {
+      pass(`/robots.txt rule ${rule}`)
+    } else {
+      fail(`/robots.txt rule ${rule}`, "missing")
+    }
+  }
+} else {
+  fail("/robots.txt content checks", robots.error || String(robots.response.status))
+}
+
+const sitemapForCrawlRules = await read("/sitemap.xml")
+if (sitemapForCrawlRules.response.ok) {
+  const locs = sitemapLocs(sitemapForCrawlRules.text)
+  const nonCanonicalLocs = locs.filter((loc) => !loc.startsWith(expectedSiteUrl))
+  const privateLocs = locs.filter((loc) => {
+    try {
+      const pathname = new URL(loc).pathname
+
+      return [
+        "/admin",
+        "/api",
+        "/auth",
+        "/dashboard",
+        "/login",
+        "/signup",
+        "/search",
+        "/submit-report",
+        "/client-response",
+        "/contract/",
+      ].some((prefix) => pathname === prefix || pathname.startsWith(prefix))
+    } catch {
+      return true
+    }
+  })
+
+  if (locs.length > 0) {
+    pass("/sitemap.xml loc entries", `${locs.length} URL(s)`)
+  } else {
+    fail("/sitemap.xml loc entries", "no URLs found")
+  }
+
+  if (nonCanonicalLocs.length === 0) {
+    pass("/sitemap.xml canonical host URLs")
+  } else {
+    fail("/sitemap.xml canonical host URLs", nonCanonicalLocs.slice(0, 5).join(", "))
+  }
+
+  if (privateLocs.length === 0) {
+    pass("/sitemap.xml excludes private routes")
+  } else {
+    fail("/sitemap.xml excludes private routes", privateLocs.slice(0, 5).join(", "))
+  }
+} else {
+  fail("/sitemap.xml crawl privacy checks", sitemapForCrawlRules.error || String(sitemapForCrawlRules.response.status))
 }
 
 const securityTxt = await read("/.well-known/security.txt")

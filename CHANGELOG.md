@@ -38,6 +38,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added live release checks proving private mobile API endpoints require bearer-token access and return no-store responses when unauthenticated.
 - Added live release checks proving private mobile mutation endpoints reject unauthenticated POST requests before accepting payloads.
 - Added live release checks for `/.well-known/security.txt` contact, canonical, policy, expiry, content type, and cache metadata.
+- Added live release checks for `robots.txt` crawl rules and `sitemap.xml` canonical/private-route safety.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
