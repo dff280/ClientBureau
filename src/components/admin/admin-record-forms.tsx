@@ -249,6 +249,12 @@ export function AdminClientEditor({
 export function AdminContractorEditor({ contractor }: { contractor: ContractorProfile }) {
   const [state, action] = useActionState(adminUpdateContractorAction, contractorState)
   const [deleteResult, deleteAction] = useActionState(adminDeleteRecordAction, deleteState)
+  const verificationTone = contractor.verificationStatus === "verified" ? "emerald" : contractor.verificationStatus === "pending" ? "amber" : "slate"
+  const profileGaps = [
+    !contractor.licenseNumber ? "license" : null,
+    !contractor.serviceArea ? "service area" : null,
+    !contractor.businessType ? "business type" : null,
+  ].filter(Boolean)
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
@@ -264,14 +270,16 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
         title={contractor.businessName}
         subtitle={`${contractor.trade} / ${contractor.city}, ${contractor.state}`}
         badge={contractor.verificationStatus}
-        tone={contractor.verificationStatus === "verified" ? "emerald" : contractor.verificationStatus === "pending" ? "amber" : "slate"}
+        tone={verificationTone}
         facts={[
           { label: "Business owner workspace", value: "Active" },
           { label: "Trade or service", value: contractor.trade },
+          { label: "Business type", value: contractor.businessType ?? "Not provided" },
           { label: "Location", value: `${contractor.city}, ${contractor.state}` },
+          { label: "Service area", value: contractor.serviceArea ?? "Not provided" },
           { label: "Verification", value: contractor.verificationStatus },
           { label: "License", value: contractor.licenseNumber ?? "Not provided" },
-          { label: "Plan context", value: "Managed through billing records" },
+          { label: "Workspace age", value: ageLabel(contractor.createdAt) },
         ]}
         actions={
           <>
@@ -289,7 +297,34 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
             </Button>
           </>
         }
-      />
+      >
+        <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2">
+          <ReadinessItem
+            icon={BadgeCheck}
+            label="Verification"
+            text={contractor.verificationStatus === "verified" ? "Verified business" : contractor.verificationStatus === "pending" ? "Review pending" : "Not verified yet"}
+            tone={verificationTone}
+          />
+          <ReadinessItem
+            icon={ShieldCheck}
+            label="Profile health"
+            text={profileGaps.length ? `Missing ${profileGaps.join(", ")}` : "Core fields complete"}
+            tone={profileGaps.length ? "amber" : "emerald"}
+          />
+          <ReadinessItem
+            icon={LockKeyhole}
+            label="Private account"
+            text="Billing and account emails stay private"
+            tone="emerald"
+          />
+          <ReadinessItem
+            icon={FileCheck2}
+            label="Public profile"
+            text="Preview before promoting"
+            tone="blue"
+          />
+        </div>
+      </AdminProfileHealthCard>
       <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-2xl">
         <SheetHeader className="border-b border-slate-200 p-5">
           <SheetTitle>Edit business / user workspace</SheetTitle>
@@ -298,6 +333,11 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-5 p-5">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <EditorSummaryTile label="Verification" value={contractor.verificationStatus} tone={verificationTone} />
+            <EditorSummaryTile label="Profile gaps" value={profileGaps.length ? String(profileGaps.length) : "Complete"} tone={profileGaps.length ? "amber" : "emerald"} />
+            <EditorSummaryTile label="Workspace age" value={ageLabel(contractor.createdAt)} tone="slate" />
+          </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Account context</p>
             <p className="mt-2 text-sm font-semibold text-slate-950">{contractor.businessName}</p>
