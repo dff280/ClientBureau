@@ -59,6 +59,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved admin Settings into a clearer platform control center with operating defaults, release gates, safety checklists, and compact policy rule groups.
 - Improved admin Unified Profiles with a daily identity queue, claim verification preview, duplicate/visibility/redaction/evidence signals, and profile cleanup priorities.
 - Improved unified search result cards with a premium dossier layout, clearer rating and match context, watch/profile/report/correction actions, and safer public-privacy copy.
+- Improved public profile share cards with a native share action, clipboard fallback, clearer confirmation states, and stronger private-data safety copy.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

@@ -33,6 +33,7 @@ export function PublicProfileShareCard({
 }: PublicProfileShareCardProps) {
   const [copied, setCopied] = useState(false)
   const [badgeCopied, setBadgeCopied] = useState(false)
+  const [shareMessage, setShareMessage] = useState("")
   const [, startShareTransition] = useTransition()
 
   function recordShare(channel: ProfileShareEvent["channel"]) {
@@ -50,10 +51,13 @@ export function PublicProfileShareCard({
     try {
       await navigator.clipboard.writeText(profileUrl)
       setCopied(true)
+      setShareMessage("Profile link copied.")
       recordShare("copy_link")
       window.setTimeout(() => setCopied(false), 2200)
+      window.setTimeout(() => setShareMessage(""), 2600)
     } catch {
       setCopied(false)
+      setShareMessage("Copy failed. You can still copy the URL from your browser.")
     }
   }
 
@@ -63,10 +67,40 @@ export function PublicProfileShareCard({
     try {
       await navigator.clipboard.writeText(snippet)
       setBadgeCopied(true)
+      setShareMessage("Branded badge link copied.")
       recordShare("referral_badge")
       window.setTimeout(() => setBadgeCopied(false), 2200)
+      window.setTimeout(() => setShareMessage(""), 2600)
     } catch {
       setBadgeCopied(false)
+      setShareMessage("Badge copy failed. Please try again.")
+    }
+  }
+
+  async function shareProfile() {
+    const shareText = `${name} in ${location}: Client Bureau public profile with moderated summaries and private-evidence safeguards.`
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${name} Client Bureau public profile`,
+          text: shareText,
+          url: profileUrl,
+        })
+        recordShare("social")
+        setShareMessage("Share sheet opened.")
+        window.setTimeout(() => setShareMessage(""), 2600)
+        return
+      }
+
+      await navigator.clipboard.writeText(`${shareText}\n${profileUrl}`)
+      recordShare("copy_link")
+      setCopied(true)
+      setShareMessage("Share text copied.")
+      window.setTimeout(() => setCopied(false), 2200)
+      window.setTimeout(() => setShareMessage(""), 2600)
+    } catch {
+      setShareMessage("Share was not completed. The public profile link is still available below.")
     }
   }
 
@@ -114,6 +148,10 @@ export function PublicProfileShareCard({
       </div>
 
       <div className="mt-4 grid gap-2">
+        <Button type="button" onClick={shareProfile} className="bg-amber-500 text-slate-950 hover:bg-amber-400">
+          <Share2 aria-hidden="true" />
+          Share profile
+        </Button>
         <Button type="button" onClick={copyProfileUrl} className="bg-slate-950 text-white hover:bg-slate-800">
           {copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}
           {copied ? "Copied profile link" : "Copy profile link"}
@@ -129,9 +167,14 @@ export function PublicProfileShareCard({
           {badgeCopied ? "Badge link copied" : "Copy branded badge link"}
         </Button>
       </div>
+      {shareMessage ? (
+        <p className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-950" aria-live="polite">
+          {shareMessage}
+        </p>
+      ) : null}
       <p className="mt-3 text-xs leading-5 text-slate-500">
-        Share only the public Client Bureau profile link. Private identifiers, raw evidence, and internal
-        moderation notes are never included on this card. Badge links use branded anchor text only.
+        Share only the public Client Bureau profile link or branded badge link. Private identifiers,
+        raw evidence, pending content, rejected content, and internal moderation notes are never included.
       </p>
     </section>
   )
