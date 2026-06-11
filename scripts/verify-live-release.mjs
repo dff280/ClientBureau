@@ -183,6 +183,12 @@ function hasNoStoreHeader(response) {
   return /no-store/i.test(cacheControl)
 }
 
+function headerContains(response, headerName, expectedValue) {
+  const value = response.headers?.get?.(headerName) ?? ""
+
+  return value.toLowerCase().includes(expectedValue.toLowerCase())
+}
+
 function isRedirectResponse(response) {
   const status = Number(response.status)
 
@@ -386,6 +392,42 @@ for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
   else fail(`${path} returns 200`, result.error || String(result.response.status))
+}
+
+const homepageForHeaders = await read("/")
+if (homepageForHeaders.response.ok) {
+  const securityHeaderChecks = [
+    ["Strict-Transport-Security", "max-age=31536000"],
+    ["Strict-Transport-Security", "includeSubDomains"],
+    ["Strict-Transport-Security", "preload"],
+    ["Content-Security-Policy", "default-src 'self'"],
+    ["Content-Security-Policy", "frame-ancestors 'none'"],
+    ["Content-Security-Policy", "object-src 'none'"],
+    ["X-Content-Type-Options", "nosniff"],
+    ["X-Frame-Options", "DENY"],
+    ["Referrer-Policy", "strict-origin-when-cross-origin"],
+    ["Permissions-Policy", "camera=()"],
+    ["Permissions-Policy", "microphone=()"],
+    ["Permissions-Policy", "geolocation=()"],
+    ["Permissions-Policy", "payment=()"],
+    ["Permissions-Policy", "usb=()"],
+    ["Cross-Origin-Opener-Policy", "same-origin-allow-popups"],
+    ["Cross-Origin-Resource-Policy", "same-origin"],
+    ["X-Permitted-Cross-Domain-Policies", "none"],
+  ]
+
+  for (const [headerName, expectedValue] of securityHeaderChecks) {
+    if (headerContains(homepageForHeaders.response, headerName, expectedValue)) {
+      pass(`Security header ${headerName}`, expectedValue)
+    } else {
+      fail(
+        `Security header ${headerName}`,
+        `${expectedValue} missing from ${homepageForHeaders.response.headers?.get?.(headerName) || "missing"}`,
+      )
+    }
+  }
+} else {
+  fail("Security header source page", homepageForHeaders.error || String(homepageForHeaders.response.status))
 }
 
 const protectedRoutes = [

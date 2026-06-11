@@ -32,6 +32,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Refined signup page handling so blocked return paths are omitted until the chosen account type can determine the correct default workspace.
 - Centralized login return-path sanitization and extended live release verification for login form and create-account handoff safety.
 - Extended live release verification to prove login/logout auth transition redirects are explicit no-store responses.
+- Aligned Caddy and app security headers and added live verification for CSP, HSTS, permissions policy, frame protection, referrer policy, and origin isolation headers.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
