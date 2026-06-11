@@ -16,6 +16,7 @@
     "mobile:build:apk": "npm --prefix apps/mobile run build:apk",
     "mobile:build:aab": "npm --prefix apps/mobile run build:aab",
     "seo:check": "node scripts/verify-seo.mjs",
+    "seo:check:local": "node scripts/run-local-seo-check.mjs",
     "verify:live": "node scripts/verify-live-release.mjs",
     "migrations:graph:print": "node scripts/print-graph-migrations.mjs",
     "migrations:graph:file": "node scripts/print-graph-migrations.mjs > supabase/migrations/manual-0014-0018-reputation-graph.sql"

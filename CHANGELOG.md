@@ -20,6 +20,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added a shared public-copy safety gate so SEO and live release checks catch MVP/demo/mock wording, internal environment terms, implementation details, and inflammatory blacklist-style language on public surfaces.
 - Expanded SEO verification across core public marketing pages and added private-marker checks for storage paths, evidence buckets, signed snapshots, raw hashes, and internal-note markers.
 - Sanitized public profile community-discussion props so private author email hashes are not serialized into client-side page payloads.
+- Added `npm run seo:check:local` to start the standalone Next.js build, run SEO verification, and shut down automatically.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

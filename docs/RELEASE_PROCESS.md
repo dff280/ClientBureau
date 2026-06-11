@@ -36,7 +36,7 @@ Recommended branch names:
    npm run lint
    npm test
    npm run build
-   npm run seo:check
+   npm run seo:check:local
    npm run mobile:check
    ```
 
@@ -174,7 +174,7 @@ Before pushing `main`:
 - `npm run lint` passes.
 - `npm test` passes.
 - `npm run build` passes.
-- `npm run seo:check` passes against a running local build, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.
+- `npm run seo:check:local` passes after `npm run build`, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.
 - `npm run mobile:check` passes.
 - `npm run verify:live` passes after the VPS rebuild.
 - Manual logged-in QA follows `docs/LIVE_WORKFLOW_QA_RUNBOOK.md`.
