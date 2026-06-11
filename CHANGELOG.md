@@ -10,6 +10,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added focused dashboard confirmation guidance so contractors can quickly verify saved records, private evidence, contract status, recovery cases, lien service cases, alerts, and reports after using each tool.
 - Added reusable admin action confidence panels across moderation, profiles, businesses/users, discussions, uploads, contracts, and recovery/lien workflows so staff can verify queue updates, public/private safety, and auditability after changes.
 - Added a Search decision guide with auth-aware no-result actions so contractors know whether to review profile context, save/watch the search, submit a documented experience, or open dashboard protection tools.
+- Added a public client profile decision guide that turns approved profile context into clear next actions for watchlists, reports, responses/disputes, contracts, recovery, and Florida lien service.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

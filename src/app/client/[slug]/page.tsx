@@ -1,7 +1,21 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Banknote, CalendarClock, FilePlus2, HelpCircle, MessageSquareText, ShieldAlert, ShieldCheck, Star } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+  Banknote,
+  Bell,
+  BriefcaseBusiness,
+  CalendarClock,
+  FilePlus2,
+  HelpCircle,
+  Landmark,
+  MessageSquareText,
+  PhoneCall,
+  ShieldAlert,
+  ShieldCheck,
+  Star,
+} from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
@@ -104,6 +118,21 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const profileUrl = `${getSiteUrl()}/client/${profile.publicSlug}`
   const profileImageUrl = `${profileUrl}/opengraph-image`
   const responseHref = `/client-response?profile=${encodeURIComponent(`/client/${profile.publicSlug}`)}`
+  const reportHref = `/submit-report?${new URLSearchParams({
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    city: profile.city,
+    state: profile.state,
+    businessName: profile.businessName ?? "",
+  }).toString()}`
+  const positiveReportHref = `/submit-report?${new URLSearchParams({
+    firstName: profile.firstName,
+    lastName: profile.lastName,
+    city: profile.city,
+    state: profile.state,
+    businessName: profile.businessName ?? "",
+    intent: "positive",
+  }).toString()}`
   const structuredData = getClientProfileStructuredData(profile)
   const stateHref = getClientStateDirectoryHref(profile)
   const cityHref = getClientCityDirectoryHref(profile)
@@ -196,20 +225,13 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href="/submit-report">
+                <Link href={reportHref}>
                   <FilePlus2 aria-hidden="true" />
                   Report a Client Experience
                 </Link>
               </Button>
               <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                <Link href={`/submit-report?${new URLSearchParams({
-                  firstName: profile.firstName,
-                  lastName: profile.lastName,
-                  city: profile.city,
-                  state: profile.state,
-                  businessName: profile.businessName ?? "",
-                  intent: "positive",
-                }).toString()}`}>
+                <Link href={positiveReportHref}>
                   <ShieldCheck aria-hidden="true" />
                   Add Positive Experience
                 </Link>
@@ -312,6 +334,17 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             </div>
 
             <TrustVerificationPanel profileName={name} summary={trustSummary} />
+
+            <ProfileDecisionGuide
+              clientName={name}
+              location={location}
+              profileSlug={profile.publicSlug}
+              reportHref={reportHref}
+              responseHref={responseHref}
+              reportCount={profile.reports.length}
+              openDisputes={openDisputes}
+              evidenceSummary={evidenceSummary}
+            />
 
             <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
@@ -607,6 +640,149 @@ function ProfileSearchSummary({
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+function ProfileDecisionGuide({
+  clientName,
+  evidenceSummary,
+  location,
+  openDisputes,
+  profileSlug,
+  reportCount,
+  reportHref,
+  responseHref,
+}: {
+  clientName: string
+  evidenceSummary: string[]
+  location: string
+  openDisputes: number
+  profileSlug: string
+  reportCount: number
+  reportHref: string
+  responseHref: string
+}) {
+  const evidenceLabel = evidenceSummary.includes("Evidence on file")
+    ? "Private evidence has been reviewed for at least one published context."
+    : "No raw evidence is shown publicly; moderators may still keep private files sealed."
+
+  const actions = [
+    {
+      detail: `Save ${clientName} to your watchlist before quotes, scheduling, deposits, material orders, or change orders.`,
+      href: `/dashboard/watchlist?clientSlug=${encodeURIComponent(profileSlug)}`,
+      icon: Bell,
+      label: "Watch this client",
+      title: "Considering this client?",
+    },
+    {
+      detail: "Submit a factual payment issue, dispute, positive reference, or would-work-with-again experience for moderation.",
+      href: reportHref,
+      icon: FilePlus2,
+      label: "Report an experience",
+      title: "Worked with this client?",
+    },
+    {
+      detail: "Clients can submit a response, dispute, correction request, or resolution update for moderator review.",
+      href: responseHref,
+      icon: MessageSquareText,
+      label: "Respond or dispute",
+      title: "Are you this client?",
+    },
+    {
+      detail: "Use agreement packets and private evidence records before labor, materials, scope changes, or payment milestones stack up.",
+      href: "/dashboard/contracts",
+      icon: BriefcaseBusiness,
+      label: "Open contract tools",
+      title: "Taking the job?",
+    },
+    {
+      detail: "If payment is already overdue, use private recovery and Florida lien service workflows for documentation and staff review.",
+      href: "/dashboard/recovery",
+      icon: PhoneCall,
+      label: "Open recovery tools",
+      title: "Payment already an issue?",
+    },
+    {
+      detail: "Florida lien service records stay private and require review gates, authorization, and supporting documentation.",
+      href: "/dashboard/lien-readiness",
+      icon: Landmark,
+      label: "Start Florida lien service",
+      title: "Need lien help?",
+    },
+  ]
+
+  return (
+    <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
+      <CardHeader className="border-b border-slate-100 bg-slate-50">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
+          What to do with this profile
+        </CardTitle>
+        <p className="text-sm leading-6 text-slate-600">
+          Use this public profile as decision context for {clientName} in {location}. It is not a
+          legal finding, guarantee, or automated approval decision.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-5 p-5">
+        <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700 md:grid-cols-3">
+          <div>
+            <p className="text-xs font-semibold uppercase text-slate-500">Approved public context</p>
+            <p className="mt-1 font-semibold text-slate-950">
+              {reportCount} {reportCount === 1 ? "report" : "reports"} shown
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase text-slate-500">Dispute context</p>
+            <p className="mt-1 font-semibold text-slate-950">
+              {openDisputes} open {openDisputes === 1 ? "dispute" : "disputes"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase text-slate-500">Evidence status</p>
+            <p className="mt-1 font-semibold text-slate-950">{evidenceLabel}</p>
+          </div>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {actions.map((action) => (
+            <ProfileDecisionAction key={action.title} {...action} />
+          ))}
+        </div>
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          Public profile pages show moderated summaries, response context, and private evidence labels only.
+          Do not rely on this page as a substitute for your own contract, documentation, payment terms, or professional advice.
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ProfileDecisionAction({
+  detail,
+  href,
+  icon: Icon,
+  label,
+  title,
+}: {
+  detail: string
+  href: string
+  icon: LucideIcon
+  label: string
+  title: string
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex h-full flex-col justify-between rounded-md border border-slate-200 bg-slate-50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-white"
+    >
+      <div>
+        <span className="flex size-10 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <h3 className="mt-4 font-semibold text-slate-950">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+      </div>
+      <span className="mt-4 text-sm font-semibold text-amber-700 group-hover:text-amber-800">{label}</span>
+    </Link>
   )
 }
 
