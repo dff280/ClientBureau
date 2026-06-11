@@ -21,12 +21,26 @@ function readLocalGitCommit() {
   }
 }
 
+function readMobileReleaseConfig() {
+  try {
+    const config = JSON.parse(readFileSync(new URL("../apps/mobile/app.json", import.meta.url), "utf8"))
+
+    return {
+      version: config?.expo?.version ? String(config.expo.version) : "",
+      androidBuild: config?.expo?.android?.versionCode ? String(config.expo.android.versionCode) : "",
+    }
+  } catch {
+    return { version: "", androidBuild: "" }
+  }
+}
+
 const expectedAppVersion = skipReleaseIdentityCheck
   ? ""
   : process.env.EXPECTED_APP_VERSION || process.env.RELEASE_VERSION || readLocalPackageVersion()
 const expectedCommit = skipReleaseIdentityCheck
   ? ""
   : process.env.EXPECTED_GIT_COMMIT || process.env.GIT_COMMIT_SHA || readLocalGitCommit()
+const expectedMobileRelease = readMobileReleaseConfig()
 
 const checks = []
 const staleReleaseDetails = []
@@ -128,6 +142,14 @@ function visibleHtml(html) {
   return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ")
 }
 
+function visibleText(html) {
+  return visibleHtml(html)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#x27;|&#39;|&amp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 function containsPrivateIdentifier(html) {
   const visible = visibleHtml(html)
 
@@ -212,6 +234,51 @@ for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.
   const result = await read(path)
   if (result.response.ok) pass(`${path} returns 200`)
   else fail(`${path} returns 200`, result.error || String(result.response.status))
+}
+
+const mobileApp = await read("/mobile-app")
+if (mobileApp.response.ok) {
+  pass("/mobile-app returns 200")
+
+  const mobileVisible = visibleText(mobileApp.text)
+
+  if (expectedMobileRelease.version) {
+    if (mobileVisible.includes(expectedMobileRelease.version)) {
+      pass("/mobile-app current mobile version", expectedMobileRelease.version)
+    } else {
+      fail("/mobile-app current mobile version", expectedMobileRelease.version)
+    }
+  } else {
+    warn("/mobile-app current mobile version", "local mobile release metadata could not be read")
+  }
+
+  if (expectedMobileRelease.androidBuild) {
+    const expectedBuildLabel = `Release build: ${expectedMobileRelease.androidBuild}`
+
+    if (mobileVisible.includes(expectedBuildLabel)) {
+      pass("/mobile-app current Android build", expectedMobileRelease.androidBuild)
+    } else {
+      fail("/mobile-app current Android build", expectedBuildLabel)
+    }
+  } else {
+    warn("/mobile-app current Android build", "local Android build metadata could not be read")
+  }
+
+  const staleMobileMarkers = [
+    "vg42czKjtB79CQnxdg3JBr.apk",
+    "pQPHajdAPswqN8UikHR5e8.aab",
+    "0.3.6",
+    "versionCode 7",
+  ]
+  const staleMobileMarkersFound = staleMobileMarkers.filter((marker) => mobileApp.text.includes(marker))
+
+  if (staleMobileMarkersFound.length === 0) {
+    pass("/mobile-app avoids stale Android release artifacts")
+  } else {
+    fail("/mobile-app avoids stale Android release artifacts", staleMobileMarkersFound.join(", "))
+  }
+} else {
+  fail("/mobile-app returns 200", mobileApp.error || String(mobileApp.response.status))
 }
 
 const home = await read("/")
