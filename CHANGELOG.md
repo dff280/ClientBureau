@@ -54,6 +54,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved admin discussion moderation with queue health signals, filter counts, response-safety cues, private attachment guidance, and clearer approve/verify/reject decision panels.
 - Improved admin CSV Intake with clearer batch health, private-import guardrails, validation and duplicate readiness summaries, and a more tolerant quoted-CSV preview parser.
 - Improved admin Audit Log with inferred attention levels, filtered-result context, entity breadcrumbs, metadata chips, mobile cards, and clearer empty states.
+- Improved admin Recovery Cases with a staff service queue board, recovery/lien readiness cards, fee and authorization gates, private case audit activity, and clearer no-case states.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
