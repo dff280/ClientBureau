@@ -124,7 +124,7 @@ export function AdminAppShell({
           </div>
         </aside>
 
-        <div className="lg:pl-72">
+        <div className="lg:ml-72">
           <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/95 px-4 py-3 backdrop-blur lg:hidden">
             <div className="flex items-center justify-between gap-3">
               <div className="rounded-md bg-white px-3 py-2 text-slate-950">

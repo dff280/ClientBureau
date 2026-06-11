@@ -47,6 +47,8 @@ All notable Client Bureau product changes should be documented here before a rel
 - Cleaned up profile-claim privacy wording and added the indexable claim-profile page to the sitemap.
 - Extended SEO verification to cover the indexable claim-profile page plus noindex workflow surfaces for login, signup, search, and client response.
 - Improved the contractor Reports dashboard with mobile-first status cards, visible status counts, clearer empty states, and softer privacy-safe workflow copy.
+- Improved the admin report moderation queue with filter counts, richer queue cards, checklist progress, review-age context, and a clearer review path before approval decisions.
+- Fixed the admin app shell sidebar offset to prevent desktop horizontal overflow across admin pages.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

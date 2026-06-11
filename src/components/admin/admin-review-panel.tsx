@@ -23,6 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { bulkReviewReportsAction, reviewReportAction } from "@/lib/actions/client-bureau"
@@ -104,6 +105,26 @@ function dateRange(start?: string, end?: string) {
   return start ? `Started ${new Date(start).toLocaleDateString()}` : `Completed ${new Date(end ?? "").toLocaleDateString()}`
 }
 
+function ageLabel(value: string) {
+  const ageMs = Date.now() - new Date(value).getTime()
+  const days = Math.max(0, Math.floor(ageMs / 86_400_000))
+
+  if (days === 0) return "Today"
+  if (days === 1) return "1 day old"
+  return `${days} days old`
+}
+
+function checklistProgress(item: AdminReviewItem) {
+  const total = item.checklist.length
+  const complete = item.checklist.filter((entry) => entry.status === "pass").length
+
+  return {
+    complete,
+    percent: total > 0 ? Math.round((complete / total) * 100) : 0,
+    total,
+  }
+}
+
 export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
   const [filter, setFilter] = useState<ReviewFilter>("needs_review")
   const [localStatuses, setLocalStatuses] = useState<Record<string, AdminReview["status"]>>({})
@@ -130,6 +151,14 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
   const selectedItem =
     visibleItems.find((item) => item.review.id === selectedId) ?? visibleItems[0] ?? displayItems[0]
 
+  const filterCounts = useMemo(
+    () =>
+      filters.map((item) => ({
+        ...item,
+        count: displayItems.filter((reviewItem) => filterReview(reviewItem, item.id)).length,
+      })),
+    [displayItems],
+  )
   const counts = useMemo(
     () => ({
       needsReview: displayItems.filter((item) => filterReview(item, "needs_review")).length,
@@ -170,7 +199,7 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
         <Metric label="Rejected" value={counts.rejected} tone="rose" />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[380px_1fr]">
+      <div className="grid gap-5 2xl:grid-cols-[380px_1fr]">
         <section className="rounded-md border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 p-4">
             <div className="flex items-center justify-between gap-3">
@@ -183,7 +212,7 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
               </Badge>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2">
-              {filters.map((item) => (
+              {filterCounts.map((item) => (
                 <Button
                   key={item.id}
                   type="button"
@@ -193,6 +222,14 @@ export function AdminReviewPanel({ items }: { items: AdminReviewItem[] }) {
                   onClick={() => setFilter(item.id)}
                 >
                   {item.label}
+                  <span
+                    className={cn(
+                      "ml-2 rounded-full px-2 py-0.5 text-[11px]",
+                      filter === item.id ? "bg-white/15 text-white" : "bg-slate-100 text-slate-600",
+                    )}
+                  >
+                    {item.count}
+                  </span>
                 </Button>
               ))}
             </div>
@@ -293,6 +330,9 @@ function QueueButton({
 }) {
   const report = item.report
   const status = item.review.status
+  const checklist = checklistProgress(item)
+  const amountUnpaid = report?.amountUnpaid ?? 0
+  const contractAmount = report?.contractAmount ?? 0
 
   return (
     <div
@@ -335,6 +375,27 @@ function QueueButton({
           <span>/</span>
           <span>{item.evidence.length} evidence files</span>
         </div>
+        <div className={cn("mt-3 grid gap-2 rounded-md p-2 text-xs", selected ? "bg-white/10" : "bg-slate-50")}>
+          <div className="flex items-center justify-between gap-2">
+            <span className={selected ? "text-slate-300" : "text-slate-500"}>Age</span>
+            <span className="font-semibold">{ageLabel(item.review.createdAt)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className={selected ? "text-slate-300" : "text-slate-500"}>Amount</span>
+            <span className="font-semibold">
+              {amountUnpaid > 0 ? `${money(amountUnpaid)} unpaid` : `${money(contractAmount)} contract`}
+            </span>
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-2">
+              <span className={selected ? "text-slate-300" : "text-slate-500"}>Checklist</span>
+              <span className="font-semibold">
+                {checklist.complete}/{checklist.total}
+              </span>
+            </div>
+            <Progress value={checklist.percent} className={cn("mt-2 h-1.5", selected && "bg-white/15")} />
+          </div>
+        </div>
       </button>
     </div>
   )
@@ -360,8 +421,13 @@ function BulkModerationBar({
     <form action={action} className="border-b border-slate-200 bg-slate-50 p-3">
       <AdminActionTokenInput />
       <input type="hidden" name="reportIds" value={selectedCsv} />
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase text-slate-500">{selectedCount} selected</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">{selectedCount} selected</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Use bulk actions only after the visible cards meet the same evidence and summary standard.
+          </p>
+        </div>
         <div className="flex flex-wrap gap-2">
           <PendingSubmitButton
             size="sm"
@@ -460,7 +526,7 @@ function ModerationWorkspace({
         </div>
       </div>
 
-      <form action={action} className="grid gap-0 xl:grid-cols-[1fr_340px]">
+      <form action={action} className="grid gap-0 2xl:grid-cols-[1fr_340px]">
         <AdminActionTokenInput />
         <input type="hidden" name="reportId" value={report?.id ?? item.review.reportId} />
 
@@ -486,6 +552,8 @@ function ModerationWorkspace({
               </AlertDescription>
             </Alert>
           ) : null}
+
+          <ReviewPathStrip item={item} summary={summary} />
 
           <WorkflowSection
             step="1"
@@ -578,7 +646,7 @@ function ModerationWorkspace({
           </WorkflowSection>
         </div>
 
-        <aside className="border-t border-slate-200 bg-slate-50 p-5 xl:border-l xl:border-t-0">
+        <aside className="border-t border-slate-200 bg-slate-50 p-5 2xl:border-l 2xl:border-t-0">
           <div className="sticky top-5 space-y-5">
             <WorkflowSection
               compact
@@ -672,6 +740,68 @@ function ModerationWorkspace({
         </aside>
       </form>
     </section>
+  )
+}
+
+function ReviewPathStrip({ item, summary }: { item: AdminReviewItem; summary: string }) {
+  const client = item.client
+  const report = item.report
+  const checklist = checklistProgress(item)
+  const steps = [
+    {
+      label: "Identity",
+      ready: Boolean(client && report?.projectCity && report?.projectState),
+      text: client ? `${client.city}, ${client.state}` : "Needs profile",
+    },
+    {
+      label: "Evidence",
+      ready: item.evidence.length > 0 || report?.evidenceAttached,
+      text: `${item.evidence.length} private file${item.evidence.length === 1 ? "" : "s"}`,
+    },
+    {
+      label: "Checklist",
+      ready: checklist.complete === checklist.total,
+      text: `${checklist.complete}/${checklist.total} complete`,
+    },
+    {
+      label: "Summary",
+      ready: summary.trim().length >= 40,
+      text: summary.trim().length >= 40 ? "Public copy ready" : "Needs careful copy",
+    },
+  ]
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Review path</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            Work left to right: identity, evidence, checklist, public summary, then decision note.
+          </p>
+        </div>
+        <Badge variant="outline" className="w-fit rounded-md bg-white">
+          {ageLabel(item.review.createdAt)}
+        </Badge>
+      </div>
+      <div className="mt-4 grid gap-2 md:grid-cols-4">
+        {steps.map((step) => (
+          <div key={step.label} className="rounded-md border border-slate-200 bg-white p-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase text-slate-500">{step.label}</p>
+              <span
+                className={cn(
+                  "flex size-5 items-center justify-center rounded-full text-[10px] font-semibold",
+                  step.ready ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800",
+                )}
+              >
+                {step.ready ? "OK" : "!"}
+              </span>
+            </div>
+            <p className="mt-2 text-sm font-medium text-slate-950">{step.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
