@@ -122,7 +122,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
         eyebrow="Public business profile"
         title={profile.businessName}
         description={`${profile.trade} in ${profile.city}, ${profile.state}. This Client Bureau business profile summarizes verification status, documentation habits, approved contribution history, and business rating context without exposing private account details.`}
-        primary={{ href: `/claim-profile?profile=${encodeURIComponent(profile.publicSlug)}`, label: "Claim or update profile", icon: UserCheck }}
+        primary={{ href: `/claim-profile?profileType=contractor&profileSlug=${encodeURIComponent(profile.publicSlug)}`, label: "Claim or update profile", icon: UserCheck }}
         secondary={{ href: "/business-rating-methodology", label: "Rating methodology", icon: HelpCircle }}
         aside={
           <div className="space-y-5 text-white">
@@ -235,7 +235,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
                   manage profile badge and review request workflows from a private account.
                 </p>
                 <Button asChild className="w-full bg-slate-950 text-white hover:bg-slate-800">
-                  <Link href={`/claim-profile?profile=${encodeURIComponent(profile.publicSlug)}`}>
+                  <Link href={`/claim-profile?profileType=contractor&profileSlug=${encodeURIComponent(profile.publicSlug)}`}>
                     <UserCheck aria-hidden="true" />
                     Claim or update
                   </Link>
