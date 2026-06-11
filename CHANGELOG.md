@@ -41,6 +41,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added live release checks for `robots.txt` crawl rules and `sitemap.xml` canonical/private-route safety.
 - Added live release checks for `llms.txt` and `ai-index.json` AI/crawler readiness, canonical public URLs, privacy rules, and private-route safety.
 - Added live release checks for the public search surface so `/search` stays noindexed, canonical, query-preserving, server-visible, and private-data safe.
+- Added live release checks for indexable client directories, report directories, and business profile indexes so key SEO surfaces stay crawlable, canonical, privacy-safe, and present in the sitemap.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

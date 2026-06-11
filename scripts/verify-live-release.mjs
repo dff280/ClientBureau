@@ -310,6 +310,39 @@ function assertProductionCopySafety(path, html) {
   }
 }
 
+function assertPublicIndexablePage(path, html, requiredTexts) {
+  assertProductionCopySafety(path, html)
+
+  const robots = metaContent(html, "robots").toLowerCase()
+  if (robots.includes("index") && robots.includes("follow") && !robots.includes("noindex") && !robots.includes("nofollow")) {
+    pass(`${path} index/follow robots metadata`, robots)
+  } else {
+    fail(`${path} index/follow robots metadata`, robots || "missing")
+  }
+
+  const pageCanonical = canonical(html)
+  if (pageCanonical === `${expectedSiteUrl}${path}`) {
+    pass(`${path} canonical`, pageCanonical)
+  } else {
+    fail(`${path} canonical`, pageCanonical || "missing")
+  }
+
+  const visibleText = visiblePageText(html)
+  for (const requiredText of requiredTexts) {
+    if (visibleText.includes(requiredText)) {
+      pass(`${path} server-visible content ${requiredText.slice(0, 60)}`)
+    } else {
+      fail(`${path} server-visible content ${requiredText.slice(0, 60)}`, "missing")
+    }
+  }
+
+  if (containsPrivateIdentifier(html)) {
+    fail(`${path} public privacy scan`, "private identifier or evidence marker found")
+  } else {
+    pass(`${path} public privacy scan`)
+  }
+}
+
 const version = await readJson("/api/version")
 if (version.response.ok && version.json?.version) {
   pass("/api/version release identity", `${version.json.version}${version.json.commit ? ` @ ${version.json.commit}` : ""}`)
@@ -1003,9 +1036,64 @@ if (home.response.ok) {
   }
 }
 
+const publicIndexablePages = [
+  {
+    path: "/clients",
+    requiredTexts: [
+      "Public client directory",
+      "Browse approved Client Bureau profiles by state and city.",
+      "Pending, rejected, private evidence, raw email, phone",
+    ],
+  },
+  {
+    path: "/clients/florida/orlando",
+    requiredTexts: [
+      "City client directory",
+      "Orlando, FL Client Bureau profiles",
+      "Public pages show moderated contractor-submitted reports",
+    ],
+  },
+  {
+    path: "/reports/recent",
+    requiredTexts: [
+      "Recent moderated client reports",
+      "Private identifiers, raw evidence files, and unapproved submissions are not displayed.",
+      "Approved Only",
+    ],
+  },
+  {
+    path: "/reports/non-payment",
+    requiredTexts: [
+      "Reported non-payment client reports",
+      "approved public summaries",
+      "Approved Only",
+    ],
+  },
+  {
+    path: "/businesses",
+    requiredTexts: [
+      "Business trust profiles",
+      "Find verified contractors and service business owners.",
+      "not customer star reviews or guarantees",
+    ],
+  },
+]
+
+for (const page of publicIndexablePages) {
+  const result = await read(page.path)
+
+  if (result.response.ok) {
+    pass(`${page.path} returns 200`)
+    assertPublicIndexablePage(page.path, result.text, page.requiredTexts)
+  } else {
+    fail(`${page.path} returns 200`, result.error || String(result.response.status))
+  }
+}
+
 const sitemap = await read("/sitemap.xml")
 const profiles = sitemap.response.ok ? sitemapProfilePaths(sitemap.text) : []
 const entityProfiles = sitemap.response.ok ? sitemapEntityProfilePaths(sitemap.text) : []
+const sitemapPublicLocs = sitemap.response.ok ? sitemapLocs(sitemap.text) : []
 if (profiles.length > 0) {
   pass("Sitemap includes public profiles", `${profiles.length} profile URL(s)`)
 } else {
@@ -1016,6 +1104,16 @@ if (entityProfiles.length > 0) {
   pass("Sitemap includes unified profile graph routes", `${entityProfiles.length} graph profile URL(s)`)
 } else {
   fail("Sitemap includes unified profile graph routes")
+}
+
+for (const page of publicIndexablePages) {
+  const expectedLoc = `${expectedSiteUrl}${page.path}`
+
+  if (sitemapPublicLocs.includes(expectedLoc)) {
+    pass(`Sitemap includes ${page.path}`, expectedLoc)
+  } else {
+    fail(`Sitemap includes ${page.path}`, "missing")
+  }
 }
 
 for (const profilePath of profiles.slice(0, 5)) {
