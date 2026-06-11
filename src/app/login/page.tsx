@@ -4,6 +4,7 @@ import { LockKeyhole, Radar, ReceiptText, ShieldCheck } from "lucide-react"
 import { LoginForm } from "@/components/forms/auth-forms"
 import { PremiumFeatureCard } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { getSafeInternalPath } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -20,8 +21,7 @@ type LoginPageProps = {
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams
-  const next = params.next
-  const redirectTo = next?.startsWith("/") && !next.startsWith("//") ? next : undefined
+  const redirectTo = getSafeInternalPath(params.next)
   const message =
     params.error ??
     (params.loggedOut ? "You have been logged out. Sign in again to continue." : undefined)

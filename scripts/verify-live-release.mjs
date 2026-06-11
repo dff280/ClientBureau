@@ -131,6 +131,23 @@ function hiddenInputValue(html, name) {
   return input ? decodeHtmlAttribute(extract(input, /\bvalue=["']([^"']*)["']/i)) : ""
 }
 
+function linkParamValues(html, pathname, paramName) {
+  const anchors = [...html.matchAll(/<a\b[^>]*>/gi)].map((match) => match[0])
+
+  return anchors
+    .map((tag) => decodeHtmlAttribute(extract(tag, /\bhref=["']([^"']+)["']/i)))
+    .map((value) => {
+      try {
+        return new URL(value, expectedSiteUrl)
+      } catch {
+        return null
+      }
+    })
+    .filter((url) => url?.pathname === pathname)
+    .map((url) => url?.searchParams.get(paramName) ?? "")
+    .filter(Boolean)
+}
+
 function canonical(html) {
   return extract(html, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
 }
@@ -352,6 +369,47 @@ for (const { path, expectedNext } of protectedRoutes) {
   } else {
     fail(`${path} protected no-store cache header`, result.response.headers?.get?.("cache-control") || "missing")
   }
+}
+
+const loginSafeNext = "/dashboard/reports"
+const loginWithSafeNext = await read(`/login?next=${encodeURIComponent(loginSafeNext)}`)
+if (loginWithSafeNext.response.ok) {
+  const nextValue = hiddenInputValue(loginWithSafeNext.text, "next")
+  const signupNextValues = linkParamValues(loginWithSafeNext.text, "/signup", "next")
+
+  if (nextValue === loginSafeNext) {
+    pass("/login preserves safe return path", nextValue)
+  } else {
+    fail("/login preserves safe return path", `expected ${loginSafeNext}, got ${nextValue || "missing"}`)
+  }
+
+  if (signupNextValues.includes(loginSafeNext)) {
+    pass("/login create-account link preserves return path", loginSafeNext)
+  } else {
+    fail(
+      "/login create-account link preserves return path",
+      `expected ${loginSafeNext}, got ${signupNextValues.length > 0 ? signupNextValues.join(", ") : "missing"}`,
+    )
+  }
+} else {
+  fail("/login preserves safe return path", loginWithSafeNext.error || String(loginWithSafeNext.response.status))
+}
+
+const loginWithUnsafeNext = await read(`/login?next=${encodeURIComponent("https://evil.example/dashboard")}`)
+if (loginWithUnsafeNext.response.ok) {
+  const nextValue = hiddenInputValue(loginWithUnsafeNext.text, "next")
+  const signupNextValues = linkParamValues(loginWithUnsafeNext.text, "/signup", "next")
+
+  if (!nextValue && signupNextValues.length === 0) {
+    pass("/login blocks unsafe return path", "no hidden next or signup next preserved")
+  } else {
+    fail(
+      "/login blocks unsafe return path",
+      `hidden=${nextValue || "missing"}; signup=${signupNextValues.length > 0 ? signupNextValues.join(", ") : "missing"}`,
+    )
+  }
+} else {
+  fail("/login blocks unsafe return path", loginWithUnsafeNext.error || String(loginWithUnsafeNext.response.status))
 }
 
 const signupSafeNext = "/search?q=John&state=FL"
