@@ -23,6 +23,7 @@ import {
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
+import mobileAppConfig from "../../../apps/mobile/app.json"
 
 const apkUrl =
   process.env.NEXT_PUBLIC_ANDROID_APK_URL ??
@@ -30,6 +31,8 @@ const apkUrl =
 const aabUrl =
   process.env.NEXT_PUBLIC_ANDROID_AAB_URL ??
   "https://expo.dev/artifacts/eas/pQPHajdAPswqN8UikHR5e8.aab"
+const mobileReleaseVersion = mobileAppConfig.expo.version
+const androidVersionCode = mobileAppConfig.expo.android.versionCode
 
 export const metadata: Metadata = {
   title: "Client Bureau Android App",
@@ -41,8 +44,8 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Current APK", value: "0.3.6", text: "Direct Android install for contractor testing." },
-  { label: "Build", value: "7", text: "Android login focus fix, premium auth, and mobile tool polish." },
+  { label: "Current APK", value: mobileReleaseVersion, text: "Direct Android install for contractors and service business owners." },
+  { label: "Android build", value: String(androidVersionCode), text: "Login focus fix, premium auth, and mobile tool polish." },
   { label: "Core tools", value: "8", text: "Search, reports, contracts, recovery, lien service, evidence, watchlist, account." },
   { label: "Private first", value: "Yes", text: "No public exposure of private documents or raw identifiers." },
 ]
@@ -95,7 +98,7 @@ const faqs = [
   {
     question: "Is the Android app a web wrapper?",
     answer:
-      "No. The Android app is an Expo Native app that connects to Client Bureau mobile API endpoints for dashboard, search, reports, contracts, recovery, lien service, evidence, and watchlist workflows.",
+      "No. The Android app is native software for contractors and service business owners. It connects to the Client Bureau platform for dashboard, search, reports, contracts, recovery, lien service, evidence, and watchlist workflows.",
   },
   {
     question: "Does the mobile app expose private evidence?",
@@ -126,16 +129,16 @@ export default function MobileAppPage() {
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-300">
                 Current mobile release
               </p>
-              <p className="mt-2 text-4xl font-semibold">0.3.6</p>
+              <p className="mt-2 text-4xl font-semibold">{mobileReleaseVersion}</p>
               <p className="mt-2 text-sm leading-6 text-slate-300">
-                Direct-test Android build with improved login focus, premium auth, safe-area
+                Android release with improved login focus, premium auth, safe-area
                 support, and contractor-first mobile workflows.
               </p>
             </div>
             <div className="grid gap-2 text-sm text-slate-300">
-              <span>Package: com.clientbureau.app</span>
-              <span>Build: Android versionCode 7</span>
-              <span>Format: APK for direct install, AAB for Play Console readiness</span>
+              <span>Android app: Client Bureau</span>
+              <span>Release build: {androidVersionCode}</span>
+              <span>Direct APK install now; Play Store package stays ready for release.</span>
             </div>
           </div>
         }
@@ -162,8 +165,8 @@ export default function MobileAppPage() {
               <BureauMetricCard
                 icon={ShieldCheck}
                 label="Security posture"
-                value="Bearer auth"
-                text="Private mobile API calls use authenticated Supabase sessions and no-store responses."
+                value="Secure session"
+                text="Private mobile requests use authenticated sessions and no-store responses."
               />
               <BureauMetricCard
                 icon={Bell}
@@ -180,9 +183,9 @@ export default function MobileAppPage() {
               Install note
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-700">
-              The APK is for direct Android testing. Android may ask you to allow installation from
-              your browser or file manager. Use the Play-ready AAB for Google Play Console upload,
-              not direct phone installation.
+              The APK is for direct Android installation. Android may ask you to allow installation
+              from your browser or file manager. Use the Play-ready AAB for Google Play Console
+              upload, not direct phone installation.
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">

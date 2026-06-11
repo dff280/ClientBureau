@@ -72,11 +72,11 @@ export async function GET() {
       ],
       avoidLanguage: [
         "public accusation labels",
-        "expose",
+        "privacy-invasive framing",
         "shame",
-        "fraudster",
-        "deadbeat",
-        "scammer",
+        "unsupported accusation wording",
+        "personal attack labels",
+        "guaranteed outcome claims",
         "guaranteed collection",
       ],
       privacyRules: [

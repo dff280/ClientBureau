@@ -14,6 +14,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved the client response/dispute workflow with clearer request-type guidance, submission readiness checks, and moderation-focused form copy.
 - Replaced technical dashboard tool-status copy with customer-friendly live-record and guided-workspace language.
 - Cleaned up admin readiness and settings language so operators see live-record, guided-workspace, and saved-record wording instead of raw feature-mode terminology.
+- Updated the Android app landing page to use current mobile release metadata, remove developer-style release wording, and include the page in SEO verification.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

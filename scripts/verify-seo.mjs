@@ -112,6 +112,7 @@ const publicContentPages = [
   "/change-order-template",
   "/homeowner-wont-pay-contractor",
   "/client-screening-for-contractors",
+  "/mobile-app",
 ]
 
 for (const path of publicContentPages) {
