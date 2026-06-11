@@ -4,7 +4,7 @@ import { formDataToObject } from "@/lib/actions/result"
 import sitemap from "@/app/sitemap"
 import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
 import { generateMetadata as generateBusinessProfileMetadata } from "@/app/business/[slug]/page"
-import { getSafeInternalPath } from "@/lib/auth"
+import { getPostSignupRedirectPath, getSafeInternalPath } from "@/lib/auth"
 import {
   buildBusinessSlug,
   businessRatingGrade,
@@ -529,6 +529,29 @@ describe("deployment URL helpers", () => {
     expect(getSafeInternalPath("//evil.example/admin")).toBeUndefined()
     expect(getSafeInternalPath("https://evil.example/admin")).toBeUndefined()
     expect(noStoreHeaders["Cache-Control"]).toContain("no-store")
+  })
+
+  it("preserves safe post-signup product paths", () => {
+    expect(getPostSignupRedirectPath("contractor", "/search?q=John&state=FL")).toBe(
+      "/search?q=John&state=FL",
+    )
+    expect(getPostSignupRedirectPath("subcontractor", "/submit-report?firstName=John")).toBe(
+      "/submit-report?firstName=John",
+    )
+  })
+
+  it("blocks privileged or self-referential post-signup paths", () => {
+    expect(getPostSignupRedirectPath("contractor", "/admin/reports")).toBe("/dashboard")
+    expect(getPostSignupRedirectPath("contractor", "/api/health")).toBe("/dashboard")
+    expect(getPostSignupRedirectPath("contractor", "/auth/callback?next=/admin")).toBe("/dashboard")
+    expect(getPostSignupRedirectPath("contractor", "/login?next=/admin")).toBe("/dashboard")
+    expect(getPostSignupRedirectPath("contractor", "/signup?next=/search")).toBe("/dashboard")
+    expect(getPostSignupRedirectPath("contractor", "https://evil.example/search")).toBe("/dashboard")
+  })
+
+  it("uses client response as the default client-account signup destination", () => {
+    expect(getPostSignupRedirectPath("client", undefined)).toBe("/client-response")
+    expect(getPostSignupRedirectPath("client", "/admin")).toBe("/client-response")
   })
 })
 

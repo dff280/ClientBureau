@@ -4,7 +4,7 @@ import { Building2, LockKeyhole, Radar, ShieldCheck } from "lucide-react"
 import { SignupForm } from "@/components/forms/auth-forms"
 import { PremiumFeatureCard } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getSafeInternalPath } from "@/lib/auth"
+import { getPostSignupRedirectPath } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Create Account",
@@ -21,7 +21,7 @@ type SignupPageProps = {
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
   const params = await searchParams
-  const redirectTo = getSafeInternalPath(params.next)
+  const redirectTo = params.next ? getPostSignupRedirectPath("contractor", params.next) : undefined
 
   return (
     <section className="bg-slate-100">

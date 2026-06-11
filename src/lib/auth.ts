@@ -283,6 +283,26 @@ export function getSafeInternalPath(value?: unknown) {
   return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined
 }
 
+export function getPostSignupRedirectPath(accountType: User["accountType"], requestedNext?: unknown) {
+  const safeNext = getSafeInternalPath(requestedNext)
+  const defaultPath = accountType === "client" ? "/client-response" : "/dashboard"
+
+  if (
+    !safeNext ||
+    safeNext.startsWith("/admin") ||
+    safeNext.startsWith("/api") ||
+    safeNext.startsWith("/auth") ||
+    safeNext === "/login" ||
+    safeNext.startsWith("/login?") ||
+    safeNext === "/signup" ||
+    safeNext.startsWith("/signup?")
+  ) {
+    return defaultPath
+  }
+
+  return safeNext
+}
+
 export async function getCurrentUser(role: UserRole = "contractor"): Promise<User | null> {
   if (getDataMode() === "mock") {
     return getDemoUser(role)

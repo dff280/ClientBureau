@@ -27,6 +27,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Polished login, signup, dashboard billing, and mobile app copy to remove technical phrasing and keep customer-facing screens clearer.
 - Improved the web sign-in form with required browser-friendly email/password fields, current-password autocomplete, and a password visibility control.
 - Preserved safe signup return paths so contractors can create an account from search/report/profile flows and continue where they started.
+- Added test coverage for signup return-path safety, including product-path preservation and blocked admin/API/auth destinations.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

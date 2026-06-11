@@ -109,7 +109,7 @@ import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/c
 import {
   getAuthCookieDiagnostics,
   getCurrentUser,
-  getSafeInternalPath,
+  getPostSignupRedirectPath,
   requireContractorAccess,
 } from "@/lib/auth"
 import { getDataMode, getSiteUrl } from "@/lib/env"
@@ -240,26 +240,6 @@ const emptyStructuredReportFields = {
   | "evidenceSupport"
   | "desiredResolution"
 >
-
-function getSignupRedirectPath(accountType: User["accountType"], requestedNext?: unknown) {
-  const safeNext = getSafeInternalPath(requestedNext)
-  const defaultPath = accountType === "client" ? "/client-response" : "/dashboard"
-
-  if (
-    !safeNext ||
-    safeNext.startsWith("/admin") ||
-    safeNext.startsWith("/api") ||
-    safeNext.startsWith("/auth") ||
-    safeNext === "/login" ||
-    safeNext.startsWith("/login?") ||
-    safeNext === "/signup" ||
-    safeNext.startsWith("/signup?")
-  ) {
-    return defaultPath
-  }
-
-  return safeNext
-}
 
 function evidenceFilesFromForm(formData: FormData) {
   return formData
@@ -720,7 +700,7 @@ export async function signupAction(
     return fail("Please correct the highlighted account fields.", zodFieldErrors(parsed.error))
   }
 
-  const redirectTo = getSignupRedirectPath(parsed.data.accountType, formData.get("next"))
+  const redirectTo = getPostSignupRedirectPath(parsed.data.accountType, formData.get("next"))
 
   if (getDataMode() === "supabase") {
     const supabase = await createClient()
