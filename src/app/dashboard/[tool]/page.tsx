@@ -506,6 +506,7 @@ export default async function DashboardToolPage({
 
   const { dashboard, clientProfiles, riskOps } = await getClientDashboardData()
   const featureDataMode = getPlatformFeatureDataMode()
+  const liveBacked = featureDataMode === "supabase"
 
   if (!dashboard || !riskOps) {
     return (
@@ -554,25 +555,25 @@ export default async function DashboardToolPage({
         eyebrow="Next best actions"
         title="Start with the simplest next step"
         description={
-          featureDataMode === "supabase"
+          liveBacked
             ? "This workspace is connected to live account records. Actions here should persist after refresh."
-            : "This workspace is in safe preview mode. Core search, reports, admin review, and public profiles remain live."
+            : "This workspace can still guide your workflow. Core search, reports, admin review, and public profiles remain available."
         }
       >
         <div className="grid gap-4 lg:grid-cols-[260px_1fr]">
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase text-amber-700">Tool status</p>
+            <p className="text-xs font-semibold uppercase text-amber-700">Workspace status</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">
-              {featureDataMode === "supabase" ? "Live-backed" : "Safe mode"}
+              {liveBacked ? "Live account records" : "Guided workspace"}
             </p>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              {featureDataMode === "supabase"
-                ? "Advanced records are using Supabase for account-level persistence."
-                : "Flip PLATFORM_FEATURE_DATA_MODE after deployment when health is ready."}
+              {liveBacked
+                ? "Successful saves and updates should remain attached to your account after refresh."
+                : "Use the guided steps here while permanent account records finish connecting."}
             </p>
             <div className="mt-3">
-              <StatusBadge tone={featureDataMode === "supabase" ? "emerald" : "amber"}>
-                {featureDataMode}
+              <StatusBadge tone={liveBacked ? "emerald" : "amber"}>
+                {liveBacked ? "Saving enabled" : "Guidance mode"}
               </StatusBadge>
             </div>
           </div>
@@ -611,7 +612,7 @@ export default async function DashboardToolPage({
       </DashboardSection>
 
       <ToolOutcomePanel
-        featureDataMode={featureDataMode}
+        liveBacked={liveBacked}
         outcomeKey={tool === "alerts" ? "alerts" : config.tab}
       />
 
@@ -710,10 +711,10 @@ export default async function DashboardToolPage({
 }
 
 function ToolOutcomePanel({
-  featureDataMode,
+  liveBacked,
   outcomeKey,
 }: {
-  featureDataMode: string
+  liveBacked: boolean
   outcomeKey: ToolOutcomeKey
 }) {
   const outcomes = getToolOutcomeItems(outcomeKey)
@@ -738,9 +739,9 @@ function ToolOutcomePanel({
       </div>
       <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
         <p className="text-sm leading-6 text-slate-600">
-          {featureDataMode === "supabase"
+          {liveBacked
             ? "This tool is using live account persistence. Successful records should remain visible after refresh and stay private unless you submit content for moderation."
-            : "This tool is in safe mode. Use Search, report submission, and public profiles for production records until live persistence is enabled."}
+            : "This tool is showing guided workflow support. Use Search, report submission, and public profiles for production records until account record saving is available here."}
         </p>
       </div>
     </DashboardSection>

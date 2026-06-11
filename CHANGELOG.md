@@ -12,6 +12,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added a Search decision guide with auth-aware no-result actions so contractors know whether to review profile context, save/watch the search, submit a documented experience, or open dashboard protection tools.
 - Added a public client profile decision guide that turns approved profile context into clear next actions for watchlists, reports, responses/disputes, contracts, recovery, and Florida lien service.
 - Improved the client response/dispute workflow with clearer request-type guidance, submission readiness checks, and moderation-focused form copy.
+- Replaced technical dashboard tool-status copy with customer-friendly live-record and guided-workspace language.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
