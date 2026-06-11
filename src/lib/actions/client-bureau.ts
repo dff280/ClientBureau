@@ -109,6 +109,7 @@ import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/c
 import {
   getAuthCookieDiagnostics,
   getCurrentUser,
+  getSafeInternalPath,
   requireContractorAccess,
 } from "@/lib/auth"
 import { getDataMode, getSiteUrl } from "@/lib/env"
@@ -239,6 +240,26 @@ const emptyStructuredReportFields = {
   | "evidenceSupport"
   | "desiredResolution"
 >
+
+function getSignupRedirectPath(accountType: User["accountType"], requestedNext?: unknown) {
+  const safeNext = getSafeInternalPath(requestedNext)
+  const defaultPath = accountType === "client" ? "/client-response" : "/dashboard"
+
+  if (
+    !safeNext ||
+    safeNext.startsWith("/admin") ||
+    safeNext.startsWith("/api") ||
+    safeNext.startsWith("/auth") ||
+    safeNext === "/login" ||
+    safeNext.startsWith("/login?") ||
+    safeNext === "/signup" ||
+    safeNext.startsWith("/signup?")
+  ) {
+    return defaultPath
+  }
+
+  return safeNext
+}
 
 function evidenceFilesFromForm(formData: FormData) {
   return formData
@@ -699,13 +720,15 @@ export async function signupAction(
     return fail("Please correct the highlighted account fields.", zodFieldErrors(parsed.error))
   }
 
+  const redirectTo = getSignupRedirectPath(parsed.data.accountType, formData.get("next"))
+
   if (getDataMode() === "supabase") {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signUp({
       email: parsed.data.email,
       password: parsed.data.password,
       options: {
-        emailRedirectTo: `${getSiteUrl()}/auth/callback?next=/dashboard`,
+        emailRedirectTo: `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
         data: {
           full_name: parsed.data.fullName,
           business_name: parsed.data.businessName,
@@ -824,6 +847,7 @@ export async function signupAction(
         fullName: parsed.data.fullName,
         role: "contractor",
         accountType: parsed.data.accountType,
+        redirectTo,
         createdAt: data.user?.created_at ?? new Date().toISOString(),
       },
       data.user
@@ -841,6 +865,7 @@ export async function signupAction(
         fullName: parsed.data.fullName,
         role: "contractor",
         accountType: parsed.data.accountType,
+        redirectTo,
         createdAt: new Date().toISOString(),
       },
     parsed.data.accountType === "client"

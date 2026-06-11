@@ -26,6 +26,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Added optional authenticated live QA verification for contractor/admin login, session endpoints, private page no-store headers, route stability, and contractor denial from admin routes.
 - Polished login, signup, dashboard billing, and mobile app copy to remove technical phrasing and keep customer-facing screens clearer.
 - Improved the web sign-in form with required browser-friendly email/password fields, current-password autocomplete, and a password visibility control.
+- Preserved safe signup return paths so contractors can create an account from search/report/profile flows and continue where they started.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

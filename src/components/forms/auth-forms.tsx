@@ -38,6 +38,7 @@ export function LoginForm({
   variant?: "default" | "destructive"
 }) {
   const [showPassword, setShowPassword] = useState(false)
+  const signupHref = redirectTo ? `/signup?next=${encodeURIComponent(redirectTo)}` : "/signup"
 
   return (
     <form action="/api/auth/login" method="post" className="grid gap-4">
@@ -88,7 +89,7 @@ export function LoginForm({
       </PendingSubmitButton>
       <p className="text-center text-sm text-slate-600">
         New to Client Bureau?{" "}
-        <Link href="/signup" className="font-semibold text-amber-700">
+        <Link href={signupHref} className="font-semibold text-amber-700">
           Create an account
         </Link>
       </p>
@@ -96,14 +97,20 @@ export function LoginForm({
   )
 }
 
-export function SignupForm() {
+export function SignupForm({ redirectTo }: { redirectTo?: string }) {
   const [state, action] = useActionState(signupAction, initialUserState)
+  const loginHref = redirectTo ? `/login?next=${encodeURIComponent(redirectTo)}` : "/login"
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
 
     if (state.ok) {
-      const nextPath = state.data.accountType === "client" ? "/client-response" : "/dashboard"
+      const nextPath =
+        "redirectTo" in state.data && typeof state.data.redirectTo === "string"
+          ? state.data.redirectTo
+          : state.data.accountType === "client"
+            ? "/client-response"
+            : "/dashboard"
       const timer = window.setTimeout(() => window.location.assign(nextPath), 700)
 
       return () => window.clearTimeout(timer)
@@ -112,6 +119,7 @@ export function SignupForm() {
 
   return (
     <form action={action} className="grid gap-5">
+      {redirectTo ? <input type="hidden" name="next" value={redirectTo} /> : null}
       {state.message ? (
         <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
           <AlertTitle>{state.ok ? "Profile created" : "Signup needs attention"}</AlertTitle>
@@ -277,7 +285,7 @@ export function SignupForm() {
       </PendingSubmitButton>
       <p className="text-center text-sm text-slate-600">
         Already have an account?{" "}
-        <Link href="/login" className="font-semibold text-amber-700">
+        <Link href={loginHref} className="font-semibold text-amber-700">
           Login
         </Link>
       </p>
