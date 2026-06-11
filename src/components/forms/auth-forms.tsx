@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { Building2, Home, MapPin, Target, UserRound } from "lucide-react"
+import { Building2, Eye, EyeOff, Home, MapPin, Target, UserRound } from "lucide-react"
 import type React from "react"
-import { useActionState, useEffect } from "react"
+import { useActionState, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
@@ -37,28 +37,57 @@ export function LoginForm({
   message?: string
   variant?: "default" | "destructive"
 }) {
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <form action="/api/auth/login" method="post" className="grid gap-4">
       {redirectTo ? <input type="hidden" name="next" value={redirectTo} /> : null}
       {message ? (
         <Alert variant={variant} className="rounded-md">
-          <AlertTitle>{variant === "default" ? "Session update" : "Login needs attention"}</AlertTitle>
+          <AlertTitle>{variant === "default" ? "Session update" : "Sign-in needs attention"}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
       ) : null}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" placeholder="contractor@example.com" />
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="contractor@example.com"
+          autoComplete="email"
+          inputMode="email"
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" name="password" type="password" placeholder="Password" />
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            autoComplete="current-password"
+            className="pr-12"
+            required
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+            onClick={() => setShowPassword((value) => !value)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+          </button>
+        </div>
       </div>
       <PendingSubmitButton pendingText="Signing in..." className="bg-slate-950 text-white hover:bg-slate-800">
         Sign in
       </PendingSubmitButton>
       <p className="text-center text-sm text-slate-600">
-        New contractor?{" "}
+        New to Client Bureau?{" "}
         <Link href="/signup" className="font-semibold text-amber-700">
           Create an account
         </Link>
