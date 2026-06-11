@@ -46,7 +46,7 @@ export default function TermsPage() {
               "Search public client profiles and private-match context for business intake decisions.",
               "Submit documented contractor experiences that are specific, relevant, and written in good faith.",
               "Use dashboards, watchlists, contract packets, recovery notes, Florida lien service records, and evidence vault records as private business workflow tools.",
-              "Do not submit content that you know is false, misleading, harassing, irrelevant, discriminatory, or designed to expose private information.",
+              "Do not submit content that you know is false, misleading, harassing, irrelevant, discriminatory, or designed to reveal private information.",
             ],
           },
           {

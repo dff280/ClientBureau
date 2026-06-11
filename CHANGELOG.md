@@ -17,6 +17,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Updated the Android app landing page to use current mobile release metadata, remove developer-style release wording, and include the page in SEO verification.
 - Made Android app download links release-safe so stale hard-coded APK/AAB artifact URLs are not shown when fresh public build URLs are not configured.
 - Extended live release verification to protect the Android landing page against stale app version, build, and APK/AAB artifact copy.
+- Added a shared public-copy safety gate so SEO and live release checks catch MVP/demo/mock wording, internal environment terms, implementation details, and inflammatory blacklist-style language on public surfaces.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

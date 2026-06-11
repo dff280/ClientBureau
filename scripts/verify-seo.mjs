@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs"
+import { findProductionCopyLeaks, visiblePageText } from "./public-copy-safety.mjs"
 
 const baseUrl = (process.env.SEO_BASE_URL || "http://localhost:4000").replace(/\/$/, "")
 const expectedSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://clientbureau.com").replace(/\/$/, "")
@@ -27,18 +28,8 @@ function extract(html, pattern) {
   return match?.[1]?.trim() ?? ""
 }
 
-function visibleText(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;|&#x27;|&#39;|&amp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
 function wordCount(html) {
-  const text = visibleText(html)
+  const text = visiblePageText(html)
 
   return text ? text.split(/\s+/).length : 0
 }
@@ -82,6 +73,10 @@ if (description.length >= 120 && description.length <= 160) {
 const canonical = extract(home.text, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
 if (canonical === `${expectedSiteUrl}/` || canonical === expectedSiteUrl) pass("Homepage canonical", canonical)
 else fail("Homepage canonical", canonical)
+
+const homeCopyLeaks = findProductionCopyLeaks(home.text)
+if (homeCopyLeaks.length === 0) pass("Homepage production copy safety")
+else fail("Homepage production copy safety", homeCopyLeaks.join(", "))
 
 for (const type of ["Organization", "WebSite", "SoftwareApplication", "FAQPage"]) {
   if (home.text.includes(`"@type":"${type}"`) || home.text.includes(`"@type": "${type}"`)) {
@@ -156,11 +151,18 @@ for (const path of publicContentPages) {
   } else {
     fail(`${path} FAQ schema present`)
   }
+
+  const productionCopyLeaks = findProductionCopyLeaks(page.text)
+  if (productionCopyLeaks.length === 0) {
+    pass(`${path} production copy safety`)
+  } else {
+    fail(`${path} production copy safety`, productionCopyLeaks.join(", "))
+  }
 }
 
 const mobileAppPage = await read("/mobile-app")
 if (mobileAppPage.response.ok) {
-  const mobileAppVisibleText = visibleText(mobileAppPage.text)
+  const mobileAppVisibleText = visiblePageText(mobileAppPage.text)
   const expectedMobileVersion = mobileConfig.expo.version
   const expectedAndroidBuild = String(mobileConfig.expo.android.versionCode)
 
@@ -231,9 +233,9 @@ else fail("Sitemap includes at least one public client profile")
 
 const publicProfile = profilePath ? await read(profilePath) : { response: { ok: false, status: "missing" }, text: "" }
 if (publicProfile.response.ok) {
-  const visibleText = publicProfile.text.replace(/<script[\s\S]*?<\/script>/g, "")
-  const hasEmail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(visibleText)
-  const hasPhone = /\b\d{3}[-.)\s]?\d{3}[-.\s]?\d{4}\b/.test(visibleText)
+  const profileVisibleText = visiblePageText(publicProfile.text)
+  const hasEmail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(profileVisibleText)
+  const hasPhone = /\b\d{3}[-.)\s]?\d{3}[-.\s]?\d{4}\b/.test(profileVisibleText)
 
   if (!hasEmail && !hasPhone) pass("Public profile hides raw email and phone")
   else fail("Public profile hides raw email and phone")
@@ -260,6 +262,13 @@ if (publicProfile.response.ok) {
     pass("Public profile avoids rating-rich-result markup")
   } else {
     fail("Public profile avoids rating-rich-result markup")
+  }
+
+  const publicProfileCopyLeaks = findProductionCopyLeaks(publicProfile.text)
+  if (publicProfileCopyLeaks.length === 0) {
+    pass("Public profile production copy safety")
+  } else {
+    fail("Public profile production copy safety", publicProfileCopyLeaks.join(", "))
   }
 } else {
   fail("Public profile returns 200", String(publicProfile.response.status))

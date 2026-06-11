@@ -1,5 +1,6 @@
 import { execSync } from "node:child_process"
 import { readFileSync } from "node:fs"
+import { findProductionCopyLeaks, visiblePageText } from "./public-copy-safety.mjs"
 
 const baseUrl = (process.env.LIVE_BASE_URL || process.env.SEO_BASE_URL || "https://clientbureau.com").replace(/\/$/, "")
 const expectedSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || baseUrl).replace(/\/$/, "")
@@ -142,14 +143,6 @@ function visibleHtml(html) {
   return html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ")
 }
 
-function visibleText(html) {
-  return visibleHtml(html)
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;|&#x27;|&#39;|&amp;/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-}
-
 function containsPrivateIdentifier(html) {
   const visible = visibleHtml(html)
 
@@ -158,6 +151,16 @@ function containsPrivateIdentifier(html) {
     /\b\d{3}[-.)\s]?\d{3}[-.\s]?\d{4}\b/.test(visible) ||
     /storage\/v1\/object|report-evidence|signed_snapshot|internal admin note/i.test(visible)
   )
+}
+
+function assertProductionCopySafety(path, html) {
+  const leaks = findProductionCopyLeaks(html)
+
+  if (leaks.length === 0) {
+    pass(`${path} production copy safety`)
+  } else {
+    fail(`${path} production copy safety`, leaks.join(", "))
+  }
 }
 
 const version = await readJson("/api/version")
@@ -239,8 +242,9 @@ for (const path of ["/", "/robots.txt", "/sitemap.xml", "/llms.txt", "/ai-index.
 const mobileApp = await read("/mobile-app")
 if (mobileApp.response.ok) {
   pass("/mobile-app returns 200")
+  assertProductionCopySafety("/mobile-app", mobileApp.text)
 
-  const mobileVisible = visibleText(mobileApp.text)
+  const mobileVisible = visiblePageText(mobileApp.text)
 
   if (expectedMobileRelease.version) {
     if (mobileVisible.includes(expectedMobileRelease.version)) {
@@ -283,6 +287,8 @@ if (mobileApp.response.ok) {
 
 const home = await read("/")
 if (home.response.ok) {
+  assertProductionCopySafety("/", home.text)
+
   const homeCanonical = canonical(home.text)
   if (homeCanonical === expectedSiteUrl || homeCanonical === `${expectedSiteUrl}/`) {
     pass("Homepage canonical", homeCanonical)
@@ -334,6 +340,8 @@ for (const profilePath of profiles.slice(0, 5)) {
     pass(`${profilePath} public privacy scan`)
   }
 
+  assertProductionCopySafety(profilePath, profile.text)
+
   const profileCanonical = canonical(profile.text)
   if (profileCanonical === `${expectedSiteUrl}${profilePath}`) {
     pass(`${profilePath} canonical`, profileCanonical)
@@ -363,6 +371,8 @@ for (const profilePath of entityProfiles.slice(0, 5)) {
   } else {
     pass(`${profilePath} public privacy scan`)
   }
+
+  assertProductionCopySafety(profilePath, profile.text)
 
   const profileCanonical = canonical(profile.text)
   if (profileCanonical === `${expectedSiteUrl}${profilePath}`) {
