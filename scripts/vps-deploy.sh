@@ -49,6 +49,7 @@ upsert_env "GIT_COMMIT_SHA" "$RELEASE_COMMIT"
 upsert_env "GIT_BRANCH" "$BRANCH"
 
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --build
+docker compose -p "$COMPOSE_PROJECT_NAME" exec -T caddy caddy reload --config /etc/caddy/Caddyfile || docker compose -p "$COMPOSE_PROJECT_NAME" restart caddy
 docker compose -p "$COMPOSE_PROJECT_NAME" ps
 docker image prune -f
 
