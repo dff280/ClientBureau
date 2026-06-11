@@ -36,6 +36,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Updated the VPS deploy script to recreate Caddy after rebuilds so mounted edge header changes take effect during normal releases.
 - Extended live release verification to prove `www.clientbureau.com` redirects to the apex host and that sensitive `Server`/`X-Powered-By` headers are not exposed.
 - Added live release checks proving private mobile API endpoints require bearer-token access and return no-store responses when unauthenticated.
+- Added live release checks proving private mobile mutation endpoints reject unauthenticated POST requests before accepting payloads.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
