@@ -24,6 +24,7 @@ Required result:
 - Sitemap includes approved `/client/...` pages and unified `/profiles/...` graph pages.
 - `/mobile-app` returns 200, shows the current native app version/build from `apps/mobile/app.json`, and does not show stale APK/AAB artifact links.
 - Public pages pass production-copy safety checks: no MVP/demo/mock/test-checkout wording, internal environment names, API/auth implementation terms, or inflammatory blacklist-style language.
+- SEO verification covers core marketing pages, policy pages, service pages, directories, report pages, industry pages, mobile app page, and sampled public profiles.
 - Public profile checks do not expose raw emails, phone numbers, street addresses, raw evidence, private contract snapshots, pending/rejected content, or admin notes.
 
 Stripe warnings are acceptable until billing is intentionally enabled.

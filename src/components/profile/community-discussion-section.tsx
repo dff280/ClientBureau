@@ -17,12 +17,17 @@ import type { ActionResult, CommunityDiscussion } from "@/lib/types"
 
 const initialState: ActionResult<CommunityDiscussion> = { ok: false, message: "" }
 
+export type PublicCommunityDiscussionEntry = Pick<
+  CommunityDiscussion,
+  "id" | "relationshipCategory" | "isVerified" | "authorName" | "commentBody"
+>
+
 export function CommunityDiscussionSection({
   profileSlug,
   discussions,
 }: {
   profileSlug: string
-  discussions: CommunityDiscussion[]
+  discussions: PublicCommunityDiscussionEntry[]
 }) {
   const [state, action] = useActionState(submitCommunityDiscussionAction, initialState)
 

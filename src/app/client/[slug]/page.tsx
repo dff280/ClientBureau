@@ -22,7 +22,10 @@ import { ReportCard } from "@/components/client/report-card"
 import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
 import { ReportTimeline } from "@/components/profile/report-timeline"
-import { CommunityDiscussionSection } from "@/components/profile/community-discussion-section"
+import {
+  CommunityDiscussionSection,
+  type PublicCommunityDiscussionEntry,
+} from "@/components/profile/community-discussion-section"
 import { PublicProfileShareCard } from "@/components/profile/public-profile-share-card"
 import { ScoreBreakdown } from "@/components/profile/score-breakdown"
 import { TrustVerificationPanel } from "@/components/profile/trust-verification-panel"
@@ -146,6 +149,13 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const responseStatus = responseStatusLabel(profile)
   const resolutionStatus = resolutionStatusLabel(profile)
   const ratingIndicators = clientRatingIndicators(profile)
+  const publicCommunityDiscussions: PublicCommunityDiscussionEntry[] = profile.communityDiscussions.map((discussion) => ({
+    id: discussion.id,
+    relationshipCategory: discussion.relationshipCategory,
+    isVerified: discussion.isVerified,
+    authorName: discussion.authorName,
+    commentBody: discussion.commentBody,
+  }))
 
   return (
     <article className="bg-slate-100">
@@ -492,7 +502,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
             <CommunityDiscussionSection
               profileSlug={profile.publicSlug}
-              discussions={profile.communityDiscussions}
+              discussions={publicCommunityDiscussions}
             />
           </div>
 

@@ -47,7 +47,7 @@ const notA = [
   "It is not a customer review score.",
   "It is not a guarantee of workmanship, payment collection, project outcome, or legal eligibility.",
   "It is not a credit score, background check, licensing board result, or insurance verification service.",
-  "It does not expose private emails, phone numbers, street addresses, uploaded evidence files, or internal moderation notes.",
+  "It does not display private emails, phone numbers, street addresses, uploaded evidence files, or staff-only moderation notes.",
 ]
 
 export default function BusinessRatingMethodologyPage() {

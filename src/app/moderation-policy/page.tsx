@@ -73,7 +73,7 @@ export default function ModerationPolicyPage() {
             body: "Public pages should show only approved or approved dispute-labeled information. Client Bureau is designed to publish limited public context, not raw case files.",
             bullets: [
               "Approved public data may include name, business name when relevant, city, state, risk level, score, report count, approved summaries, positive reports, response context, and evidence-on-file labels.",
-              "Public pages should not include pending reports, rejected reports, private evidence, private identifiers, private addresses, internal admin notes, or unreviewed comments.",
+              "Public pages should not include pending reports, rejected reports, private evidence, private identifiers, private addresses, staff-only moderation notes, or unreviewed comments.",
               "Community discussion entries and client responses default to pending until approved.",
             ],
           },

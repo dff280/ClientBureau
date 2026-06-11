@@ -37,3 +37,30 @@ export function findProductionCopyLeaks(html) {
     })
     .filter(Boolean)
 }
+
+export function findPublicPrivateDataLeaks(html, options = {}) {
+  const { includeContactIdentifiers = false } = options
+  const text = visiblePageText(html)
+  const patterns = [
+    { label: "private storage URL", pattern: /storage\/v1\/object/i },
+    { label: "private evidence bucket", pattern: /report-evidence/i },
+    { label: "private signed contract snapshot", pattern: /signed_snapshot/i },
+    { label: "internal admin note marker", pattern: /internal admin note/i },
+    { label: "raw hash marker", pattern: /\bsha256:[a-z0-9_-]+/i },
+  ]
+
+  if (includeContactIdentifiers) {
+    patterns.push(
+      { label: "raw email address", pattern: /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i },
+      { label: "raw phone number", pattern: /\b\d{3}[-.)\s]?\d{3}[-.\s]?\d{4}\b/ },
+    )
+  }
+
+  return patterns
+    .map(({ label, pattern }) => {
+      const match = text.match(pattern) || html.match(pattern)
+
+      return match ? `${label}: "${match[0]}"` : ""
+    })
+    .filter(Boolean)
+}

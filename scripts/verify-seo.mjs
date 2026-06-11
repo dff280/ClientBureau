@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { findProductionCopyLeaks, visiblePageText } from "./public-copy-safety.mjs"
+import { findProductionCopyLeaks, findPublicPrivateDataLeaks, visiblePageText } from "./public-copy-safety.mjs"
 
 const baseUrl = (process.env.SEO_BASE_URL || "http://localhost:4000").replace(/\/$/, "")
 const expectedSiteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://clientbureau.com").replace(/\/$/, "")
@@ -113,12 +113,28 @@ const publicContentPages = [
   "/mobile-app",
 ]
 
-for (const path of publicContentPages) {
+const corePublicPages = [
+  "/pricing",
+  "/how-it-works",
+  "/about",
+  "/contact",
+  "/enterprise",
+  "/resources",
+  "/score-methodology",
+  "/business-rating-methodology",
+  "/businesses",
+  "/reports/recent",
+  "/reports/high-risk",
+  "/industries/service-businesses",
+]
+
+async function verifyPublicPage(path, options = {}) {
+  const { requireSubstantialContent = false, requireFaq = false } = options
   const page = await read(path)
 
   if (!page.response.ok) {
     fail(`${path} returns 200`, String(page.response.status))
-    continue
+    return
   }
 
   pass(`${path} returns 200`)
@@ -143,13 +159,17 @@ for (const path of publicContentPages) {
   if (pageCanonical === `${expectedSiteUrl}${path}`) pass(`${path} canonical`, pageCanonical)
   else fail(`${path} canonical`, pageCanonical)
 
-  if (count >= 450) pass(`${path} substantial content`, `${count} words`)
-  else fail(`${path} substantial content`, `${count} words`)
+  if (requireSubstantialContent) {
+    if (count >= 450) pass(`${path} substantial content`, `${count} words`)
+    else fail(`${path} substantial content`, `${count} words`)
+  }
 
-  if (page.text.includes(`"@type":"FAQPage"`) || page.text.includes(`"@type": "FAQPage"`)) {
-    pass(`${path} FAQ schema present`)
-  } else {
-    fail(`${path} FAQ schema present`)
+  if (requireFaq) {
+    if (page.text.includes(`"@type":"FAQPage"`) || page.text.includes(`"@type": "FAQPage"`)) {
+      pass(`${path} FAQ schema present`)
+    } else {
+      fail(`${path} FAQ schema present`)
+    }
   }
 
   const productionCopyLeaks = findProductionCopyLeaks(page.text)
@@ -158,6 +178,27 @@ for (const path of publicContentPages) {
   } else {
     fail(`${path} production copy safety`, productionCopyLeaks.join(", "))
   }
+
+  const privateDataLeaks = findPublicPrivateDataLeaks(page.text)
+  if (privateDataLeaks.length === 0) {
+    pass(`${path} public private-data safety`)
+  } else {
+    fail(`${path} public private-data safety`, privateDataLeaks.join(", "))
+  }
+}
+
+const publicPageChecks = new Map()
+
+for (const path of corePublicPages) {
+  publicPageChecks.set(path, { requireSubstantialContent: false, requireFaq: false })
+}
+
+for (const path of publicContentPages) {
+  publicPageChecks.set(path, { requireSubstantialContent: true, requireFaq: true })
+}
+
+for (const [path, options] of publicPageChecks.entries()) {
+  await verifyPublicPage(path, options)
 }
 
 const mobileAppPage = await read("/mobile-app")
@@ -233,9 +274,9 @@ else fail("Sitemap includes at least one public client profile")
 
 const publicProfile = profilePath ? await read(profilePath) : { response: { ok: false, status: "missing" }, text: "" }
 if (publicProfile.response.ok) {
-  const profileVisibleText = visiblePageText(publicProfile.text)
-  const hasEmail = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(profileVisibleText)
-  const hasPhone = /\b\d{3}[-.)\s]?\d{3}[-.\s]?\d{4}\b/.test(profileVisibleText)
+  const profilePrivateDataLeaks = findPublicPrivateDataLeaks(publicProfile.text, { includeContactIdentifiers: true })
+  const hasEmail = /raw email address/.test(profilePrivateDataLeaks.join(", "))
+  const hasPhone = /raw phone number/.test(profilePrivateDataLeaks.join(", "))
 
   if (!hasEmail && !hasPhone) pass("Public profile hides raw email and phone")
   else fail("Public profile hides raw email and phone")
@@ -269,6 +310,15 @@ if (publicProfile.response.ok) {
     pass("Public profile production copy safety")
   } else {
     fail("Public profile production copy safety", publicProfileCopyLeaks.join(", "))
+  }
+
+  const profileNonContactPrivateLeaks = profilePrivateDataLeaks.filter(
+    (leak) => !leak.startsWith("raw email address") && !leak.startsWith("raw phone number"),
+  )
+  if (profileNonContactPrivateLeaks.length === 0) {
+    pass("Public profile private-data marker safety")
+  } else {
+    fail("Public profile private-data marker safety", profileNonContactPrivateLeaks.join(", "))
   }
 } else {
   fail("Public profile returns 200", String(publicProfile.response.status))
