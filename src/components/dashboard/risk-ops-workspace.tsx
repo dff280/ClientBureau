@@ -476,6 +476,8 @@ export function RiskOpsWorkspace({
           </CardHeader>
           <CardContent className="space-y-4 p-5">
             <CreatePanel
+              actionLabel="Watch client"
+              defaultOpen={rankedWatchlist.length === 0}
               title="Add a watched client"
               text="Use this when you want alerts before accepting more work, approving changes, or scheduling crews."
             >
@@ -504,6 +506,8 @@ export function RiskOpsWorkspace({
           </CardHeader>
           <CardContent className="space-y-5 p-5">
             <CreatePanel
+              actionLabel="Create assessment"
+              defaultOpen={riskOps.intakeAssessments.length === 0}
               title="Create intake assessment"
               text="Use this before you decide deposit, contract, schedule, and milestone controls."
             >
@@ -570,20 +574,22 @@ export function RiskOpsWorkspace({
             title="Get Help Recovering Payment"
             text="Open a private managed case when an invoice is overdue and you want Client Bureau staff to review documents, contact the client, and seek a contractor-direct resolution."
           />
-          <div className="grid gap-3 md:grid-cols-3">
-            <ToolExplainer
-              title="What this service does"
-              text="Resolution Desk reviews your invoice, contract, and evidence, then logs factual outreach and response history."
-            />
-            <ToolExplainer
-              title="How payment works"
-              text="Client Bureau charges a service fee. Any recovered payment is paid directly to your business."
-            />
-            <ToolExplainer
-              title="What stays private"
-              text="Client contact details, private evidence, staff notes, and payment records are not shown on public profiles."
-            />
-          </div>
+          {!focusTab ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <ToolExplainer
+                title="What this service does"
+                text="Resolution Desk reviews your invoice, contract, and evidence, then logs factual outreach and response history."
+              />
+              <ToolExplainer
+                title="How payment works"
+                text="Client Bureau charges a service fee. Any recovered payment is paid directly to your business."
+              />
+              <ToolExplainer
+                title="What stays private"
+                text="Client contact details, private evidence, staff notes, and payment records are not shown on public profiles."
+              />
+            </div>
+          ) : null}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -596,6 +602,8 @@ export function RiskOpsWorkspace({
             </CardHeader>
             <CardContent className="grid gap-5 p-5 xl:grid-cols-[380px_1fr]">
               <CreatePanel
+                actionLabel="Open case"
+                defaultOpen={riskOps.managedRecoveryCases.length === 0}
                 title="Open managed case"
                 text="Use this when you want Client Bureau to help seek a documented payment resolution."
               >
@@ -636,6 +644,8 @@ export function RiskOpsWorkspace({
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
             <CreatePanel
+              actionLabel="Create record"
+              defaultOpen={riskOps.paymentRecoveryCases.length === 0}
               title="Create internal tracking record"
               text="Use this for your own invoice timeline, call logging, and follow-up notes."
             >
@@ -664,6 +674,8 @@ export function RiskOpsWorkspace({
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
             <CreatePanel
+              actionLabel="Log attempt"
+              defaultOpen={riskOps.paymentRecoveryAttempts.length === 0 && riskOps.paymentRecoveryCases.length > 0}
               title="Log contact attempt"
               text="Record calls, emails, letters, and portal messages with outcome and follow-up date."
             >
@@ -692,6 +704,8 @@ export function RiskOpsWorkspace({
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
             <CreatePanel
+              actionLabel="Create plan"
+              defaultOpen={riskOps.paymentPlans.length === 0 && riskOps.paymentRecoveryCases.length > 0}
               title="Create payment plan"
               text="Track proposed or accepted payment timing privately."
             >
@@ -718,20 +732,22 @@ export function RiskOpsWorkspace({
             title="Florida Lien Service"
             text="Create a private Florida notice or claim-of-lien filing case, pay the service fee plus pass-through filing costs, sign authorization, and track attorney/vendor review through recording proof and release."
           />
-          <div className="grid gap-3 md:grid-cols-3">
-            <ToolExplainer
-              title="Florida first"
-              text="This workflow is limited to Florida properties while Client Bureau builds attorney/vendor filing operations state by state."
-            />
-            <ToolExplainer
-              title="Authorization required"
-              text="You must certify accuracy and authorize review before a notice is sent or filing is routed."
-            />
-            <ToolExplainer
-              title="What stays private"
-              text="Property details, raw documents, staff notes, drafts, receipts, and recording files stay private."
-            />
-          </div>
+          {!focusTab ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <ToolExplainer
+                title="Florida first"
+                text="This workflow is limited to Florida properties while Client Bureau builds attorney/vendor filing operations state by state."
+              />
+              <ToolExplainer
+                title="Authorization required"
+                text="You must certify accuracy and authorize review before a notice is sent or filing is routed."
+              />
+              <ToolExplainer
+                title="What stays private"
+                text="Property details, raw documents, staff notes, drafts, receipts, and recording files stay private."
+              />
+            </div>
+          ) : null}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -744,6 +760,8 @@ export function RiskOpsWorkspace({
             </CardHeader>
             <CardContent className="grid gap-5 p-5 xl:grid-cols-[420px_1fr]">
               <CreatePanel
+                actionLabel="Start case"
+                defaultOpen={riskOps.floridaLienCases.length === 0}
                 title="Start Florida lien case"
                 text="Use for a Florida notice packet or claim-of-lien filing workflow."
               >
@@ -782,6 +800,8 @@ export function RiskOpsWorkspace({
             </CardHeader>
             <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.9fr_1.1fr]">
               <CreatePanel
+                actionLabel="Create checklist"
+                defaultOpen={riskOps.lienNoticeDrafts.length === 0}
                 title="Create internal checklist"
                 text="Use this for early deadline and document review before starting a managed Florida service case."
               >
@@ -807,20 +827,22 @@ export function RiskOpsWorkspace({
             title="Contracts"
             text="Create private agreement links clients can review and sign, invite the client into the workflow, and track signature plus payment timing before work starts."
           />
-          <div className="grid gap-3 md:grid-cols-3">
-            <ToolExplainer
-              title="What this does"
-              text="Contract links give the client a private review page for scope, price, deposit, milestones, and electronic signature."
-            />
-            <ToolExplainer
-              title="Separate service workflows"
-              text="Recovery outreach and Florida lien filing are handled in their own managed-service pages, not inside contract signing links."
-            />
-            <ToolExplainer
-              title="Future payment path"
-              text="Deposit and milestone coordination is staged here so a reviewed payment layer can be added cleanly later."
-            />
-          </div>
+          {!focusTab ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <ToolExplainer
+                title="What this does"
+                text="Contract links give the client a private review page for scope, price, deposit, milestones, and electronic signature."
+              />
+              <ToolExplainer
+                title="Separate service workflows"
+                text="Recovery outreach and Florida lien filing are handled in their own managed-service pages, not inside contract signing links."
+              />
+              <ToolExplainer
+                title="Future payment path"
+                text="Deposit and milestone coordination is staged here so a reviewed payment layer can be added cleanly later."
+              />
+            </div>
+          ) : null}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -833,6 +855,8 @@ export function RiskOpsWorkspace({
         </CardHeader>
         <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
           <CreatePanel
+            actionLabel="Create template"
+            defaultOpen={riskOps.contractDocuments.length === 0}
             title="Create agreement template"
             text="Prepare reusable agreement controls before generating a signing packet."
           >
@@ -864,6 +888,8 @@ export function RiskOpsWorkspace({
             </CardHeader>
             <CardContent className="grid gap-5 p-5 xl:grid-cols-[360px_1fr]">
               <CreatePanel
+                actionLabel="Create packet"
+                defaultOpen={riskOps.contractPackets.length === 0}
                 title="Create agreement packet"
                 text="Prepare the private signing packet before sending it to a client."
               >
@@ -900,6 +926,8 @@ export function RiskOpsWorkspace({
           </CardHeader>
           <CardContent className="grid gap-5 p-5 lg:grid-cols-[0.95fr_1.05fr]">
             <CreatePanel
+              actionLabel="Save draft"
+              defaultOpen={riskOps.reportDrafts.length === 0}
               title="Save report draft"
               text="Start a draft when you need time to gather invoices, access records, or communication history."
             >
@@ -1190,7 +1218,7 @@ function WorkspaceTabNavigation() {
 function WorkspaceIntro({ title, text }: { title: string; text: string }) {
   return (
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase text-amber-700">Workspace</p>
+      <p className="text-xs font-semibold uppercase text-amber-700">Tool overview</p>
       <h2 className="mt-1 text-xl font-semibold text-slate-950">{title}</h2>
       <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">{text}</p>
     </div>
@@ -1207,16 +1235,20 @@ function ToolExplainer({ title, text }: { title: string; text: string }) {
 }
 
 function CreatePanel({
+  actionLabel = "Create new",
   children,
+  defaultOpen = false,
   text,
   title,
 }: {
+  actionLabel?: string
   children: ReactNode
+  defaultOpen?: boolean
   text: string
   title: string
 }) {
   return (
-    <details className="rounded-md border border-slate-200 bg-white shadow-sm">
+    <details className="rounded-md border border-slate-200 bg-white shadow-sm" open={defaultOpen}>
       <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
         <span>
           <span className="block font-semibold text-slate-950">{title}</span>
@@ -1224,7 +1256,7 @@ function CreatePanel({
         </span>
         <span className="inline-flex w-fit items-center gap-2 rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
           <PlusCircle className="size-4" aria-hidden="true" />
-          Create new
+          {actionLabel}
         </span>
       </summary>
       <div className="border-t border-slate-200 bg-slate-50/50 p-4">{children}</div>

@@ -267,6 +267,127 @@ export function GuidedActionPanel({
   )
 }
 
+export function DashboardActionRail({
+  actions,
+  className,
+}: {
+  actions: {
+    detail?: string
+    href: string
+    label: string
+    primary?: boolean
+  }[]
+  className?: string
+}) {
+  return (
+    <div className={cn("grid gap-3 md:grid-cols-3", className)}>
+      {actions.map((action) => (
+        <Link
+          key={`${action.href}-${action.label}`}
+          href={action.href}
+          prefetch={false}
+          className={cn(
+            "group rounded-md border p-4 shadow-sm transition hover:-translate-y-0.5",
+            action.primary
+              ? "border-slate-950 bg-slate-950 text-white"
+              : "border-slate-200 bg-white text-slate-950 hover:border-amber-300",
+          )}
+        >
+          <span
+            className={cn(
+              "text-xs font-semibold uppercase",
+              action.primary ? "text-amber-300" : "text-amber-700",
+            )}
+          >
+            {action.primary ? "Start here" : "Next option"}
+          </span>
+          <span className="mt-2 block font-semibold">{action.label}</span>
+          {action.detail ? (
+            <span
+              className={cn(
+                "mt-2 block text-sm leading-6",
+                action.primary ? "text-slate-300" : "text-slate-600",
+              )}
+            >
+              {action.detail}
+            </span>
+          ) : null}
+          <span
+            className={cn(
+              "mt-4 inline-flex items-center gap-2 text-sm font-semibold",
+              action.primary ? "text-amber-200" : "text-amber-700",
+            )}
+          >
+            Continue
+            <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+          </span>
+        </Link>
+      ))}
+    </div>
+  )
+}
+
+export function ToolQuickStart({
+  actions,
+  className,
+  description,
+  details,
+  eyebrow = "Quick start",
+  statusDescription,
+  statusLabel,
+  statusTone = "emerald",
+  title,
+}: {
+  actions: {
+    detail?: string
+    href: string
+    label: string
+    primary?: boolean
+  }[]
+  className?: string
+  description: string
+  details: {
+    label: string
+    text: string
+  }[]
+  eyebrow?: string
+  statusDescription: string
+  statusLabel: string
+  statusTone?: Tone
+  title: string
+}) {
+  return (
+    <section className={cn("rounded-md border border-slate-200 bg-white shadow-sm", className)}>
+      <div className="grid gap-0 lg:grid-cols-[1fr_280px]">
+        <div className="p-5">
+          <p className="text-xs font-semibold uppercase text-amber-700">{eyebrow}</p>
+          <h2 className="mt-1 text-2xl font-semibold tracking-normal text-slate-950">{title}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {details.map((item) => (
+              <div key={item.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-semibold uppercase text-slate-500">{item.label}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <aside className="border-t border-slate-200 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0">
+          <p className="text-xs font-semibold uppercase text-amber-300">Private workspace</p>
+          <h3 className="mt-2 text-xl font-semibold">{statusLabel}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-300">{statusDescription}</p>
+          <StatusBadge tone={statusTone} className="mt-4 bg-white">
+            Account-only
+          </StatusBadge>
+        </aside>
+      </div>
+      <div className="border-t border-slate-100 p-5">
+        <DashboardActionRail actions={actions} />
+      </div>
+    </section>
+  )
+}
+
 export function StatusBadge({
   children,
   tone = "slate",

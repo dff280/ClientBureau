@@ -6,6 +6,7 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ### Improved
 
+- Simplified the contractor dashboard home and focused tool pages with compact account status, clearer start-here actions, one quick-start panel per tool, collapsed create panels, and plain-English private-record language.
 - Added an admin command-center Release QA panel that links staff to release identity, admin session, dashboard persistence, and public privacy checks.
 - Added focused dashboard confirmation guidance so contractors can quickly verify saved records, private evidence, contract status, recovery cases, lien service cases, alerts, and reports after using each tool.
 - Added reusable admin action confidence panels across moderation, profiles, businesses/users, discussions, uploads, contracts, and recovery/lien workflows so staff can verify queue updates, public/private safety, and auditability after changes.

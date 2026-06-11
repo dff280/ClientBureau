@@ -7,21 +7,16 @@ import {
   CheckCircle2,
   CreditCard,
   FilePlus2,
-  Gift,
-  Landmark,
-  PhoneCall,
   Search,
   ShieldCheck,
-  Signature,
   UploadCloud,
 } from "lucide-react"
 
 import { ClientDashboardShell } from "@/components/dashboard/client-dashboard-shell"
 import { EnterpriseDashboardOverview } from "@/components/dashboard/enterprise-dashboard-overview"
 import {
+  DashboardActionRail,
   DashboardSection,
-  GuidedActionPanel,
-  QuickActionCard,
   StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
@@ -169,65 +164,66 @@ export default async function DashboardPage({
       secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
       title={`${dashboard.contractor.businessName} Command Center`}
     >
-      <EnterpriseDashboardOverview summary={enterpriseSummary} />
+      <div className="grid gap-3 md:grid-cols-4">
+        <CompactStatusCard
+          label="Current plan"
+          value={subscriptionTier.replace("_", " ")}
+          helper="Search, reports, contracts, and private tools"
+        />
+        <CompactStatusCard
+          label="Verification"
+          value={dashboard.contractor.verificationStatus.replace("_", " ")}
+          helper="Business identity and account readiness"
+        />
+        <CompactStatusCard
+          label="Searches saved"
+          value={dashboard.savedSearches.length.toString()}
+          helper="Recent client checks you can revisit"
+        />
+        <CompactStatusCard
+          label="Unread alerts"
+          value={unreadAlerts.toString()}
+          helper="Watched-client changes needing review"
+          tone={unreadAlerts > 0 ? "amber" : "slate"}
+        />
+      </div>
 
       <DashboardSection
         eyebrow="Start here"
-        title="Check first. Document when you have experience."
-        description="Client Bureau is built around practical client intelligence. Start with a search before taking the job, then submit a documented report after a real client experience."
+        title="Check first. Then document, protect, and follow up."
+        description="Use these as the daily shortcuts. Start with a client check before quotes, contracts, scheduling, deposits, materials, or invoice risk."
       >
-        <div className="grid gap-4 xl:grid-cols-3">
-          <GuidedActionPanel
-            href="/search"
-            icon={Search}
-            label="Daily first step"
-            title="Check a Client"
-            description="Use this before quotes, contracts, scheduling, deposits, materials, or final invoice risk."
-            cta="Start client check"
-            tone="amber"
-            steps={["Search name, business, city, phone, or email", "Review rating, reports, evidence labels, and responses", "Save, watch, report, or move into contract terms"]}
-          />
-          <GuidedActionPanel
-            href="/submit-report"
-            icon={FilePlus2}
-            label="After real experience"
-            title="Report a Client Experience"
-            description="Submit positive, resolved, or payment-related experiences with careful moderation language."
-            cta="Open guided report"
-            tone="slate"
-            steps={["Identify the client and project", "Add timeline, payment context, and public summary", "Attach evidence privately and attest to accuracy"]}
-          />
-          <GuidedActionPanel
-            href="/dashboard/contracts"
-            icon={Signature}
-            label="Before work starts"
-            title="Create Agreement Packet"
-            description="Set scope, exclusions, milestones, payment terms, and signing status before work begins."
-            cta="Create agreement"
-            tone="blue"
-            steps={["Check the client first", "Build scope and payment terms", "Send a private signing link"]}
-          />
-        </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <QuickActionCard
-            href="/dashboard/recovery"
-            icon={PhoneCall}
-            title="Get help recovering payment"
-            description="Open a private Resolution Desk case for staff-assisted follow-up."
-          />
-          <QuickActionCard
-            href="/dashboard/lien-readiness"
-            icon={Landmark}
-            title="Florida lien service"
-            description="Start a notice or claim-of-lien filing workflow."
-          />
-          <QuickActionCard
-            href="/dashboard/growth"
-            icon={Gift}
-            title="Grow your network"
-            description="Invite contractors, claim your profile, and request client feedback after completed jobs."
-          />
-        </div>
+        <DashboardActionRail
+          actions={[
+            {
+              detail: "Search a lead, homeowner, customer, or business before you take the job.",
+              href: "/search",
+              label: "Check a Client",
+              primary: true,
+            },
+            {
+              detail: "Document a positive, resolved, or payment-related client experience.",
+              href: "/submit-report",
+              label: "Report a Client Experience",
+            },
+            {
+              detail: "Create scope, payment terms, milestones, and a private signing link.",
+              href: "/dashboard/contracts",
+              label: "Create Contract",
+            },
+            {
+              detail: "Open a private Resolution Desk case for overdue payment follow-up.",
+              href: "/dashboard/recovery",
+              label: "Payment Recovery",
+            },
+            {
+              detail: "Start a Florida notice or filing workflow with document review gates.",
+              href: "/dashboard/lien-readiness",
+              label: "Florida Lien Service",
+            },
+          ]}
+          className="lg:grid-cols-5"
+        />
       </DashboardSection>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -378,7 +374,37 @@ export default async function DashboardPage({
           </CardContent>
         </Card>
       </div>
+
+      <EnterpriseDashboardOverview summary={enterpriseSummary} />
     </ClientDashboardShell>
+  )
+}
+
+function CompactStatusCard({
+  helper,
+  label,
+  tone = "slate",
+  value,
+}: {
+  helper: string
+  label: string
+  tone?: "slate" | "amber"
+  value: string
+}) {
+  return (
+    <div
+      className={
+        tone === "amber"
+          ? "rounded-md border border-amber-200 bg-amber-50 p-4 shadow-sm"
+          : "rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+      }
+    >
+      <p className={tone === "amber" ? "text-xs font-semibold uppercase text-amber-800" : "text-xs font-semibold uppercase text-slate-500"}>
+        {label}
+      </p>
+      <p className="mt-2 truncate text-2xl font-semibold capitalize text-slate-950">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-600">{helper}</p>
+    </div>
   )
 }
 
