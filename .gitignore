@@ -42,6 +42,9 @@ yarn-error.log*
 *.tar
 *.tar.gz
 
+# Codex local session attachments
+.codex-remote-attachments/
+
 # vercel
 .vercel
 

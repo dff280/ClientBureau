@@ -181,6 +181,30 @@ function clientProfileLinks(html) {
     .filter(Boolean)
 }
 
+function businessProfileLinks(html) {
+  return [...html.matchAll(/href=["']([^"']*\/business\/[^"']+)["']/gi)]
+    .map((match) => {
+      try {
+        return new URL(match[1], expectedSiteUrl).pathname
+      } catch {
+        return ""
+      }
+    })
+    .filter((path) => path && path !== "/businesses")
+}
+
+function claimProfileLinks(html) {
+  return [...html.matchAll(/href=["']([^"']*\/claim-profile\?[^"']+)["']/gi)]
+    .map((match) => {
+      try {
+        return new URL(decodeHtmlAttribute(match[1]), expectedSiteUrl)
+      } catch {
+        return null
+      }
+    })
+    .filter(Boolean)
+}
+
 function sitemapProfilePaths(xml) {
   return [...xml.matchAll(/<loc>https?:\/\/[^<]+(\/client\/[^<]+)<\/loc>/gi)].map((match) => match[1])
 }
@@ -1347,6 +1371,60 @@ if (brokenProfileLinks.length === 0) {
   pass("Public landing pages link only to available profiles", `${checkedProfileLinks.size} profile link(s) checked`)
 } else {
   fail("Public landing pages link only to available profiles", brokenProfileLinks.join(", "))
+}
+
+const businessesPageForClaim = await read("/businesses")
+
+if (!businessesPageForClaim.response.ok) {
+  fail("/businesses claim-link source returns 200", businessesPageForClaim.error || String(businessesPageForClaim.response.status))
+} else {
+  const businessPaths = [...new Set(businessProfileLinks(businessesPageForClaim.text))]
+  const businessPath = businessPaths[0]
+
+  if (!businessPath) {
+    fail("Business directory exposes at least one public business profile link")
+  } else {
+    const businessProfile = await read(businessPath)
+
+    if (!businessProfile.response.ok) {
+      fail(`${businessPath} returns 200 for claim-link verification`, businessProfile.error || String(businessProfile.response.status))
+    } else {
+      const directClaimLinks = claimProfileLinks(businessProfile.text)
+        .filter((url) => url.searchParams.get("profileType") === "contractor" && Boolean(url.searchParams.get("profileSlug")))
+      const claimLink = directClaimLinks[0]
+
+      if (claimLink) {
+        pass("Business profile claim links preserve profile target", `${claimLink.pathname}${claimLink.search}`)
+        const claimPage = await read(`${claimLink.pathname}${claimLink.search}`)
+
+        if (!claimPage.response.ok) {
+          fail("Direct business claim page returns 200", claimPage.error || String(claimPage.response.status))
+        } else {
+          pass("Direct business claim page returns 200")
+
+          const slug = claimLink.searchParams.get("profileSlug") ?? ""
+          const profileType = claimLink.searchParams.get("profileType") ?? ""
+          const hiddenSlug = hiddenInputValue(claimPage.text, "profileSlug")
+          const hiddenType = hiddenInputValue(claimPage.text, "profileType")
+          const visibleText = visiblePageText(claimPage.text)
+
+          if (visibleText.includes("Verify your relationship to this profile.") && visibleText.includes("Claim target")) {
+            pass("Direct business claim page renders verification workflow")
+          } else {
+            fail("Direct business claim page renders verification workflow", "missing direct-claim copy")
+          }
+
+          if (hiddenSlug === slug && hiddenType === profileType) {
+            pass("Direct business claim form preserves hidden profile target", `${hiddenType}/${hiddenSlug}`)
+          } else {
+            fail("Direct business claim form preserves hidden profile target", `expected ${profileType}/${slug}, got ${hiddenType}/${hiddenSlug}`)
+          }
+        }
+      } else {
+        fail("Business profile claim links preserve profile target", "missing profileType=contractor and profileSlug")
+      }
+    }
+  }
 }
 
 for (const check of checks) {
