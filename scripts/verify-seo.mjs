@@ -67,6 +67,41 @@ function clientProfileLinks(html) {
     .filter(Boolean)
 }
 
+function businessProfileLinks(html) {
+  return [...html.matchAll(/href=["']([^"']*\/business\/[^"']+)["']/gi)]
+    .map((match) => {
+      try {
+        return new URL(match[1], expectedSiteUrl).pathname
+      } catch {
+        return ""
+      }
+    })
+    .filter((path) => path && path !== "/businesses")
+}
+
+function claimProfileLinks(html) {
+  return [...html.matchAll(/href=["']([^"']*\/claim-profile\?[^"']+)["']/gi)]
+    .map((match) => {
+      try {
+        return new URL(decodeHtmlAttribute(match[1]), expectedSiteUrl)
+      } catch {
+        return null
+      }
+    })
+    .filter(Boolean)
+}
+
+function hiddenInputValue(html, name) {
+  const inputs = [...html.matchAll(/<input\b[^>]*>/gi)].map((match) => match[0])
+  const input = inputs.find((tag) => {
+    const inputName = extract(tag, /\bname=["']([^"']+)["']/i)
+
+    return inputName === name
+  })
+
+  return input ? decodeHtmlAttribute(extract(input, /\bvalue=["']([^"']*)["']/i)) : ""
+}
+
 function sitemapProfilePath(xml) {
   const match = xml.match(/<loc>https?:\/\/[^<]+(\/client\/[^<]+)<\/loc>/i)
 
@@ -357,6 +392,51 @@ if (brokenProfileLinks.length === 0) {
   pass("Public landing pages link only to available client profiles", `${checkedProfileLinks.size} checked`)
 } else {
   fail("Public landing pages link only to available client profiles", brokenProfileLinks.join(", "))
+}
+
+const businessesPageForClaim = await read("/businesses")
+if (businessesPageForClaim.response.ok) {
+  const businessPath = [...new Set(businessProfileLinks(businessesPageForClaim.text))][0]
+
+  if (businessPath) {
+    const businessProfile = await read(businessPath)
+
+    if (businessProfile.response.ok) {
+      const claimLink = claimProfileLinks(businessProfile.text)
+        .find((url) => url.searchParams.get("profileType") === "contractor" && Boolean(url.searchParams.get("profileSlug")))
+
+      if (claimLink) {
+        pass("Business profile claim links preserve profile target", `${claimLink.pathname}${claimLink.search}`)
+        const claimPage = await read(`${claimLink.pathname}${claimLink.search}`)
+        const slug = claimLink.searchParams.get("profileSlug") ?? ""
+        const profileType = claimLink.searchParams.get("profileType") ?? ""
+        const visibleText = visiblePageText(claimPage.text)
+
+        if (claimPage.response.ok) pass("Direct business claim page returns 200")
+        else fail("Direct business claim page returns 200", String(claimPage.response.status))
+
+        if (visibleText.includes("Verify your relationship to this profile.") && visibleText.includes("Claim target")) {
+          pass("Direct business claim page renders verification workflow")
+        } else {
+          fail("Direct business claim page renders verification workflow", "missing direct-claim copy")
+        }
+
+        if (hiddenInputValue(claimPage.text, "profileSlug") === slug && hiddenInputValue(claimPage.text, "profileType") === profileType) {
+          pass("Direct business claim form preserves hidden profile target", `${profileType}/${slug}`)
+        } else {
+          fail("Direct business claim form preserves hidden profile target", `${profileType}/${slug}`)
+        }
+      } else {
+        fail("Business profile claim links preserve profile target", "missing profileType=contractor and profileSlug")
+      }
+    } else {
+      fail(`${businessPath} returns 200 for claim-link verification`, String(businessProfile.response.status))
+    }
+  } else {
+    fail("Business directory exposes at least one public business profile link")
+  }
+} else {
+  fail("/businesses claim-link source returns 200", String(businessesPageForClaim.response.status))
 }
 
 const sitemap = await read("/sitemap.xml")
