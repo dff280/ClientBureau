@@ -584,7 +584,7 @@ describe("launch health gates", () => {
     expect(summary.coreLiveReady).toBe(true)
     expect(summary.platformCanUseSupabase).toBe(true)
     expect(summary.recommendedPlatformFeatureDataMode).toBe("supabase")
-    expect(summary.readinessLabel).toBe("Ready to flip")
+    expect(summary.readinessLabel).toBe("Ready for live records")
     expect(summary.platformColumnCount).toEqual({
       ready:
         requiredContractPacketColumns.length +

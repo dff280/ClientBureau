@@ -249,7 +249,7 @@ function evidenceFilesFromForm(formData: FormData) {
 function actionErrorMessage(error: unknown, fallback: string) {
   if (error instanceof Error && error.message) {
     if (error.message.includes("Missing platform table")) {
-      return `${fallback} This advanced workspace is temporarily in safe mode. Core account, reporting, search, and public profile tools remain available.`
+      return `${fallback} This advanced workspace is temporarily in guided mode. Core account, reporting, search, and public profile tools remain available.`
     }
 
     if (

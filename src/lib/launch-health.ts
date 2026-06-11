@@ -268,28 +268,28 @@ export function summarizeLaunchHealth(input: {
   const platformCanUseSupabase = coreLiveReady && platformTablesReady && platformSchemaReady
   const recommendedPlatformFeatureDataMode = platformCanUseSupabase ? "supabase" : "mock"
 
-  let readinessLabel = "Ready to flip"
-  let readinessMessage = "All required core and platform tables responded. Advanced ops can be switched to Supabase-backed mode."
+  let readinessLabel = "Ready for live records"
+  let readinessMessage = "All required core and platform tables responded. Advanced operations can use live account records."
 
   if (!input.supabaseConfigured || !input.serviceRoleConfigured) {
     readinessLabel = "Configuration missing"
     readinessMessage =
-      "Keep advanced tools in mock mode until Supabase URL, publishable key, and service role key are configured."
+      "Keep advanced tools in guided mode until the project URL, publishable key, and service role key are configured."
   } else if (!coreTablesReady) {
     readinessLabel = "Core tables missing"
     readinessMessage =
-      "Core Supabase tables are not fully available. Keep the launch guarded and apply the base migrations before changing feature mode."
+      "Core record tables are not fully available. Keep the launch guarded and apply the base migrations before moving advanced tools to live account records."
   } else if (!platformTablesReady) {
-    readinessLabel = "Keep advanced tools mocked"
+    readinessLabel = "Guided ops required"
     readinessMessage =
-      "Core Supabase is reachable, but platform ops tables are missing. Apply migrations 0003 through 0018 before flipping advanced tools."
+      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0018 before moving advanced tools to live account records."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, or response graph columns are missing. Apply migrations through 0018 before using Supabase-backed advanced workflows."
+      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, or response graph columns are missing. Apply migrations through 0018 before using live advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
-    readinessMessage = "Advanced dashboard and admin ops are configured for Supabase-backed persistence."
+    readinessMessage = "Advanced dashboard and admin operations are saving to live account records."
   }
 
   return {

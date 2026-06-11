@@ -4,7 +4,6 @@ import { Activity, ArrowRight, Database, FileCode2, Settings, ShieldCheck, Signa
 import { AdminPageHeader, DashboardSection, StatCard } from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getPlatformFeatureDataMode } from "@/lib/env"
 import { getLaunchHealth } from "@/lib/launch-health"
 
 export const metadata: Metadata = {
@@ -15,18 +14,20 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminSettingsPage() {
-  const platformFeatureMode = getPlatformFeatureDataMode()
   const health = await getLaunchHealth()
   const readiness = health.readiness
   const missingTables = health.requiredTables.filter((table) => !table.exists)
   const liveOpsActive = readiness.platformCanUseSupabase && health.platformFeatureDataMode === "supabase"
+  const coreRecordsLabel = health.dataMode === "supabase" ? "Live" : "Needs review"
+  const advancedRecordsLabel = liveOpsActive ? "Live" : "Guided"
+  const recommendedRecordsLabel = readiness.platformCanUseSupabase ? "Live" : "Guided"
   const readinessSteps = liveOpsActive
     ? [
         {
-          title: "Supabase live ops is active",
+          title: "Live operations are active",
           detail:
-            "Contractor dashboard tools, admin ops records, unified profiles, graph links, recovery, lien, contract, and evidence workflows are using Supabase-backed persistence.",
-          value: "PLATFORM_FEATURE_DATA_MODE=supabase",
+            "Contractor dashboard tools, admin ops records, unified profiles, graph links, recovery, lien, contract, and evidence workflows are saving to live account records.",
+          value: "Account records live",
         },
         {
           title: "Run live workflow QA before each release",
@@ -37,16 +38,16 @@ export default async function AdminSettingsPage() {
         {
           title: "Rollback remains available",
           detail:
-            "If an advanced ops workflow needs review, switch feature data mode back to mock and rebuild. Core auth, reports, admin approval, public profiles, and SEO stay live.",
-          value: "PLATFORM_FEATURE_DATA_MODE=mock",
+            "If an advanced ops workflow needs review, move that workspace back to guided mode and rebuild. Core auth, reports, admin approval, public profiles, and SEO stay live.",
+          value: "Guided fallback available",
         },
       ]
     : [
         {
-          title: "Keep advanced tools in safe mode",
+          title: "Keep advanced tools in guided mode",
           detail:
             "Core auth, reports, admin review, public profiles, and search can stay live while advanced ops waits for database readiness.",
-          value: "PLATFORM_FEATURE_DATA_MODE=mock",
+          value: "Guided workspace active",
         },
         {
           title: "Apply the platform backfill if health shows missing columns",
@@ -57,8 +58,8 @@ export default async function AdminSettingsPage() {
         {
           title: "Flip only after health says ready",
           detail:
-            "When platformCanUseSupabase is true, switch advanced workflows to Supabase and rebuild. Rollback is the same safe-mode value.",
-          value: "PLATFORM_FEATURE_DATA_MODE=supabase",
+            "When readiness is green, switch advanced workflows to live account records and rebuild. Rollback returns that workspace to guided mode.",
+          value: "Live records after readiness",
         },
       ]
   const settingsGroups = [
@@ -85,7 +86,7 @@ export default async function AdminSettingsPage() {
       items: [
         ["Evidence privacy", "Uploaded evidence is private by default. Public profiles show only evidence summaries such as invoices reviewed or photos reviewed."],
         ["Route protection", "Admin routes require the admin role. Normal users cannot access internal sections."],
-        ["Feature data mode", `Platform expansion workflows currently read from ${platformFeatureMode} feature data.`],
+        ["Advanced records", `Platform expansion workflows are currently in ${advancedRecordsLabel.toLowerCase()} mode.`],
         ["Public evidence labels", "Public pages should show evidence-on-file summaries only, never raw filenames, storage paths, invoices, photos, screenshots, contracts, or PDFs."],
       ],
     },
@@ -145,16 +146,16 @@ export default async function AdminSettingsPage() {
             tone={health.status === "ok" ? "emerald" : "amber"}
           />
           <StatCard
-            label="Data mode"
-            value={health.dataMode}
+            label="Core records"
+            value={coreRecordsLabel}
             helper="Core records source"
             icon={Database}
             tone={health.dataMode === "supabase" ? "emerald" : "amber"}
           />
           <StatCard
-            label="Feature mode"
-            value={health.platformFeatureDataMode}
-            helper="Advanced ops data source"
+            label="Advanced records"
+            value={advancedRecordsLabel}
+            helper="Advanced ops readiness"
             icon={Settings}
             tone={health.platformFeatureDataMode === "supabase" ? "emerald" : "amber"}
           />
@@ -194,8 +195,8 @@ export default async function AdminSettingsPage() {
           </CardHeader>
           <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_1.2fr]">
             <div className="grid gap-3 sm:grid-cols-2">
-              <HealthFact label="Data mode" value={health.dataMode} ok={health.dataMode === "supabase"} />
-              <HealthFact label="Feature data" value={health.platformFeatureDataMode} ok={health.platformFeatureDataMode === "supabase"} />
+              <HealthFact label="Core records" value={coreRecordsLabel} ok={health.dataMode === "supabase"} />
+              <HealthFact label="Advanced records" value={advancedRecordsLabel} ok={health.platformFeatureDataMode === "supabase"} />
               <HealthFact label="Supabase" value={health.supabaseConfigured ? "Configured" : "Missing"} ok={health.supabaseConfigured} />
               <HealthFact label="Service role" value={health.serviceRoleConfigured ? "Configured" : "Missing"} ok={health.serviceRoleConfigured} />
               <HealthFact label="Core tables" value={`${readiness.coreTableCount.ready}/${readiness.coreTableCount.total}`} ok={readiness.coreTablesReady} />
@@ -203,8 +204,8 @@ export default async function AdminSettingsPage() {
               <HealthFact label="Signing fields" value={`${readiness.platformColumnCount.ready}/${readiness.platformColumnCount.total}`} ok={readiness.platformSchemaReady} />
               <HealthFact label="Stripe" value={health.stripeConfigured ? "Configured" : "Missing"} ok={health.stripeConfigured} />
               <HealthFact label="Webhook" value={health.stripeWebhookConfigured ? "Configured" : "Missing"} ok={health.stripeWebhookConfigured} />
-              <HealthFact label="Recommended mode" value={readiness.recommendedPlatformFeatureDataMode} ok={readiness.platformCanUseSupabase} />
-              <HealthFact label="Rollback mode" value="mock" ok />
+              <HealthFact label="Recommended state" value={recommendedRecordsLabel} ok={readiness.platformCanUseSupabase} />
+              <HealthFact label="Fallback state" value="Guided" ok />
             </div>
             <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
               <p className="font-semibold text-slate-950">{readiness.readinessLabel}</p>

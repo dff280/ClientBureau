@@ -122,7 +122,9 @@ export default async function AdminHomePage() {
             <div className="flex flex-wrap gap-2">
               <Badge variant="outline" className="rounded-md bg-slate-50">Admin only</Badge>
               <Badge variant="outline" className="rounded-md bg-slate-50">{escalatedCases} escalations</Badge>
-              <Badge variant="outline" className="rounded-md bg-slate-50">Feature mode: {health.platformFeatureDataMode}</Badge>
+              <Badge variant="outline" className="rounded-md bg-slate-50">
+                {health.readiness.platformCanUseSupabase ? "Live ops active" : "Ops readiness check"}
+              </Badge>
             </div>
           }
         />
@@ -403,8 +405,8 @@ function ReleaseQaPanel({ health }: { health: Awaited<ReturnType<typeof getLaunc
       icon: ShieldCheck,
     },
     {
-      title: "Workflow persistence",
-      detail: "Create or update one safe test record in dashboard tools, refresh, and verify it persists.",
+      title: "Saved records",
+      detail: "Create or update one safe test record in dashboard tools, refresh, and verify it remains attached to the account.",
       href: "/dashboard",
       action: "Open dashboard",
       ready: health.readiness.platformCanUseSupabase,
@@ -470,7 +472,7 @@ function LiveOpsReadinessPanel({ health }: { health: Awaited<ReturnType<typeof g
   return (
     <AdminQueueHeader
       eyebrow="Live Ops Readiness"
-      title={readiness.platformCanUseSupabase ? "Advanced tools are ready for Supabase persistence." : "Advanced tools are staged behind a safety gate."}
+      title={readiness.platformCanUseSupabase ? "Advanced tools are saving to live account records." : "Advanced tools are waiting on a readiness check."}
       description={readiness.readinessMessage}
       icon={Database}
       badge={readiness.readinessLabel}

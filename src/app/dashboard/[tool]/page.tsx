@@ -556,7 +556,7 @@ export default async function DashboardToolPage({
         title="Start with the simplest next step"
         description={
           liveBacked
-            ? "This workspace is connected to live account records. Actions here should persist after refresh."
+            ? "This workspace is connected to your account. Successful actions should remain visible after refresh."
             : "This workspace can still guide your workflow. Core search, reports, admin review, and public profiles remain available."
         }
       >
@@ -740,7 +740,7 @@ function ToolOutcomePanel({
       <div className="mt-4 rounded-md border border-slate-200 bg-white p-4">
         <p className="text-sm leading-6 text-slate-600">
           {liveBacked
-            ? "This tool is using live account persistence. Successful records should remain visible after refresh and stay private unless you submit content for moderation."
+            ? "This tool saves to your account. Successful records should remain visible after refresh and stay private unless you submit content for moderation."
             : "This tool is showing guided workflow support. Use Search, report submission, and public profiles for production records until account record saving is available here."}
         </p>
       </div>
