@@ -137,6 +137,17 @@ function hiddenInputValue(html, name) {
   return input ? decodeHtmlAttribute(extract(input, /\bvalue=["']([^"']*)["']/i)) : ""
 }
 
+function metaContent(html, name) {
+  const metas = [...html.matchAll(/<meta\b[^>]*>/gi)].map((match) => match[0])
+  const meta = metas.find((tag) => {
+    const metaName = extract(tag, /\bname=["']([^"']+)["']/i)
+
+    return metaName.toLowerCase() === name.toLowerCase()
+  })
+
+  return meta ? decodeHtmlAttribute(extract(meta, /\bcontent=["']([^"']*)["']/i)) : ""
+}
+
 function linkParamValues(html, pathname, paramName) {
   const anchors = [...html.matchAll(/<a\b[^>]*>/gi)].map((match) => match[0])
 
@@ -876,6 +887,62 @@ if (signupWithAdminNext.response.ok) {
   }
 } else {
   fail("/signup blocks privileged return path", signupWithAdminNext.error || String(signupWithAdminNext.response.status))
+}
+
+const searchPath = "/search?q=John&state=FL"
+const searchPage = await read(searchPath)
+if (searchPage.response.ok) {
+  pass("/search returns 200")
+  assertProductionCopySafety("/search", searchPage.text)
+
+  const searchRobots = metaContent(searchPage.text, "robots").toLowerCase()
+  if (searchRobots.includes("noindex") && searchRobots.includes("nofollow")) {
+    pass("/search noindex/nofollow robots metadata", searchRobots)
+  } else {
+    fail("/search noindex/nofollow robots metadata", searchRobots || "missing")
+  }
+
+  const searchCanonical = canonical(searchPage.text)
+  if (searchCanonical === `${expectedSiteUrl}/search`) {
+    pass("/search canonical", searchCanonical)
+  } else {
+    fail("/search canonical", searchCanonical || "missing")
+  }
+
+  const visibleSearch = visiblePageText(searchPage.text)
+  const requiredSearchTexts = [
+    "Check a Client Before You Take the Job.",
+    "Server-verified results",
+    "Search decision guide",
+    "Public results show approved context only",
+    "Report a Client Experience",
+  ]
+
+  for (const requiredText of requiredSearchTexts) {
+    if (visibleSearch.includes(requiredText)) {
+      pass(`/search server-visible content ${requiredText.slice(0, 60)}`)
+    } else {
+      fail(`/search server-visible content ${requiredText.slice(0, 60)}`, "missing")
+    }
+  }
+
+  const searchSignupNextValues = linkParamValues(searchPage.text, "/signup", "next")
+  if (searchSignupNextValues.includes(searchPath)) {
+    pass("/search create-account link preserves query", searchPath)
+  } else {
+    fail(
+      "/search create-account link preserves query",
+      searchSignupNextValues.length > 0 ? searchSignupNextValues.join(", ") : "missing",
+    )
+  }
+
+  if (containsPrivateIdentifier(searchPage.text)) {
+    fail("/search public privacy scan", "private identifier or evidence marker found")
+  } else {
+    pass("/search public privacy scan")
+  }
+} else {
+  fail("/search returns 200", searchPage.error || String(searchPage.response.status))
 }
 
 const mobileApp = await read("/mobile-app")
