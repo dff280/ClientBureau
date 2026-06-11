@@ -58,6 +58,7 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved admin Contracts with a daily contract desk, agreement-packet review queue, signature/payment readiness lanes, private-link health, and audit-gap signals.
 - Improved admin Settings into a clearer platform control center with operating defaults, release gates, safety checklists, and compact policy rule groups.
 - Improved admin Unified Profiles with a daily identity queue, claim verification preview, duplicate/visibility/redaction/evidence signals, and profile cleanup priorities.
+- Improved unified search result cards with a premium dossier layout, clearer rating and match context, watch/profile/report/correction actions, and safer public-privacy copy.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 
