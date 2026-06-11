@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: "Client Response and Dispute",
   description:
     "Submit a Client Bureau response, dispute, correction request, or resolution update for moderated review and public profile context.",
+  alternates: {
+    canonical: "/client-response",
+  },
   robots: {
     index: false,
     follow: false,

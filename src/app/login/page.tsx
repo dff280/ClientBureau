@@ -9,6 +9,9 @@ import { getSafeInternalPath } from "@/lib/auth"
 export const metadata: Metadata = {
   title: "Sign In",
   description: "Sign in to Client Bureau for client checks, documented reports, evidence records, contracts, recovery workflows, and account management.",
+  alternates: {
+    canonical: "/login",
+  },
   robots: {
     index: false,
     follow: false,

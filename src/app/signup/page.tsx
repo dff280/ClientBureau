@@ -9,6 +9,9 @@ import { getSafePostSignupReturnPath } from "@/lib/auth"
 export const metadata: Metadata = {
   title: "Create Account",
   description: "Create a Client Bureau account for client checks, reports, contracts, evidence records, payment recovery, and client response workflows.",
+  alternates: {
+    canonical: "/signup",
+  },
   robots: {
     index: false,
     follow: false,

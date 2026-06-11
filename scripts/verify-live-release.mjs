@@ -300,6 +300,12 @@ function containsPrivateIdentifier(html) {
   )
 }
 
+function containsPrivateDataMarker(html) {
+  const visible = visibleHtml(html)
+
+  return /storage\/v1\/object|report-evidence|signed_snapshot|internal admin note/i.test(visible)
+}
+
 function assertProductionCopySafety(path, html) {
   const leaks = findProductionCopyLeaks(html)
 
@@ -340,6 +346,39 @@ function assertPublicIndexablePage(path, html, requiredTexts) {
     fail(`${path} public privacy scan`, "private identifier or evidence marker found")
   } else {
     pass(`${path} public privacy scan`)
+  }
+}
+
+function assertNoindexPage(path, html, requiredTexts) {
+  assertProductionCopySafety(path, html)
+
+  const robots = metaContent(html, "robots").toLowerCase()
+  if (robots.includes("noindex") && robots.includes("nofollow")) {
+    pass(`${path} noindex/nofollow robots metadata`, robots)
+  } else {
+    fail(`${path} noindex/nofollow robots metadata`, robots || "missing")
+  }
+
+  const pageCanonical = canonical(html)
+  if (pageCanonical === `${expectedSiteUrl}${path}`) {
+    pass(`${path} canonical`, pageCanonical)
+  } else {
+    fail(`${path} canonical`, pageCanonical || "missing")
+  }
+
+  const visibleText = visiblePageText(html)
+  for (const requiredText of requiredTexts) {
+    if (visibleText.includes(requiredText)) {
+      pass(`${path} server-visible content ${requiredText.slice(0, 60)}`)
+    } else {
+      fail(`${path} server-visible content ${requiredText.slice(0, 60)}`, "missing")
+    }
+  }
+
+  if (containsPrivateDataMarker(html)) {
+    fail(`${path} private-data marker scan`, "private evidence or internal marker found")
+  } else {
+    pass(`${path} private-data marker scan`)
   }
 }
 
@@ -857,6 +896,12 @@ for (const { path, expectedNext } of protectedRoutes) {
 const loginSafeNext = "/dashboard/reports"
 const loginWithSafeNext = await read(`/login?next=${encodeURIComponent(loginSafeNext)}`)
 if (loginWithSafeNext.response.ok) {
+  assertNoindexPage("/login", loginWithSafeNext.text, [
+    "Secure account access",
+    "Return to your business protection workspace.",
+    "Sign in to Client Bureau",
+  ])
+
   const nextValue = hiddenInputValue(loginWithSafeNext.text, "next")
   const signupNextValues = linkParamValues(loginWithSafeNext.text, "/signup", "next")
 
@@ -898,6 +943,12 @@ if (loginWithUnsafeNext.response.ok) {
 const signupSafeNext = "/search?q=John&state=FL"
 const signupWithSafeNext = await read(`/signup?next=${encodeURIComponent(signupSafeNext)}`)
 if (signupWithSafeNext.response.ok) {
+  assertNoindexPage("/signup", signupWithSafeNext.text, [
+    "Business protection account",
+    "Create the account that helps protect your next job.",
+    "Create your Client Bureau account",
+  ])
+
   const nextValue = hiddenInputValue(signupWithSafeNext.text, "next")
 
   if (nextValue === signupSafeNext) {
@@ -920,6 +971,18 @@ if (signupWithAdminNext.response.ok) {
   }
 } else {
   fail("/signup blocks privileged return path", signupWithAdminNext.error || String(signupWithAdminNext.response.status))
+}
+
+const clientResponse = await read("/client-response")
+if (clientResponse.response.ok) {
+  pass("/client-response returns 200")
+  assertNoindexPage("/client-response", clientResponse.text, [
+    "Client response",
+    "Respond, dispute, correct, or update a Client Bureau profile.",
+    "Fairness is part of the product.",
+  ])
+} else {
+  fail("/client-response returns 200", clientResponse.error || String(clientResponse.response.status))
 }
 
 const searchPath = "/search?q=John&state=FL"
@@ -1127,6 +1190,14 @@ const publicIndexablePages = [
       "Client Bureau Android",
       "Client checks and job-protection tools from the field.",
       "Current mobile release",
+    ],
+  },
+  {
+    path: "/claim-profile",
+    requiredTexts: [
+      "Business profile claiming",
+      "Claim your Client Bureau business profile.",
+      "Business verification status",
     ],
   },
 ]
