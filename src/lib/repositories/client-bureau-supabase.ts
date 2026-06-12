@@ -91,6 +91,7 @@ import type {
   ClientPipelineItem,
   AuditLogEntry,
   AdminQueueAssignment,
+  BusinessRatingFactor,
   ClientProfile,
   ClientReport,
   ClientResponse,
@@ -240,6 +241,22 @@ function isMissingReportIntakeColumnError(error: { message?: string; code?: stri
     message.includes("project_job_id") ||
     message.includes("report_confidence_level") ||
     message.includes("redaction_note") ||
+    message.includes("reported_business_role") ||
+    message.includes("counterparty_business_role") ||
+    message.includes("hiring_party_name_private") ||
+    message.includes("scope_documentation_status") ||
+    message.includes("work_authorization_status") ||
+    message.includes("retainage_amount") ||
+    message.includes("payment_application_reference") ||
+    message.includes("license_insurance_context") ||
+    message.includes("relationship_verification_summary") ||
+    message.includes("rating_model") ||
+    message.includes("rating_version") ||
+    message.includes("rating_confidence") ||
+    message.includes("rating_factors") ||
+    message.includes("rating_public_note") ||
+    message.includes("rating_last_calculated_at") ||
+    message.includes("profile_rating_events") ||
     message.includes("profile_subtype") ||
     message.includes("verification_level") ||
     message.includes("duplicate_group_key") ||
@@ -341,6 +358,30 @@ function mapProjectJob(row: ProjectJobRow): ProjectJob {
   }
 }
 
+function parseRatingFactors(value: Json): BusinessRatingFactor[] | undefined {
+  if (!Array.isArray(value)) return undefined
+
+  const factors = value.flatMap((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return []
+
+    const factor = item as { [key: string]: Json | undefined }
+    const status: BusinessRatingFactor["status"] =
+      factor.status === "strong" || factor.status === "good" || factor.status === "needs_attention"
+        ? factor.status
+        : "needs_attention"
+
+    return [{
+      label: typeof factor.label === "string" ? factor.label : "Rating factor",
+      score: typeof factor.score === "number" ? factor.score : 0,
+      maxScore: typeof factor.maxScore === "number" ? factor.maxScore : 0,
+      status,
+      description: typeof factor.description === "string" ? factor.description : "Public-safe rating context.",
+    }]
+  })
+
+  return factors.length > 0 ? factors : undefined
+}
+
 function mapEntityProfile(row: EntityProfileRow): EntityProfile {
   return {
     id: row.id,
@@ -366,6 +407,12 @@ function mapEntityProfile(row: EntityProfileRow): EntityProfile {
     redactionNote: row.redaction_note ?? undefined,
     ratingScore: row.rating_score,
     ratingBand: row.rating_band as EntityProfile["ratingBand"],
+    ratingModel: row.rating_model ?? undefined,
+    ratingVersion: row.rating_version ?? undefined,
+    ratingConfidence: row.rating_confidence ?? undefined,
+    ratingFactors: parseRatingFactors(row.rating_factors),
+    ratingPublicNote: row.rating_public_note ?? undefined,
+    ratingLastCalculatedAt: row.rating_last_calculated_at ?? undefined,
     reportCount: row.report_count,
     positiveReportCount: row.positive_report_count,
     disputedReportCount: row.disputed_report_count,
@@ -458,6 +505,15 @@ function mapClientReport(row: ClientReportRow): ClientReport {
     redactionNote: row.redaction_note ?? undefined,
     clientType: row.client_type ?? undefined,
     clientJobAddressPrivate: row.client_job_address_private ?? undefined,
+    reportedBusinessRole: row.reported_business_role ?? undefined,
+    counterpartyBusinessRole: row.counterparty_business_role ?? undefined,
+    hiringPartyNamePrivate: row.hiring_party_name_private ?? undefined,
+    scopeDocumentationStatus: row.scope_documentation_status ?? undefined,
+    workAuthorizationStatus: row.work_authorization_status ?? undefined,
+    retainageAmount: row.retainage_amount ?? undefined,
+    paymentApplicationReference: row.payment_application_reference ?? undefined,
+    licenseInsuranceContext: row.license_insurance_context ?? undefined,
+    relationshipVerificationSummary: row.relationship_verification_summary ?? undefined,
     tradeCategory: row.trade_category ?? undefined,
     jobType: row.job_type ?? undefined,
     jobStartDate: row.job_start_date ?? undefined,
@@ -1617,46 +1673,68 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
   const supabase = createServiceClient()
   const { data: userRow } = await supabase.from("users").select("account_type").eq("id", userId).maybeSingle()
   const profileType: ProfileType = userRow?.account_type === "subcontractor" ? "subcontractor" : "contractor"
+  const rating = calculateBusinessRating({ contractor: mapContractorProfile(contractor), reports: [], evidence: [] })
+  const ratingModel =
+    rating.profileKind === "subcontractor"
+      ? "subcontractor_trade_partner_reliability"
+      : "contractor_business_reliability"
   const slug = buildBusinessSlug({
     businessName: contractor.business_name,
     city: contractor.city,
     state: contractor.state,
   })
-  const { data, error } = await supabase
+  const basePayload: Tables["entity_profiles"]["Insert"] = {
+    profile_type: profileType,
+    profile_subtype: profileType === "subcontractor" ? contractor.business_type ?? "Individual trade professional" : contractor.business_type ?? "Service business",
+    display_name: contractor.business_name,
+    business_name: contractor.business_name,
+    city: contractor.city,
+    state: contractor.state.toUpperCase(),
+    slug,
+    legacy_contractor_id: contractor.id,
+    claimed_status: "claimed",
+    owner_user_id: userId,
+    verification_level: contractor.verification_status === "verified" ? "business_verified" : "email_verified",
+    verification_badges: contractor.verification_status === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
+    duplicate_group_key: duplicateGroupKey({
+      displayName: contractor.business_name,
+      businessName: contractor.business_name,
+      city: contractor.city,
+      state: contractor.state,
+    }),
+    rating_score: rating.score,
+    rating_band: rating.grade,
+    is_public: true,
+    public_summary:
+      profileType === "subcontractor"
+        ? "Trade partner profile with verification context, documented scope signals, and moderated payment-chain activity."
+        : "Business profile with verification context and moderated project activity.",
+    updated_at: new Date().toISOString(),
+  }
+  const ratingPayload: Tables["entity_profiles"]["Insert"] = {
+    ...basePayload,
+    rating_model: ratingModel,
+    rating_version: "business-rating-v2",
+    rating_confidence: rating.confidence,
+    rating_factors: rating.factors as unknown as Json,
+    rating_public_note: rating.summary,
+    rating_last_calculated_at: new Date().toISOString(),
+  }
+  let result = await supabase
     .from("entity_profiles")
-    .upsert(
-      {
-        profile_type: profileType,
-        profile_subtype: profileType === "subcontractor" ? contractor.business_type ?? "Individual trade professional" : contractor.business_type ?? "Service business",
-        display_name: contractor.business_name,
-        business_name: contractor.business_name,
-        city: contractor.city,
-        state: contractor.state.toUpperCase(),
-        slug,
-        legacy_contractor_id: contractor.id,
-        claimed_status: "claimed",
-        owner_user_id: userId,
-        verification_level: contractor.verification_status === "verified" ? "business_verified" : "email_verified",
-        verification_badges: contractor.verification_status === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
-        duplicate_group_key: duplicateGroupKey({
-          displayName: contractor.business_name,
-          businessName: contractor.business_name,
-          city: contractor.city,
-          state: contractor.state,
-        }),
-        rating_score: contractor.verification_status === "verified" ? 88 : contractor.verification_status === "pending" ? 76 : 68,
-        rating_band: contractor.verification_status === "verified" ? "A" : "Review Pending",
-        is_public: true,
-        public_summary:
-          profileType === "subcontractor"
-            ? "Trade partner profile with verification context, documented scope signals, and moderated payment-chain activity."
-            : "Business profile with verification context and moderated project activity.",
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "profile_type,slug" },
-    )
+    .upsert(ratingPayload, { onConflict: "profile_type,slug" })
     .select("*")
     .single()
+
+  if (result.error && isMissingReportIntakeColumnError(result.error)) {
+    result = await supabase
+      .from("entity_profiles")
+      .upsert(basePayload, { onConflict: "profile_type,slug" })
+      .select("*")
+      .single()
+  }
+
+  const { data, error } = result
 
   if (error) {
     if (isMissingRelationError(error) || isMissingReportIntakeColumnError(error)) return undefined
@@ -1864,6 +1942,12 @@ export async function getPublicEntityProfilesSupabase(): Promise<EntityProfile[]
       ...profile,
       ratingScore: business.ratingScore,
       ratingBand: business.ratingGrade,
+      ratingModel: profile.profileType === "subcontractor" ? "subcontractor_trade_partner_reliability" as const : "contractor_business_reliability" as const,
+      ratingVersion: "business-rating-v2",
+      ratingConfidence: business.ratingConfidence,
+      ratingFactors: business.ratingFactors,
+      ratingPublicNote: business.ratingSummary,
+      ratingLastCalculatedAt: business.lastUpdated,
       reportCount: business.reportStats.approved,
       positiveReportCount: business.reportStats.positive,
       disputedReportCount: business.reportStats.disputed,
@@ -1932,6 +2016,12 @@ export async function getPublicEntityProfileSupabase(
         ...profile,
         ratingScore: relatedContractor.ratingScore,
         ratingBand: relatedContractor.ratingGrade,
+        ratingModel: profile.profileType === "subcontractor" ? "subcontractor_trade_partner_reliability" as const : "contractor_business_reliability" as const,
+        ratingVersion: "business-rating-v2",
+        ratingConfidence: relatedContractor.ratingConfidence,
+        ratingFactors: relatedContractor.ratingFactors,
+        ratingPublicNote: relatedContractor.ratingSummary,
+        ratingLastCalculatedAt: relatedContractor.lastUpdated,
         reportCount: relatedContractor.reportStats.approved,
         positiveReportCount: relatedContractor.reportStats.positive,
         disputedReportCount: relatedContractor.reportStats.disputed,
@@ -2914,6 +3004,15 @@ export async function submitClientReportSupabase(
     redaction_note: "Private identifiers, raw evidence, addresses, and internal notes are excluded from public summaries.",
     client_type: input.clientType ?? null,
     client_job_address_private: input.jobAddress ?? null,
+    reported_business_role: input.reportedBusinessRole ?? null,
+    counterparty_business_role: input.counterpartyBusinessRole ?? null,
+    hiring_party_name_private: input.hiringPartyNamePrivate ?? null,
+    scope_documentation_status: input.scopeDocumentationStatus ?? null,
+    work_authorization_status: input.workAuthorizationStatus ?? null,
+    retainage_amount: input.retainageAmount ?? null,
+    payment_application_reference: input.paymentApplicationReference ?? null,
+    license_insurance_context: input.licenseInsuranceContext ?? null,
+    relationship_verification_summary: input.relationshipVerificationSummary ?? null,
     trade_category: input.tradeCategory ?? null,
     job_type: input.jobType ?? null,
     job_start_date: input.jobStartDate ?? null,

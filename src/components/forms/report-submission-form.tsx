@@ -13,6 +13,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { submitClientReportAction } from "@/lib/actions/client-bureau"
 import { clientTypes, jobStatuses, paymentDisputeStatuses } from "@/lib/locations"
+import {
+  businessRelationshipRoleOptions,
+  scopeDocumentationStatusOptions,
+  workAuthorizationStatusOptions,
+} from "@/lib/schemas/client-bureau"
 import type { ActionResult, ClientReport, ProfileType, ReportCategory, ReportRelationshipType } from "@/lib/types"
 import {
   clientProfileSubtypes,
@@ -171,6 +176,74 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           {isBusinessProfileReport ? (
             <div className="md:col-span-2">
               <RoleRequirementsPanel profileType={subjectProfileType} />
+            </div>
+          ) : null}
+          {isBusinessProfileReport ? (
+            <div className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4 md:col-span-2 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <p className="text-sm font-semibold text-slate-950">Business relationship details</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">
+                  These fields help moderators understand whether the report is about a prime contractor,
+                  subcontractor, trade crew, vendor, or business-to-business job. They stay private unless
+                  a public-safe summary is approved.
+                </p>
+              </div>
+              <SelectField
+                name="reportedBusinessRole"
+                label="Reported party role"
+                defaultOption="Select reported role"
+                options={businessRelationshipRoleOptions}
+                errors={state.ok ? undefined : state.fieldErrors}
+              />
+              <SelectField
+                name="counterpartyBusinessRole"
+                label="Your role or counterparty role"
+                defaultOption="Select your role"
+                options={businessRelationshipRoleOptions}
+                errors={state.ok ? undefined : state.fieldErrors}
+              />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="hiringPartyNamePrivate">Hiring party / prime contractor name optional and private</Label>
+                <Input
+                  id="hiringPartyNamePrivate"
+                  name="hiringPartyNamePrivate"
+                  placeholder="Used for moderation and matching only"
+                />
+                <FieldError name="hiringPartyNamePrivate" errors={state.ok ? undefined : state.fieldErrors} />
+              </div>
+              <SelectField
+                name="scopeDocumentationStatus"
+                label="How was scope documented?"
+                defaultOption="Select documentation"
+                options={scopeDocumentationStatusOptions}
+                errors={state.ok ? undefined : state.fieldErrors}
+              />
+              <SelectField
+                name="workAuthorizationStatus"
+                label="How was work authorized?"
+                defaultOption="Select authorization"
+                options={workAuthorizationStatusOptions}
+                errors={state.ok ? undefined : state.fieldErrors}
+              />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="licenseInsuranceContext">License / insurance context optional</Label>
+                <Input
+                  id="licenseInsuranceContext"
+                  name="licenseInsuranceContext"
+                  placeholder="Example: license number on invoice, insurance certificate requested, not applicable"
+                />
+                <FieldError name="licenseInsuranceContext" errors={state.ok ? undefined : state.fieldErrors} />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="relationshipVerificationSummary">Relationship verification summary required</Label>
+                <Textarea
+                  id="relationshipVerificationSummary"
+                  name="relationshipVerificationSummary"
+                  placeholder="Explain how you worked with this contractor/subcontractor and what documents support the relationship."
+                  className="min-h-24 bg-white"
+                />
+                <FieldError name="relationshipVerificationSummary" errors={state.ok ? undefined : state.fieldErrors} />
+              </div>
             </div>
           ) : null}
           <div className="space-y-2">
@@ -445,6 +518,27 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               <FieldError name="daysOverdue" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
           </div>
+          {isBusinessProfileReport ? (
+            <div className="grid gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 md:col-span-2 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <p className="text-sm font-semibold text-amber-950">Payment-chain context</p>
+                <p className="mt-1 text-xs leading-5 text-amber-900">
+                  Especially useful for subcontractor-to-contractor reports, retainage, draw requests,
+                  pay applications, milestone billing, and business-to-business payment disputes.
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="retainageAmount">Retainage amount optional</Label>
+                <Input id="retainageAmount" name="retainageAmount" type="number" min="0" placeholder="1500" />
+                <FieldError name="retainageAmount" errors={state.ok ? undefined : state.fieldErrors} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="paymentApplicationReference">Pay app / invoice reference optional</Label>
+                <Input id="paymentApplicationReference" name="paymentApplicationReference" placeholder="Pay app #3, invoice 1048, draw 2" />
+                <FieldError name="paymentApplicationReference" errors={state.ok ? undefined : state.fieldErrors} />
+              </div>
+            </div>
+          ) : null}
           <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 md:col-span-2 sm:grid-cols-2">
             {[
               ["clientResponded", "Client responded"],
@@ -572,6 +666,38 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         Submit for Moderation
       </PendingSubmitButton>
     </form>
+  )
+}
+
+function SelectField({
+  name,
+  label,
+  defaultOption,
+  options,
+  errors,
+}: {
+  name: string
+  label: string
+  defaultOption: string
+  options: readonly string[]
+  errors?: Record<string, string[]>
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name}>{label}</Label>
+      <select
+        id={name}
+        name={name}
+        defaultValue=""
+        className="h-10 w-full rounded-md border border-input bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <option value="">{defaultOption}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
+      </select>
+      <FieldError name={name} errors={errors} />
+    </div>
   )
 }
 

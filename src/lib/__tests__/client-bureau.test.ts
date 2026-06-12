@@ -18,6 +18,7 @@ import {
   requiredContractPacketColumns,
   requiredLaunchTables,
   requiredMultiProfileColumns,
+  requiredRatingTransparencyColumns,
   requiredRevenueWorkflowColumns,
   summarizeLaunchHealth,
 } from "@/lib/launch-health"
@@ -586,8 +587,13 @@ describe("launch health gates", () => {
       name: column.name,
       exists: !missing.includes(`${column.table}.${column.name}`),
     }))
+    const ratingTransparencyColumns = requiredRatingTransparencyColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: !missing.includes(`${column.table}.${column.name}`),
+    }))
 
-    return [...contractColumns, ...revenueColumns, ...multiProfileColumns]
+    return [...contractColumns, ...revenueColumns, ...multiProfileColumns, ...ratingTransparencyColumns]
   }
 
   it("keeps core and platform launch table groups distinct", () => {
@@ -619,11 +625,13 @@ describe("launch health gates", () => {
       ready:
         requiredContractPacketColumns.length +
         requiredRevenueWorkflowColumns.length +
-        requiredMultiProfileColumns.length,
+        requiredMultiProfileColumns.length +
+        requiredRatingTransparencyColumns.length,
       total:
         requiredContractPacketColumns.length +
         requiredRevenueWorkflowColumns.length +
-        requiredMultiProfileColumns.length,
+        requiredMultiProfileColumns.length +
+        requiredRatingTransparencyColumns.length,
     })
   })
 
@@ -981,6 +989,7 @@ describe("business ratings and public business profiles", () => {
       "Communication and resolution posture",
     ])
     expect(rating.summary).toContain("payment-chain context")
+    expect(rating.factors.find((factor) => factor.label === "Payment-chain reliability context")?.description).toContain("pay application")
   })
 
   it("returns public business profiles without private account identifiers", () => {
@@ -1279,6 +1288,8 @@ describe("schemas and mock actions", () => {
       subjectProfileType: "subcontractor",
       subjectProfileSubtype: "Licensed subcontractor",
       relationshipType: "contractor_to_subcontractor",
+      reportedBusinessRole: "Subcontractor / trade partner",
+      counterpartyBusinessRole: "Prime contractor / GC",
       firstName: "Drew",
       lastName: "Santos",
       businessName: "Bright Line Electric",
@@ -1294,6 +1305,12 @@ describe("schemas and mock actions", () => {
       contractAmount: 9000,
       amountUnpaid: 2500,
       signedContract: true,
+      scopeDocumentationStatus: "Signed contract",
+      workAuthorizationStatus: "Authorized before work started",
+      retainageAmount: 2500,
+      paymentApplicationReference: "Pay app 2",
+      licenseInsuranceContext: "License and insurance certificate were requested before scheduling.",
+      relationshipVerificationSummary: "The contractor hired this subcontractor for the rough-in scope and has the signed work order, invoices, and messages.",
       reportCategory: "Late payment",
       paymentStatus: "Retainage unresolved",
       disputeStatus: "Disputed",
@@ -1311,6 +1328,8 @@ describe("schemas and mock actions", () => {
       subjectProfileType: "contractor",
       subjectProfileSubtype: "General contractor",
       relationshipType: "contractor_to_subcontractor",
+      reportedBusinessRole: "Prime contractor / GC",
+      counterpartyBusinessRole: "Subcontractor / trade partner",
       firstName: "Morgan",
       lastName: "Ellis",
       businessName: "RidgeBuild Contracting",
@@ -1321,6 +1340,9 @@ describe("schemas and mock actions", () => {
       projectType: "Kitchen remodel",
       jobType: "Residential remodel",
       jobStatus: "Completed",
+      scopeDocumentationStatus: "Signed contract",
+      workAuthorizationStatus: "Authorized before work started",
+      relationshipVerificationSummary: "The subcontractor worked under this GC and has a signed subcontract, invoices, messages, and completion photos.",
       projectCity: "Orlando",
       projectState: "FL",
       contractAmount: 12000,

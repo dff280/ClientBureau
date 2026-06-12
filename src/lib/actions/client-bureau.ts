@@ -182,6 +182,15 @@ import { createServiceClient } from "@/lib/supabase/service"
 
 const emptyStructuredReportFields = {
   clientType: undefined,
+  reportedBusinessRole: undefined,
+  counterpartyBusinessRole: undefined,
+  hiringPartyNamePrivate: undefined,
+  scopeDocumentationStatus: undefined,
+  workAuthorizationStatus: undefined,
+  retainageAmount: undefined,
+  paymentApplicationReference: undefined,
+  licenseInsuranceContext: undefined,
+  relationshipVerificationSummary: undefined,
   jobAddress: undefined,
   tradeCategory: undefined,
   jobType: undefined,
@@ -212,6 +221,15 @@ const emptyStructuredReportFields = {
 } satisfies Pick<
   ClientReportInput,
   | "clientType"
+  | "reportedBusinessRole"
+  | "counterpartyBusinessRole"
+  | "hiringPartyNamePrivate"
+  | "scopeDocumentationStatus"
+  | "workAuthorizationStatus"
+  | "retainageAmount"
+  | "paymentApplicationReference"
+  | "licenseInsuranceContext"
+  | "relationshipVerificationSummary"
   | "jobAddress"
   | "tradeCategory"
   | "jobType"
@@ -302,6 +320,15 @@ function buildPrivateReportTimeline(input: ClientReportInput) {
     reportDetailLine("Reported profile type", input.subjectProfileType),
     reportDetailLine("Reported profile subtype", input.subjectProfileSubtype),
     reportDetailLine("Relationship type", input.relationshipType),
+    reportDetailLine("Reported business role", input.reportedBusinessRole),
+    reportDetailLine("Counterparty business role", input.counterpartyBusinessRole),
+    reportDetailLine("Private hiring party / prime context", input.hiringPartyNamePrivate),
+    reportDetailLine("Scope documentation status", input.scopeDocumentationStatus),
+    reportDetailLine("Work authorization status", input.workAuthorizationStatus),
+    reportDetailLine("Retainage amount", input.retainageAmount),
+    reportDetailLine("Pay application or invoice reference", input.paymentApplicationReference),
+    reportDetailLine("License / insurance context", input.licenseInsuranceContext),
+    reportDetailLine("Relationship verification summary", input.relationshipVerificationSummary),
     reportDetailLine("Project/job record", input.projectJobTitle),
     reportDetailLine("Existing project/job ID", input.projectJobId),
     reportDetailLine("Client type", input.clientType),

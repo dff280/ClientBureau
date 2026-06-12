@@ -316,8 +316,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
   const responseHref = `/client-response?profile=${encodeURIComponent(profile.profileHref)}`
   const presentation = getEntityProfilePresentation(profile.profileType)
-  const ratingFactors = profile.relatedContractor?.ratingFactors ?? []
-  const ratingSummary = profile.relatedContractor?.ratingSummary ?? presentation.methodologyDescription
+  const ratingFactors = profile.relatedContractor?.ratingFactors ?? profile.ratingFactors ?? []
+  const ratingSummary = profile.relatedContractor?.ratingSummary ?? profile.ratingPublicNote ?? presentation.methodologyDescription
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",

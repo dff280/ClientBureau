@@ -47,6 +47,7 @@ import type {
   ProfileSubtype,
   ProjectJobStatus,
   ProjectProfileRole,
+  ProfileRatingModel,
   ReportConfidenceLevel,
   ReportRelationshipType,
   VerificationLevel,
@@ -182,6 +183,15 @@ export interface Database {
           legacy_client_name: string | null
           report_confidence_level: ReportConfidenceLevel
           redaction_note: string | null
+          reported_business_role: string | null
+          counterparty_business_role: string | null
+          hiring_party_name_private: string | null
+          scope_documentation_status: string | null
+          work_authorization_status: string | null
+          retainage_amount: number | null
+          payment_application_reference: string | null
+          license_insurance_context: string | null
+          relationship_verification_summary: string | null
           client_type: string | null
           client_job_address_private: string | null
           trade_category: string | null
@@ -238,6 +248,15 @@ export interface Database {
           legacy_client_name?: string | null
           report_confidence_level?: ReportConfidenceLevel
           redaction_note?: string | null
+          reported_business_role?: string | null
+          counterparty_business_role?: string | null
+          hiring_party_name_private?: string | null
+          scope_documentation_status?: string | null
+          work_authorization_status?: string | null
+          retainage_amount?: number | null
+          payment_application_reference?: string | null
+          license_insurance_context?: string | null
+          relationship_verification_summary?: string | null
           client_type?: string | null
           client_job_address_private?: string | null
           trade_category?: string | null
@@ -308,6 +327,12 @@ export interface Database {
           redaction_note: string | null
           rating_score: number
           rating_band: string
+          rating_model: ProfileRatingModel | null
+          rating_version: string | null
+          rating_confidence: string | null
+          rating_factors: Json
+          rating_public_note: string | null
+          rating_last_calculated_at: string | null
           report_count: number
           positive_report_count: number
           disputed_report_count: number
@@ -341,6 +366,12 @@ export interface Database {
           redaction_note?: string | null
           rating_score?: number
           rating_band?: string
+          rating_model?: ProfileRatingModel | null
+          rating_version?: string | null
+          rating_confidence?: string | null
+          rating_factors?: Json
+          rating_public_note?: string | null
+          rating_last_calculated_at?: string | null
           report_count?: number
           positive_report_count?: number
           disputed_report_count?: number
@@ -549,6 +580,44 @@ export interface Database {
           created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["profile_redaction_events"]["Insert"]>
+        Relationships: []
+      }
+      profile_rating_events: {
+        Row: {
+          id: string
+          profile_id: string
+          profile_type: ProfileType
+          rating_model: ProfileRatingModel
+          rating_version: string
+          previous_score: number | null
+          next_score: number
+          previous_band: string | null
+          next_band: string
+          confidence: string
+          factor_snapshot: Json
+          source_report_id: string | null
+          recalculated_by: string | null
+          reason: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          profile_id: string
+          profile_type: ProfileType
+          rating_model: ProfileRatingModel
+          rating_version: string
+          previous_score?: number | null
+          next_score: number
+          previous_band?: string | null
+          next_band: string
+          confidence: string
+          factor_snapshot?: Json
+          source_report_id?: string | null
+          recalculated_by?: string | null
+          reason: string
+          created_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["profile_rating_events"]["Insert"]>
         Relationships: []
       }
       report_evidence: {

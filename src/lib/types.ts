@@ -137,6 +137,10 @@ export type VerificationBadge =
   | "Verified phone"
 export type BusinessRatingGrade = "A+" | "A" | "B" | "C" | "Review Pending"
 export type BusinessRatingConfidence = "Basic" | "Moderate" | "Strong"
+export type ProfileRatingModel =
+  | "client_risk"
+  | "contractor_business_reliability"
+  | "subcontractor_trade_partner_reliability"
 export type WatchlistStatus = "active" | "cleared"
 export type WatchlistAlertEventType =
   | "new_report"
@@ -422,6 +426,12 @@ export interface EntityProfile {
   redactionNote?: string
   ratingScore: number
   ratingBand: RiskLevel | BusinessRatingGrade | "Review Pending"
+  ratingModel?: ProfileRatingModel
+  ratingVersion?: string
+  ratingConfidence?: BusinessRatingConfidence | string
+  ratingFactors?: BusinessRatingFactor[]
+  ratingPublicNote?: string
+  ratingLastCalculatedAt?: string
   reportCount: number
   positiveReportCount: number
   disputedReportCount: number
@@ -560,6 +570,24 @@ export interface ProfileRedactionEvent {
   fieldName: string
   previousPublicValueHash?: string
   redactedBy?: string
+  reason: string
+  createdAt: string
+}
+
+export interface ProfileRatingEvent {
+  id: string
+  profileId: string
+  profileType: ProfileType
+  ratingModel: ProfileRatingModel
+  ratingVersion: string
+  previousScore?: number
+  nextScore: number
+  previousBand?: string
+  nextBand: string
+  confidence: BusinessRatingConfidence | string
+  factorSnapshot: BusinessRatingFactor[]
+  sourceReportId?: string
+  recalculatedBy?: string
   reason: string
   createdAt: string
 }
@@ -1106,6 +1134,15 @@ export interface ClientReport {
   redactionNote?: string
   clientType?: string
   clientJobAddressPrivate?: string
+  reportedBusinessRole?: string
+  counterpartyBusinessRole?: string
+  hiringPartyNamePrivate?: string
+  scopeDocumentationStatus?: string
+  workAuthorizationStatus?: string
+  retainageAmount?: number
+  paymentApplicationReference?: string
+  licenseInsuranceContext?: string
+  relationshipVerificationSummary?: string
   tradeCategory?: string
   jobType?: string
   jobStartDate?: string

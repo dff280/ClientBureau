@@ -81,12 +81,24 @@ function approvedReportStats(reports: ClientReport[]) {
   const evidenceAttachedReports = reports.filter((report) => report.evidenceAttached)
   const signedContractReports = reports.filter((report) => report.signedContract)
   const writtenChangeOrderReports = reports.filter((report) => report.writtenChangeOrder)
+  const scopeDocumentedReports = reports.filter((report) =>
+    report.signedContract ||
+    report.writtenChangeOrder ||
+    ["Signed contract", "Written proposal accepted", "Text/email approval", "Purchase order/work order"].includes(report.scopeDocumentationStatus ?? ""),
+  )
+  const workAuthorizedReports = reports.filter((report) =>
+    ["Authorized before work started", "Change order authorized", "Emergency work authorization"].includes(report.workAuthorizationStatus ?? ""),
+  )
+  const relationshipVerifiedReports = reports.filter((report) => Boolean(report.relationshipVerificationSummary))
   const relationshipReports = reports.filter((report) =>
     report.relationshipType === "subcontractor_to_contractor" ||
     report.relationshipType === "contractor_to_subcontractor" ||
     report.relationshipType === "business_to_business",
   )
   const tradeScopedReports = reports.filter((report) => report.tradeCategory || report.jobType || report.projectJobId)
+  const paymentApplicationReports = reports.filter((report) => Boolean(report.paymentApplicationReference))
+  const retainageReports = reports.filter((report) => (report.retainageAmount ?? 0) > 0)
+  const licenseInsuranceReports = reports.filter((report) => Boolean(report.licenseInsuranceContext))
   const completedReports = reports.filter((report) => report.jobStatus?.toLowerCase().includes("complete"))
   const responseReports = reports.filter(
     (report) => report.clientResponded || report.responseStatus === "Response published" || report.responseStatus === "Resolved",
@@ -103,8 +115,14 @@ function approvedReportStats(reports: ClientReport[]) {
     evidenceAttachedReports,
     signedContractReports,
     writtenChangeOrderReports,
+    scopeDocumentedReports,
+    workAuthorizedReports,
+    relationshipVerifiedReports,
     relationshipReports,
     tradeScopedReports,
+    paymentApplicationReports,
+    retainageReports,
+    licenseInsuranceReports,
     completedReports,
     responseReports,
     unpaidRatio,
@@ -139,9 +157,10 @@ function calculateContractorReliabilityRating(input: {
     Math.min(stats.resolvedReports.length * 2, 4)
   const documentationScore =
     Math.min(stats.evidenceAttachedReports.length * 4 + evidence.length * 2, 10) +
-    Math.min(stats.signedContractReports.length * 3, 6) +
-    Math.min(stats.writtenChangeOrderReports.length * 2, 4) +
-    Math.min(stats.tradeScopedReports.length * 1.5, 2)
+    Math.min(stats.scopeDocumentedReports.length * 3, 6) +
+    Math.min(stats.writtenChangeOrderReports.length * 2, 3) +
+    Math.min(stats.relationshipVerifiedReports.length * 1.5, 2) +
+    Math.min(stats.tradeScopedReports.length, 1)
   const resolutionScore =
     12 +
     Math.min(stats.resolvedReports.length * 2, 5) -
@@ -169,7 +188,7 @@ function calculateContractorReliabilityRating(input: {
       "Contracts and evidence discipline",
       documentationScore,
       22,
-      "Looks for private evidence, signed agreements, written change orders, and documented project scope.",
+      "Looks for private evidence, signed agreements, written change orders, documented project scope, and relationship verification.",
     ),
     factor(
       "Payment and resolution posture",
@@ -215,20 +234,23 @@ function calculateSubcontractorReliabilityRating(input: {
     (contractor.licenseNumber ? 3 : 0) +
     (contractor.businessType ? 2 : 0) +
     (contractor.companySize ? 1 : 0) +
-    (contractor.serviceArea ? 1 : 0)
+    (contractor.serviceArea ? 1 : 0) +
+    Math.min(stats.licenseInsuranceReports.length, 1)
   const scopeDocumentationScore =
     5 +
-    Math.min(stats.tradeScopedReports.length * 4, 7) +
-    Math.min(stats.signedContractReports.length * 3, 5) +
-    Math.min(stats.writtenChangeOrderReports.length * 2, 3)
+    Math.min(stats.tradeScopedReports.length * 3, 5) +
+    Math.min(stats.scopeDocumentedReports.length * 3, 6) +
+    Math.min(stats.workAuthorizedReports.length * 2, 4)
   const relationshipHistoryScore =
     4 +
-    Math.min(stats.relationshipReports.length * 5, 8) +
-    Math.min(stats.approvedReports.length * 2, 4) +
+    Math.min(stats.relationshipReports.length * 4, 7) +
+    Math.min(stats.relationshipVerifiedReports.length * 3, 5) +
     Math.min(stats.positiveReports.length * 2, 2)
   const paymentChainScore =
     10 +
-    Math.min(stats.evidenceAttachedReports.length * 3 + evidence.length * 2, 6) +
+    Math.min(stats.evidenceAttachedReports.length * 2 + evidence.length * 2, 5) +
+    Math.min(stats.paymentApplicationReports.length * 2, 3) +
+    Math.min(stats.retainageReports.length * 1.5, 2) +
     Math.min(stats.resolvedReports.length * 2, 4) -
     Math.min(stats.disputedReports.length * 3, 6) -
     Math.min(Math.round(stats.unpaidRatio * 12), 8)
@@ -252,19 +274,19 @@ function calculateSubcontractorReliabilityRating(input: {
       "Scope and documentation clarity",
       scopeDocumentationScore,
       20,
-      "Rewards project scope detail, trade category, signed agreements, and written change-order documentation.",
+      "Rewards project scope detail, trade category, signed agreements, work authorization, and change-order documentation.",
     ),
     factor(
       "GC/sub relationship history",
       relationshipHistoryScore,
       18,
-      "Looks at documented subcontractor-to-contractor or contractor-to-subcontractor project relationships.",
+      "Looks at documented subcontractor-to-contractor or contractor-to-subcontractor project relationships and relationship verification.",
     ),
     factor(
       "Payment-chain reliability context",
       paymentChainScore,
       20,
-      "Considers retainage, unresolved payment context, evidence, and resolved payment-chain outcomes.",
+      "Considers retainage, pay application context, unresolved payment context, evidence, and resolved payment-chain outcomes.",
     ),
     factor(
       "Evidence and completion readiness",

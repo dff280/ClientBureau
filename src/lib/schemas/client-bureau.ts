@@ -79,6 +79,33 @@ const optionalDate = z
   .optional()
   .transform((value) => value || undefined)
 
+export const businessRelationshipRoleOptions = [
+  "Prime contractor / GC",
+  "Subcontractor / trade partner",
+  "Service business",
+  "Project owner / customer",
+  "Property manager",
+  "Vendor / supplier",
+  "Other",
+] as const
+
+export const scopeDocumentationStatusOptions = [
+  "Signed contract",
+  "Written proposal accepted",
+  "Text/email approval",
+  "Purchase order/work order",
+  "Verbal agreement only",
+  "No clear scope document",
+] as const
+
+export const workAuthorizationStatusOptions = [
+  "Authorized before work started",
+  "Change order authorized",
+  "Emergency work authorization",
+  "Authorization disputed",
+  "Not sure",
+] as const
+
 function milestoneScheduleTotals(value?: string) {
   const lines = (value ?? "")
     .split(/\r?\n/)
@@ -114,6 +141,15 @@ export const clientReportSchema = z
       .transform((value) => value || undefined),
     relationshipType: z.enum(reportRelationshipTypes).optional(),
     clientType: z.enum(clientTypes).optional(),
+    reportedBusinessRole: optionalChoice(businessRelationshipRoleOptions),
+    counterpartyBusinessRole: optionalChoice(businessRelationshipRoleOptions),
+    hiringPartyNamePrivate: z.string().trim().max(160, "Keep private hiring-party context under 160 characters.").optional().transform((value) => value || undefined),
+    scopeDocumentationStatus: optionalChoice(scopeDocumentationStatusOptions),
+    workAuthorizationStatus: optionalChoice(workAuthorizationStatusOptions),
+    retainageAmount: optionalMoney("Retainage amount"),
+    paymentApplicationReference: z.string().trim().max(120, "Keep payment application reference under 120 characters.").optional().transform((value) => value || undefined),
+    licenseInsuranceContext: z.string().trim().max(400, "Keep license/insurance context under 400 characters.").optional().transform((value) => value || undefined),
+    relationshipVerificationSummary: z.string().trim().max(900, "Keep relationship verification under 900 characters.").optional().transform((value) => value || undefined),
     firstName: requiredText("Client first name"),
     lastName: requiredText("Client last name"),
     businessName: optionalText,
@@ -195,6 +231,14 @@ export const clientReportSchema = z
       addIssue("subjectProfileSubtype", "Choose the contractor or subcontractor profile subtype.")
     }
 
+    if (!value.reportedBusinessRole) {
+      addIssue("reportedBusinessRole", "Choose the reported party's business role.")
+    }
+
+    if (!value.counterpartyBusinessRole) {
+      addIssue("counterpartyBusinessRole", "Choose your or the counterparty's role in the job.")
+    }
+
     if (!value.relationshipType) {
       addIssue("relationshipType", "Choose the business relationship for this report.")
     }
@@ -239,6 +283,18 @@ export const clientReportSchema = z
 
     if (!hasText(value.projectJobTitle)) {
       addIssue("projectJobTitle", "Project/job label is required for contractor and subcontractor reports.")
+    }
+
+    if (!value.scopeDocumentationStatus) {
+      addIssue("scopeDocumentationStatus", "Choose how the scope or agreement was documented.")
+    }
+
+    if (!value.workAuthorizationStatus) {
+      addIssue("workAuthorizationStatus", "Choose how the work was authorized.")
+    }
+
+    if (!hasText(value.relationshipVerificationSummary, 20)) {
+      addIssue("relationshipVerificationSummary", "Explain how you know this business relationship and what documentation supports it.")
     }
 
     if (!hasText(value.whatWasAgreed, 20)) {

@@ -58,6 +58,7 @@ export const platformLaunchTables = [
   "profile_merge_events",
   "report_reassignment_events",
   "profile_redaction_events",
+  "profile_rating_events",
 ] as const satisfies RequiredTable[]
 
 export const requiredLaunchTables = [
@@ -121,8 +122,29 @@ export const requiredMultiProfileColumns = [
   { table: "client_responses", name: "attachment_reference_private" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
+export const requiredRatingTransparencyColumns = [
+  { table: "entity_profiles", name: "rating_model" },
+  { table: "entity_profiles", name: "rating_version" },
+  { table: "entity_profiles", name: "rating_confidence" },
+  { table: "entity_profiles", name: "rating_factors" },
+  { table: "entity_profiles", name: "rating_public_note" },
+  { table: "entity_profiles", name: "rating_last_calculated_at" },
+  { table: "client_reports", name: "reported_business_role" },
+  { table: "client_reports", name: "counterparty_business_role" },
+  { table: "client_reports", name: "hiring_party_name_private" },
+  { table: "client_reports", name: "scope_documentation_status" },
+  { table: "client_reports", name: "work_authorization_status" },
+  { table: "client_reports", name: "retainage_amount" },
+  { table: "client_reports", name: "payment_application_reference" },
+  { table: "client_reports", name: "license_insurance_context" },
+  { table: "client_reports", name: "relationship_verification_summary" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
 const requiredPlatformColumnTotal =
-  requiredContractPacketColumns.length + requiredRevenueWorkflowColumns.length + requiredMultiProfileColumns.length
+  requiredContractPacketColumns.length +
+  requiredRevenueWorkflowColumns.length +
+  requiredMultiProfileColumns.length +
+  requiredRatingTransparencyColumns.length
 
 type LaunchColumnStatus = {
   table: RequiredTable
@@ -217,7 +239,14 @@ async function checkRequiredColumns() {
       message: "Supabase service role is not configured.",
     }))
 
-    return [...contractColumns, ...revenueColumns, ...multiProfileColumns]
+    const ratingTransparencyColumns: LaunchColumnStatus[] = requiredRatingTransparencyColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+
+    return [...contractColumns, ...revenueColumns, ...multiProfileColumns, ...ratingTransparencyColumns]
   }
 
   const supabase = createServiceClient()
@@ -226,7 +255,12 @@ async function checkRequiredColumns() {
     table: "contract_packets" as const,
     name,
   }))
-  const requiredColumns = [...contractChecks, ...requiredRevenueWorkflowColumns, ...requiredMultiProfileColumns]
+  const requiredColumns = [
+    ...contractChecks,
+    ...requiredRevenueWorkflowColumns,
+    ...requiredMultiProfileColumns,
+    ...requiredRatingTransparencyColumns,
+  ]
 
   return Promise.all(
     requiredColumns.map(async ({ table, name }) => {
@@ -282,11 +316,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Guided ops required"
     readinessMessage =
-      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0018 before moving advanced tools to live account records."
+      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0019 before moving advanced tools to live account records."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, or response graph columns are missing. Apply migrations through 0018 before using live advanced workflows."
+      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, response graph, or rating transparency columns are missing. Apply migrations through 0019 before using live advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin operations are saving to live account records."
