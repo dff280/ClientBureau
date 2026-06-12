@@ -62,6 +62,11 @@ const faqs = [
       "Yes. Clients can submit a response, dispute, correction request, or resolution update for moderation before public display.",
   },
   {
+    question: "How are subcontractor profiles different from contractor profiles?",
+    answer:
+      "Contractor profiles focus on customer-facing business reliability. Subcontractor profiles focus on trade scope, GC/sub relationships, payment-chain context, evidence readiness, and claim or correction rights.",
+  },
+  {
     question: "Are private emails, phone numbers, and evidence files public?",
     answer:
       "No. Public pages do not display private contact identifiers, street addresses, internal notes, or raw evidence files.",

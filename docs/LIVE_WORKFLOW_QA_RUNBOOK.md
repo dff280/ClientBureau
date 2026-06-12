@@ -1,6 +1,6 @@
 # Client Bureau Live Workflow QA Runbook
 
-Use this after every production deploy while `DATA_MODE=supabase` is active. `PLATFORM_FEATURE_DATA_MODE` may stay `mock` as a safe mode until `/api/health` confirms all platform columns through migration `0019`.
+Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through migration `0019`.
 
 ## 1. Release And Health Gate
 
@@ -48,7 +48,7 @@ Required result:
 - SEO verification covers core marketing pages, policy pages, service pages, directories, report pages, industry pages, mobile app page, and sampled public profiles.
 - Public profile checks do not expose raw emails, phone numbers, street addresses, raw evidence, private contract snapshots, pending/rejected content, or admin notes.
 - Optional authenticated QA confirms contractor/admin login, session endpoints, route-to-route stability, no-store private pages, and contractor denial from the admin area.
-- `/profiles/subcontractor` should link to a real public subcontractor detail page before SEO/acquisition campaigns. If no verified subcontractor record exists yet, the SEO verifier may warn instead of failing; do not publish fake subcontractor records.
+- `/profiles/subcontractor` should link to a real public subcontractor detail page before SEO/acquisition campaigns. If no verified subcontractor record exists yet, the SEO verifier may warn instead of failing; do not publish fake subcontractor records. Use `docs/SUBCONTRACTOR_PROFILE_LAUNCH_RUNBOOK.md` for the first public trade profile.
 
 Stripe warnings are acceptable until billing is intentionally enabled.
 

@@ -3,32 +3,17 @@
 ## Current Live State
 
 - Website is live at `https://clientbureau.com`.
-- Deployed version is `0.4.2` at commit `f3c5058`.
+- Deployed version is `0.4.2` at commit `f0a9a40`.
 - Core production mode is `DATA_MODE=supabase`.
-- Advanced platform mode is intentionally safe-gated with `PLATFORM_FEATURE_DATA_MODE=mock`.
-- `/api/health` is `ok` for core live readiness.
+- Advanced platform mode is active with `PLATFORM_FEATURE_DATA_MODE=supabase`.
+- `/api/health` is `ok` for core and advanced platform readiness.
 - Stripe remains intentionally deferred.
 
 ## Immediate Launch Tasks
 
-1. Apply `supabase/migrations/0019_contractor_subcontractor_rating_transparency.sql` in Supabase SQL Editor.
-2. Recheck `https://clientbureau.com/api/health`.
-3. When health reports `platformCanUseSupabase: true`, set the VPS env to:
-
-```text
-PLATFORM_FEATURE_DATA_MODE=supabase
-```
-
-4. Rebuild the VPS:
-
-```bash
-cd /opt/client-bureau
-docker compose -p clientbureau up -d --build --remove-orphans
-docker image prune -f
-```
-
-5. Publish at least one real, verified subcontractor/trade-professional profile. Do not create a fake public profile for SEO.
-6. Run:
+1. Publish at least one real, verified subcontractor/trade-professional profile. Do not create a fake public profile for SEO.
+2. Use `docs/SUBCONTRACTOR_PROFILE_LAUNCH_RUNBOOK.md` before making the record public.
+3. Run:
 
 ```bash
 LIVE_BASE_URL=https://clientbureau.com npm run verify:live

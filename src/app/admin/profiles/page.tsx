@@ -3,6 +3,7 @@ import Link from "next/link"
 import {
   AlertTriangle,
   BadgeCheck,
+  BriefcaseBusiness,
   ClipboardCheck,
   Eye,
   EyeOff,
@@ -12,6 +13,7 @@ import {
   ShieldCheck,
   UserCheck,
   UsersRound,
+  Wrench,
   type LucideIcon,
 } from "lucide-react"
 
@@ -89,6 +91,20 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
   })
   const publicCount = profiles.filter((profile) => profile.isPublic).length
   const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed" || profile.claimedStatus === "verified").length
+  const subcontractorProfiles = profiles.filter((profile) => profile.profileType === "subcontractor")
+  const publicSubcontractorCount = subcontractorProfiles.filter((profile) => profile.isPublic).length
+  const verifiedSubcontractorCount = subcontractorProfiles.filter((profile) =>
+    ["claimed", "verified"].includes(profile.claimedStatus) || profile.verificationBadges?.length,
+  ).length
+  const subcontractorLaunchReadyCount = subcontractorProfiles.filter((profile) =>
+    profile.isPublic &&
+    ["claimed", "verified"].includes(profile.claimedStatus) &&
+    profile.city &&
+    profile.state &&
+    profile.profileSubtype &&
+    profile.publicSummary &&
+    profile.ratingScore > 0,
+  ).length
   const duplicateGroups = profiles.reduce<Record<string, EntityProfile[]>>((groups, profile) => {
     if (!profile.duplicateGroupKey) return groups
     groups[profile.duplicateGroupKey] = [...(groups[profile.duplicateGroupKey] ?? []), profile]
@@ -144,6 +160,57 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
           <StatCard label="Pending claims" value={pendingClaimCount} helper="Claims awaiting verification review" icon={BadgeCheck} tone="amber" />
           <StatCard label="Graph signals" value={duplicateSignals} helper={`${duplicateGroupCount} duplicate group${duplicateGroupCount === 1 ? "" : "s"} need review`} icon={GitMerge} tone={duplicateSignals > 0 ? "amber" : "slate"} />
         </div>
+
+        <DashboardSection
+          eyebrow="Subcontractor launch readiness"
+          title="Prepare the first verified trade-professional profile"
+          description="Client Bureau should publish only real subcontractor or trade-professional records. Use this checklist before acquisition campaigns point at the subcontractor directory."
+        >
+          <div className="grid gap-3 lg:grid-cols-[0.75fr_1.25fr]">
+            <div className="rounded-md border border-blue-200 bg-blue-50 p-5 text-blue-950">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Trade inventory</p>
+                  <p className="mt-2 text-3xl font-semibold">{publicSubcontractorCount}</p>
+                  <p className="mt-1 text-sm leading-6">
+                    Public subcontractor profiles currently available. Live SEO warns until at least one real verified profile is published.
+                  </p>
+                </div>
+                <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-white text-blue-800">
+                  <Wrench className="size-5" aria-hidden="true" />
+                </span>
+              </div>
+              <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
+                <ProfileFact label="Total trade records" value={subcontractorProfiles.length} />
+                <ProfileFact label="Claimed / verified" value={verifiedSubcontractorCount} />
+                <ProfileFact label="Launch-ready" value={subcontractorLaunchReadyCount} />
+                <ProfileFact label="Rating model" value="Trade Partner" />
+              </dl>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              <LaunchChecklistCard
+                icon={BriefcaseBusiness}
+                title="Identity is real"
+                detail="Use a real subcontractor, installer, crew, labor provider, or specialty trade. Do not create placeholder records for SEO."
+              />
+              <LaunchChecklistCard
+                icon={ClipboardCheck}
+                title="Trade scope is clear"
+                detail="Set subtype, trade category, city/state, service area context, and public-safe summary before publishing."
+              />
+              <LaunchChecklistCard
+                icon={ShieldCheck}
+                title="Verification is documented"
+                detail="Confirm claim status, business relationship, license/insurance indicators where available, and moderator note."
+              />
+              <LaunchChecklistCard
+                icon={Eye}
+                title="Public output is safe"
+                detail="Preview the public profile and confirm no raw email, phone, address, evidence path, private contract data, or admin note appears."
+              />
+            </div>
+          </div>
+        </DashboardSection>
 
         <DashboardSection
           eyebrow="Daily identity queue"
@@ -408,6 +475,26 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
         </div>
       </div>
     </section>
+  )
+}
+
+function LaunchChecklistCard({
+  icon: Icon,
+  title,
+  detail,
+}: {
+  icon: LucideIcon
+  title: string
+  detail: string
+}) {
+  return (
+    <article className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <span className="flex size-10 items-center justify-center rounded-md bg-blue-100 text-blue-800">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <h3 className="mt-3 font-semibold text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+    </article>
   )
 }
 

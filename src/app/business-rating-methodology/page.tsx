@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Building2, CheckCircle2, HelpCircle, ShieldCheck, Star } from "lucide-react"
+import { Building2, CheckCircle2, Handshake, HelpCircle, ShieldCheck, Star, Wrench } from "lucide-react"
 
 import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Badge } from "@/components/ui/badge"
@@ -68,6 +68,25 @@ const factors = [
     title: "Profile readiness",
     weight: "Support",
     text: "Complete platform setup, profile claiming, response readiness, business details, and documentation habits help increase confidence that the profile reflects a real operating business or trade partner.",
+  },
+]
+
+const subcontractorSignals = [
+  {
+    title: "Trade identity",
+    text: "Specialty trade, crew type, installer role, labor-provider context, service area, and license or insurance indicators where available.",
+  },
+  {
+    title: "Scope proof",
+    text: "Signed subcontract, work order, purchase order, accepted proposal, change order, completion photo, invoice, or message thread.",
+  },
+  {
+    title: "Relationship proof",
+    text: "Subcontractor-to-contractor, contractor-to-subcontractor, or business-to-business context with enough detail for moderation.",
+  },
+  {
+    title: "Payment-chain proof",
+    text: "Pay applications, retainage, draw requests, milestone billing, unpaid balance context, and documented resolution or follow-up.",
   },
 ]
 
@@ -153,6 +172,35 @@ export default function BusinessRatingMethodologyPage() {
               </Card>
             ))}
           </div>
+
+          <Card className="overflow-hidden rounded-md border-blue-200 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-sm">
+            <CardContent className="grid gap-6 p-6 lg:grid-cols-[0.7fr_1.3fr] lg:items-start">
+              <div>
+                <div className="flex size-11 items-center justify-center rounded-md bg-blue-100 text-blue-800">
+                  <Wrench className="size-5" aria-hidden="true" />
+                </div>
+                <p className="mt-4 text-sm font-semibold uppercase tracking-[0.16em] text-blue-700">
+                  Subcontractor rating inputs
+                </p>
+                <h2 className="mt-2 text-2xl font-black text-slate-950">
+                  Trade Partner Reliability is built around the payment chain.
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                  A subcontractor profile should answer who performed the trade work, what scope was authorized,
+                  who hired whom, what documentation exists, and whether payment-chain issues were resolved.
+                </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                {subcontractorSignals.map((item) => (
+                  <div key={item.title} className="rounded-md border border-blue-100 bg-white p-4 shadow-sm">
+                    <Handshake className="size-5 text-blue-700" aria-hidden="true" />
+                    <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid gap-4 lg:grid-cols-5">
             {factors.map((factor) => (

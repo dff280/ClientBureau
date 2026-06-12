@@ -3,6 +3,7 @@ import {
   BadgeCheck,
   Building2,
   ClipboardCheck,
+  ClipboardList,
   FileSearch,
   Filter,
   Hammer,
@@ -423,6 +424,10 @@ export function EntityProfileDirectory({
 
       <section id="profile-directory" className="bureau-section">
         <div className="bureau-container space-y-6">
+          {activeType === "subcontractor" ? (
+            <SubcontractorReadingGuide />
+          ) : null}
+
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-5 p-5">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -541,9 +546,15 @@ export function EntityProfileDirectory({
                 <div className="flex size-12 items-center justify-center rounded-md bg-amber-100 text-amber-800">
                   <UsersRound className="size-6" aria-hidden="true" />
                 </div>
-                <h3 className="mt-4 text-xl font-semibold text-slate-950">No public profiles matched those filters.</h3>
+                <h3 className="mt-4 text-xl font-semibold text-slate-950">
+                  {activeType === "subcontractor"
+                    ? "No public subcontractor profiles matched those filters."
+                    : "No public profiles matched those filters."}
+                </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  Clear the search, choose another state, or use the private search workflow for account-level saved searches and watchlist actions.
+                  {activeType === "subcontractor"
+                    ? "Verified trade profiles appear after claim, moderation, and public visibility review. You can claim a trade profile, report a documented GC/sub experience, or use private search for saved-search and watchlist actions."
+                    : "Clear the search, choose another state, or use the private search workflow for account-level saved searches and watchlist actions."}
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
@@ -555,6 +566,16 @@ export function EntityProfileDirectory({
                   <Button asChild variant="outline">
                     <Link href="/search">Open private search</Link>
                   </Button>
+                  {activeType === "subcontractor" ? (
+                    <>
+                      <Button asChild variant="outline">
+                        <Link href="/claim-profile?profileType=subcontractor">Claim trade profile</Link>
+                      </Button>
+                      <Button asChild variant="outline">
+                        <Link href="/submit-report?profileType=subcontractor">Report trade experience</Link>
+                      </Button>
+                    </>
+                  ) : null}
                 </div>
               </CardContent>
             </Card>
@@ -596,5 +617,66 @@ export function EntityProfileDirectory({
         secondary={{ href: "/how-it-works", label: "How it works", icon: FileSearch }}
       />
     </main>
+  )
+}
+
+function SubcontractorReadingGuide() {
+  const items = [
+    {
+      icon: Wrench,
+      title: "Trade scope",
+      text: "Look for the specialty trade, crew role, installer type, labor-provider context, or licensed-subcontractor category.",
+    },
+    {
+      icon: Handshake,
+      title: "Relationship path",
+      text: "Read whether the record involves subcontractor-to-contractor, contractor-to-subcontractor, or business-to-business project context.",
+    },
+    {
+      icon: ClipboardList,
+      title: "Payment-chain signals",
+      text: "Retainage, pay applications, draw requests, milestone billing, and resolution status matter more here than customer-facing review language.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Private evidence",
+      text: "Public pages can show evidence-on-file labels, but raw contracts, invoices, photos, messages, and staff notes stay private.",
+    },
+  ]
+
+  return (
+    <Card className="overflow-hidden rounded-md border-blue-200 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-sm">
+      <CardContent className="p-5">
+        <div className="grid gap-5 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+              How to read subcontractor profiles
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">
+              This is a trade-partner record, not a customer review page.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Subcontractors, installers, crews, and specialty trades carry different risk than customer-facing contractors.
+              Client Bureau separates trade scope, relationship documentation, payment-chain context, and private evidence indicators.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {items.map((item) => {
+              const Icon = item.icon
+
+              return (
+                <div key={item.title} className="rounded-md border border-blue-100 bg-white/80 p-4 shadow-sm">
+                  <span className="flex size-10 items-center justify-center rounded-md bg-blue-100 text-blue-800">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }

@@ -44,8 +44,8 @@ const profileTypeLabels: Record<ProfileType, string> = {
 
 const relationshipLabels: Record<ReportRelationshipType, string> = {
   contractor_to_client: "I am a contractor reporting a client/customer",
-  subcontractor_to_contractor: "I am a subcontractor reporting a contractor/business",
-  contractor_to_subcontractor: "I am a contractor reporting a subcontractor/trade pro",
+  subcontractor_to_contractor: "I am a subcontractor reporting a contractor or GC",
+  contractor_to_subcontractor: "I am a contractor reporting a subcontractor or trade crew",
   client_to_contractor: "I am a client/customer reporting a contractor/business",
   business_to_business: "Business-to-business project relationship",
 }
@@ -61,6 +61,18 @@ function defaultRelationshipForProfile(type: ProfileType): ReportRelationshipTyp
   if (type === "subcontractor") return "contractor_to_subcontractor"
 
   return "contractor_to_client"
+}
+
+function relationshipVerificationPlaceholder(profileType: ProfileType) {
+  if (profileType === "subcontractor") {
+    return "Example: We hired this electrical subcontractor for rough-in work. Scope was documented in a signed work order, work dates are known, invoices/photos are available, and the reported issue relates to completion, quality, scheduling, or payment-chain context."
+  }
+
+  if (profileType === "contractor") {
+    return "Example: We worked under this general contractor or service business. Subcontract, invoices, messages, pay applications, completion photos, or retainage records support the relationship."
+  }
+
+  return "Explain how you worked with this client/customer and what documents support the reported experience."
 }
 
 interface ReportSubmissionFormProps {
@@ -239,7 +251,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
                 <Textarea
                   id="relationshipVerificationSummary"
                   name="relationshipVerificationSummary"
-                  placeholder="Explain how you worked with this contractor/subcontractor and what documents support the relationship."
+                  placeholder={relationshipVerificationPlaceholder(subjectProfileType)}
                   className="min-h-24 bg-white"
                 />
                 <FieldError name="relationshipVerificationSummary" errors={state.ok ? undefined : state.fieldErrors} />
@@ -744,20 +756,20 @@ function ReportIntentCard({
 function RoleRequirementsPanel({ profileType }: { profileType: ProfileType }) {
   const isSubcontractor = profileType === "subcontractor"
   const title = isSubcontractor
-    ? "Subcontractor reports need trade and payment-chain context."
+    ? "Subcontractor reports need trade, scope, and payment-chain context."
     : "Contractor reports need business relationship context."
   const items = isSubcontractor
     ? [
         "Choose the trade subtype, such as licensed subcontractor, crew, installer, or specialty trade.",
-        "Use contractor-to-subcontractor or business-to-business relationship context.",
-        "Include trade category, job status, scope agreement, completed work, and evidence description.",
-        "For concerns, describe payment-chain, retainage, scope, or dispute context in neutral terms.",
+        "Use contractor-to-subcontractor or business-to-business relationship context when you hired or worked with the trade partner.",
+        "Include trade category, job status, work authorization, scope agreement, completed work, and evidence description.",
+        "For concerns, describe pay applications, retainage, completion, scope, scheduling, or dispute context in neutral terms.",
       ]
     : [
         "Choose the contractor subtype, such as general contractor, service business, or specialty contractor.",
-        "Use subcontractor-to-contractor, client-to-contractor, or business-to-business relationship context.",
-        "Include service category, job status, scope agreement, completed work, and evidence description.",
-        "For concerns, describe payment, scope, schedule, or dispute context in neutral terms.",
+        "Use subcontractor-to-contractor, client-to-contractor, or business-to-business context when the reported party managed the job or hired the trade.",
+        "Include service category, job status, scope agreement, completed work, authorization, and evidence description.",
+        "For concerns, describe payment, retainage, scope, schedule, or dispute context in neutral terms.",
       ]
 
   return (

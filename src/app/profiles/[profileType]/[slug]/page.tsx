@@ -482,6 +482,16 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
               />
             ) : null}
 
+            {profile.profileType === "subcontractor" ? (
+              <SubcontractorDossierPanel
+                evidenceLabel={profile.evidenceSummaryLabel}
+                relationshipCount={profile.relationships.length}
+                reportCount={profile.reportCount}
+                resolvedCount={profile.resolvedReportCount}
+                subtype={String(profile.profileSubtype ?? "Trade professional")}
+              />
+            ) : null}
+
             <Card className={`rounded-md shadow-sm ${presentation.accent.panel}`}>
               <CardContent className="p-6">
                 <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${presentation.accent.text}`}>
@@ -729,6 +739,90 @@ function RatingMethodPanel({
               <Progress value={(item.score / item.maxScore) * 100} className="mt-4" />
             </div>
           ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function SubcontractorDossierPanel({
+  evidenceLabel,
+  relationshipCount,
+  reportCount,
+  resolvedCount,
+  subtype,
+}: {
+  evidenceLabel: string
+  relationshipCount: number
+  reportCount: number
+  resolvedCount: number
+  subtype: string
+}) {
+  const items = [
+    {
+      icon: Wrench,
+      label: "Trade scope",
+      value: subtype,
+      text: "Subcontractor profiles start with the trade role: specialty scope, crew type, installer category, labor-provider context, or licensed-subcontractor category.",
+    },
+    {
+      icon: Handshake,
+      label: "Relationship context",
+      value: relationshipCount > 0 ? `${relationshipCount} linked` : "Review-ready",
+      text: "GC/sub, contractor-to-subcontractor, subcontractor-to-contractor, and business-to-business context is separated from direct client work.",
+    },
+    {
+      icon: ClipboardCheck,
+      label: "Payment-chain context",
+      value: reportCount > 0 ? `${reportCount} public-safe` : "No public reports",
+      text: "Approved summaries can reference retainage, pay applications, invoices, draw requests, milestone billing, or resolution posture without publishing private documents.",
+    },
+    {
+      icon: FileText,
+      label: "Evidence posture",
+      value: evidenceLabel,
+      text: "Raw contracts, invoices, photos, screenshots, messages, and staff notes remain private. Public pages show evidence-on-file labels only.",
+    },
+  ]
+
+  return (
+    <Card className="overflow-hidden rounded-md border-blue-200 bg-gradient-to-br from-blue-950 via-slate-950 to-slate-900 text-white shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-200">
+              Trade partner dossier
+            </p>
+            <h2 className="mt-2 text-2xl font-black">Scope, relationship, and payment-chain context.</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-300">
+              Subcontractor records are designed for project partners, not public shaming. The profile separates trade
+              role, GC/sub documentation, payment-chain history, evidence indicators, and response/correction rights.
+            </p>
+          </div>
+          <div className="rounded-md border border-white/10 bg-white/10 px-4 py-3 text-right">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-200">Resolved context</p>
+            <p className="mt-1 text-3xl font-black">{resolvedCount}</p>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-2">
+          {items.map((item) => {
+            const Icon = item.icon
+
+            return (
+              <div key={item.label} className="rounded-md border border-white/10 bg-white/10 p-4">
+                <div className="flex items-start gap-3">
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-blue-200 text-blue-950">
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-blue-200">{item.label}</p>
+                    <h3 className="mt-1 font-semibold text-white">{item.value}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{item.text}</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </CardContent>
     </Card>
