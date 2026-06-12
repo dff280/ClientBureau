@@ -3,6 +3,7 @@ import Link from "next/link"
 import { redirect } from "next/navigation"
 import {
   AlertCircle,
+  BriefcaseBusiness,
   Building2,
   CheckCircle2,
   CreditCard,
@@ -26,6 +27,7 @@ import { buildBusinessSlug } from "@/lib/business-rating"
 import { getClientDashboardData } from "@/lib/dashboard-data"
 import { buildEnterpriseDashboardSummary } from "@/lib/enterprise-dashboard"
 import { buildTodaysWorkItems } from "@/lib/platform-features"
+import { getProjectJobsService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
   title: "Business Protection Dashboard",
@@ -47,6 +49,7 @@ const workspaceRedirects: Record<string, string> = {
   contracts: "/dashboard/contracts",
   evidence: "/dashboard/evidence",
   growth: "/dashboard/growth",
+  jobs: "/dashboard/jobs",
   lien: "/dashboard/lien-readiness",
   "lien-readiness": "/dashboard/lien-readiness",
   "notice-readiness": "/dashboard/lien-readiness",
@@ -70,7 +73,7 @@ export default async function DashboardPage({
     redirect(workspaceRedirects[requestedWorkspace] ?? "/dashboard")
   }
 
-  const { dashboard, clientProfiles, riskOps } = await getClientDashboardData("/dashboard")
+  const { user, dashboard, clientProfiles, riskOps } = await getClientDashboardData("/dashboard")
 
   if (!dashboard) {
     return (
@@ -91,8 +94,12 @@ export default async function DashboardPage({
   }
 
   const subscriptionTier = dashboard.subscription?.tier ?? "free"
+  const projectJobs = await getProjectJobsService(user.id)
   const businessProfileHref = `/business/${buildBusinessSlug(dashboard.contractor)}`
   const unreadAlerts = riskOps.watchlistAlerts.filter((item) => !item.readAt).length
+  const activeJobs = projectJobs.filter((item) =>
+    ["lead", "estimate", "scheduled", "in_progress", "active", "payment_issue", "disputed"].includes(item.status),
+  ).length
   const signedContracts = riskOps.contractPackets.filter(
     (item) => item.status === "signed" || item.signatureStatus === "fully_signed",
   ).length
@@ -111,6 +118,12 @@ export default async function DashboardPage({
       complete: dashboard.savedSearches.length > 0,
       href: "/search",
       icon: Search,
+    },
+    {
+      label: "Create first job",
+      complete: projectJobs.length > 0,
+      href: "/dashboard/jobs",
+      icon: BriefcaseBusiness,
     },
     {
       label: "Report client experience",
@@ -146,6 +159,9 @@ export default async function DashboardPage({
   const recentContracts = [...riskOps.contractPackets]
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     .slice(0, 3)
+  const recentJobs = [...projectJobs]
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, 3)
   const recentRecovery = [...riskOps.paymentRecoveryCases]
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
     .slice(0, 3)
@@ -164,7 +180,7 @@ export default async function DashboardPage({
       secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
       title={`${dashboard.contractor.businessName} Command Center`}
     >
-      <div className="grid gap-3 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-5">
         <CompactStatusCard
           label="Current plan"
           value={subscriptionTier.replace("_", " ")}
@@ -179,6 +195,12 @@ export default async function DashboardPage({
           label="Searches saved"
           value={dashboard.savedSearches.length.toString()}
           helper="Recent client checks you can revisit"
+        />
+        <CompactStatusCard
+          label="Active jobs"
+          value={activeJobs.toString()}
+          helper="Private job records with scope and participants"
+          tone={activeJobs > 0 ? "amber" : "slate"}
         />
         <CompactStatusCard
           label="Unread alerts"
@@ -207,6 +229,11 @@ export default async function DashboardPage({
               label: "Report a Client Experience",
             },
             {
+              detail: "Create a private job file with property details, scope, and participant roles.",
+              href: "/dashboard/jobs",
+              label: "Create Job",
+            },
+            {
               detail: "Create scope, payment terms, milestones, and a private signing link.",
               href: "/dashboard/contracts",
               label: "Create Contract",
@@ -222,7 +249,7 @@ export default async function DashboardPage({
               label: "Florida Lien Service",
             },
           ]}
-          className="lg:grid-cols-5"
+          className="lg:grid-cols-6"
         />
       </DashboardSection>
 
@@ -314,7 +341,18 @@ export default async function DashboardPage({
         title="Recent reputation activity"
         description="A short snapshot of recent reports, agreements, and payment items that may affect client decisions."
       >
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-4">
+          <RecentList
+            emptyText="No private job records yet."
+            href="/dashboard/jobs"
+            title="Jobs"
+            items={recentJobs.map((job) => ({
+              id: job.id,
+              label: job.title,
+              text: job.shortDescription ?? job.projectType,
+              meta: job.status.replaceAll("_", " "),
+            }))}
+          />
           <RecentList
             emptyText="No reports yet."
             href="/dashboard/reports"
