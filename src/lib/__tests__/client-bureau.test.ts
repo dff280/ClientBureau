@@ -19,6 +19,7 @@ import {
   coreLaunchTables,
   platformLaunchTables,
   requiredContractPacketColumns,
+  requiredFlexibleJobColumns,
   requiredLaunchTables,
   requiredMultiProfileColumns,
   requiredRatingTransparencyColumns,
@@ -610,7 +611,19 @@ describe("launch health gates", () => {
       exists: !missing.includes(`${column.table}.${column.name}`),
     }))
 
-    return [...contractColumns, ...revenueColumns, ...multiProfileColumns, ...ratingTransparencyColumns]
+    const flexibleJobColumns = requiredFlexibleJobColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: !missing.includes(`${column.table}.${column.name}`),
+    }))
+
+    return [
+      ...contractColumns,
+      ...revenueColumns,
+      ...multiProfileColumns,
+      ...ratingTransparencyColumns,
+      ...flexibleJobColumns,
+    ]
   }
 
   it("keeps core and platform launch table groups distinct", () => {
@@ -643,12 +656,14 @@ describe("launch health gates", () => {
         requiredContractPacketColumns.length +
         requiredRevenueWorkflowColumns.length +
         requiredMultiProfileColumns.length +
-        requiredRatingTransparencyColumns.length,
+        requiredRatingTransparencyColumns.length +
+        requiredFlexibleJobColumns.length,
       total:
         requiredContractPacketColumns.length +
         requiredRevenueWorkflowColumns.length +
         requiredMultiProfileColumns.length +
-        requiredRatingTransparencyColumns.length,
+        requiredRatingTransparencyColumns.length +
+        requiredFlexibleJobColumns.length,
     })
   })
 
@@ -2219,5 +2234,7 @@ describe("platform expansion schemas", () => {
 
     expect(typedInsert.scope_summary).toContain("Scope")
     expect(requiredContractPacketColumns).toContain("signed_snapshot")
+    expect(requiredFlexibleJobColumns).toContainEqual({ table: "project_jobs", name: "job_number" })
+    expect(requiredFlexibleJobColumns).toContainEqual({ table: "project_job_profiles", name: "participant_status" })
   })
 })

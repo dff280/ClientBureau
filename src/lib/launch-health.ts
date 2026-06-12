@@ -140,11 +140,37 @@ export const requiredRatingTransparencyColumns = [
   { table: "client_reports", name: "relationship_verification_summary" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
+export const requiredFlexibleJobColumns = [
+  { table: "entity_profiles", name: "account_capabilities" },
+  { table: "project_jobs", name: "job_number" },
+  { table: "project_jobs", name: "job_type" },
+  { table: "project_jobs", name: "priority" },
+  { table: "project_jobs", name: "short_description" },
+  { table: "project_jobs", name: "detailed_scope_of_work" },
+  { table: "project_jobs", name: "trade_category" },
+  { table: "project_jobs", name: "address_line1" },
+  { table: "project_jobs", name: "postal_code" },
+  { table: "project_jobs", name: "property_type" },
+  { table: "project_jobs", name: "access_instructions" },
+  { table: "project_jobs", name: "private_access_code" },
+  { table: "project_jobs", name: "target_completion_date" },
+  { table: "project_jobs", name: "customer_facing_notes" },
+  { table: "project_job_profiles", name: "hired_by_profile_id" },
+  { table: "project_job_profiles", name: "reports_to_participant_id" },
+  { table: "project_job_profiles", name: "billing_relationship" },
+  { table: "project_job_profiles", name: "participant_status" },
+  { table: "project_job_profiles", name: "scope_assigned" },
+  { table: "project_job_profiles", name: "contract_amount" },
+  { table: "project_job_profiles", name: "notes" },
+  { table: "project_job_profiles", name: "updated_at" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
 const requiredPlatformColumnTotal =
   requiredContractPacketColumns.length +
   requiredRevenueWorkflowColumns.length +
   requiredMultiProfileColumns.length +
-  requiredRatingTransparencyColumns.length
+  requiredRatingTransparencyColumns.length +
+  requiredFlexibleJobColumns.length
 
 type LaunchColumnStatus = {
   table: RequiredTable
@@ -246,7 +272,20 @@ async function checkRequiredColumns() {
       message: "Supabase service role is not configured.",
     }))
 
-    return [...contractColumns, ...revenueColumns, ...multiProfileColumns, ...ratingTransparencyColumns]
+    const flexibleJobColumns: LaunchColumnStatus[] = requiredFlexibleJobColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+
+    return [
+      ...contractColumns,
+      ...revenueColumns,
+      ...multiProfileColumns,
+      ...ratingTransparencyColumns,
+      ...flexibleJobColumns,
+    ]
   }
 
   const supabase = createServiceClient()
@@ -260,6 +299,7 @@ async function checkRequiredColumns() {
     ...requiredRevenueWorkflowColumns,
     ...requiredMultiProfileColumns,
     ...requiredRatingTransparencyColumns,
+    ...requiredFlexibleJobColumns,
   ]
 
   return Promise.all(
@@ -316,11 +356,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Guided ops required"
     readinessMessage =
-      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0019 before moving advanced tools to live account records."
+      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0020 before moving advanced tools to live account records."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, response graph, or rating transparency columns are missing. Apply migrations through 0019 before using live advanced workflows."
+      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, flexible job participants, response graph, or rating transparency columns are missing. Apply migrations through 0020 before using live advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin operations are saving to live account records."
