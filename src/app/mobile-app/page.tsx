@@ -52,7 +52,7 @@ export const metadata: Metadata = {
 
 const proof = [
   {
-    label: "Current release",
+    label: "Current mobile release",
     value: mobileReleaseVersion,
     text: hasDirectApk
       ? "Direct Android install for contractors and service business owners."
