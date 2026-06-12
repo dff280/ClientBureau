@@ -9,37 +9,65 @@ import { getSiteUrl } from "@/lib/env"
 export const metadata: Metadata = {
   title: "Business Rating Methodology",
   description:
-    "Learn how Client Bureau Business Rating summarizes verification, documentation, public contribution history, resolution posture, and account completeness.",
+    "Learn how Client Bureau rates contractor business profiles and subcontractor trade partner profiles with role-specific trust factors.",
   alternates: {
     canonical: `${getSiteUrl()}/business-rating-methodology`,
   },
 }
 
+const ratingModels = [
+  {
+    title: "Contractor Business Reliability Rating",
+    label: "Prime and service-business profile",
+    text: "Built for contractors, service businesses, and customer-facing operators. It weighs business identity, client-facing project history, contracts, private evidence, payment resolution posture, and account readiness.",
+    factors: [
+      "Business identity and verification",
+      "Client-facing project history",
+      "Contracts and evidence discipline",
+      "Payment and resolution posture",
+      "Account and response readiness",
+    ],
+  },
+  {
+    title: "Subcontractor Trade Partner Reliability Rating",
+    label: "Trade and crew profile",
+    text: "Built for subcontractors, installers, crews, labor providers, and specialty trades. It weighs trade identity, scope documentation, GC/sub relationship history, payment-chain context, evidence readiness, and resolution posture.",
+    factors: [
+      "Trade identity and credential readiness",
+      "Scope and documentation clarity",
+      "GC/sub relationship history",
+      "Payment-chain reliability context",
+      "Evidence and completion readiness",
+      "Communication and resolution posture",
+    ],
+  },
+]
+
 const factors = [
   {
-    title: "Business verification",
-    weight: "30%",
-    text: "Verification status is the largest factor. Verified businesses receive the strongest signal, pending businesses receive partial credit, and basic profiles remain review pending until the account has more trusted context.",
+    title: "Role-specific verification",
+    weight: "Primary",
+    text: "Contractor profiles emphasize operating business identity, service area, and customer-facing readiness. Subcontractor profiles emphasize trade identity, license or insurance indicators where available, crew readiness, and GC/sub relationship context.",
   },
   {
-    title: "Documentation discipline",
-    weight: "25%",
-    text: "Client Bureau rewards consistent private documentation, such as invoices, contracts, screenshots, photos, PDFs, and evidence summaries connected to reports or business workflows.",
+    title: "Project documentation",
+    weight: "High",
+    text: "Client Bureau rewards private documentation such as signed agreements, change orders, invoices, screenshots, photos, PDFs, and evidence summaries connected to moderated reports or business workflows.",
   },
   {
-    title: "Approved contribution history",
-    weight: "20%",
-    text: "The rating considers admin-approved contribution activity, including documented client reports and positive client experiences submitted through moderation.",
+    title: "Approved relationship history",
+    weight: "High",
+    text: "Contractor ratings consider client-facing approved records. Subcontractor ratings place more weight on documented contractor-to-subcontractor, subcontractor-to-contractor, and business-to-business work relationships.",
   },
   {
-    title: "Resolution posture",
-    weight: "15%",
-    text: "Open dispute context and moderation outcomes affect the rating. The goal is to reward careful documentation and neutral, response-aware record handling.",
+    title: "Payment and resolution posture",
+    weight: "High",
+    text: "Open dispute context, unresolved balances, retainage/payment-chain signals, and documented resolution outcomes influence the rating. The system rewards clear records and response-aware handling.",
   },
   {
-    title: "Account completeness",
-    weight: "10%",
-    text: "Complete platform setup, active plan status, and business profile readiness help increase confidence that the profile reflects a real operating business.",
+    title: "Profile readiness",
+    weight: "Support",
+    text: "Complete platform setup, profile claiming, response readiness, business details, and documentation habits help increase confidence that the profile reflects a real operating business or trade partner.",
   },
 ]
 
@@ -55,17 +83,17 @@ export default function BusinessRatingMethodologyPage() {
     <main className="bg-slate-100">
       <PremiumHero
         eyebrow="Business Rating methodology"
-        title="How Client Bureau Business Rating works."
-        description="Business Rating is a public trust signal for contractors and service businesses. It summarizes verification, documentation habits, approved contribution history, resolution posture, and account completeness in a letter grade and 0-100 score."
+        title="How Client Bureau business and trade ratings work."
+        description="Client Bureau now uses role-specific rating models: one for contractor business reliability and one for subcontractor trade partner reliability. Both are public trust signals, not customer star reviews."
         primary={{ href: "/businesses", label: "Browse business profiles", icon: Building2 }}
         secondary={{ href: "/score-methodology", label: "Client rating methodology", icon: HelpCircle }}
         aside={
           <div className="space-y-4 text-white">
             <Star className="size-9 text-amber-300" aria-hidden="true" />
-            <p className="text-xl font-semibold">Readiness, not customer stars.</p>
+            <p className="text-xl font-semibold">Two roles. Two rating models.</p>
             <p className="text-sm leading-6 text-slate-300">
-              Business Rating evaluates platform readiness and documentation habits. It is not a
-              workmanship guarantee, license verification service, or customer review score.
+              Contractors and subcontractors work from different risk positions, so Client Bureau
+              separates business reliability from trade partner reliability.
             </p>
           </div>
         }
@@ -74,8 +102,8 @@ export default function BusinessRatingMethodologyPage() {
       <PremiumProofStrip
         items={[
           { label: "Range", value: "0-100", text: "Presented with a public letter grade." },
-          { label: "Top factor", value: "Verification", text: "Business verification carries the largest weight." },
-          { label: "Process", value: "Documentation", text: "Contracts, evidence, reports, and resolution posture matter." },
+          { label: "Models", value: "2", text: "Separate contractor and subcontractor rating scales." },
+          { label: "Process", value: "Evidence", text: "Contracts, reports, trade scope, and resolution posture matter." },
           { label: "Privacy", value: "Protected", text: "Private account data is not displayed publicly." },
         ]}
         dark
@@ -103,6 +131,29 @@ export default function BusinessRatingMethodologyPage() {
             </CardContent>
           </Card>
 
+          <div className="grid gap-5 lg:grid-cols-2">
+            {ratingModels.map((model) => (
+              <Card key={model.title} className="rounded-md border-slate-200 bg-white shadow-sm">
+                <CardHeader>
+                  <Badge variant="outline" className="w-fit rounded-md bg-amber-50 text-amber-900">
+                    {model.label}
+                  </Badge>
+                  <CardTitle className="text-2xl">{model.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm leading-6 text-slate-600">{model.text}</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {model.factors.map((item) => (
+                      <div key={item} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-800">
+                        {item}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
           <div className="grid gap-4 lg:grid-cols-5">
             {factors.map((factor) => (
               <Card key={factor.title} className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -129,17 +180,17 @@ export default function BusinessRatingMethodologyPage() {
               </CardHeader>
               <CardContent className="space-y-4 text-sm leading-6 text-slate-600">
                 <p>
-                  Client Bureau Business Rating is designed for business-owner protection and trust
-                  presentation. It helps contractors show that they use documented workflows,
-                  keep evidence private, submit reports through moderation, and maintain a more
-                  complete business profile.
+                  Client Bureau rating models are designed for business-owner protection and trust
+                  presentation. Contractor profiles help service businesses show verified identity,
+                  documented workflows, private evidence handling, moderated reports, and response
+                  readiness. Subcontractor profiles help trade professionals show scope clarity,
+                  documented GC/sub relationships, payment-chain context, and evidence readiness.
                 </p>
                 <p>
-                  The rating is intentionally not built as a public complaint score. It rewards
-                  process quality: verification, documentation, approved contribution history,
-                  resolution posture, and profile completeness. As more verified and approved
-                  context becomes available, rating confidence can move from Basic to Moderate or
-                  Strong.
+                  Neither rating is built as a public complaint score. They reward process quality:
+                  verification, documentation, approved relationship history, resolution posture,
+                  and profile completeness. As more verified and approved context becomes available,
+                  rating confidence can move from Basic to Moderate or Strong.
                 </p>
                 <p>
                   Public pages should remain neutral and factual. A high rating does not mean every
