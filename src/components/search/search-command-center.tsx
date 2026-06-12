@@ -380,7 +380,7 @@ export function SearchCommandCenter({
                       </option>
                     ))}
                   </select>
-                  <Button className="h-11 bg-slate-950 px-6 text-white hover:bg-slate-800" type="submit">
+                  <Button className="h-11 w-full justify-center bg-slate-950 px-6 text-white hover:bg-slate-800 md:w-auto" type="submit">
                     Check
                     <ArrowRight aria-hidden="true" />
                   </Button>
@@ -433,9 +433,9 @@ export function SearchCommandCenter({
                         key={profile.id}
                         href={`/client/${profile.publicSlug}`}
                         onClick={() => trackSearchEvent("result_viewed", instantProfiles.length)}
-                        className="bureau-hover-lift group rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:shadow-md"
+                        className="bureau-hover-lift group rounded-md border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-300 hover:shadow-md sm:p-4"
                       >
-                        <div className="flex items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
                               <h3 className="font-semibold text-slate-950">{formatClientName(profile)}</h3>
@@ -451,7 +451,7 @@ export function SearchCommandCenter({
                               {profile.city}, {profile.state}
                             </p>
                           </div>
-                          <div className="shrink-0 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center">
+                          <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center sm:w-auto sm:shrink-0">
                             <p className="text-xl font-semibold text-slate-950">{profile.clientBureauScore}</p>
                             <p className="text-[11px] font-semibold uppercase text-slate-500">rating</p>
                           </div>
@@ -674,7 +674,7 @@ export function SearchCommandCenter({
             </p>
           </div>
         </div>
-        <Button asChild variant="outline">
+        <Button asChild variant="outline" className="w-full justify-center sm:w-auto">
           <Link href="/submit-report">
             <FilePlus2 aria-hidden="true" />
             Report a Client Experience

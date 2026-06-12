@@ -121,13 +121,27 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
     letter-spacing: 0;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+  }
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
   }
 }
 
@@ -137,7 +151,7 @@
   }
 
   .bureau-section {
-    @apply py-14 sm:py-20;
+    @apply py-10 sm:py-16 lg:py-20;
   }
 
   .premium-hero-surface {
@@ -185,6 +199,30 @@
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98)),
       linear-gradient(90deg, rgba(203, 213, 225, 0.35) 1px, transparent 1px);
+  }
+
+  .mobile-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mobile-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .touch-target {
+    min-height: 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  .bureau-hover-lift:hover {
+    transform: none;
+    box-shadow: none;
   }
 }
 

@@ -77,7 +77,7 @@ export function ClientDashboardShell({
   return (
     <section className="bureau-paper min-h-screen">
       <div className="premium-hero-surface relative isolate overflow-hidden border-b border-slate-900 bg-slate-950 text-white">
-        <div className="bureau-container flex flex-col justify-between gap-5 py-7 lg:flex-row lg:items-end">
+        <div className="bureau-container flex flex-col justify-between gap-5 py-6 sm:py-7 lg:flex-row lg:items-end">
           <div className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <Badge className="rounded-md bg-amber-500 text-slate-950">
@@ -87,13 +87,13 @@ export function ClientDashboardShell({
                 Private workspace
               </Badge>
             </div>
-            <h1 className="mt-4 text-3xl font-semibold tracking-normal sm:text-4xl">{title}</h1>
+            <h1 className="mt-4 text-2xl font-semibold tracking-normal sm:text-4xl">{title}</h1>
             <p className="mt-3 text-sm leading-6 text-slate-300">{description}</p>
           </div>
           {(primaryAction || secondaryAction) ? (
-            <div className="flex flex-wrap gap-3">
+            <div className="grid gap-3 sm:flex sm:flex-wrap">
               {primaryAction ? (
-                <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
+                <Button asChild className="w-full justify-center bg-amber-500 text-slate-950 hover:bg-amber-400 sm:w-auto">
                   <Link href={primaryAction.href}>
                     {PrimaryIcon ? <PrimaryIcon aria-hidden="true" /> : null}
                     {primaryAction.label}
@@ -101,7 +101,7 @@ export function ClientDashboardShell({
                 </Button>
               ) : null}
               {secondaryAction ? (
-                <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
+                <Button asChild variant="outline" className="w-full justify-center border-white/20 bg-white/10 text-white hover:bg-white/15 sm:w-auto">
                   <Link href={secondaryAction.href}>
                     {SecondaryIcon ? <SecondaryIcon aria-hidden="true" /> : null}
                     {secondaryAction.label}
@@ -126,7 +126,7 @@ export function ClientDashboardShell({
           </div>
           <nav
             aria-label="Mobile dashboard tools"
-            className="mt-3 flex max-w-full gap-2 overflow-x-auto overscroll-x-contain pb-1"
+            className="mobile-scrollbar -mx-4 mt-3 flex max-w-[calc(100%+2rem)] snap-x gap-2 overflow-x-auto overscroll-x-contain px-4 pb-1"
           >
             {mobileDashboardLinks.map((item) => {
               const Icon = navIcons[item.label] ?? ShieldCheck
@@ -137,7 +137,7 @@ export function ClientDashboardShell({
                   key={`mobile-${item.href}-${item.label}`}
                   href={item.href}
                   className={cn(
-                    "inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium shadow-sm transition",
+                    "inline-flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium shadow-sm transition",
                     active
                       ? "border-slate-950 bg-slate-950 text-white"
                       : "border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:text-slate-950",
@@ -155,7 +155,7 @@ export function ClientDashboardShell({
         </div>
       </div>
 
-      <div className="bureau-container grid gap-6 py-6 lg:grid-cols-[260px_1fr]">
+      <div className="bureau-container grid gap-5 py-4 sm:gap-6 sm:py-6 lg:grid-cols-[260px_1fr]">
         <aside className="hidden h-fit rounded-md border border-slate-200 bg-white p-3 shadow-lg shadow-slate-950/5 lg:sticky lg:top-4 lg:block">
           <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold uppercase text-amber-700">Tools</p>
@@ -193,7 +193,7 @@ export function ClientDashboardShell({
             ))}
           </nav>
         </aside>
-        <main className="min-w-0 space-y-6">{children}</main>
+        <main className="min-w-0 space-y-5 sm:space-y-6">{children}</main>
       </div>
     </section>
   )

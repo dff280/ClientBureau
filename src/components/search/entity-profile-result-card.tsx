@@ -30,7 +30,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
     <Card className={`overflow-hidden rounded-md border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-950/10 ${presentation.cardClassName}`}>
       <CardContent className="p-0">
         <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_286px]">
-          <div className="space-y-5 p-5">
+          <div className="space-y-4 p-4 sm:space-y-5 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
@@ -46,7 +46,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                   </span>
                 </div>
 
-                <h2 className="mt-3 text-2xl font-semibold tracking-normal text-slate-950">{result.displayName}</h2>
+                <h2 className="mt-3 text-xl font-semibold tracking-normal text-slate-950 sm:text-2xl">{result.displayName}</h2>
                 {result.businessName ? (
                   <p className="mt-1 text-sm font-semibold text-slate-700">{result.businessName}</p>
                 ) : null}
@@ -60,14 +60,14 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                 </p>
               </div>
 
-              <div className="grid min-w-32 rounded-md border border-slate-200 bg-slate-50 p-3 text-center">
+              <div className="grid w-full rounded-md border border-slate-200 bg-slate-50 p-3 text-center sm:w-auto sm:min-w-32">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{presentation.scoreLabel}</p>
                 <p className={`mt-1 text-3xl font-semibold ${scoreTone}`}>{result.ratingScore}</p>
                 <p className="text-xs font-semibold text-slate-600">{String(result.ratingBand)}</p>
               </div>
             </div>
 
-            <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 sm:p-4">
               <p className={`text-xs font-semibold uppercase ${presentation.accentText}`}>{presentation.contextLabel}</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 {result.latestSummary ||
@@ -82,7 +82,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
             </div>
           </div>
 
-          <aside className="flex flex-col justify-between gap-5 border-t border-slate-200 bg-slate-50 p-5 lg:border-l lg:border-t-0">
+          <aside className="flex flex-col justify-between gap-4 border-t border-slate-200 bg-slate-50 p-4 sm:gap-5 sm:p-5 lg:border-l lg:border-t-0">
             <div>
               <p className="text-xs font-semibold uppercase text-amber-700">Recommended next step</p>
               <h3 className="mt-2 font-semibold text-slate-950">{result.nextAction}</h3>
@@ -92,23 +92,23 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
             </div>
 
             <div className="grid gap-2">
-              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+              <Button asChild className="w-full justify-center bg-slate-950 text-white hover:bg-slate-800">
                 <Link href={result.profileHref}>
                   <Eye aria-hidden="true" />
                   {presentation.viewLabel}
                   <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="w-full justify-center">
                 <Link href={watchHref}>
                   <Bell aria-hidden="true" />
                   {presentation.watchLabel}
                 </Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="w-full justify-center">
                 <Link href={submitHref}>{presentation.reportLabel}</Link>
               </Button>
-              <Button asChild variant="ghost">
+              <Button asChild variant="ghost" className="w-full justify-center">
                 <Link href={claimHref}>{presentation.claimLabel}</Link>
               </Button>
             </div>
@@ -253,7 +253,7 @@ function Signal({
   label: string
 }) {
   return (
-    <div className="flex min-h-14 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm">
+    <div className="flex min-h-12 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm sm:min-h-14">
       <span className={iconClassName}>{icon}</span>
       <span>{label}</span>
     </div>

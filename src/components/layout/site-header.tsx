@@ -76,8 +76,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/92 shadow-sm shadow-slate-950/[0.03] backdrop-blur">
-      <div className="bureau-container flex min-h-16 items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-4">
+      <div className="bureau-container flex min-h-16 items-center justify-between gap-2 sm:gap-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <BrandMark />
           <span className="hidden max-w-52 text-xs font-semibold leading-5 text-slate-500 xl:inline">
             {corePositioning}
@@ -121,7 +121,7 @@ export function SiteHeader() {
                 <Menu aria-hidden="true" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80">
+            <SheetContent side="left" className="mobile-safe-bottom w-[min(22rem,calc(100vw-1.5rem))] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>
                   <BrandMark />
@@ -132,7 +132,7 @@ export function SiteHeader() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
+                    className="touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
                   >
                     <span className="font-semibold">{item.label}</span>
                     {item.description ? (
@@ -163,7 +163,7 @@ export function SiteHeader() {
                 {session.authenticated ? (
                   <Link
                     href="/api/auth/logout"
-                    className="rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950"
+                    className="touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950"
                   >
                     Logout
                   </Link>
@@ -171,13 +171,13 @@ export function SiteHeader() {
                   <>
                     <Link
                       href="/login"
-                      className="rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950"
+                      className="touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-slate-950"
                     >
                       Login
                     </Link>
                     <Link
                       href="/signup"
-                      className="rounded-md border border-slate-950 bg-slate-950 px-3 py-3 text-white shadow-sm transition hover:bg-slate-800"
+                      className="touch-target rounded-md border border-slate-950 bg-slate-950 px-3 py-3 text-white shadow-sm transition hover:bg-slate-800"
                     >
                       Create Account
                     </Link>
@@ -195,7 +195,7 @@ export function SiteHeader() {
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" className="bg-slate-950 text-white hover:bg-slate-800">
                     <UserCircle aria-hidden="true" />
-                    Account
+                    <span className="hidden sm:inline">Account</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -235,7 +235,7 @@ export function SiteHeader() {
                   Login
                 </Link>
               </Button>
-              <Button size="sm" asChild className="bg-slate-950 text-white hover:bg-slate-800">
+              <Button size="sm" asChild className="hidden bg-slate-950 text-white hover:bg-slate-800 sm:inline-flex">
                 <Link href="/signup">
                   <FilePlus2 aria-hidden="true" />
                   Create Account

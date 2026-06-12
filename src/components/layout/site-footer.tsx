@@ -12,7 +12,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-slate-200 bg-slate-950 text-white">
-      <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1.1fr_1.8fr_0.8fr]">
+      <div className="bureau-container grid gap-8 py-10 sm:py-12 lg:grid-cols-[1.1fr_1.8fr_0.8fr]">
         <div className="space-y-4">
           <div className="inline-flex rounded-md bg-white p-2 text-slate-950">
             <BrandMark />
@@ -43,7 +43,7 @@ export function SiteFooter() {
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">{group.title}</p>
               <div className="grid gap-2">
                 {group.links.map((link) => (
-                  <Link key={link.href} href={link.href} className="text-slate-300 hover:text-white">
+                  <Link key={link.href} href={link.href} className="inline-flex min-h-8 items-center text-slate-300 hover:text-white">
                     {link.label}
                   </Link>
                 ))}
@@ -71,7 +71,7 @@ export function SiteFooter() {
           </Link>
         </div>
       </div>
-      <div className="border-t border-white/10 py-4">
+      <div className="mobile-safe-bottom border-t border-white/10 py-4">
         <div className="bureau-container flex flex-col gap-2 text-xs text-slate-400 sm:flex-row sm:items-center sm:justify-between">
           <span>Copyright 2026 Client Bureau. All rights reserved.</span>
           <span>Public reports are moderated and presented as reported experiences.</span>
