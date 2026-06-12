@@ -265,7 +265,7 @@ export function deriveEntityProfiles(input: {
     return {
       id: `entity_contractor_${contractor.id}`,
       profileType: isSubcontractor ? "subcontractor" : "contractor",
-      profileSubtype: isSubcontractor ? "Individual trade professional" : contractor.businessType ?? "Service business",
+      profileSubtype: isSubcontractor ? contractor.businessType ?? "Individual trade professional" : contractor.businessType ?? "Service business",
       displayName: contractor.businessName,
       businessName: contractor.businessName,
       city: contractor.city,
@@ -275,7 +275,11 @@ export function deriveEntityProfiles(input: {
       claimedStatus: "claimed",
       ownerUserId: contractor.userId,
       verificationLevel: contractor.verificationStatus === "verified" ? "business_verified" : "email_verified",
-      verificationBadges: contractor.verificationStatus === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
+      verificationBadges: contractor.verificationBadges?.length
+        ? contractor.verificationBadges
+        : contractor.verificationStatus === "verified"
+          ? ["Verified business", "Verified email"]
+          : ["Verified email"],
       duplicateGroupKey: duplicateGroupKey({
         displayName: contractor.businessName,
         businessName: contractor.businessName,
@@ -292,7 +296,9 @@ export function deriveEntityProfiles(input: {
       ).length,
       evidenceOnFileCount: reports.filter((report) => report.evidenceAttached).length,
       responseCount: 0,
-      publicSummary: "Business profile with verification context and moderated project activity.",
+      publicSummary: isSubcontractor
+        ? "Trade partner profile with verification context, documented scope signals, and moderated payment-chain activity."
+        : "Business profile with verification context and moderated project activity.",
       isPublic: true,
       createdAt: contractor.createdAt,
       updatedAt: publicBusiness?.lastUpdated ?? contractor.createdAt,

@@ -51,6 +51,13 @@ const profileSubtypeOptions: Record<ProfileType, readonly string[]> = {
   subcontractor: subcontractorProfileSubtypes,
 }
 
+function defaultRelationshipForProfile(type: ProfileType): ReportRelationshipType {
+  if (type === "contractor") return "subcontractor_to_contractor"
+  if (type === "subcontractor") return "contractor_to_subcontractor"
+
+  return "contractor_to_client"
+}
+
 interface ReportSubmissionFormProps {
   defaults?: Partial<Record<string, string>>
 }
@@ -61,9 +68,15 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
   const initialCategory = defaults.intent === "positive" ? positiveReportCategories[0] : reportCategories[0]
   const initialProfileType = profileTypes.includes(defaults.profileType as ProfileType) ? defaults.profileType as ProfileType : "client"
   const [subjectProfileType, setSubjectProfileType] = useState<ProfileType>(initialProfileType)
+  const [relationshipType, setRelationshipType] = useState<ReportRelationshipType>(
+    reportRelationshipTypes.includes(defaults.relationshipType as ReportRelationshipType)
+      ? (defaults.relationshipType as ReportRelationshipType)
+      : defaultRelationshipForProfile(initialProfileType),
+  )
   const [reportCategory, setReportCategory] = useState<ReportCategory>(initialCategory)
   const [amountUnpaid, setAmountUnpaid] = useState(defaults.amountUnpaid ?? "")
   const isPositiveReport = isPositiveReportCategory(reportCategory)
+  const isBusinessProfileReport = subjectProfileType === "contractor" || subjectProfileType === "subcontractor"
 
   useEffect(() => {
     if (state.message) {
@@ -103,7 +116,11 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               name="subjectProfileType"
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               value={subjectProfileType}
-              onChange={(event) => setSubjectProfileType(event.target.value as ProfileType)}
+              onChange={(event) => {
+                const nextType = event.target.value as ProfileType
+                setSubjectProfileType(nextType)
+                setRelationshipType(defaultRelationshipForProfile(nextType))
+              }}
             >
               {profileTypes.map((type) => (
                 <option key={type} value={type}>{profileTypeLabels[type]}</option>
@@ -133,7 +150,8 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               id="relationshipType"
               name="relationshipType"
               className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-              defaultValue="contractor_to_client"
+              value={relationshipType}
+              onChange={(event) => setRelationshipType(event.target.value as ReportRelationshipType)}
             >
               {reportRelationshipTypes.map((type) => (
                 <option key={type} value={type}>{relationshipLabels[type]}</option>
@@ -142,7 +160,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <FieldError name="relationshipType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="clientType">Client type</Label>
+            <Label htmlFor="clientType">Reported party type</Label>
             <select id="clientType" name="clientType" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue="Individual">
               {clientTypes.map((type) => (
                 <option key={type} value={type}>{type}</option>
@@ -150,9 +168,22 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             </select>
             <FieldError name="clientType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
+          {isBusinessProfileReport ? (
+            <div className="md:col-span-2">
+              <RoleRequirementsPanel profileType={subjectProfileType} />
+            </div>
+          ) : null}
           <div className="space-y-2">
-            <Label htmlFor="businessName">Business name optional</Label>
-            <Input id="businessName" name="businessName" defaultValue={defaults.businessName} placeholder="ABC Property Group" />
+            <Label htmlFor="businessName">
+              {isBusinessProfileReport ? "Business or display name" : "Business name optional"}
+            </Label>
+            <Input
+              id="businessName"
+              name="businessName"
+              defaultValue={defaults.businessName}
+              placeholder={isBusinessProfileReport ? "Bright Line Electric" : "ABC Property Group"}
+            />
+            <FieldError name="businessName" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="firstName">Reported party first name</Label>
@@ -203,7 +234,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
         <div className="grid gap-4 md:grid-cols-2">
           {defaults.projectJobId ? <input type="hidden" name="projectJobId" value={defaults.projectJobId} /> : null}
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="projectJobTitle">Project/job label</Label>
+            <Label htmlFor="projectJobTitle">Project/job label{isBusinessProfileReport ? " required" : ""}</Label>
             <Input id="projectJobTitle" name="projectJobTitle" defaultValue={defaults.projectJobTitle} placeholder="Smith kitchen remodel, Orlando" />
             <p className="text-xs leading-5 text-slate-500">
               This creates a private job record that connects reports, evidence, contracts, responses, and future updates.
@@ -211,7 +242,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <FieldError name="projectJobTitle" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tradeCategory">Trade or service category</Label>
+            <Label htmlFor="tradeCategory">Trade or service category{isBusinessProfileReport ? " required" : ""}</Label>
             <Input id="tradeCategory" name="tradeCategory" placeholder="Painting, roofing, remodeling, HVAC" />
             <FieldError name="tradeCategory" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
@@ -221,12 +252,12 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             <FieldError name="projectType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="jobType">Job type</Label>
+            <Label htmlFor="jobType">Job type{isBusinessProfileReport ? " required" : ""}</Label>
             <Input id="jobType" name="jobType" placeholder="Residential repaint, emergency repair, commercial install" />
             <FieldError name="jobType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="jobStatus">Job status</Label>
+            <Label htmlFor="jobStatus">Job status{isBusinessProfileReport ? " required" : ""}</Label>
             <select id="jobStatus" name="jobStatus" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" defaultValue="">
               <option value="">Select status</option>
               {jobStatuses.map((status) => (
@@ -514,7 +545,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
 
       <WorkflowStep step="7" title="Review and attest" text="Before submission, confirm the report is accurate, documentable, and appropriate for moderation.">
         <div className="grid gap-3">
-          <Attestation name="relationshipCertification" label="I confirm I had a real commercial relationship with this client." errors={state.ok ? undefined : state.fieldErrors} />
+          <Attestation name="relationshipCertification" label="I confirm I had a real commercial relationship with the reported party." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation name="truthfulCertification" label="I certify this report is truthful to the best of my knowledge." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation name="documentationCertification" label="I can provide documentation or have accurately described the documentation available." errors={state.ok ? undefined : state.fieldErrors} />
           <Attestation
@@ -581,6 +612,40 @@ function ReportIntentCard({
         {text}
       </span>
     </button>
+  )
+}
+
+function RoleRequirementsPanel({ profileType }: { profileType: ProfileType }) {
+  const isSubcontractor = profileType === "subcontractor"
+  const title = isSubcontractor
+    ? "Subcontractor reports need trade and payment-chain context."
+    : "Contractor reports need business relationship context."
+  const items = isSubcontractor
+    ? [
+        "Choose the trade subtype, such as licensed subcontractor, crew, installer, or specialty trade.",
+        "Use contractor-to-subcontractor or business-to-business relationship context.",
+        "Include trade category, job status, scope agreement, completed work, and evidence description.",
+        "For concerns, describe payment-chain, retainage, scope, or dispute context in neutral terms.",
+      ]
+    : [
+        "Choose the contractor subtype, such as general contractor, service business, or specialty contractor.",
+        "Use subcontractor-to-contractor, client-to-contractor, or business-to-business relationship context.",
+        "Include service category, job status, scope agreement, completed work, and evidence description.",
+        "For concerns, describe payment, scope, schedule, or dispute context in neutral terms.",
+      ]
+
+  return (
+    <div className="rounded-md border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
+      <p className="font-semibold">{title}</p>
+      <div className="mt-3 grid gap-2 md:grid-cols-2">
+        {items.map((item) => (
+          <div key={item} className="flex gap-2 leading-6">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-blue-700" aria-hidden="true" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 

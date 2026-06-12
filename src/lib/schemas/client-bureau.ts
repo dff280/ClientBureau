@@ -180,6 +180,83 @@ export const clientReportSchema = z
     responseRightCertification: z.coerce.boolean().optional(),
     noHarassmentCertification: z.coerce.boolean().optional(),
   })
+  .superRefine((value, ctx) => {
+    const isBusinessProfile = value.subjectProfileType === "contractor" || value.subjectProfileType === "subcontractor"
+
+    if (!isBusinessProfile) return
+
+    const addIssue = (path: keyof typeof value, message: string) => {
+      ctx.addIssue({ code: "custom", path: [path], message })
+    }
+    const hasText = (text?: string, min = 2) => Boolean(text && text.trim().length >= min)
+    const isConcernReport = !isPositiveReportCategory(value.reportCategory)
+
+    if (!value.subjectProfileSubtype) {
+      addIssue("subjectProfileSubtype", "Choose the contractor or subcontractor profile subtype.")
+    }
+
+    if (!value.relationshipType) {
+      addIssue("relationshipType", "Choose the business relationship for this report.")
+    }
+
+    if (
+      value.subjectProfileType === "contractor" &&
+      value.relationshipType &&
+      !["subcontractor_to_contractor", "client_to_contractor", "business_to_business"].includes(value.relationshipType)
+    ) {
+      addIssue(
+        "relationshipType",
+        "Reports about contractors should use subcontractor-to-contractor, client-to-contractor, or business-to-business context.",
+      )
+    }
+
+    if (
+      value.subjectProfileType === "subcontractor" &&
+      value.relationshipType &&
+      !["contractor_to_subcontractor", "business_to_business"].includes(value.relationshipType)
+    ) {
+      addIssue(
+        "relationshipType",
+        "Reports about subcontractors should use contractor-to-subcontractor or business-to-business context.",
+      )
+    }
+
+    if (!hasText(value.businessName) && !(hasText(value.firstName) && hasText(value.lastName))) {
+      addIssue("businessName", "Provide a business/display name or the reported party's first and last name.")
+    }
+
+    if (!hasText(value.tradeCategory)) {
+      addIssue("tradeCategory", "Trade or service category is required for contractor and subcontractor reports.")
+    }
+
+    if (!hasText(value.jobType)) {
+      addIssue("jobType", "Job type is required for contractor and subcontractor reports.")
+    }
+
+    if (!value.jobStatus) {
+      addIssue("jobStatus", "Job status is required for contractor and subcontractor reports.")
+    }
+
+    if (!hasText(value.projectJobTitle)) {
+      addIssue("projectJobTitle", "Project/job label is required for contractor and subcontractor reports.")
+    }
+
+    if (!hasText(value.whatWasAgreed, 20)) {
+      addIssue("whatWasAgreed", "Describe the agreed scope, payment terms, or project responsibility.")
+    }
+
+    if (!hasText(value.workCompleted, 20)) {
+      addIssue("workCompleted", "Describe the work, delivery, milestone, or business obligation completed.")
+    }
+
+    if (!hasText(value.evidenceSupport, 20)) {
+      addIssue("evidenceSupport", "Describe the evidence available for moderator review.")
+    }
+
+    if (isConcernReport && !hasText(value.paymentIssue, 20)) {
+      addIssue("paymentIssue", "Describe the payment, scope, retainage, or dispute issue in neutral terms.")
+    }
+  })
   .refine((value) => value.amountUnpaid <= value.contractAmount, {
     path: ["amountUnpaid"],
     message: "Amount unpaid cannot exceed the contract amount.",
@@ -202,7 +279,7 @@ export const clientReportSchema = z
   })
   .refine((value) => value.relationshipCertification === true, {
     path: ["relationshipCertification"],
-    message: "Confirm that you had a real commercial relationship with this client.",
+    message: "Confirm that you had a real commercial relationship with the reported party.",
   })
   .refine((value) => value.moderationCertification === true, {
     path: ["moderationCertification"],

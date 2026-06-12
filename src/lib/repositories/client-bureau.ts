@@ -312,6 +312,7 @@ function buildPublicBusinessProfile(input: {
   const positiveReports = approvedReports.filter((report) => isPositiveReportCategory(report.reportCategory))
   const disputedReports = reports.filter((report) => report.status === "disputed")
   const rating = calculateBusinessRating({ contractor, reports, evidence, subscription })
+  const profileLabel = rating.profileKind === "subcontractor" ? "trade partner profile" : "business profile"
   const serviceAreas = [
     `${contractor.city}, ${contractor.state}`,
     ...reports.map((report) => `${report.projectCity}, ${report.projectState}`),
@@ -346,8 +347,8 @@ function buildPublicBusinessProfile(input: {
     },
     publicClientReports,
     trustHighlights: [
-      `${publicProfileStatus} business profile`,
-      `${rating.confidence} rating confidence`,
+      `${publicProfileStatus} ${profileLabel}`,
+      `${rating.confidence} ${rating.ratingName.toLowerCase()} confidence`,
       `${publicClientReports.length} public client report${publicClientReports.length === 1 ? "" : "s"} contributed`,
       evidence.length > 0 ? "Private evidence records on file" : "Evidence workflow available",
     ],

@@ -20,11 +20,12 @@ import { PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components
 import { RiskBadge } from "@/components/client/risk-badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { JsonLd } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
 import { claimedStatusLabel, profileTypeLabel, profileTypePluralLabel, reportConfidenceLabel, relationshipLabel } from "@/lib/entity-profiles"
 import { getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
-import { profileTypes, type ProfileType } from "@/lib/types"
+import { profileTypes, type BusinessRatingFactor, type ProfileType } from "@/lib/types"
 
 type EntityProfilePageProps = {
   params: Promise<{
@@ -69,6 +70,8 @@ type EntityProfilePresentation = {
   accountTitle: string
   accountText: string
   accountCta: string
+  methodologyTitle: string
+  methodologyDescription: string
   accent: {
     icon: string
     panel: string
@@ -83,8 +86,8 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
       heroDescription:
         "This contractor and service-business profile shows approved public business context: verification signals, service-area records, public project history, response indicators, and claim/correction paths. Private identifiers and raw files stay sealed.",
       dossierEyebrow: "Business trust dossier",
-      scoreLabel: "Business profile indicator",
-      scoreCaption: "A public-safe profile signal based on approved context, verification, project activity, and moderation status.",
+      scoreLabel: "Business reliability rating",
+      scoreCaption: "A public-safe business signal based on verification, project history, documentation, and moderation status.",
       proofTypeText: "Contractor records are grouped around customer-facing business activity and project responsibility.",
       proofSubtypeText: "Subtypes help distinguish general contractors, service businesses, specialty contractors, agencies, and property-service companies.",
       proofReportsText: "Approved public summaries show documented business/project context only.",
@@ -129,6 +132,9 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
       accountText:
         "Claim your profile, monitor public context, document client experiences, organize evidence, and keep your business record accurate.",
       accountCta: "Create account",
+      methodologyTitle: "Business Reliability Rating",
+      methodologyDescription:
+        "Contractor ratings weigh business identity, client-facing project history, contracts, private evidence, payment resolution posture, and account readiness.",
       accent: {
         icon: "bg-emerald-100 text-emerald-800",
         panel: "border-emerald-200 bg-emerald-50/70",
@@ -143,8 +149,8 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
       heroDescription:
         "This subcontractor and trade-professional profile shows approved public trade context: specialty scope, GC/sub relationship signals, documentation readiness, payment-chain indicators, and claim/correction paths. Private identifiers and raw files stay sealed.",
       dossierEyebrow: "Trade partner dossier",
-      scoreLabel: "Trade profile indicator",
-      scoreCaption: "A public-safe profile signal based on approved trade context, documentation, relationships, and moderation status.",
+      scoreLabel: "Trade partner rating",
+      scoreCaption: "A public-safe trade signal based on scope, GC/sub relationships, payment-chain context, and evidence readiness.",
       proofTypeText: "Subcontractor records are grouped around specialty work, crew roles, and contractor-to-subcontractor relationships.",
       proofSubtypeText: "Subtypes help distinguish installers, crews, labor providers, licensed subcontractors, and specialty trades.",
       proofReportsText: "Approved public summaries show documented trade and payment-chain context only.",
@@ -189,6 +195,9 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
       accountText:
         "Claim your profile, document GC/sub relationships, organize evidence, track payment-chain context, and keep your trade record accurate.",
       accountCta: "Create account",
+      methodologyTitle: "Trade Partner Reliability Rating",
+      methodologyDescription:
+        "Subcontractor ratings weigh trade identity, scope documentation, GC/sub relationship history, payment-chain context, evidence readiness, and resolution posture.",
       accent: {
         icon: "bg-blue-100 text-blue-800",
         panel: "border-blue-200 bg-blue-50/70",
@@ -248,6 +257,9 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
     accountText:
       "Contractors and service businesses can check public context, save searches, and document real project experiences.",
     accountCta: "Create account",
+    methodologyTitle: "Profile Rating Context",
+    methodologyDescription:
+      "Public profile scores use approved, moderated context only. Private identifiers and raw evidence are not published.",
     accent: {
       icon: "bg-amber-100 text-amber-800",
       panel: "border-amber-200 bg-amber-50/70",
@@ -304,6 +316,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
   const responseHref = `/client-response?profile=${encodeURIComponent(profile.profileHref)}`
   const presentation = getEntityProfilePresentation(profile.profileType)
+  const ratingFactors = profile.relatedContractor?.ratingFactors ?? []
+  const ratingSummary = profile.relatedContractor?.ratingSummary ?? presentation.methodologyDescription
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",
@@ -429,6 +443,16 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           </aside>
 
           <div className="space-y-6">
+            {profile.profileType === "contractor" || profile.profileType === "subcontractor" ? (
+              <RatingMethodPanel
+                accentText={presentation.accent.text}
+                factors={ratingFactors}
+                score={profile.ratingScore}
+                summary={ratingSummary}
+                title={presentation.methodologyTitle}
+              />
+            ) : null}
+
             <Card className={`rounded-md shadow-sm ${presentation.accent.panel}`}>
               <CardContent className="p-6">
                 <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${presentation.accent.text}`}>
@@ -475,7 +499,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                         <div>
                           <p className="font-semibold text-slate-950">{project.title}</p>
                           <p className="mt-1 text-sm text-slate-600">
-                            {project.projectType} · {project.city}, {project.state}
+                            {project.projectType} - {project.city}, {project.state}
                           </p>
                         </div>
                         <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase text-slate-600">
@@ -586,6 +610,87 @@ function ProfileFact({ label, value }: { label: string; value: string }) {
       <span className="text-slate-500">{label}</span>
       <span className="text-right font-semibold text-slate-950">{value}</span>
     </div>
+  )
+}
+
+function RatingMethodPanel({
+  accentText,
+  factors,
+  score,
+  summary,
+  title,
+}: {
+  accentText: string
+  factors: BusinessRatingFactor[]
+  score: number
+  summary: string
+  title: string
+}) {
+  const visibleFactors = factors.length > 0
+    ? factors
+    : [
+        {
+          label: "Verification and identity",
+          score: Math.min(score, 24),
+          maxScore: 24,
+          status: "good" as const,
+          description: "Uses public-safe verification and profile completeness signals.",
+        },
+        {
+          label: "Approved public context",
+          score: Math.min(Math.max(score - 24, 0), 26),
+          maxScore: 26,
+          status: "good" as const,
+          description: "Uses approved reports, project context, and public-safe summaries.",
+        },
+        {
+          label: "Evidence and response posture",
+          score: Math.min(Math.max(score - 50, 0), 25),
+          maxScore: 25,
+          status: "good" as const,
+          description: "Uses evidence indicators, response paths, and correction rights.",
+        },
+        {
+          label: "Resolution context",
+          score: Math.min(Math.max(score - 75, 0), 25),
+          maxScore: 25,
+          status: "good" as const,
+          description: "Uses dispute, resolution, and payment-context indicators when available.",
+        },
+      ]
+
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${accentText}`}>Rating algorithm</p>
+            <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{summary}</p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Current score</p>
+            <p className="mt-1 text-3xl font-black text-slate-950">{score}/100</p>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-4">
+          {visibleFactors.map((item) => (
+            <div key={item.label} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-slate-950">{item.label}</h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{item.description}</p>
+                </div>
+                <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold uppercase text-slate-600">
+                  {item.score}/{item.maxScore}
+                </span>
+              </div>
+              <Progress value={(item.score / item.maxScore) * 100} className="mt-4" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

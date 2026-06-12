@@ -948,13 +948,39 @@ describe("business ratings and public business profiles", () => {
     expect(rating.score).toBeGreaterThan(50)
     expect(businessRatingGrade(rating.score)).toBe(rating.grade)
     expect(rating.factors.map((factor) => factor.label)).toEqual([
-      "Business verification",
-      "Documentation discipline",
-      "Approved contribution history",
-      "Resolution posture",
-      "Account completeness",
+      "Business identity and verification",
+      "Client-facing project history",
+      "Contracts and evidence discipline",
+      "Payment and resolution posture",
+      "Account and response readiness",
     ])
+    expect(rating.profileKind).toBe("contractor")
+    expect(rating.ratingName).toBe("Business Reliability Rating")
     expect(rating.summary).toContain("not a customer review score")
+  })
+
+  it("calculates a different subcontractor trade partner rating model", () => {
+    const subcontractor = contractorProfiles.find((profile) => profile.businessName === "Bright Line Electric")
+
+    if (!subcontractor) throw new Error("Expected seeded subcontractor profile")
+
+    const reports = clientReports.filter((report) => report.contractorId === subcontractor.id)
+    const evidence = reportEvidence.filter((item) =>
+      reports.some((report) => report.id === item.reportId),
+    )
+    const rating = calculateBusinessRating({ contractor: subcontractor, reports, evidence })
+
+    expect(rating.profileKind).toBe("subcontractor")
+    expect(rating.ratingName).toBe("Trade Partner Reliability Rating")
+    expect(rating.factors.map((factor) => factor.label)).toEqual([
+      "Trade identity and credential readiness",
+      "Scope and documentation clarity",
+      "GC/sub relationship history",
+      "Payment-chain reliability context",
+      "Evidence and completion readiness",
+      "Communication and resolution posture",
+    ])
+    expect(rating.summary).toContain("payment-chain context")
   })
 
   it("returns public business profiles without private account identifiers", () => {
@@ -1226,6 +1252,95 @@ describe("schemas and mock actions", () => {
 
     expect(validPositive.success).toBe(true)
     expect(invalidPositive.success).toBe(false)
+  })
+
+  it("requires stronger context for contractor and subcontractor profile reports", () => {
+    const incompleteSubcontractorReport = clientReportSchema.safeParse({
+      subjectProfileType: "subcontractor",
+      firstName: "Drew",
+      lastName: "Santos",
+      businessName: "Bright Line Electric",
+      city: "Orlando",
+      state: "FL",
+      projectType: "Electrical rough-in",
+      projectCity: "Orlando",
+      projectState: "FL",
+      contractAmount: 9000,
+      amountUnpaid: 2500,
+      reportCategory: "Late payment",
+      paymentStatus: "Retainage unresolved",
+      reportSummary:
+        "A contractor-submitted report states retainage remained unresolved after documented completion and follow-up.",
+      detailedExperience:
+        "The contractor reported a documented trade relationship, completion context, payment follow-up, and unresolved retainage.",
+      ...requiredReportCertifications,
+    })
+    const completeSubcontractorReport = clientReportSchema.safeParse({
+      subjectProfileType: "subcontractor",
+      subjectProfileSubtype: "Licensed subcontractor",
+      relationshipType: "contractor_to_subcontractor",
+      firstName: "Drew",
+      lastName: "Santos",
+      businessName: "Bright Line Electric",
+      city: "Orlando",
+      state: "FL",
+      projectJobTitle: "Lake Nona rough-in package",
+      tradeCategory: "Electrical",
+      projectType: "Electrical rough-in",
+      jobType: "Residential rough-in",
+      jobStatus: "Completed",
+      projectCity: "Orlando",
+      projectState: "FL",
+      contractAmount: 9000,
+      amountUnpaid: 2500,
+      signedContract: true,
+      reportCategory: "Late payment",
+      paymentStatus: "Retainage unresolved",
+      disputeStatus: "Disputed",
+      reportSummary:
+        "A contractor-submitted report states retainage remained unresolved after documented completion and follow-up.",
+      detailedExperience:
+        "The contractor reported a documented trade relationship, completion context, payment follow-up, and unresolved retainage.",
+      whatWasAgreed: "Electrical rough-in scope, milestone payment terms, inspection coordination, and retainage terms were documented.",
+      workCompleted: "The rough-in package was completed and submitted for inspection according to the documented work order.",
+      paymentIssue: "The reported issue concerns retained payment remaining unresolved after documented follow-up.",
+      evidenceSupport: "Agreement, invoice, message log, completion photos, and inspection-related notes are available for moderation.",
+      ...requiredReportCertifications,
+    })
+    const wrongRelationship = clientReportSchema.safeParse({
+      subjectProfileType: "contractor",
+      subjectProfileSubtype: "General contractor",
+      relationshipType: "contractor_to_subcontractor",
+      firstName: "Morgan",
+      lastName: "Ellis",
+      businessName: "RidgeBuild Contracting",
+      city: "Orlando",
+      state: "FL",
+      projectJobTitle: "GC payment dispute",
+      tradeCategory: "Remodeling",
+      projectType: "Kitchen remodel",
+      jobType: "Residential remodel",
+      jobStatus: "Completed",
+      projectCity: "Orlando",
+      projectState: "FL",
+      contractAmount: 12000,
+      amountUnpaid: 1800,
+      reportCategory: "Late payment",
+      paymentStatus: "Progress payment unresolved",
+      reportSummary:
+        "A subcontractor-submitted report states a progress payment remained unresolved after documented work and follow-up.",
+      detailedExperience:
+        "The subcontractor reported a documented GC/sub relationship, completed work, payment follow-up, and unresolved balance.",
+      whatWasAgreed: "Trade scope, progress billing, schedule, and completion expectations were documented before the work started.",
+      workCompleted: "The trade work was completed according to the requested scope and submitted for review.",
+      paymentIssue: "The reported issue concerns a progress payment remaining unresolved after documented follow-up.",
+      evidenceSupport: "Contract, invoice, messages, completion photos, and change-order notes are available for moderation.",
+      ...requiredReportCertifications,
+    })
+
+    expect(incompleteSubcontractorReport.success).toBe(false)
+    expect(completeSubcontractorReport.success).toBe(true)
+    expect(wrongRelationship.success).toBe(false)
   })
 
   it("interprets client ratings and cleans public report copy", () => {

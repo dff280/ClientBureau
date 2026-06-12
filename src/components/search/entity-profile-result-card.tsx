@@ -61,7 +61,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
               </div>
 
               <div className="grid min-w-32 rounded-md border border-slate-200 bg-slate-50 p-3 text-center">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Rating</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{presentation.scoreLabel}</p>
                 <p className={`mt-1 text-3xl font-semibold ${scoreTone}`}>{result.ratingScore}</p>
                 <p className="text-xs font-semibold text-slate-600">{String(result.ratingBand)}</p>
               </div>
@@ -129,6 +129,7 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
       tone: "border-emerald-200 bg-emerald-50 text-emerald-800",
       cardClassName: "hover:border-emerald-300",
       accentText: "text-emerald-700",
+      scoreLabel: "Business rating",
       contextLabel: "Business trust context",
       fallbackSummary:
         "Approved contractor profile context is available. Business verification, public project signals, and correction paths are shown without publishing private identifiers.",
@@ -166,6 +167,7 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
       tone: "border-blue-200 bg-blue-50 text-blue-800",
       cardClassName: "hover:border-blue-300",
       accentText: "text-blue-700",
+      scoreLabel: "Trade rating",
       contextLabel: "Trade partner context",
       fallbackSummary:
         "Approved subcontractor profile context is available. Trade scope, GC/sub relationship signals, payment-chain context, and private evidence indicators are shown carefully.",
@@ -202,6 +204,7 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
     tone: "border-amber-200 bg-amber-50 text-amber-800",
     cardClassName: "hover:border-amber-300",
     accentText: "text-amber-700",
+    scoreLabel: "Profile rating",
     contextLabel: "Reported client context",
     fallbackSummary:
       "Approved public client profile context is available. Private identifiers and raw evidence are not shown publicly.",

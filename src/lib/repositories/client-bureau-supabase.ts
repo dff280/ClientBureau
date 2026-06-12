@@ -1627,7 +1627,7 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
     .upsert(
       {
         profile_type: profileType,
-        profile_subtype: profileType === "subcontractor" ? "Individual trade professional" : contractor.business_type ?? "Service business",
+        profile_subtype: profileType === "subcontractor" ? contractor.business_type ?? "Individual trade professional" : contractor.business_type ?? "Service business",
         display_name: contractor.business_name,
         business_name: contractor.business_name,
         city: contractor.city,
@@ -1647,7 +1647,10 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
         rating_score: contractor.verification_status === "verified" ? 88 : contractor.verification_status === "pending" ? 76 : 68,
         rating_band: contractor.verification_status === "verified" ? "A" : "Review Pending",
         is_public: true,
-        public_summary: "Business profile with verification context and moderated project activity.",
+        public_summary:
+          profileType === "subcontractor"
+            ? "Trade partner profile with verification context, documented scope signals, and moderated payment-chain activity."
+            : "Business profile with verification context and moderated project activity.",
         updated_at: new Date().toISOString(),
       },
       { onConflict: "profile_type,slug" },
@@ -1754,6 +1757,7 @@ function buildPublicBusinessProfileFromRows(input: {
   const positiveReports = approvedReports.filter((report) => isPositiveReportCategory(report.reportCategory))
   const disputedReports = reports.filter((report) => report.status === "disputed")
   const rating = calculateBusinessRating({ contractor, reports, evidence, subscription })
+  const profileLabel = rating.profileKind === "subcontractor" ? "trade partner profile" : "business profile"
   const serviceAreas = [
     `${contractor.city}, ${contractor.state}`,
     ...reports.map((report) => `${report.projectCity}, ${report.projectState}`),
@@ -1788,8 +1792,8 @@ function buildPublicBusinessProfileFromRows(input: {
     },
     publicClientReports,
     trustHighlights: [
-      `${publicProfileStatus} business profile`,
-      `${rating.confidence} rating confidence`,
+      `${publicProfileStatus} ${profileLabel}`,
+      `${rating.confidence} ${rating.ratingName.toLowerCase()} confidence`,
       `${publicClientReports.length} public client report${publicClientReports.length === 1 ? "" : "s"} contributed`,
       evidence.length > 0 ? "Private evidence records on file" : "Evidence workflow available",
     ],
@@ -1847,7 +1851,26 @@ export async function getPublicEntityProfilesSupabase(): Promise<EntityProfile[]
 
   if (error) throw new Error(error.message)
 
-  return (data ?? []).map(mapEntityProfile)
+  const profiles = (data ?? []).map(mapEntityProfile)
+  const businessProfiles = await getPublicBusinessProfilesSupabase().catch(() => [] satisfies PublicBusinessProfile[])
+
+  return profiles.map((profile) => {
+    if (!profile.legacyContractorId) return profile
+
+    const business = businessProfiles.find((item) => item.id === profile.legacyContractorId || item.publicSlug === profile.slug)
+    if (!business) return profile
+
+    return {
+      ...profile,
+      ratingScore: business.ratingScore,
+      ratingBand: business.ratingGrade,
+      reportCount: business.reportStats.approved,
+      positiveReportCount: business.reportStats.positive,
+      disputedReportCount: business.reportStats.disputed,
+      evidenceOnFileCount: business.reportStats.evidenceAttached,
+      updatedAt: business.lastUpdated,
+    }
+  })
 }
 
 export async function getPublicEntityProfileSupabase(
@@ -1904,9 +1927,21 @@ export async function getPublicEntityProfileSupabase(
   const relatedContractor = profile.legacyContractorId
     ? await getPublicBusinessProfileSupabase(profile.slug).catch(() => undefined)
     : undefined
+  const normalizedProfile = relatedContractor
+    ? {
+        ...profile,
+        ratingScore: relatedContractor.ratingScore,
+        ratingBand: relatedContractor.ratingGrade,
+        reportCount: relatedContractor.reportStats.approved,
+        positiveReportCount: relatedContractor.reportStats.positive,
+        disputedReportCount: relatedContractor.reportStats.disputed,
+        evidenceOnFileCount: relatedContractor.reportStats.evidenceAttached,
+        updatedAt: relatedContractor.lastUpdated,
+      }
+    : profile
 
   return buildPublicEntityProfile({
-    profile,
+    profile: normalizedProfile,
     reports,
     relatedClient,
     relatedContractor,
