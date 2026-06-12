@@ -12,6 +12,7 @@ import type {
   ContractWorkspaceItem,
   ContractorRiskOpsData,
   ContractorWatchlistItem,
+  EntityProfile,
   EvidenceVaultItem,
   LienNoticeDraft,
   ModerationCase,
@@ -21,6 +22,9 @@ import type {
   PaymentPlan,
   PaymentRecoveryCase,
   PaymentRecoveryAttempt,
+  ProjectJob,
+  ProjectJobDetail,
+  ProjectJobParticipant,
   PublicClientProfile,
   RecoveryComplianceReview,
   ReportDraft,
@@ -41,10 +45,15 @@ import type {
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
   PaymentPlanInput,
+  ProjectJobInput,
+  ProjectJobParticipantInput,
   RecoveryComplianceReviewInput,
+  RemoveProjectJobParticipantInput,
   ReportDraftInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
+  UpdateProjectJobInput,
+  UpdateProjectJobParticipantInput,
   WatchlistItemInput,
 } from "@/lib/schemas/client-bureau"
 
@@ -70,6 +79,14 @@ export interface ClientBureauRepository {
   createClientPipelineItem(userId: string, input: ClientPipelineItemInput): ClientPipelineItem
   updateClientPipelineStage(itemId: string, stage: ClientPipelineItem["stage"]): ClientPipelineItem
   createClientRiskRoom(userId: string, input: ClientRiskRoomInput): ClientRiskRoom
+  getProjectJobs(userId: string): ProjectJob[]
+  getProjectJobDetail(userId: string, jobId: string): ProjectJobDetail | undefined
+  searchJobAccounts(query?: string): EntityProfile[]
+  createProjectJob(userId: string, input: ProjectJobInput): ProjectJob
+  updateProjectJob(userId: string, input: UpdateProjectJobInput): ProjectJob
+  addProjectJobParticipant(userId: string, input: ProjectJobParticipantInput): ProjectJobParticipant
+  updateProjectJobParticipant(userId: string, input: UpdateProjectJobParticipantInput): ProjectJobParticipant
+  removeProjectJobParticipant(userId: string, input: RemoveProjectJobParticipantInput): ProjectJobParticipant
   logPaymentRecoveryAttempt(userId: string, input: PaymentRecoveryAttemptInput): PaymentRecoveryAttempt
   createPaymentPlan(userId: string, input: PaymentPlanInput): PaymentPlan
   createContractPacket(userId: string, input: ContractPacketInput): ContractPacket

@@ -227,6 +227,7 @@ export function deriveEntityProfiles(input: {
       id: `entity_client_${client.id}`,
       profileType: "client" as const,
       profileSubtype: client.businessName ? "Business client" : "Homeowner",
+      accountCapabilities: ["client"],
       displayName: [client.firstName, client.lastName].filter(Boolean).join(" "),
       businessName: client.businessName,
       city: client.city,
@@ -261,11 +262,16 @@ export function deriveEntityProfiles(input: {
     const reports = input.reports.filter((report) => report.contractorId === contractor.id)
     const publicBusiness = input.publicBusinesses?.find((business) => business.id === contractor.id)
     const isSubcontractor = contractor.trade.toLowerCase().includes("subcontract") || contractor.businessType?.toLowerCase().includes("subcontract")
+    const supportsSubcontractorWork =
+      isSubcontractor ||
+      contractor.primaryGoal?.toLowerCase().includes("subcontract") ||
+      contractor.serviceArea?.toLowerCase().includes("subcontract")
 
     return {
       id: `entity_contractor_${contractor.id}`,
       profileType: isSubcontractor ? "subcontractor" : "contractor",
       profileSubtype: isSubcontractor ? contractor.businessType ?? "Individual trade professional" : contractor.businessType ?? "Service business",
+      accountCapabilities: supportsSubcontractorWork ? ["contractor", "subcontractor"] : ["contractor"],
       displayName: contractor.businessName,
       businessName: contractor.businessName,
       city: contractor.city,
@@ -383,7 +389,10 @@ export function searchEntityProfiles(
         .toLowerCase()
       const exactMatch = normalizedQuery.length > 0 && searchable.includes(normalizedQuery)
       const locationMatch = Boolean(filters.state && normalizeStateCode(profile.state) === normalizeStateCode(filters.state))
-      const typeMatch = Boolean(filters.profileType && profile.profileType === filters.profileType)
+      const typeMatch = Boolean(
+        filters.profileType &&
+        (profile.profileType === filters.profileType || profile.accountCapabilities?.includes(filters.profileType)),
+      )
       const profileTypeBoost = profile.profileType === "client" ? 8 : 4
       const matchScore =
         (exactMatch ? 60 : 0) +
@@ -430,7 +439,10 @@ export function searchEntityProfiles(
           .toLowerCase()
           .includes(normalizedQuery)
       const matchesState = !filters.state || normalizeStateCode(profile.state) === normalizeStateCode(filters.state)
-      const matchesType = !filters.profileType || profile.profileType === filters.profileType
+      const matchesType =
+        !filters.profileType ||
+        profile.profileType === filters.profileType ||
+        Boolean(profile.accountCapabilities?.includes(filters.profileType))
       const matchesRisk = !filters.riskLevel || profile.ratingBand === filters.riskLevel
 
       return profile.isPublic && matchesQuery && matchesState && matchesType && matchesRisk

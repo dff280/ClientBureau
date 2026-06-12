@@ -72,11 +72,17 @@ export const verificationLevels = [
   "admin_verified",
 ] as const
 export const projectJobStatuses = [
+  "lead",
+  "estimate",
+  "scheduled",
+  "in_progress",
+  "on_hold",
   "draft",
   "screening",
   "contract_pending",
   "active",
   "completed",
+  "cancelled",
   "payment_issue",
   "disputed",
   "resolved",
@@ -84,12 +90,48 @@ export const projectJobStatuses = [
 ] as const
 export const projectProfileRoles = [
   "client",
+  "property_owner",
+  "primary_contact",
+  "prime_contractor",
+  "hiring_contractor",
   "contractor",
   "subcontractor",
+  "sub_subcontractor",
+  "vendor",
+  "supplier",
+  "project_manager",
+  "estimator",
+  "internal_crew",
   "owner",
   "property_manager",
   "reporter",
   "subject",
+  "other",
+] as const
+export const projectJobTypes = [
+  "direct_client_job",
+  "contractor_managed_job",
+  "subcontracted_work",
+  "internal_project",
+  "warranty_callback",
+  "other",
+] as const
+export const projectJobPriorities = ["low", "normal", "high", "urgent"] as const
+export const projectPropertyTypes = [
+  "residential",
+  "commercial",
+  "multi_family",
+  "hoa_community",
+  "industrial",
+  "other",
+] as const
+export const jobParticipantStatuses = ["active", "pending", "completed", "removed"] as const
+export const jobBillingRelationships = [
+  "client_pays_contractor",
+  "contractor_pays_subcontractor",
+  "contractor_pays_vendor",
+  "direct_owner_payment",
+  "internal",
   "other",
 ] as const
 export const reportRelationshipTypes = [
@@ -115,6 +157,11 @@ export type ReportConfidenceLevel = (typeof reportConfidenceLevels)[number]
 export type VerificationLevel = (typeof verificationLevels)[number]
 export type ProjectJobStatus = (typeof projectJobStatuses)[number]
 export type ProjectProfileRole = (typeof projectProfileRoles)[number]
+export type ProjectJobType = (typeof projectJobTypes)[number]
+export type ProjectJobPriority = (typeof projectJobPriorities)[number]
+export type ProjectPropertyType = (typeof projectPropertyTypes)[number]
+export type JobParticipantStatus = (typeof jobParticipantStatuses)[number]
+export type JobBillingRelationship = (typeof jobBillingRelationships)[number]
 export type ReportStatus = "pending" | "approved" | "rejected" | "disputed"
 export type ReportResolutionStatus =
   | "Unresolved"
@@ -408,6 +455,7 @@ export interface EntityProfile {
   id: string
   profileType: ProfileType
   profileSubtype?: ProfileSubtype | string
+  accountCapabilities?: ProfileType[]
   displayName: string
   legalNamePrivate?: string
   businessName?: string
@@ -485,19 +533,36 @@ export interface ProfileClaim {
 export interface ProjectJob {
   id: string
   ownerUserId?: string
+  jobNumber?: string
   title: string
   projectType: string
+  jobType?: ProjectJobType
+  priority?: ProjectJobPriority
   status: ProjectJobStatus
+  shortDescription?: string
+  detailedScopeOfWork?: string
+  tradeCategory?: string
   city: string
   state: string
   projectAddressPrivate?: string
+  addressLine1?: string
+  addressLine2?: string
+  postalCode?: string
+  county?: string
+  propertyType?: ProjectPropertyType
+  accessInstructions?: string
+  privateAccessCode?: string
+  parkingInstructions?: string
+  siteWarnings?: string
   startDate?: string
+  targetCompletionDate?: string
   completionDate?: string
   contractAmount: number
   amountDue: number
   primaryClientProfileId?: string
   primaryContractorProfileId?: string
   publicSummary?: string
+  customerFacingNotes?: string
   privateNotes?: string
   isPublicSummaryAllowed: boolean
   createdAt: string
@@ -523,11 +588,26 @@ export interface ProjectJobProfile {
   id: string
   projectJobId: string
   profileId: string
+  profile?: EntityProfile
   role: ProjectProfileRole
   relationshipLabel?: string
+  hiredByProfileId?: string
+  reportsToParticipantId?: string
+  billingRelationship?: JobBillingRelationship
+  participantStatus: JobParticipantStatus
+  scopeAssigned?: string
+  contractAmount?: number
   isPrimary: boolean
+  notes?: string
   privateNotes?: string
   createdAt: string
+  updatedAt?: string
+}
+
+export type ProjectJobParticipant = ProjectJobProfile
+
+export interface ProjectJobDetail extends ProjectJob {
+  participants: ProjectJobParticipant[]
 }
 
 export interface ProfileRelationship {

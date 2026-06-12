@@ -51,7 +51,10 @@ import {
   paymentPlanSchema,
   paymentRecoveryAttemptSchema,
   paymentRecoveryCaseSchema,
+  projectJobParticipantSchema,
+  projectJobSchema,
   resolutionDeskContactSchema,
+  removeProjectJobParticipantSchema,
   reportDraftSchema,
   recoveryComplianceReviewSchema,
   serviceFeeCheckoutSchema,
@@ -59,6 +62,8 @@ import {
   updateClientPipelineStageSchema,
   updateContractPacketStatusSchema,
   updateEvidenceVaultStatusSchema,
+  updateProjectJobParticipantSchema,
+  updateProjectJobSchema,
   updateWatchlistItemSchema,
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
@@ -98,6 +103,8 @@ import type {
   ProfileClaim,
   ProfileMergeEvent,
   ProfileRedactionEvent,
+  ProjectJob,
+  ProjectJobParticipant,
   ReportReassignmentEvent,
   SavedClientSearch,
   SearchAnalyticsEvent,
@@ -121,6 +128,7 @@ import {
   createContractShareLinkService,
   createClientPipelineItemService,
   createClientRiskRoomService,
+  createProjectJobService,
   createIntakeAssessmentService,
   createLienNoticeDraftService,
   createContractPacketService,
@@ -137,6 +145,8 @@ import {
   logResolutionDeskContactService,
   markServiceFeePaidService,
   markRecoveryResolvedService,
+  addProjectJobParticipantService,
+  removeProjectJobParticipantService,
   signContractShareService,
   signLienFilingAuthorizationService,
   reviewRecoveryComplianceService,
@@ -173,6 +183,8 @@ import {
   updateContractPacketStatusService,
   updateEvidenceVaultStatusService,
   updateModerationCaseService,
+  updateProjectJobParticipantService,
+  updateProjectJobService,
   updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
 import type { ClientReportInput } from "@/lib/schemas/client-bureau"
@@ -1966,6 +1978,120 @@ export async function createRiskRoomAction(
     return ok(room, "Private client work file created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Client work file could not be created."))
+  }
+}
+
+export async function createProjectJobAction(
+  _previousState: ActionResult<ProjectJob>,
+  formData: FormData,
+): Promise<ActionResult<ProjectJob>> {
+  const parsed = projectJobSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the job fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const job = await createProjectJobService(user.id, parsed.data)
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/jobs")
+    return ok(job, "Job created. Add participants next.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Job could not be created."))
+  }
+}
+
+export async function updateProjectJobAction(
+  _previousState: ActionResult<ProjectJob>,
+  formData: FormData,
+): Promise<ActionResult<ProjectJob>> {
+  const parsed = updateProjectJobSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the job fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const job = await updateProjectJobService(user.id, parsed.data)
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/jobs")
+    revalidatePath(`/dashboard/jobs/${job.id}`)
+    return ok(job, "Job details updated.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Job could not be updated."))
+  }
+}
+
+export async function addProjectJobParticipantAction(
+  _previousState: ActionResult<ProjectJobParticipant>,
+  formData: FormData,
+): Promise<ActionResult<ProjectJobParticipant>> {
+  const parsed = projectJobParticipantSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the participant fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const participant = await addProjectJobParticipantService(user.id, parsed.data)
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/jobs")
+    revalidatePath(`/dashboard/jobs/${parsed.data.jobId}`)
+    return ok(participant, "Participant attached to this job.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Participant could not be attached."))
+  }
+}
+
+export async function updateProjectJobParticipantAction(
+  _previousState: ActionResult<ProjectJobParticipant>,
+  formData: FormData,
+): Promise<ActionResult<ProjectJobParticipant>> {
+  const parsed = updateProjectJobParticipantSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the participant fields.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const participant = await updateProjectJobParticipantService(user.id, parsed.data)
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/jobs")
+    revalidatePath(`/dashboard/jobs/${parsed.data.jobId}`)
+    return ok(participant, "Participant role updated for this job.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Participant could not be updated."))
+  }
+}
+
+export async function removeProjectJobParticipantAction(
+  _previousState: ActionResult<ProjectJobParticipant>,
+  formData: FormData,
+): Promise<ActionResult<ProjectJobParticipant>> {
+  const parsed = removeProjectJobParticipantSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select a participant to remove.", zodFieldErrors(parsed.error))
+  }
+
+  const user = await requireContractorAccess()
+
+  try {
+    const participant = await removeProjectJobParticipantService(user.id, parsed.data)
+    revalidatePath("/dashboard")
+    revalidatePath("/dashboard/jobs")
+    revalidatePath(`/dashboard/jobs/${parsed.data.jobId}`)
+    return ok(participant, "Participant removed from this job. The account record was not deleted.")
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Participant could not be removed."))
   }
 }
 

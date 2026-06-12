@@ -334,14 +334,16 @@ export function EntityProfileDirectory({
 }) {
   const copy = directoryCopy[activeType ?? "all"]
   const presentation = directoryRolePresentation(activeType)
+  const matchesActiveType = (profile: EntityProfile, type: ProfileType) =>
+    profile.profileType === type || Boolean(profile.accountCapabilities?.includes(type))
   const visibleProfiles = activeType
-    ? allProfiles.filter((profile) => profile.profileType === activeType)
+    ? allProfiles.filter((profile) => matchesActiveType(profile, activeType))
     : allProfiles
   const profileCounts = profileTypes.map((type) => ({
     href: `/profiles/${type}`,
     label: profileTypePluralLabel(type),
     type,
-    value: allProfiles.filter((profile) => profile.profileType === type).length,
+    value: allProfiles.filter((profile) => matchesActiveType(profile, type)).length,
   }))
   const verifiedCount = visibleProfiles.filter((profile) =>
     ["claimed", "verified"].includes(profile.claimedStatus),

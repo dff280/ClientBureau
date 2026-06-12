@@ -11,6 +11,7 @@ import {
   createContractPacket,
   createContractShareLink,
   createPaymentPlan,
+  createProjectJob,
   createServiceFeeOrder,
   createWatchlistItem,
   deleteSavedClientSearch,
@@ -21,6 +22,8 @@ import {
   getAdminModerationCrmData,
   getContractorRiskOpsData,
   getPendingAdminReviews,
+  getProjectJobDetail,
+  getProjectJobs,
   getPublicClientProfile,
   getPublicClientProfiles,
   getPublicBusinessProfile,
@@ -46,6 +49,7 @@ import {
   saveAdminQueueView,
   saveClientSearch,
   saveReportDraft,
+  searchJobAccounts,
   searchClients,
   searchProfiles,
   setMockModerationDecisionReason,
@@ -72,6 +76,10 @@ import {
   updateContractPacketStatus,
   updateEvidenceVaultStatus,
   updateMockModerationCase,
+  updateProjectJob,
+  addProjectJobParticipant,
+  updateProjectJobParticipant,
+  removeProjectJobParticipant,
   updateWatchlistItem,
 } from "@/lib/repositories/client-bureau"
 import {
@@ -85,6 +93,7 @@ import {
   createLienNoticeDraftSupabase,
   createPaymentPlanSupabase,
   createPaymentRecoveryCaseSupabase,
+  createProjectJobSupabase,
   createServiceFeeOrderSupabase,
   createWatchlistItemSupabase,
   deleteSavedClientSearchSupabase,
@@ -96,6 +105,8 @@ import {
   getContractorDashboardSupabase,
   getContractPacketByShareTokenSupabase,
   getPendingAdminReviewsSupabase,
+  getProjectJobDetailSupabase,
+  getProjectJobsSupabase,
   getPublicClientProfileSupabase,
   getPublicClientProfilesSupabase,
   getPublicBusinessProfileSupabase,
@@ -120,6 +131,7 @@ import {
   saveAdminQueueViewSupabase,
   saveClientSearchSupabase,
   saveReportDraftSupabase,
+  searchJobAccountsSupabase,
   searchClientsSupabase,
   searchProfilesSupabase,
   setModerationDecisionReasonSupabase,
@@ -146,6 +158,10 @@ import {
   updateContractPacketStatusSupabase,
   updateEvidenceVaultStatusSupabase,
   updateModerationCaseSupabase,
+  updateProjectJobSupabase,
+  addProjectJobParticipantSupabase,
+  updateProjectJobParticipantSupabase,
+  removeProjectJobParticipantSupabase,
   updateWatchlistItemSupabase,
 } from "@/lib/repositories/client-bureau-supabase"
 import type {
@@ -173,7 +189,10 @@ import type {
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
   PaymentPlanInput,
+  ProjectJobInput,
+  ProjectJobParticipantInput,
   RecoveryComplianceReviewInput,
+  RemoveProjectJobParticipantInput,
   ResolutionDeskContactInput,
   ReportDraftInput,
   SavedClientSearchInput,
@@ -184,6 +203,8 @@ import type {
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
+  UpdateProjectJobInput,
+  UpdateProjectJobParticipantInput,
   WatchlistItemInput,
   ProfileClaimInput,
   AdminProfileClaimReviewInput,
@@ -446,6 +467,24 @@ export async function getContractorRiskOpsDataService(userId: string) {
   if (!dashboard) return undefined
 
   return createDefaultRiskOpsData(dashboard.contractor.id)
+}
+
+export async function getProjectJobsService(userId: string) {
+  if (shouldUsePlatformSupabase()) return getProjectJobsSupabase(userId)
+
+  return getProjectJobs(userId)
+}
+
+export async function getProjectJobDetailService(userId: string, jobId: string) {
+  if (shouldUsePlatformSupabase()) return getProjectJobDetailSupabase(userId, jobId)
+
+  return getProjectJobDetail(userId, jobId)
+}
+
+export async function searchJobAccountsService(query = "") {
+  if (shouldUsePlatformSupabase()) return searchJobAccountsSupabase(query)
+
+  return searchJobAccounts(query)
 }
 
 export async function getAdminModerationCrmDataService() {
@@ -797,6 +836,36 @@ export async function createClientRiskRoomService(userId: string, input: ClientR
   if (!dashboard) throw new Error("Contractor workspace was not found.")
 
   return createClientRiskRoom(dashboard.contractor.id, input)
+}
+
+export async function createProjectJobService(userId: string, input: ProjectJobInput) {
+  if (shouldUsePlatformSupabase()) return createProjectJobSupabase(userId, input)
+
+  return createProjectJob(userId, input)
+}
+
+export async function updateProjectJobService(userId: string, input: UpdateProjectJobInput) {
+  if (shouldUsePlatformSupabase()) return updateProjectJobSupabase(userId, input)
+
+  return updateProjectJob(userId, input)
+}
+
+export async function addProjectJobParticipantService(userId: string, input: ProjectJobParticipantInput) {
+  if (shouldUsePlatformSupabase()) return addProjectJobParticipantSupabase(userId, input)
+
+  return addProjectJobParticipant(userId, input)
+}
+
+export async function updateProjectJobParticipantService(userId: string, input: UpdateProjectJobParticipantInput) {
+  if (shouldUsePlatformSupabase()) return updateProjectJobParticipantSupabase(userId, input)
+
+  return updateProjectJobParticipant(userId, input)
+}
+
+export async function removeProjectJobParticipantService(userId: string, input: RemoveProjectJobParticipantInput) {
+  if (shouldUsePlatformSupabase()) return removeProjectJobParticipantSupabase(userId, input)
+
+  return removeProjectJobParticipant(userId, input)
 }
 
 export async function logPaymentRecoveryAttemptService(userId: string, input: PaymentRecoveryAttemptInput) {

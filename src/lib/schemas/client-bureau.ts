@@ -18,6 +18,13 @@ import {
   contractorProfileSubtypes,
   isPositiveReportCategory,
   profileTypes,
+  jobBillingRelationships,
+  jobParticipantStatuses,
+  projectJobPriorities,
+  projectJobStatuses,
+  projectJobTypes,
+  projectProfileRoles,
+  projectPropertyTypes,
   reportCategories,
   reportRelationshipTypes,
   riskLevels,
@@ -878,6 +885,78 @@ export const clientRiskRoomSchema = z.object({
   summary: requiredText("Client work file summary", 20).max(900, "Keep the summary under 900 characters."),
 })
 
+export const projectJobSchema = z.object({
+  jobNumber: z.string().trim().max(80, "Keep job number under 80 characters.").optional().transform((value) => value || undefined),
+  title: requiredText("Job name", 3).max(140, "Keep job name under 140 characters."),
+  jobType: z.enum(projectJobTypes),
+  projectType: requiredText("Service type", 2).max(120, "Keep service type under 120 characters."),
+  tradeCategory: z.string().trim().max(120, "Keep trade category under 120 characters.").optional().transform((value) => value || undefined),
+  status: z.enum(projectJobStatuses).default("lead"),
+  priority: z.enum(projectJobPriorities).default("normal"),
+  shortDescription: requiredText("Short description", 10).max(500, "Keep short description under 500 characters."),
+  detailedScopeOfWork: z.string().trim().max(2500, "Keep scope of work under 2,500 characters.").optional().transform((value) => value || undefined),
+  addressLine1: z.string().trim().max(160, "Keep address line 1 under 160 characters.").optional().transform((value) => value || undefined),
+  addressLine2: z.string().trim().max(160, "Keep address line 2 under 160 characters.").optional().transform((value) => value || undefined),
+  city: cityText("Job city"),
+  state: stateCode("Job state"),
+  postalCode: z.string().trim().max(12, "Keep postal code under 12 characters.").optional().transform((value) => value || undefined),
+  county: z.string().trim().max(80, "Keep county under 80 characters.").optional().transform((value) => value || undefined),
+  propertyType: z.enum(projectPropertyTypes).optional().or(z.literal("")).transform((value) => value || undefined),
+  accessInstructions: z.string().trim().max(700, "Keep access instructions under 700 characters.").optional().transform((value) => value || undefined),
+  privateAccessCode: z.string().trim().max(120, "Keep private access code under 120 characters.").optional().transform((value) => value || undefined),
+  parkingInstructions: z.string().trim().max(500, "Keep parking instructions under 500 characters.").optional().transform((value) => value || undefined),
+  siteWarnings: z.string().trim().max(700, "Keep site warnings under 700 characters.").optional().transform((value) => value || undefined),
+  startDate: optionalDate,
+  targetCompletionDate: optionalDate,
+  completionDate: optionalDate,
+  contractAmount: money("Contract value"),
+  amountDue: optionalMoney("Amount due"),
+  customerFacingNotes: z.string().trim().max(900, "Keep customer-facing notes under 900 characters.").optional().transform((value) => value || undefined),
+  privateNotes: z.string().trim().max(1200, "Keep private notes under 1,200 characters.").optional().transform((value) => value || undefined),
+}).superRefine((value, ctx) => {
+  if (value.jobType !== "internal_project" && !value.addressLine1 && !value.shortDescription) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["addressLine1"],
+      message: "Add a job address or clear location description for non-internal jobs.",
+    })
+  }
+
+  if (value.completionDate && value.startDate && value.completionDate < value.startDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["completionDate"],
+      message: "Completed date cannot be before the start date.",
+    })
+  }
+})
+
+export const updateProjectJobSchema = projectJobSchema.extend({
+  jobId: requiredText("Job ID"),
+})
+
+export const projectJobParticipantSchema = z.object({
+  jobId: requiredText("Job ID"),
+  accountId: requiredText("Account"),
+  roleOnJob: z.enum(projectProfileRoles),
+  hiredByAccountId: optionalText,
+  reportsToParticipantId: optionalText,
+  billingRelationship: z.enum(jobBillingRelationships).optional().or(z.literal("")).transform((value) => value || undefined),
+  participantStatus: z.enum(jobParticipantStatuses).default("active"),
+  scopeAssigned: z.string().trim().max(900, "Keep assigned scope under 900 characters.").optional().transform((value) => value || undefined),
+  contractAmount: optionalMoney("Participant contract amount"),
+  notes: z.string().trim().max(900, "Keep participant notes under 900 characters.").optional().transform((value) => value || undefined),
+})
+
+export const updateProjectJobParticipantSchema = projectJobParticipantSchema.extend({
+  participantId: requiredText("Participant ID"),
+})
+
+export const removeProjectJobParticipantSchema = z.object({
+  jobId: requiredText("Job ID"),
+  participantId: requiredText("Participant ID"),
+})
+
 export const paymentRecoveryAttemptSchema = z.object({
   recoveryCaseId: requiredText("Recovery case ID"),
   channel: z.enum(["email", "phone", "letter", "client_portal"]),
@@ -1086,6 +1165,11 @@ export type ContractWorkspaceItemInput = z.infer<typeof contractWorkspaceItemSch
 export type ClientPipelineItemInput = z.infer<typeof clientPipelineItemSchema>
 export type UpdateClientPipelineStageInput = z.infer<typeof updateClientPipelineStageSchema>
 export type ClientRiskRoomInput = z.infer<typeof clientRiskRoomSchema>
+export type ProjectJobInput = z.infer<typeof projectJobSchema>
+export type UpdateProjectJobInput = z.infer<typeof updateProjectJobSchema>
+export type ProjectJobParticipantInput = z.infer<typeof projectJobParticipantSchema>
+export type UpdateProjectJobParticipantInput = z.infer<typeof updateProjectJobParticipantSchema>
+export type RemoveProjectJobParticipantInput = z.infer<typeof removeProjectJobParticipantSchema>
 export type PaymentRecoveryAttemptInput = z.infer<typeof paymentRecoveryAttemptSchema>
 export type PaymentPlanInput = z.infer<typeof paymentPlanSchema>
 export type ContractPacketInput = z.infer<typeof contractPacketSchema>

@@ -75,7 +75,9 @@ export default async function ProfileTypeDirectoryPage({
     getPublicEntityProfilesService(),
     searchProfilesService(query, { state, profileType }),
   ])
-  const typedProfiles = allProfiles.filter((profile) => profile.profileType === profileType)
+  const typedProfiles = allProfiles.filter((profile) =>
+    profile.profileType === profileType || profile.accountCapabilities?.includes(profileType),
+  )
   const states = [...new Set(typedProfiles.map((profile) => profile.state))].sort()
   const siteUrl = getSiteUrl()
 

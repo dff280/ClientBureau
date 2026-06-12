@@ -64,7 +64,10 @@ import type {
   PaymentPlanInput,
   PaymentRecoveryAttemptInput,
   PaymentRecoveryCaseInput,
+  ProjectJobInput,
+  ProjectJobParticipantInput,
   RecoveryComplianceReviewInput,
+  RemoveProjectJobParticipantInput,
   ResolutionDeskContactInput,
   ReportDraftInput,
   SavedClientSearchInput,
@@ -75,6 +78,8 @@ import type {
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
+  UpdateProjectJobInput,
+  UpdateProjectJobParticipantInput,
   WatchlistItemInput,
 } from "@/lib/schemas/client-bureau"
 import { isPositiveReportCategory, profileTypes } from "@/lib/types"
@@ -132,6 +137,8 @@ import type {
   ProfileType,
   ProfileShareEvent,
   ProjectJob,
+  ProjectJobDetail,
+  ProjectJobParticipant,
   ReportReassignmentEvent,
   ReportEvidence,
   ReportDraft,
@@ -197,6 +204,7 @@ type ProfileShareEventRow = Tables["profile_share_events"]["Row"]
 type EntityProfileRow = Tables["entity_profiles"]["Row"]
 type ProfileClaimRow = Tables["profile_claims"]["Row"]
 type ProjectJobRow = Tables["project_jobs"]["Row"]
+type ProjectJobProfileRow = Tables["project_job_profiles"]["Row"]
 
 const emptyHash = "sha256:empty-private"
 
@@ -338,23 +346,108 @@ function mapProjectJob(row: ProjectJobRow): ProjectJob {
   return {
     id: row.id,
     ownerUserId: row.owner_user_id ?? undefined,
+    jobNumber: row.job_number ?? undefined,
     title: row.title,
     projectType: row.project_type,
+    jobType: row.job_type ?? undefined,
+    priority: row.priority,
     status: row.status,
+    shortDescription: row.short_description ?? undefined,
+    detailedScopeOfWork: row.detailed_scope_of_work ?? undefined,
+    tradeCategory: row.trade_category ?? undefined,
     city: row.city,
     state: row.state,
     projectAddressPrivate: row.project_address_private ?? undefined,
+    addressLine1: row.address_line1 ?? undefined,
+    addressLine2: row.address_line2 ?? undefined,
+    postalCode: row.postal_code ?? undefined,
+    county: row.county ?? undefined,
+    propertyType: row.property_type ?? undefined,
+    accessInstructions: row.access_instructions ?? undefined,
+    privateAccessCode: row.private_access_code ?? undefined,
+    parkingInstructions: row.parking_instructions ?? undefined,
+    siteWarnings: row.site_warnings ?? undefined,
     startDate: row.start_date ?? undefined,
+    targetCompletionDate: row.target_completion_date ?? undefined,
     completionDate: row.completion_date ?? undefined,
     contractAmount: row.contract_amount,
     amountDue: row.amount_due,
     primaryClientProfileId: row.primary_client_profile_id ?? undefined,
     primaryContractorProfileId: row.primary_contractor_profile_id ?? undefined,
     publicSummary: row.public_summary ?? undefined,
+    customerFacingNotes: row.customer_facing_notes ?? undefined,
     privateNotes: row.private_notes ?? undefined,
     isPublicSummaryAllowed: row.is_public_summary_allowed,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  }
+}
+
+function mapProjectJobParticipant(
+  row: ProjectJobProfileRow,
+  profilesById: Map<string, EntityProfile> = new Map(),
+): ProjectJobParticipant {
+  return {
+    id: row.id,
+    projectJobId: row.project_job_id,
+    profileId: row.profile_id,
+    profile: profilesById.get(row.profile_id),
+    role: row.role,
+    relationshipLabel: row.relationship_label ?? undefined,
+    hiredByProfileId: row.hired_by_profile_id ?? undefined,
+    reportsToParticipantId: row.reports_to_participant_id ?? undefined,
+    billingRelationship: row.billing_relationship ?? undefined,
+    participantStatus: row.participant_status,
+    scopeAssigned: row.scope_assigned ?? undefined,
+    contractAmount: row.contract_amount ?? undefined,
+    isPrimary: row.is_primary,
+    notes: row.notes ?? undefined,
+    privateNotes: row.private_notes ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+function generatedJobNumber() {
+  return `JOB-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+}
+
+function projectJobPayload(userId: string, input: ProjectJobInput | UpdateProjectJobInput): Tables["project_jobs"]["Update"] {
+  const privateAddress = [input.addressLine1, input.addressLine2, input.city, input.state, input.postalCode]
+    .filter(Boolean)
+    .join(", ")
+
+  return {
+    owner_user_id: userId,
+    job_number: input.jobNumber || generatedJobNumber(),
+    title: input.title,
+    project_type: input.projectType,
+    job_type: input.jobType,
+    priority: input.priority,
+    status: input.status,
+    short_description: input.shortDescription,
+    detailed_scope_of_work: input.detailedScopeOfWork ?? null,
+    trade_category: input.tradeCategory ?? null,
+    city: input.city,
+    state: input.state.toUpperCase(),
+    project_address_private: privateAddress || null,
+    address_line1: input.addressLine1 ?? null,
+    address_line2: input.addressLine2 ?? null,
+    postal_code: input.postalCode ?? null,
+    county: input.county ?? null,
+    property_type: input.propertyType ?? null,
+    access_instructions: input.accessInstructions ?? null,
+    private_access_code: input.privateAccessCode ?? null,
+    parking_instructions: input.parkingInstructions ?? null,
+    site_warnings: input.siteWarnings ?? null,
+    start_date: input.startDate ?? null,
+    target_completion_date: input.targetCompletionDate ?? null,
+    completion_date: input.completionDate ?? null,
+    contract_amount: input.contractAmount,
+    amount_due: input.amountDue ?? 0,
+    customer_facing_notes: input.customerFacingNotes ?? null,
+    private_notes: input.privateNotes ?? null,
+    is_public_summary_allowed: false,
   }
 }
 
@@ -387,6 +480,7 @@ function mapEntityProfile(row: EntityProfileRow): EntityProfile {
     id: row.id,
     profileType: row.profile_type,
     profileSubtype: row.profile_subtype ?? defaultProfileSubtype(row.profile_type),
+    accountCapabilities: row.account_capabilities?.length ? row.account_capabilities : [row.profile_type],
     displayName: row.display_name,
     legalNamePrivate: row.legal_name_private ?? undefined,
     businessName: row.business_name ?? undefined,
@@ -3770,6 +3864,204 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
       "Keep recovery, Florida lien service, and evidence records private unless reviewed.",
     ],
   }
+}
+
+export async function getProjectJobsSupabase(userId: string): Promise<ProjectJob[]> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("project_jobs")
+    .select("*")
+    .eq("owner_user_id", userId)
+    .order("updated_at", { ascending: false })
+
+  if (error) {
+    if (isMissingRelationError(error) || isMissingReportIntakeColumnError(error)) return []
+    throw new Error(error.message)
+  }
+
+  return (data ?? []).map(mapProjectJob)
+}
+
+export async function getProjectJobDetailSupabase(userId: string, jobId: string): Promise<ProjectJobDetail | undefined> {
+  const supabase = createServiceClient()
+  const { data: job, error: jobError } = await supabase
+    .from("project_jobs")
+    .select("*")
+    .eq("id", jobId)
+    .eq("owner_user_id", userId)
+    .maybeSingle()
+
+  if (jobError) {
+    if (isMissingRelationError(jobError) || isMissingReportIntakeColumnError(jobError)) return undefined
+    throw new Error(jobError.message)
+  }
+  if (!job) return undefined
+
+  const { data: participants, error: participantError } = await supabase
+    .from("project_job_profiles")
+    .select("*")
+    .eq("project_job_id", jobId)
+    .order("created_at", { ascending: true })
+
+  if (participantError) {
+    if (isMissingRelationError(participantError) || isMissingReportIntakeColumnError(participantError)) {
+      return { ...mapProjectJob(job), participants: [] }
+    }
+    throw new Error(participantError.message)
+  }
+
+  const profileIds = [...new Set((participants ?? []).map((participant) => participant.profile_id))]
+  const profilesById = new Map<string, EntityProfile>()
+
+  if (profileIds.length > 0) {
+    const { data: profiles, error: profileError } = await supabase
+      .from("entity_profiles")
+      .select("*")
+      .in("id", profileIds)
+
+    if (profileError && !isMissingRelationError(profileError)) throw new Error(profileError.message)
+    for (const profile of profiles ?? []) profilesById.set(profile.id, mapEntityProfile(profile))
+  }
+
+  return {
+    ...mapProjectJob(job),
+    participants: (participants ?? []).map((participant) => mapProjectJobParticipant(participant, profilesById)),
+  }
+}
+
+export async function searchJobAccountsSupabase(query = ""): Promise<EntityProfile[]> {
+  const supabase = createServiceClient()
+  const normalized = query.trim()
+  let request = supabase
+    .from("entity_profiles")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(24)
+
+  if (normalized) {
+    const escaped = normalized.replaceAll("%", "\\%").replaceAll(",", " ")
+    request = request.or(`display_name.ilike.%${escaped}%,business_name.ilike.%${escaped}%,city.ilike.%${escaped}%,slug.ilike.%${escaped}%`)
+  }
+
+  const { data, error } = await request
+  if (error) {
+    if (isMissingRelationError(error)) return []
+    throw new Error(error.message)
+  }
+
+  return (data ?? []).map(mapEntityProfile)
+}
+
+export async function createProjectJobSupabase(userId: string, input: ProjectJobInput): Promise<ProjectJob> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("project_jobs")
+    .insert(projectJobPayload(userId, input) as Tables["project_jobs"]["Insert"])
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+  return mapProjectJob(data)
+}
+
+export async function updateProjectJobSupabase(userId: string, input: UpdateProjectJobInput): Promise<ProjectJob> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("project_jobs")
+    .update(projectJobPayload(userId, input))
+    .eq("id", input.jobId)
+    .eq("owner_user_id", userId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+  return mapProjectJob(data)
+}
+
+function participantPayload(input: ProjectJobParticipantInput | UpdateProjectJobParticipantInput): Tables["project_job_profiles"]["Insert"] {
+  return {
+    project_job_id: input.jobId,
+    profile_id: input.accountId,
+    role: input.roleOnJob,
+    relationship_label: input.roleOnJob.replaceAll("_", " "),
+    hired_by_profile_id: input.hiredByAccountId ?? null,
+    reports_to_participant_id: input.reportsToParticipantId ?? null,
+    billing_relationship: input.billingRelationship ?? null,
+    participant_status: input.participantStatus,
+    scope_assigned: input.scopeAssigned ?? null,
+    contract_amount: input.contractAmount ?? null,
+    notes: input.notes ?? null,
+    is_primary: false,
+    private_notes: input.notes ?? null,
+  }
+}
+
+async function assertOwnsProjectJob(userId: string, jobId: string) {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("project_jobs")
+    .select("id")
+    .eq("id", jobId)
+    .eq("owner_user_id", userId)
+    .maybeSingle()
+
+  if (error) throw new Error(error.message)
+  if (!data) throw new Error("Job was not found.")
+}
+
+export async function addProjectJobParticipantSupabase(userId: string, input: ProjectJobParticipantInput): Promise<ProjectJobParticipant> {
+  await assertOwnsProjectJob(userId, input.jobId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("project_job_profiles")
+    .upsert(participantPayload(input), { onConflict: "project_job_id,profile_id,role" })
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+  return mapProjectJobParticipant(data)
+}
+
+export async function updateProjectJobParticipantSupabase(userId: string, input: UpdateProjectJobParticipantInput): Promise<ProjectJobParticipant> {
+  await assertOwnsProjectJob(userId, input.jobId)
+  const supabase = createServiceClient()
+  const { data: duplicate } = await supabase
+    .from("project_job_profiles")
+    .select("id")
+    .eq("project_job_id", input.jobId)
+    .eq("profile_id", input.accountId)
+    .eq("role", input.roleOnJob)
+    .neq("id", input.participantId)
+    .neq("participant_status", "removed")
+    .maybeSingle()
+
+  if (duplicate) throw new Error("This account already has that role on this job.")
+
+  const { data, error } = await supabase
+    .from("project_job_profiles")
+    .update(participantPayload(input))
+    .eq("id", input.participantId)
+    .eq("project_job_id", input.jobId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+  return mapProjectJobParticipant(data)
+}
+
+export async function removeProjectJobParticipantSupabase(userId: string, input: RemoveProjectJobParticipantInput): Promise<ProjectJobParticipant> {
+  await assertOwnsProjectJob(userId, input.jobId)
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("project_job_profiles")
+    .update({ participant_status: "removed" })
+    .eq("id", input.participantId)
+    .eq("project_job_id", input.jobId)
+    .select("*")
+    .single()
+
+  if (error) throw new Error(error.message)
+  return mapProjectJobParticipant(data)
 }
 
 export async function getAdminModerationCrmDataSupabase(): Promise<AdminModerationCrmData> {

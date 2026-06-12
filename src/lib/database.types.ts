@@ -46,7 +46,12 @@ import type {
   ProfileType,
   ProfileSubtype,
   ProjectJobStatus,
+  ProjectJobPriority,
+  ProjectJobType,
+  ProjectPropertyType,
   ProjectProfileRole,
+  JobBillingRelationship,
+  JobParticipantStatus,
   ProfileRatingModel,
   ReportConfidenceLevel,
   ReportRelationshipType,
@@ -309,6 +314,7 @@ export interface Database {
           id: string
           profile_type: ProfileType
           profile_subtype: ProfileSubtype | string | null
+          account_capabilities: ProfileType[]
           display_name: string
           legal_name_private: string | null
           business_name: string | null
@@ -348,6 +354,7 @@ export interface Database {
           id?: string
           profile_type: ProfileType
           profile_subtype?: ProfileSubtype | string | null
+          account_capabilities?: ProfileType[]
           display_name: string
           legal_name_private?: string | null
           business_name?: string | null
@@ -420,19 +427,36 @@ export interface Database {
         Row: {
           id: string
           owner_user_id: string | null
+          job_number: string | null
           title: string
           project_type: string
+          job_type: ProjectJobType | null
+          priority: ProjectJobPriority
           status: ProjectJobStatus
+          short_description: string | null
+          detailed_scope_of_work: string | null
+          trade_category: string | null
           city: string
           state: string
           project_address_private: string | null
+          address_line1: string | null
+          address_line2: string | null
+          postal_code: string | null
+          county: string | null
+          property_type: ProjectPropertyType | null
+          access_instructions: string | null
+          private_access_code: string | null
+          parking_instructions: string | null
+          site_warnings: string | null
           start_date: string | null
+          target_completion_date: string | null
           completion_date: string | null
           contract_amount: number
           amount_due: number
           primary_client_profile_id: string | null
           primary_contractor_profile_id: string | null
           public_summary: string | null
+          customer_facing_notes: string | null
           private_notes: string | null
           is_public_summary_allowed: boolean
           created_at: string
@@ -441,19 +465,36 @@ export interface Database {
         Insert: {
           id?: string
           owner_user_id?: string | null
+          job_number?: string | null
           title: string
           project_type: string
+          job_type?: ProjectJobType | null
+          priority?: ProjectJobPriority
           status?: ProjectJobStatus
+          short_description?: string | null
+          detailed_scope_of_work?: string | null
+          trade_category?: string | null
           city: string
           state: string
           project_address_private?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          postal_code?: string | null
+          county?: string | null
+          property_type?: ProjectPropertyType | null
+          access_instructions?: string | null
+          private_access_code?: string | null
+          parking_instructions?: string | null
+          site_warnings?: string | null
           start_date?: string | null
+          target_completion_date?: string | null
           completion_date?: string | null
           contract_amount?: number
           amount_due?: number
           primary_client_profile_id?: string | null
           primary_contractor_profile_id?: string | null
           public_summary?: string | null
+          customer_facing_notes?: string | null
           private_notes?: string | null
           is_public_summary_allowed?: boolean
           created_at?: string
@@ -469,9 +510,17 @@ export interface Database {
           profile_id: string
           role: ProjectProfileRole
           relationship_label: string | null
+          hired_by_profile_id: string | null
+          reports_to_participant_id: string | null
+          billing_relationship: JobBillingRelationship | null
+          participant_status: JobParticipantStatus
+          scope_assigned: string | null
+          contract_amount: number | null
           is_primary: boolean
+          notes: string | null
           private_notes: string | null
           created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -479,9 +528,17 @@ export interface Database {
           profile_id: string
           role: ProjectProfileRole
           relationship_label?: string | null
+          hired_by_profile_id?: string | null
+          reports_to_participant_id?: string | null
+          billing_relationship?: JobBillingRelationship | null
+          participant_status?: JobParticipantStatus
+          scope_assigned?: string | null
+          contract_amount?: number | null
           is_primary?: boolean
+          notes?: string | null
           private_notes?: string | null
           created_at?: string
+          updated_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["project_job_profiles"]["Insert"]>
         Relationships: []

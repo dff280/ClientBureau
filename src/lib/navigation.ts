@@ -23,6 +23,7 @@ export const contractorDashboardNav: NavigationItem[] = [
   { href: "/dashboard", label: "Overview", description: "Daily work queue, account health, and next actions." },
   { href: "/search", label: "Check a Client", description: "Check a client before taking the job." },
   { href: "/dashboard/reports", label: "Reports", description: "Draft, submit, and track client experience reports." },
+  { href: "/dashboard/jobs", label: "Jobs", description: "Private job records, property details, scope, and role-specific participants." },
   { href: "/dashboard/watchlist", label: "Watchlist", description: "Monitor saved clients and private-match signals." },
   { href: "/dashboard/growth", label: "Growth", description: "Invite contractors, earn credits, claim your profile, and request client feedback." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Signing links, agreement packets, change orders, and client invites." },
@@ -37,7 +38,7 @@ export const contractorDashboardNav: NavigationItem[] = [
 export const contractorDashboardGroups: NavigationGroup[] = [
   {
     title: "Start",
-    links: contractorDashboardNav.filter((item) => ["Overview"].includes(item.label)),
+    links: contractorDashboardNav.filter((item) => ["Overview", "Jobs"].includes(item.label)),
   },
   {
     title: "Find Clients",

@@ -14,6 +14,8 @@ import {
   communityDiscussions,
   contractorRiskOps,
   contractorProfiles,
+  projectJobParticipants,
+  projectJobs,
   reportEvidence,
   savedSearches,
   subscriptions,
@@ -68,7 +70,10 @@ import type {
   PaymentRecoveryCaseInput,
   PaymentRecoveryAttemptInput,
   PaymentPlanInput,
+  ProjectJobInput,
+  ProjectJobParticipantInput,
   RecoveryComplianceReviewInput,
+  RemoveProjectJobParticipantInput,
   ResolutionDeskContactInput,
   SavedClientSearchInput,
   SearchAnalyticsEventInput,
@@ -77,6 +82,8 @@ import type {
   ProfileShareEventInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
+  UpdateProjectJobInput,
+  UpdateProjectJobParticipantInput,
 } from "@/lib/schemas/client-bureau"
 import type {
   AdminSavedView,
@@ -130,6 +137,9 @@ import type {
   ProfileClaim,
   ProfileMergeEvent,
   ProfileRedactionEvent,
+  ProjectJob,
+  ProjectJobDetail,
+  ProjectJobParticipant,
   PublicEntityProfile,
   ReportReassignmentEvent,
   Subscription,
@@ -932,6 +942,229 @@ export function getContractorRiskOpsData(userId: string): ContractorRiskOpsData 
     activity: contractorRiskOps.activity.filter((item) => item.contractorId === contractor.id),
     recommendedActions: contractorRiskOps.recommendedActions,
   }
+}
+
+function jobNumberFallback(input?: string) {
+  return input?.trim() || `JOB-${new Date().getFullYear()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+}
+
+function projectJobFromInput(userId: string, input: ProjectJobInput, existing?: ProjectJob): ProjectJob {
+  const now = new Date().toISOString()
+  const privateAddress = [input.addressLine1, input.addressLine2, input.city, input.state, input.postalCode]
+    .filter(Boolean)
+    .join(", ")
+
+  return {
+    ...(existing ?? {
+      id: `job_${Math.random().toString(36).slice(2, 10)}`,
+      createdAt: now,
+      isPublicSummaryAllowed: false,
+    }),
+    ownerUserId: userId,
+    jobNumber: jobNumberFallback(input.jobNumber ?? existing?.jobNumber),
+    title: input.title,
+    projectType: input.projectType,
+    jobType: input.jobType,
+    priority: input.priority,
+    status: input.status,
+    shortDescription: input.shortDescription,
+    detailedScopeOfWork: input.detailedScopeOfWork,
+    tradeCategory: input.tradeCategory,
+    city: input.city,
+    state: input.state,
+    projectAddressPrivate: privateAddress || existing?.projectAddressPrivate,
+    addressLine1: input.addressLine1,
+    addressLine2: input.addressLine2,
+    postalCode: input.postalCode,
+    county: input.county,
+    propertyType: input.propertyType,
+    accessInstructions: input.accessInstructions,
+    privateAccessCode: input.privateAccessCode,
+    parkingInstructions: input.parkingInstructions,
+    siteWarnings: input.siteWarnings,
+    startDate: input.startDate,
+    targetCompletionDate: input.targetCompletionDate,
+    completionDate: input.completionDate,
+    contractAmount: input.contractAmount,
+    amountDue: input.amountDue ?? existing?.amountDue ?? 0,
+    primaryClientProfileId: existing?.primaryClientProfileId,
+    primaryContractorProfileId: existing?.primaryContractorProfileId,
+    publicSummary: existing?.publicSummary ?? "Private job record. Public profile pages show approved summaries only.",
+    customerFacingNotes: input.customerFacingNotes,
+    privateNotes: input.privateNotes,
+    updatedAt: now,
+  }
+}
+
+function attachParticipantProfiles(participants: ProjectJobParticipant[]) {
+  const profiles = getEntityProfiles()
+
+  return participants.map((participant) => ({
+    ...participant,
+    profile: profiles.find((profile) => profile.id === participant.profileId),
+  }))
+}
+
+function projectJobDetail(job: ProjectJob): ProjectJobDetail {
+  return {
+    ...job,
+    participants: attachParticipantProfiles(
+      projectJobParticipants.filter((participant) => participant.projectJobId === job.id),
+    ),
+  }
+}
+
+export function getProjectJobs(userId: string): ProjectJob[] {
+  return projectJobs
+    .filter((job) => job.ownerUserId === userId)
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+}
+
+export function getProjectJobDetail(userId: string, jobId: string): ProjectJobDetail | undefined {
+  const job = projectJobs.find((item) => item.id === jobId && item.ownerUserId === userId)
+  if (!job) return undefined
+
+  return projectJobDetail(job)
+}
+
+export function searchJobAccounts(query = ""): EntityProfile[] {
+  const normalized = query.trim().toLowerCase()
+  const profiles = getEntityProfiles()
+
+  if (!normalized) return profiles.slice(0, 24)
+
+  return profiles
+    .filter((profile) =>
+      [
+        profile.displayName,
+        profile.businessName,
+        profile.city,
+        profile.state,
+        profile.profileType,
+        profile.profileSubtype,
+        profile.slug,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(normalized),
+    )
+    .slice(0, 24)
+}
+
+export function createProjectJob(userId: string, input: ProjectJobInput): ProjectJob {
+  const job = projectJobFromInput(userId, input)
+  projectJobs.unshift(job)
+  return job
+}
+
+export function updateProjectJob(userId: string, input: UpdateProjectJobInput): ProjectJob {
+  const index = projectJobs.findIndex((job) => job.id === input.jobId && job.ownerUserId === userId)
+  if (index === -1) throw new Error("Job was not found.")
+
+  const job = projectJobFromInput(userId, input, projectJobs[index])
+  projectJobs[index] = job
+  return job
+}
+
+export function addProjectJobParticipant(userId: string, input: ProjectJobParticipantInput): ProjectJobParticipant {
+  const job = projectJobs.find((item) => item.id === input.jobId && item.ownerUserId === userId)
+  if (!job) throw new Error("Job was not found.")
+
+  const profile = getEntityProfiles().find((item) => item.id === input.accountId)
+  if (!profile) throw new Error("Account profile was not found.")
+
+  const existing = projectJobParticipants.find((participant) =>
+    participant.projectJobId === input.jobId &&
+    participant.profileId === input.accountId &&
+    participant.role === input.roleOnJob,
+  )
+  const now = new Date().toISOString()
+  const participant: ProjectJobParticipant = {
+    ...(existing ?? {
+      id: `job_participant_${Math.random().toString(36).slice(2, 10)}`,
+      createdAt: now,
+      isPrimary: false,
+    }),
+    projectJobId: input.jobId,
+    profileId: input.accountId,
+    profile,
+    role: input.roleOnJob,
+    hiredByProfileId: input.hiredByAccountId,
+    reportsToParticipantId: input.reportsToParticipantId,
+    billingRelationship: input.billingRelationship,
+    participantStatus: input.participantStatus,
+    scopeAssigned: input.scopeAssigned,
+    contractAmount: input.contractAmount,
+    relationshipLabel: input.roleOnJob.replaceAll("_", " "),
+    notes: input.notes,
+    updatedAt: now,
+  }
+
+  if (existing) {
+    const index = projectJobParticipants.findIndex((item) => item.id === existing.id)
+    projectJobParticipants[index] = participant
+  } else {
+    projectJobParticipants.unshift(participant)
+  }
+
+  return participant
+}
+
+export function updateProjectJobParticipant(userId: string, input: UpdateProjectJobParticipantInput): ProjectJobParticipant {
+  const job = projectJobs.find((item) => item.id === input.jobId && item.ownerUserId === userId)
+  if (!job) throw new Error("Job was not found.")
+
+  const existing = projectJobParticipants.find((participant) => participant.id === input.participantId && participant.projectJobId === input.jobId)
+  if (!existing) throw new Error("Participant was not found.")
+
+  const duplicate = projectJobParticipants.find((participant) =>
+    participant.id !== input.participantId &&
+    participant.projectJobId === input.jobId &&
+    participant.profileId === input.accountId &&
+    participant.role === input.roleOnJob &&
+    participant.participantStatus !== "removed",
+  )
+  if (duplicate) throw new Error("This account already has that role on this job.")
+
+  const profile = getEntityProfiles().find((item) => item.id === input.accountId)
+  if (!profile) throw new Error("Account profile was not found.")
+
+  const index = projectJobParticipants.findIndex((participant) => participant.id === input.participantId)
+  projectJobParticipants[index] = {
+    ...existing,
+    profileId: input.accountId,
+    profile,
+    role: input.roleOnJob,
+    hiredByProfileId: input.hiredByAccountId,
+    reportsToParticipantId: input.reportsToParticipantId,
+    billingRelationship: input.billingRelationship,
+    participantStatus: input.participantStatus,
+    scopeAssigned: input.scopeAssigned,
+    contractAmount: input.contractAmount,
+    relationshipLabel: input.roleOnJob.replaceAll("_", " "),
+    notes: input.notes,
+    createdAt: existing.createdAt,
+    updatedAt: new Date().toISOString(),
+  }
+
+  return projectJobParticipants[index]
+}
+
+export function removeProjectJobParticipant(userId: string, input: RemoveProjectJobParticipantInput): ProjectJobParticipant {
+  const job = projectJobs.find((item) => item.id === input.jobId && item.ownerUserId === userId)
+  if (!job) throw new Error("Job was not found.")
+
+  const index = projectJobParticipants.findIndex((participant) => participant.id === input.participantId && participant.projectJobId === input.jobId)
+  if (index === -1) throw new Error("Participant was not found.")
+
+  projectJobParticipants[index] = {
+    ...projectJobParticipants[index],
+    participantStatus: "removed",
+    updatedAt: new Date().toISOString(),
+  }
+
+  return projectJobParticipants[index]
 }
 
 export function getAdminModerationCrmData() {

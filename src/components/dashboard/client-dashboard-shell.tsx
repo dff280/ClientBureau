@@ -4,6 +4,7 @@ import type { LucideIcon } from "lucide-react"
 import {
   Activity,
   BellRing,
+  BriefcaseBusiness,
   ClipboardCheck,
   CreditCard,
   FilePlus2,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils"
 
 const navIcons: Record<string, LucideIcon> = {
   Overview: LayoutDashboard,
+  Jobs: BriefcaseBusiness,
   "Check a Client": Search,
   "Report a Client Experience": FilePlus2,
   Reports: ClipboardCheck,

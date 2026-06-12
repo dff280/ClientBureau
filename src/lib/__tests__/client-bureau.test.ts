@@ -115,19 +115,25 @@ import {
   getPublicClientProfile,
   getPublicBusinessProfile,
   createContractShareLink,
+  addProjectJobParticipant,
+  createProjectJob,
   createServiceFeeOrder,
   getContractPacketByShareToken,
   getContractorDashboard,
   getContractorRiskOpsData,
   getEntityProfiles,
+  getProjectJobDetail,
+  getProjectJobs,
   signLienFilingAuthorization,
   searchClients,
+  removeProjectJobParticipant,
   signContractShare,
   simulateApprovalPublication,
   simulateSubmittedClientReport,
   submitProfileClaim,
   submitFloridaLienCase,
   submitManagedRecoveryCase,
+  updateProjectJobParticipant,
 } from "@/lib/repositories/client-bureau"
 import {
   businessProtectionPromise,
@@ -165,6 +171,8 @@ import {
   paymentPlans,
   paymentRecoveryAttempts,
   paymentRecoveryCases,
+  projectJobParticipants,
+  projectJobs,
   reportDrafts,
   watchlistAlerts,
 } from "@/lib/mock-data"
@@ -190,6 +198,8 @@ import {
   moderationCaseAssignmentSchema,
   moderationDecisionReasonSchema,
   paymentRecoveryCaseSchema,
+  projectJobParticipantSchema,
+  projectJobSchema,
   recoveryComplianceReviewSchema,
   reportDraftSchema,
   serviceFeeCheckoutSchema,
@@ -413,6 +423,7 @@ describe("product positioning", () => {
       "Overview",
       "Check a Client",
       "Reports",
+      "Jobs",
       "Watchlist",
       "Growth",
       "Contracts",
@@ -1951,6 +1962,112 @@ describe("platform expansion schemas", () => {
         summary: "Private room links search, evidence, recovery, and contract context.",
       }).success,
     ).toBe(true)
+  })
+
+  it("validates private jobs and role-specific participants", () => {
+    expect(
+      projectJobSchema.safeParse({
+        title: "Pool deck painting after pool remodel",
+        jobType: "subcontracted_work",
+        projectType: "Pool deck painting",
+        tradeCategory: "Painting",
+        status: "scheduled",
+        priority: "high",
+        shortDescription: "Paint the pool deck after the prime contractor completes the remodel handoff.",
+        addressLine1: "Private customer property",
+        city: "Orlando",
+        state: "FL",
+        propertyType: "residential",
+        contractAmount: 6800,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      projectJobSchema.safeParse({
+        title: "",
+        jobType: "subcontracted_work",
+        projectType: "Painting",
+        status: "scheduled",
+        priority: "normal",
+        shortDescription: "Missing job name.",
+        city: "Orlando",
+        state: "FL",
+        contractAmount: 6800,
+      }).success,
+    ).toBe(false)
+
+    expect(
+      projectJobParticipantSchema.safeParse({
+        jobId: "job_pool_deck_01",
+        accountId: "entity_contractor_contractor_04",
+        roleOnJob: "subcontractor",
+        hiredByAccountId: "entity_contractor_contractor_03",
+        billingRelationship: "contractor_pays_subcontractor",
+        participantStatus: "active",
+        scopeAssigned: "Paint the pool deck after remodel handoff.",
+        contractAmount: 6800,
+      }).success,
+    ).toBe(true)
+  })
+
+  it("lets one account hold different roles on different jobs without duplicate accounts", () => {
+    const superiorProfileId = "entity_contractor_contractor_04"
+    const poolDeck = getProjectJobDetail("user_contractor_03", "job_pool_deck_01")
+    const exteriorRepaint = getProjectJobDetail("user_contractor_03", "job_exterior_repaint_01")
+
+    expect(poolDeck?.participants.find((participant) => participant.profileId === superiorProfileId)?.role).toBe("subcontractor")
+    expect(exteriorRepaint?.participants.find((participant) => participant.profileId === superiorProfileId)?.role).toBe("prime_contractor")
+    expect(getEntityProfiles().filter((profile) => profile.id === superiorProfileId)).toHaveLength(1)
+    expect(projectJobParticipants.filter((participant) => participant.profileId === superiorProfileId)).toHaveLength(2)
+    expect(getProjectJobs("user_contractor_03").map((job) => job.id)).toEqual([
+      "job_exterior_repaint_01",
+      "job_pool_deck_01",
+    ])
+    expect(projectJobs.some((job) => job.id === "job_pool_deck_01")).toBe(true)
+  })
+
+  it("creates and edits private job participants without deleting the account profile", () => {
+    const accountId = "entity_contractor_contractor_04"
+    const beforeProfileCount = getEntityProfiles().filter((profile) => profile.id === accountId).length
+    const job = createProjectJob("user_contractor_03", {
+      title: "QA exterior trim repaint",
+      jobType: "direct_client_job",
+      projectType: "Exterior repaint",
+      status: "lead",
+      priority: "normal",
+      shortDescription: "Private QA job used to verify participant lifecycle behavior.",
+      city: "Orlando",
+      state: "FL",
+      propertyType: "residential",
+      contractAmount: 1250,
+    })
+    const participant = addProjectJobParticipant("user_contractor_03", {
+      jobId: job.id,
+      accountId,
+      roleOnJob: "prime_contractor",
+      participantStatus: "pending",
+      billingRelationship: "client_pays_contractor",
+      scopeAssigned: "Trim repaint scope.",
+      contractAmount: 1250,
+    })
+    const updated = updateProjectJobParticipant("user_contractor_03", {
+      jobId: job.id,
+      participantId: participant.id,
+      accountId,
+      roleOnJob: "prime_contractor",
+      participantStatus: "active",
+      billingRelationship: "client_pays_contractor",
+      notes: "Verified participant update path.",
+    })
+    const removed = removeProjectJobParticipant("user_contractor_03", {
+      jobId: job.id,
+      participantId: participant.id,
+    })
+
+    expect(job.ownerUserId).toBe("user_contractor_03")
+    expect(updated.participantStatus).toBe("active")
+    expect(removed.participantStatus).toBe("removed")
+    expect(getEntityProfiles().filter((profile) => profile.id === accountId)).toHaveLength(beforeProfileCount)
   })
 
   it("validates recovery attempts, payment plans, contract packets, and admin controls", () => {
