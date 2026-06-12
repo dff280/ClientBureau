@@ -56,7 +56,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
   const adminUsers = data.users.filter((user) => user.role === "admin").length
   const clientAccounts = data.users.filter((user) => user.accountType === "client").length
   const businessAccounts = data.users.filter((user) => user.accountType !== "client").length
-  const missingLicenseCount = data.contractors.filter((contractor) => !contractor.licenseNumber).length
+  const incompleteBusinessProfileCount = data.contractors.filter(hasBusinessProfileGaps).length
   const filteredContractors = data.contractors
     .filter((contractor) => {
       const text = [
@@ -109,11 +109,11 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
         />
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          <StatCard label="Users" value={data.users.length} helper="All platform user records" icon={UsersRound} tone="slate" />
+          <StatCard label="Users" value={data.users.length} helper={`${newUsers} new in the last 14 days`} icon={UsersRound} tone="slate" />
           <StatCard label="Businesses" value={data.contractors.length} helper="Business-owner workspaces" icon={ShieldCheck} tone="blue" />
           <StatCard label="Verified" value={verified} helper="Accounts with verified business status" icon={UserCheck} tone="emerald" />
           <StatCard label="Pending verification" value={pending} helper="Accounts needing review" icon={ShieldCheck} tone={pending > 0 ? "amber" : "slate"} />
-          <StatCard label="New users" value={newUsers} helper="Created in the last 14 days" icon={CalendarClock} tone={newUsers > 0 ? "blue" : "slate"} />
+          <StatCard label="Profile gaps" value={incompleteBusinessProfileCount} helper="Missing operating details" icon={CalendarClock} tone={incompleteBusinessProfileCount > 0 ? "amber" : "slate"} />
         </div>
 
         <DashboardSection
@@ -139,9 +139,9 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
             <AccountWorkTile
               icon={BriefcaseBusiness}
               label="Profile gaps"
-              value={missingLicenseCount}
-              text="Business profiles missing license details or supporting verification context."
-              tone={missingLicenseCount > 0 ? "amber" : "slate"}
+              value={incompleteBusinessProfileCount}
+              text="Business profiles missing license, service area, company size, years, website, or platform goal."
+              tone={incompleteBusinessProfileCount > 0 ? "amber" : "slate"}
             />
             <AccountWorkTile
               icon={LockKeyhole}
@@ -262,7 +262,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
         <DashboardSection
           eyebrow="Business profiles"
           title="Business-owner workspaces"
-          description={`${filteredContractors.length} visible business profile${filteredContractors.length === 1 ? "" : "s"} sorted by verification urgency, profile completeness, and onboarding age.`}
+          description={`${filteredContractors.length} visible business profile${filteredContractors.length === 1 ? "" : "s"} sorted by verification urgency, profile completeness, operating details, and onboarding age.`}
         >
         <div className="grid gap-4 xl:grid-cols-2">
           {filteredContractors.map((contractor) => (
@@ -290,8 +290,24 @@ function contractorPriority(contractor: Awaited<ReturnType<typeof getAdminWorksp
   if (contractor.verificationStatus === "unverified") priority += 50
   if (!contractor.licenseNumber) priority += 20
   if (!contractor.serviceArea) priority += 10
+  if (!contractor.businessType) priority += 8
+  if (!contractor.companySize) priority += 6
+  if (!contractor.yearsInBusiness) priority += 6
+  if (!contractor.primaryGoal) priority += 5
+  if (!contractor.websiteUrl) priority += 3
   if (isWithinDays(contractor.createdAt, 14)) priority += 8
   return priority
+}
+
+function hasBusinessProfileGaps(contractor: Awaited<ReturnType<typeof getAdminWorkspaceDataService>>["contractors"][number]) {
+  return !(
+    contractor.licenseNumber &&
+    contractor.serviceArea &&
+    contractor.businessType &&
+    contractor.companySize &&
+    contractor.yearsInBusiness &&
+    contractor.primaryGoal
+  )
 }
 
 function isWithinDays(value: string, days: number) {

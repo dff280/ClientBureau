@@ -286,6 +286,51 @@ export default async function AdminHomePage() {
           </DashboardSection>
         </div>
 
+        <DashboardSection
+          eyebrow="Technical control plane"
+          title="Operate records, identity graph, and platform readiness from one place"
+          description="Use these controls when staff needs to change profile data, inspect graph relationships, confirm live database readiness, or review sensitive audit activity."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <TechnicalControlCard
+              href="/admin/profiles"
+              icon={Database}
+              label="Profile Graph"
+              title="Unified identity CRM"
+              detail="Claims, duplicate groups, report reassignment, redactions, contractor/subcontractor profile context."
+              status={`${data.clients.length + data.contractors.length} records`}
+              tone="blue"
+            />
+            <TechnicalControlCard
+              href="/admin/clients"
+              icon={UserRound}
+              label="Client Records"
+              title="Edit public-safe profile fields"
+              detail="Identity, city/state, ZIP, rating, risk, visibility, report count, and public profile preview."
+              status={`${publicClients} public`}
+              tone="emerald"
+            />
+            <TechnicalControlCard
+              href="/admin/contractors"
+              icon={UsersRound}
+              label="Business Records"
+              title="Manage contractor/subcontractor data"
+              detail="Trade, service area, license, website, company size, years in business, goals, and verification."
+              status={`${pendingBusinesses} pending`}
+              tone={pendingBusinesses > 0 ? "amber" : "slate"}
+            />
+            <TechnicalControlCard
+              href="/api/health"
+              icon={Database}
+              label="Live Health"
+              title="Supabase readiness"
+              detail={`Core ${health.readiness.coreTableCount.ready}/${health.readiness.coreTableCount.total}, platform ${health.readiness.platformTableCount.ready}/${health.readiness.platformTableCount.total}, columns ${health.readiness.platformColumnCount.ready}/${health.readiness.platformColumnCount.total}.`}
+              status={health.readiness.platformCanUseSupabase ? "Live ready" : "Review"}
+              tone={health.readiness.platformCanUseSupabase ? "emerald" : "amber"}
+            />
+          </div>
+        </DashboardSection>
+
         <ReleaseQaPanel health={health} />
 
         <LiveOpsReadinessPanel health={health} />
@@ -382,6 +427,42 @@ function ServiceRow({
         </div>
         <StatusBadge tone={tone}>{value}</StatusBadge>
       </div>
+    </Link>
+  )
+}
+
+function TechnicalControlCard({
+  detail,
+  href,
+  icon: Icon,
+  label,
+  status,
+  title,
+  tone,
+}: {
+  detail: string
+  href: string
+  icon: LucideIcon
+  label: string
+  status: string
+  title: string
+  tone: "slate" | "amber" | "emerald" | "blue"
+}) {
+  return (
+    <Link
+      href={href}
+      prefetch={false}
+      className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:border-amber-300 hover:bg-white"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-white">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <StatusBadge tone={tone}>{status}</StatusBadge>
+      </div>
+      <p className="mt-4 text-xs font-semibold uppercase text-amber-700">{label}</p>
+      <h3 className="mt-1 font-semibold text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
     </Link>
   )
 }

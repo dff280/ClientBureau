@@ -3478,8 +3478,10 @@ export async function updateAdminClientRecordSupabase(input: {
   businessName?: string
   city: string
   state: string
+  zip?: string
   riskLevel: ClientProfile["riskLevel"]
   clientBureauScore: number
+  reportCount?: number
   isPublic?: boolean
   moderatorNote?: string
   reviewer?: { id: string; fullName: string }
@@ -3493,9 +3495,12 @@ export async function updateAdminClientRecordSupabase(input: {
       business_name: input.businessName ?? null,
       city: input.city,
       state: input.state.toUpperCase(),
+      zip: input.zip ?? null,
       risk_level: input.riskLevel,
       client_bureau_score: input.clientBureauScore,
+      report_count: input.reportCount,
       is_public: Boolean(input.isPublic),
+      updated_at: new Date().toISOString(),
     })
     .eq("id", input.clientId)
     .select("*")
@@ -3521,8 +3526,16 @@ export async function updateAdminContractorRecordSupabase(input: {
   contractorId: string
   businessName: string
   trade: string
+  businessType?: string
+  businessPhone?: string
+  websiteUrl?: string
+  serviceArea?: string
+  companySize?: string
+  yearsInBusiness?: string
+  primaryGoal?: string
   city: string
   state: string
+  licenseNumber?: string
   verificationStatus: ContractorProfile["verificationStatus"]
   moderatorNote?: string
   reviewer?: { id: string; fullName: string }
@@ -3533,8 +3546,16 @@ export async function updateAdminContractorRecordSupabase(input: {
     .update({
       business_name: input.businessName,
       trade: input.trade,
+      business_type: input.businessType ?? null,
+      business_phone: input.businessPhone ?? null,
+      website_url: input.websiteUrl ?? null,
+      service_area: input.serviceArea ?? null,
+      company_size: input.companySize ?? null,
+      years_in_business: input.yearsInBusiness ?? null,
+      primary_goal: input.primaryGoal ?? null,
       city: input.city,
       state: input.state.toUpperCase(),
+      license_number: input.licenseNumber ?? null,
       verification_status: input.verificationStatus,
     })
     .eq("id", input.contractorId)

@@ -531,8 +531,10 @@ export async function updateAdminClientRecordService(
     businessName: input.businessName,
     city: input.city,
     state: input.state.toUpperCase(),
+    zip: input.zip,
     riskLevel: input.riskLevel,
     clientBureauScore: input.clientBureauScore,
+    reportCount: input.reportCount,
     isPublic: Boolean(input.isPublic),
   } satisfies Partial<ClientProfile> & { id: string })
 }
@@ -546,8 +548,16 @@ export async function updateAdminContractorRecordService(
     id: input.contractorId,
     businessName: input.businessName,
     trade: input.trade,
+    businessType: input.businessType,
+    businessPhone: input.businessPhone,
+    websiteUrl: input.websiteUrl,
+    serviceArea: input.serviceArea,
+    companySize: input.companySize,
+    yearsInBusiness: input.yearsInBusiness,
+    primaryGoal: input.primaryGoal,
     city: input.city,
     state: input.state.toUpperCase(),
+    licenseNumber: input.licenseNumber,
     verificationStatus: input.verificationStatus,
   } satisfies Partial<ContractorProfile> & { id: string })
 }

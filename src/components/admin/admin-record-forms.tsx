@@ -41,6 +41,7 @@ import {
 } from "@/lib/actions/client-bureau"
 import { buildBusinessSlug } from "@/lib/business-rating"
 import { clientRatingBand } from "@/lib/client-rating"
+import { businessTypes, companySizes, onboardingGoals, yearsInBusinessOptions } from "@/lib/locations"
 import type { ActionResult, AuditLogEntry, ClientProfile, ContractorProfile } from "@/lib/types"
 import { riskLevels } from "@/lib/types"
 import { cn } from "@/lib/utils"
@@ -93,6 +94,7 @@ export function AdminClientEditor({
           { label: "Client Bureau Rating", value: `${client.clientBureauScore}/100` },
           { label: "Rating band", value: ratingBand },
           { label: "Risk level", value: client.riskLevel },
+          { label: "ZIP / directory", value: client.zip ?? "Not provided" },
           { label: "Approved / total reports", value: `${metrics.approved} / ${metrics.total}` },
           { label: "Pending / disputed", value: `${metrics.pending} pending / ${metrics.disputed} disputed` },
           { label: "Evidence status", value: metrics.evidence > 0 ? `${metrics.evidence} evidence-backed report${metrics.evidence === 1 ? "" : "s"}` : "No evidence label yet" },
@@ -179,6 +181,7 @@ export function AdminClientEditor({
                 <LabeledInput label="Business optional" name="businessName" defaultValue={client.businessName ?? ""} />
                 <LabeledInput label="City" name="city" defaultValue={client.city} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledState label="State" id={`${client.id}-state`} name="state" defaultValue={client.state} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="ZIP optional" name="zip" defaultValue={client.zip ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
               </div>
             </EditorFormSection>
             <EditorFormSection
@@ -202,6 +205,7 @@ export function AdminClientEditor({
                   </select>
                 </div>
                 <LabeledInput label="Client Bureau Rating" name="clientBureauScore" defaultValue={String(client.clientBureauScore)} type="number" />
+                <LabeledInput label="Report count" name="reportCount" defaultValue={String(client.reportCount)} type="number" />
               </div>
               <label className="mt-4 flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-700">
                 <Checkbox name="isPublic" defaultChecked={client.isPublic} />
@@ -254,6 +258,8 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
     !contractor.licenseNumber ? "license" : null,
     !contractor.serviceArea ? "service area" : null,
     !contractor.businessType ? "business type" : null,
+    !contractor.companySize ? "company size" : null,
+    !contractor.yearsInBusiness ? "years in business" : null,
   ].filter(Boolean)
 
   useEffect(() => {
@@ -277,8 +283,11 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
           { label: "Business type", value: contractor.businessType ?? "Not provided" },
           { label: "Location", value: `${contractor.city}, ${contractor.state}` },
           { label: "Service area", value: contractor.serviceArea ?? "Not provided" },
+          { label: "Company size", value: contractor.companySize ?? "Not provided" },
+          { label: "Years in business", value: contractor.yearsInBusiness ?? "Not provided" },
           { label: "Verification", value: contractor.verificationStatus },
           { label: "License", value: contractor.licenseNumber ?? "Not provided" },
+          { label: "Website", value: contractor.websiteUrl ? "Website on file" : "Not provided" },
           { label: "Workspace age", value: ageLabel(contractor.createdAt) },
         ]}
         actions={
@@ -348,33 +357,50 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
           <form action={action} className="grid gap-4">
             <AdminActionTokenInput />
             <input type="hidden" name="contractorId" value={contractor.id} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <LabeledInput label="Business" name="businessName" defaultValue={contractor.businessName} errors={state.ok ? undefined : state.fieldErrors} />
-              <LabeledInput label="Trade" name="trade" defaultValue={contractor.trade} errors={state.ok ? undefined : state.fieldErrors} />
-              <LabeledInput label="City" name="city" defaultValue={contractor.city} errors={state.ok ? undefined : state.fieldErrors} />
-              <LabeledState label="State" id={`${contractor.id}-state`} name="state" defaultValue={contractor.state} errors={state.ok ? undefined : state.fieldErrors} />
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${contractor.id}-verification`}>
-                  Verification
-                </label>
-                <select
-                  id={`${contractor.id}-verification`}
+            <EditorFormSection
+              title="Business identity"
+              description="These fields power the business/trade profile, profile claiming, public proof cards, and admin search."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledInput label="Business" name="businessName" defaultValue={contractor.businessName} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="Trade" name="trade" defaultValue={contractor.trade} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledSelect label="Business type" name="businessType" defaultValue={contractor.businessType ?? ""} options={businessTypes} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="Website optional" name="websiteUrl" defaultValue={contractor.websiteUrl ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
+                <div className="sm:col-span-2">
+                  <LabeledTextarea label="Service area" name="serviceArea" defaultValue={contractor.serviceArea ?? ""} errors={state.ok ? undefined : state.fieldErrors} placeholder="Orlando, Winter Park, Orange County, Central Florida" />
+                </div>
+              </div>
+            </EditorFormSection>
+            <EditorFormSection
+              title="Verification and operating details"
+              description="Use dropdowns for structured fields so search, ratings, and admin queues stay consistent."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LabeledInput label="City" name="city" defaultValue={contractor.city} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledState label="State" id={`${contractor.id}-state`} name="state" defaultValue={contractor.state} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="License number optional" name="licenseNumber" defaultValue={contractor.licenseNumber ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledSelect
+                  label="Verification"
                   name="verificationStatus"
                   defaultValue={contractor.verificationStatus}
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                >
-                  <option value="unverified">Unverified</option>
-                  <option value="pending">Pending</option>
-                  <option value="verified">Verified</option>
-                </select>
+                  options={["unverified", "pending", "verified"]}
+                  errors={state.ok ? undefined : state.fieldErrors}
+                />
+                <LabeledSelect label="Company size" name="companySize" defaultValue={contractor.companySize ?? ""} options={companySizes} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledSelect label="Years in business" name="yearsInBusiness" defaultValue={contractor.yearsInBusiness ?? ""} options={yearsInBusinessOptions} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledSelect label="Main goal" name="primaryGoal" defaultValue={contractor.primaryGoal ?? ""} options={onboardingGoals} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="Verification phone private" name="businessPhone" defaultValue={contractor.businessPhone ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
               </div>
-            </div>
-            <div>
+            </EditorFormSection>
+            <EditorFormSection
+              title="Moderator note"
+              description="Explain why the business profile, verification, location, or operational details changed."
+            >
               <Textarea name="moderatorNote" required placeholder="Required moderator note for audit log" className="min-h-24" />
               <p className="mt-2 text-xs leading-5 text-slate-500">
-                Note why the business profile, verification, or location changed.
+                Private verification phone, license details, and account context stay internal unless a public-safe label is intentionally shown.
               </p>
-            </div>
+            </EditorFormSection>
             <PendingSubmitButton pendingText="Saving..." className="bg-slate-950 text-white hover:bg-slate-800">
               <ShieldCheck aria-hidden="true" />
               Save business changes
@@ -547,6 +573,72 @@ function LabeledInput({
         {label}
       </label>
       <Input id={`${name}-${defaultValue}`} name={name} defaultValue={defaultValue} type={type} />
+      <FieldError name={name} errors={errors} />
+    </div>
+  )
+}
+
+function LabeledSelect({
+  label,
+  name,
+  defaultValue,
+  errors,
+  options,
+}: {
+  label: string
+  name: string
+  defaultValue?: string
+  errors?: Record<string, string[]>
+  options: readonly string[]
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${name}-${defaultValue ?? "empty"}`}>
+        {label}
+      </label>
+      <select
+        id={`${name}-${defaultValue ?? "empty"}`}
+        name={name}
+        defaultValue={defaultValue ?? ""}
+        className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        <option value="">Select {label.toLowerCase()}</option>
+        {options.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+      <FieldError name={name} errors={errors} />
+    </div>
+  )
+}
+
+function LabeledTextarea({
+  label,
+  name,
+  defaultValue,
+  errors,
+  placeholder,
+}: {
+  label: string
+  name: string
+  defaultValue?: string
+  errors?: Record<string, string[]>
+  placeholder?: string
+}) {
+  return (
+    <div className="space-y-2">
+      <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${name}-${defaultValue ?? "empty"}`}>
+        {label}
+      </label>
+      <Textarea
+        id={`${name}-${defaultValue ?? "empty"}`}
+        name={name}
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="min-h-24 bg-white"
+      />
       <FieldError name={name} errors={errors} />
     </div>
   )
