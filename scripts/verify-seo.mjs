@@ -181,6 +181,21 @@ for (const path of ["/llms.txt", "/robots.txt", "/sitemap.xml", "/ai-index.json"
   else fail(`${path} returns 200`, String(result.response.status))
 }
 
+const launchAssets = [
+  "/images/search-dossier-console.webp",
+  "/images/florida-agreement-packet.webp",
+  "/images/admin-ops-crm-console.webp",
+  "/images/mobile-field-app-console.webp",
+]
+
+for (const path of launchAssets) {
+  const response = await fetch(`${baseUrl}${path}`)
+  const contentType = response.headers.get("content-type") ?? ""
+
+  if (response.ok && contentType.includes("image/")) pass(`${path} launch image available`, contentType)
+  else fail(`${path} launch image available`, `${response.status} ${contentType}`)
+}
+
 const publicContentPages = [
   "/terms",
   "/privacy",
@@ -200,6 +215,7 @@ const publicContentPages = [
   "/florida-lien-notice-service",
   "/florida-lien-filing-service",
   "/contractor-contract-template",
+  "/florida-contractor-agreement-template",
   "/change-order-template",
   "/homeowner-wont-pay-contractor",
   "/client-screening-for-contractors",

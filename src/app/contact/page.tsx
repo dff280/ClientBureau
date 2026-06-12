@@ -8,10 +8,12 @@ import {
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
+  ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getPublicContactInfo } from "@/lib/env"
+import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
   title: "Contact Client Bureau",
@@ -60,6 +62,8 @@ const proof = [
   { label: "Privacy", value: "Protected", text: "Raw evidence and private contact details stay out of public pages." },
 ]
 
+const adminOpsAsset = pageAssets.adminOpsCrm
+
 export default function ContactPage() {
   const contact = getPublicContactInfo()
   const hasAddress = contact.street && contact.city && contact.state
@@ -73,14 +77,15 @@ export default function ContactPage() {
         primary={{ href: "/signup", label: "Create account", icon: Users }}
         secondary={{ href: "/client-response", label: "Submit client response", icon: MessageSquareText }}
         aside={
-          <div className="space-y-4 text-white">
-            <ShieldCheck className="size-9 text-amber-300" aria-hidden="true" />
-            <p className="text-xl font-semibold">Privacy-first support routing.</p>
-            <p className="text-sm leading-6 text-slate-300">
-              Client Bureau does not publish private contractor or client identifiers through
-              public contact pages. Use the guided workflows for report, response, and account records.
-            </p>
-          </div>
+          <ProductMockupFrame
+            dark
+            eyebrow="Support routing"
+            title="Privacy-first workflows."
+            description="Guided paths keep report, response, moderation, and account records organized without exposing private identifiers."
+            imageSrc={adminOpsAsset.src}
+            imageAlt={adminOpsAsset.alt}
+            points={["Account support", "Moderated responses", "Private-data safeguards"]}
+          />
         }
       />
 

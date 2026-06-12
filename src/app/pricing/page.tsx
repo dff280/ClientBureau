@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
 export const metadata: Metadata = {
@@ -99,6 +100,9 @@ const faqs = [
   ["Are private emails, phone numbers, addresses, or evidence public?", "No. Private identifiers and raw evidence stay private and are not displayed on public client profiles."],
 ]
 
+const searchDossierAsset = pageAssets.searchDossier
+const agreementPacketAsset = pageAssets.floridaAgreementPacket
+
 export default function PricingPage() {
   return (
     <>
@@ -114,8 +118,8 @@ export default function PricingPage() {
             eyebrow="Pro workflow"
             title="One plan. One intake process."
             description="Search, contract, document, recover, and monitor from the same private workspace."
-            imageSrc="/images/search-intelligence-console.webp"
-            imageAlt="Client Bureau search intelligence console showing client ratings and private matching."
+            imageSrc={searchDossierAsset.src}
+            imageAlt={searchDossierAsset.alt}
             points={["Unlimited checks on Pro", "Private evidence records", "Recovery and lien-service paths"]}
           />
         }
@@ -141,8 +145,8 @@ export default function PricingPage() {
               eyebrow="Plan value"
               title="Pricing is tied to the work you already do."
               description="Client Bureau should sit at the front of intake, not after a job goes bad."
-              imageSrc="/images/contract-packet-console.webp"
-              imageAlt="Client Bureau contract packet workspace with scope, payment terms, and signature status."
+              imageSrc={agreementPacketAsset.src}
+              imageAlt={agreementPacketAsset.alt}
               points={["Client checks before scheduling", "Agreement packets before work starts", "Evidence and recovery records after issues appear"]}
             />
             <WorkflowTimeline items={workflowSteps} />

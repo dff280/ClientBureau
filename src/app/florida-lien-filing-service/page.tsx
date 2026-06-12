@@ -9,6 +9,7 @@ import {
   ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
@@ -89,6 +90,8 @@ const filingReadiness = [
   },
 ]
 
+const resolutionDeskAsset = pageAssets.resolutionDesk
+
 export default function FloridaLienFilingServicePage() {
   return (
     <>
@@ -105,8 +108,8 @@ export default function FloridaLienFilingServicePage() {
             eyebrow="Review-gated filing"
             title="Lien service case file"
             description="Deadline risk, authorization, fee status, vendor review, recording proof, and release tracking stay private."
-            imageSrc="/images/resolution-desk-console.webp"
-            imageAlt="Client Bureau lien service console showing deadline and case review status."
+            imageSrc={resolutionDeskAsset.src}
+            imageAlt="Client Bureau lien service workflow visual showing deadline, authorization, vendor review, and recording proof status."
             points={["Contractor authorization", "Attorney/vendor review", "Recording proof tracking"]}
           />
         }

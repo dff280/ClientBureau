@@ -1,8 +1,10 @@
 import { spawn } from "node:child_process"
-import { existsSync } from "node:fs"
+import { cpSync, existsSync } from "node:fs"
 import net from "node:net"
 
 const standaloneServer = ".next/standalone/server.js"
+const standalonePublic = ".next/standalone/public"
+const standaloneStatic = ".next/standalone/.next/static"
 const host = process.env.SEO_LOCAL_HOST || "127.0.0.1"
 const preferredPort = Number(process.env.SEO_LOCAL_PORT || process.env.PORT || 4100)
 
@@ -77,6 +79,14 @@ if (!existsSync(standaloneServer)) {
     `[seo:check:local] Missing ${standaloneServer}. Run "npm run build" before "npm run seo:check:local".`,
   )
   process.exit(1)
+}
+
+if (existsSync("public")) {
+  cpSync("public", standalonePublic, { recursive: true, force: true })
+}
+
+if (existsSync(".next/static")) {
+  cpSync(".next/static", standaloneStatic, { recursive: true, force: true })
 }
 
 const port = await findAvailablePort(preferredPort)

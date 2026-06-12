@@ -9,6 +9,7 @@ import {
   ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
@@ -87,6 +88,8 @@ const noticeReadiness = [
   },
 ]
 
+const resolutionDeskAsset = pageAssets.resolutionDesk
+
 export default function FloridaLienNoticeServicePage() {
   return (
     <>
@@ -103,8 +106,8 @@ export default function FloridaLienNoticeServicePage() {
             eyebrow="Notice packet"
             title="Private notice workflow"
             description="Florida notice cases stay private and require contractor certification before staff or vendor action."
-            imageSrc="/images/resolution-desk-console.webp"
-            imageAlt="Client Bureau Florida notice workflow console."
+            imageSrc={resolutionDeskAsset.src}
+            imageAlt="Client Bureau Florida notice workflow visual showing private case review and service tracking."
             points={["Document review", "Authorization gate", "Delivery proof tracking"]}
           />
         }

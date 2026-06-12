@@ -23,8 +23,10 @@ import {
   PremiumFeatureCard,
   PremiumHero,
   PremiumSectionHeader,
+  ProductMockupFrame,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
+import { pageAssets } from "@/lib/page-assets"
 import { getFaqSchema, JsonLd } from "@/lib/seo"
 
 export const metadata: Metadata = {
@@ -162,6 +164,8 @@ const faqs = [
   },
 ]
 
+const mobileFieldAppAsset = pageAssets.mobileFieldApp
+
 export default function PlatformPage() {
   return (
     <>
@@ -173,13 +177,15 @@ export default function PlatformPage() {
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
         secondary={{ href: "/signup", label: "Create Account", icon: LockKeyhole }}
         aside={
-          <div className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-300">Platform doctrine</p>
-            <h2 className="mt-3 text-2xl font-semibold text-white">Search before the job. Document during the job. Protect payment after.</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Every workflow exists to help a contractor or service business make a cleaner decision before risk becomes expensive.
-            </p>
-          </div>
+          <ProductMockupFrame
+            dark
+            eyebrow="Platform doctrine"
+            title="Search, document, protect."
+            description="Every workflow helps a contractor or service business make a cleaner decision before risk becomes expensive."
+            imageSrc={mobileFieldAppAsset.src}
+            imageAlt={mobileFieldAppAsset.alt}
+            points={mobileFieldAppAsset.points}
+          />
         }
       />
 

@@ -8,9 +8,11 @@ import {
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
+  ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
   title: "About Client Bureau",
@@ -58,6 +60,8 @@ const standards = [
   "Administrative review separates private workflow records from public profile summaries.",
 ]
 
+const platformAsset = pageAssets.platformHero
+
 export default function AboutPage() {
   return (
     <main className="bg-slate-100">
@@ -68,14 +72,15 @@ export default function AboutPage() {
         primary={{ href: "/search", label: "Check a Client", icon: FileSearch }}
         secondary={{ href: "/how-it-works", label: "How it works", icon: BadgeCheck }}
         aside={
-          <div className="space-y-4 text-white">
-            <BadgeCheck className="size-9 text-amber-300" aria-hidden="true" />
-            <p className="text-xl font-semibold">Built for documentation, moderation, and fair context.</p>
-            <p className="text-sm leading-6 text-slate-300">
-              Client Bureau is a moderated record system built around documented business experiences,
-              private matching, evidence-on-file summaries, and client right-of-response.
-            </p>
-          </div>
+          <ProductMockupFrame
+            dark
+            eyebrow="Trust platform"
+            title="Documentation, moderation, and fair context."
+            description="A moderated record system built around documented business experiences, private matching, evidence-on-file summaries, and response rights."
+            imageSrc={platformAsset.src}
+            imageAlt={platformAsset.alt}
+            points={platformAsset.points}
+          />
         }
       />
 

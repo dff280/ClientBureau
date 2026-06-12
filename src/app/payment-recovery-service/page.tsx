@@ -12,6 +12,7 @@ import {
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
@@ -108,6 +109,8 @@ const caseFileSections = [
   },
 ]
 
+const resolutionDeskAsset = pageAssets.resolutionDesk
+
 export default function PaymentRecoveryServicePage() {
   return (
     <>
@@ -124,8 +127,8 @@ export default function PaymentRecoveryServicePage() {
             eyebrow="Private case workflow"
             title="Resolution Desk record"
             description="Staff-assisted follow-up, payment-plan context, response notes, and case outcomes stay organized privately."
-            imageSrc="/images/resolution-desk-console.webp"
-            imageAlt="Client Bureau resolution desk console for payment recovery cases."
+            imageSrc={resolutionDeskAsset.src}
+            imageAlt={resolutionDeskAsset.alt}
             points={["Document review", "Respectful outreach", "Contractor-direct payment tracking"]}
           />
         }

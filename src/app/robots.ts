@@ -37,6 +37,7 @@ export default function robots(): MetadataRoute.Robots {
         "/florida-lien-notice-service",
         "/florida-lien-filing-service",
         "/contractor-contract-template",
+        "/florida-contractor-agreement-template",
         "/change-order-template",
         "/homeowner-wont-pay-contractor",
         "/client-screening-for-contractors",

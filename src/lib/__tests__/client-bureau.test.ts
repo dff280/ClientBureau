@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest"
 
+import { existsSync } from "node:fs"
+import path from "node:path"
+
 import { formDataToObject } from "@/lib/actions/result"
 import sitemap from "@/app/sitemap"
 import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
@@ -166,6 +169,8 @@ import {
   watchlistAlerts,
 } from "@/lib/mock-data"
 import { acquisitionPages, getAcquisitionPage } from "@/lib/acquisition-pages"
+import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
+import { pageAssets } from "@/lib/page-assets"
 import { allSeoLandingPages, getSeoLandingPage } from "@/lib/seo-landing-pages"
 import {
   intakeAssessmentSchema,
@@ -1122,6 +1127,7 @@ describe("public SEO landing pages", () => {
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
     expect(urls).toContain("https://clientbureau.com/industries/contractors")
     expect(urls).toContain("https://clientbureau.com/contractor-contract-template")
+    expect(urls).toContain("https://clientbureau.com/florida-contractor-agreement-template")
     expect(urls).toContain("https://clientbureau.com/change-order-template")
     expect(urls).toContain("https://clientbureau.com/homeowner-wont-pay-contractor")
     expect(urls).toContain("https://clientbureau.com/client-screening-for-contractors")
@@ -1130,6 +1136,7 @@ describe("public SEO landing pages", () => {
   it("defines high-intent acquisition pages with careful conversion copy", () => {
     expect(acquisitionPages.map((page) => page.slug)).toEqual([
       "contractor-contract-template",
+      "florida-contractor-agreement-template",
       "change-order-template",
       "homeowner-wont-pay-contractor",
       "client-screening-for-contractors",
@@ -1138,6 +1145,23 @@ describe("public SEO landing pages", () => {
       "does not guarantee collection",
     )
     expect(JSON.stringify(acquisitionPages)).not.toContain("blacklist")
+  })
+
+  it("assigns launch visuals to public acquisition pages", () => {
+    expect(acquisitionPages.every((page) => Boolean(page.visualAssetKey))).toBe(true)
+    for (const page of acquisitionPages) {
+      expect(page.visualAssetKey ? pageAssets[page.visualAssetKey].src : "").toMatch(/^\/images\/.+\.webp$/)
+    }
+  })
+
+  it("ships optimized launch image assets with descriptive alt text", () => {
+    for (const asset of Object.values(pageAssets)) {
+      const assetPath = path.join(process.cwd(), "public", asset.src.replace(/^\//, ""))
+      expect(existsSync(assetPath)).toBe(true)
+      expect(asset.alt.length).toBeGreaterThan(30)
+      expect(asset.points.length).toBeGreaterThanOrEqual(3)
+      expect(asset.src).toMatch(/^\/images\/.+\.webp$/)
+    }
   })
 
   it("generates careful metadata for public client profiles", async () => {
@@ -1971,6 +1995,19 @@ describe("platform expansion schemas", () => {
         nextAction: "Review agreement before scheduling.",
       }).success,
     ).toBe(true)
+
+    expect(
+      contractPacketSchema.safeParse({
+        ...floridaResidentialServiceAgreementTemplate.fields,
+        clientName: "Florida Homeowner",
+        clientLegalName: "Florida Homeowner",
+        contractorLegalName: "RidgeBuild Contracting LLC",
+        packetValue: 12000,
+        depositRequired: 2500,
+      }).success,
+    ).toBe(true)
+    expect(JSON.stringify(floridaResidentialServiceAgreementTemplate)).toContain("Attorney review")
+    expect(JSON.stringify(floridaResidentialServiceAgreementTemplate)).not.toContain("blacklist")
 
     expect(
       contractPacketSchema.safeParse({

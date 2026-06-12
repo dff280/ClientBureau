@@ -12,6 +12,7 @@ import {
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
   title: "How Client Bureau Works",
@@ -98,6 +99,8 @@ const safeguards = [
   },
 ]
 
+const evidenceVaultAsset = pageAssets.evidenceVault
+
 export default function HowItWorksPage() {
   return (
     <>
@@ -132,8 +135,8 @@ export default function HowItWorksPage() {
               eyebrow="Operating system"
               title="Every step creates a stronger private record."
               description="Search context, contract terms, evidence, recovery notes, and lien-service readiness stay organized as the project moves forward."
-              imageSrc="/images/evidence-vault-console.webp"
-              imageAlt="Client Bureau evidence vault showing private invoices, photos, and document review status."
+              imageSrc={evidenceVaultAsset.src}
+              imageAlt={evidenceVaultAsset.alt}
               points={["Private evidence by default", "Moderated summaries only", "Response and correction path"]}
             />
           </div>

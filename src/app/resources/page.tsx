@@ -8,10 +8,12 @@ import {
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
+  ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { resourceNavigationGroups } from "@/lib/navigation"
+import { pageAssets } from "@/lib/page-assets"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 
 export const metadata: Metadata = {
@@ -66,6 +68,8 @@ const faqs = [
   },
 ]
 
+const evidenceVaultAsset = pageAssets.evidenceVault
+
 export default function ResourcesPage() {
   return (
     <main className="bg-slate-100">
@@ -77,14 +81,15 @@ export default function ResourcesPage() {
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
         secondary={{ href: "/business-rating-methodology", label: "Business & trade ratings", icon: BookOpenCheck }}
         aside={
-          <div className="space-y-4 text-white">
-            <BookOpenCheck className="size-9 text-amber-300" aria-hidden="true" />
-            <p className="text-xl font-semibold">Built for responsible use.</p>
-            <p className="text-sm leading-6 text-slate-300">
-              Client Bureau works best when records are factual, documented, moderated, and clear
-              about what is public, what is private, and where a client can respond.
-            </p>
-          </div>
+          <ProductMockupFrame
+            dark
+            eyebrow="Responsible use"
+            title="Documented, moderated, and clear."
+            description="Records work best when they are factual, organized, and clear about what is public, private, and response-aware."
+            imageSrc={evidenceVaultAsset.src}
+            imageAlt={evidenceVaultAsset.alt}
+            points={evidenceVaultAsset.points}
+          />
         }
       />
 

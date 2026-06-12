@@ -1,15 +1,17 @@
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, FileText, LockKeyhole, Search } from "lucide-react"
 
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { AcquisitionPage } from "@/lib/acquisition-pages"
 import { getSiteUrl } from "@/lib/env"
+import { pageAssets } from "@/lib/page-assets"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 
 export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
   const siteUrl = getSiteUrl()
+  const visualAsset = page.visualAssetKey ? pageAssets[page.visualAssetKey] : undefined
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -84,14 +86,26 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
         primary={{ href: page.primaryCta.href, label: page.primaryCta.label, icon: Search }}
         secondary={{ href: page.secondaryCta.href, label: page.secondaryCta.label, icon: ArrowRight }}
         aside={
-          <div className="space-y-4 text-white">
-            <LockKeyhole className="size-9 text-amber-300" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-semibold uppercase text-slate-300">{page.proofLabel}</p>
-              <p className="mt-1 text-2xl font-semibold">{page.proofValue}</p>
+          visualAsset ? (
+            <ProductMockupFrame
+              dark
+              eyebrow={page.proofLabel}
+              title={visualAsset.title}
+              description={page.proofDetail}
+              imageSrc={visualAsset.src}
+              imageAlt={visualAsset.alt}
+              points={visualAsset.points}
+            />
+          ) : (
+            <div className="space-y-4 text-white">
+              <LockKeyhole className="size-9 text-amber-300" aria-hidden="true" />
+              <div>
+                <p className="text-sm font-semibold uppercase text-slate-300">{page.proofLabel}</p>
+                <p className="mt-1 text-2xl font-semibold">{page.proofValue}</p>
+              </div>
+              <p className="text-sm leading-6 text-slate-300">{page.proofDetail}</p>
             </div>
-            <p className="text-sm leading-6 text-slate-300">{page.proofDetail}</p>
-          </div>
+          )
         }
       />
 

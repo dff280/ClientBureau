@@ -9,6 +9,7 @@ import { PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
+import { pageAssets } from "@/lib/page-assets"
 import { getContractorDashboardService, searchClientsService, searchProfilesService } from "@/lib/repositories/client-bureau-service"
 import { toSearchPreviewProfile } from "@/lib/search-experience"
 import { profileTypes, reportCategories, riskLevels, type ProfileType, type ReportCategory, type RiskLevel } from "@/lib/types"
@@ -94,6 +95,8 @@ function profileTypeFilterHref(input: {
   return `/search${params.size ? `?${params.toString()}` : ""}`
 }
 
+const searchDossierAsset = pageAssets.searchDossier
+
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
   const query = params.q ?? ""
@@ -132,9 +135,9 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                     ? `Create a free account to save "${query}" and continue into watchlists, private matching, and report workflows.`
                     : "Search is private. Raw phone numbers, emails, addresses, and evidence files are not displayed on public profiles."
               }
-              imageSrc="/images/search-intelligence-console.webp"
-              imageAlt="Client Bureau search intelligence console with client profile previews."
-              points={["Approved public summaries", "Private identifier matching", "Saved searches and watchlists"]}
+              imageSrc={searchDossierAsset.src}
+              imageAlt={searchDossierAsset.alt}
+              points={searchDossierAsset.points}
             />
             {!isAuthenticated ? (
               <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">

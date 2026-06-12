@@ -24,6 +24,7 @@ import { Progress } from "@/components/ui/progress"
 import { JsonLd } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
 import { claimedStatusLabel, profileTypeLabel, profileTypePluralLabel, reportConfidenceLabel, relationshipLabel } from "@/lib/entity-profiles"
+import { pageAssets } from "@/lib/page-assets"
 import { getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type BusinessRatingFactor, type ProfileType } from "@/lib/types"
 
@@ -316,6 +317,12 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
   const responseHref = `/client-response?profile=${encodeURIComponent(profile.profileHref)}`
   const presentation = getEntityProfilePresentation(profile.profileType)
+  const profileAsset =
+    profile.profileType === "contractor"
+      ? pageAssets.platformHero
+      : profile.profileType === "subcontractor"
+        ? pageAssets.evidenceVault
+        : pageAssets.searchDossier
   const ratingFactors = profile.relatedContractor?.ratingFactors ?? profile.ratingFactors ?? []
   const ratingSummary = profile.relatedContractor?.ratingSummary ?? profile.ratingPublicNote ?? presentation.methodologyDescription
   const methodologyHref = profile.profileType === "client" ? "/score-methodology" : "/business-rating-methodology"
@@ -403,6 +410,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
             eyebrow={presentation.dossierEyebrow}
             title={`${profile.ratingScore}/100 ${presentation.scoreLabel.toLowerCase()}`}
             description={`${profile.reportCount} approved public ${profile.reportCount === 1 ? "report" : "reports"} with ${profile.evidenceSummaryLabel.toLowerCase()}. ${presentation.scoreCaption}`}
+            imageSrc={profileAsset.src}
+            imageAlt={profileAsset.alt}
             points={[
               claimedStatusLabel(profile.claimedStatus),
               profile.responseStatusLabel,

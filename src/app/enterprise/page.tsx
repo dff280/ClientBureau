@@ -8,9 +8,11 @@ import {
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
+  ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
   title: "Enterprise Business Protection",
@@ -53,6 +55,8 @@ const enterpriseUseCases = [
   "A franchise or association wants consistent client-risk workflows across teams or markets.",
 ]
 
+const adminOpsAsset = pageAssets.adminOpsCrm
+
 export default function EnterprisePage() {
   return (
     <main className="bg-slate-100">
@@ -63,14 +67,15 @@ export default function EnterprisePage() {
         primary={{ href: "/contact", label: "Talk to Client Bureau", icon: Building2 }}
         secondary={{ href: "/pricing", label: "Compare plans", icon: ArrowRight }}
         aside={
-          <div className="space-y-4 text-white">
-            <Building2 className="size-9 text-amber-300" aria-hidden="true" />
-            <p className="text-xl font-semibold">Custom annual options.</p>
-            <p className="text-sm leading-6 text-slate-300">
-              Enterprise plans are scoped around seats, search volume, team workflow, moderation
-              needs, public-profile controls, and onboarding support.
-            </p>
-          </div>
+          <ProductMockupFrame
+            dark
+            eyebrow="Enterprise operations"
+            title="Shared risk and moderation visibility."
+            description="Enterprise plans are scoped around seats, search volume, team workflow, profile controls, and onboarding support."
+            imageSrc={adminOpsAsset.src}
+            imageAlt={adminOpsAsset.alt}
+            points={adminOpsAsset.points}
+          />
         }
       />
 

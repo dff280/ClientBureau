@@ -4,6 +4,7 @@ export type AcquisitionPage = {
   slug: string
   path: string
   kind: AcquisitionPageKind
+  visualAssetKey?: "searchDossier" | "floridaAgreementPacket" | "resolutionDesk" | "evidenceVault" | "mobileFieldApp"
   eyebrow: string
   title: string
   h1: string
@@ -39,6 +40,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     slug: "contractor-contract-template",
     path: "/contractor-contract-template",
     kind: "tool",
+    visualAssetKey: "floridaAgreementPacket",
     eyebrow: "Agreement packets",
     title: "Contractor Contract Template and E-Signature Workflow",
     h1: "Contractor Contract Template and E-Signature Workflow",
@@ -76,6 +78,11 @@ export const acquisitionPages: AcquisitionPage[] = [
     ],
     relatedLinks: [
       {
+        label: "Florida agreement starter",
+        href: "/florida-contractor-agreement-template",
+        description: "Start from a Florida-aware agreement packet structure before attorney review.",
+      },
+      {
         label: "Change order template",
         href: "/change-order-template",
         description: "Document scope changes before extra work begins.",
@@ -110,9 +117,85 @@ export const acquisitionPages: AcquisitionPage[] = [
     ],
   },
   {
+    slug: "florida-contractor-agreement-template",
+    path: "/florida-contractor-agreement-template",
+    kind: "tool",
+    visualAssetKey: "floridaAgreementPacket",
+    eyebrow: "Florida agreement starter",
+    title: "Florida Contractor Agreement Starter Template",
+    h1: "Florida Contractor Agreement Starter Template",
+    description:
+      "Start a Florida contractor agreement packet with scope, payment terms, change orders, lien-review prompts, and private e-signature records.",
+    heroCopy:
+      "Florida jobs deserve clearer records before labor, materials, scheduling, or deposits are committed. Client Bureau gives contractors a private starter packet for scope, exclusions, payment timing, change-order approvals, cancellation review, lien-notice review, and client signature readiness.",
+    primaryCta: {
+      label: "Use the Florida starter",
+      href: "/dashboard/contracts",
+    },
+    secondaryCta: {
+      label: "Read contract workflow",
+      href: "/contractor-contract-template",
+    },
+    proofLabel: "First template",
+    proofValue: "Florida-ready review structure",
+    proofDetail:
+      "The starter helps organize the issues Florida contractors often need reviewed before sending a client signing link.",
+    useCases: [
+      "Florida residential repair, remodel, installation, and trade-service work that needs a written scope before scheduling.",
+      "Projects where deposits, progress payments, final payment triggers, and change orders should be visible to the client before work begins.",
+      "Jobs where lien-notice, notice-of-commencement, permit, licensing, cancellation, roofing, or local-code review may matter.",
+    ],
+    workflow: [
+      "Open Contracts in the dashboard and choose the Florida starter inside the agreement packet form.",
+      "Replace starter language with project-specific scope, exclusions, payment terms, dates, and contractor/client legal names.",
+      "Review Florida-specific requirements with qualified counsel or a qualified business advisor when needed.",
+      "Generate a private signing link only after the packet is complete and ready for client review.",
+    ],
+    trustPoints: [
+      "The template stays private in the contractor workspace and does not publish contract content to public profiles.",
+      "Client Bureau does not provide legal advice, guarantee enforceability, or guarantee lien rights, priority, payment, or collection.",
+      "The starter is built around cautious review prompts for Florida construction lien, cancellation, licensing, permit, and local-practice issues.",
+    ],
+    relatedLinks: [
+      {
+        label: "Contractor contract template",
+        href: "/contractor-contract-template",
+        description: "See the broader agreement packet and e-signature workflow.",
+      },
+      {
+        label: "Change order template",
+        href: "/change-order-template",
+        description: "Document changed scope, added cost, and schedule impact.",
+      },
+      {
+        label: "Florida lien filing service",
+        href: "/florida-lien-filing-service",
+        description: "Review Florida lien filing workflow gates and private records.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Is this a Florida legal contract?",
+        answer:
+          "No. It is a private business workflow starter for organizing agreement fields, review prompts, signatures, and audit records. Contractors should get attorney review before relying on it as a legal contract.",
+      },
+      {
+        question: "Why does the starter mention lien and cancellation review?",
+        answer:
+          "Florida construction lien, home-solicitation, licensing, permit, roofing, and local requirements can depend on the work type and transaction. The template prompts review instead of pretending one generic agreement covers every job.",
+      },
+      {
+        question: "Can clients sign the packet online?",
+        answer:
+          "Yes. After the contractor edits and reviews the packet, Client Bureau can generate a private client signing link with signature status, signed snapshot, and private audit history.",
+      },
+    ],
+  },
+  {
     slug: "change-order-template",
     path: "/change-order-template",
     kind: "tool",
+    visualAssetKey: "floridaAgreementPacket",
     eyebrow: "Scope protection",
     title: "Contractor Change Order Template",
     h1: "Contractor Change Order Template",
@@ -187,6 +270,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     slug: "homeowner-wont-pay-contractor",
     path: "/homeowner-wont-pay-contractor",
     kind: "guide",
+    visualAssetKey: "resolutionDesk",
     eyebrow: "Payment problem guide",
     title: "What to Do When a Homeowner Won't Pay a Contractor",
     h1: "What to Do When a Homeowner Won't Pay a Contractor",
@@ -261,6 +345,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     slug: "client-screening-for-contractors",
     path: "/client-screening-for-contractors",
     kind: "service",
+    visualAssetKey: "searchDossier",
     eyebrow: "Client screening",
     title: "Client Screening for Contractors",
     h1: "Client Screening for Contractors",

@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { pageAssets } from "@/lib/page-assets"
 import {
   getPublicClientProfileService,
   getPublicClientProfilesService,
@@ -61,6 +62,7 @@ export const dynamic = "force-dynamic"
 type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
 
 const heroHeadline = "Check a Client Before You Take the Job."
+const platformHeroAsset = pageAssets.platformHero
 
 const heroTrustSignals = [
   {
@@ -341,8 +343,8 @@ export default async function Home() {
 
       <section className="relative isolate overflow-hidden bg-slate-950 text-white">
         <Image
-          src="/images/client-bureau-platform-hero-bright.webp"
-          alt="Client Bureau dashboard interface for client search, contract packets, report review, and evidence workflow."
+          src={platformHeroAsset.src}
+          alt={platformHeroAsset.alt}
           fill
           priority
           sizes="100vw"

@@ -45,6 +45,14 @@ export const metadata: Metadata = {
       "Check the client before you take the job.",
     url: getSiteUrl(),
     siteName: "Client Bureau",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Client Bureau contractor business protection platform.",
+      },
+    ],
     locale: "en_US",
     type: "website",
   },
@@ -53,6 +61,7 @@ export const metadata: Metadata = {
     title: "Client Bureau",
     description:
       "Check the client before you take the job.",
+    images: ["/twitter-image"],
   },
   robots: {
     index: true,

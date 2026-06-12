@@ -19,6 +19,7 @@ import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame } fr
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
+import { pageAssets } from "@/lib/page-assets"
 import { profileTypes, type EntityProfile, type EntityProfileSearchResult, type ProfileType } from "@/lib/types"
 
 type ProfileDirectoryCopy = {
@@ -347,6 +348,14 @@ export function EntityProfileDirectory({
   const evidenceCount = visibleProfiles.filter((profile) => profile.evidenceOnFileCount > 0).length
   const reportCount = visibleProfiles.reduce((total, profile) => total + profile.reportCount, 0)
   const faqs = getProfileDirectoryFaqs(activeType)
+  const directoryAsset =
+    activeType === "contractor"
+      ? pageAssets.platformHero
+      : activeType === "subcontractor"
+        ? pageAssets.evidenceVault
+        : activeType === "client"
+          ? pageAssets.searchDossier
+          : pageAssets.searchDossier
 
   return (
     <main className="bg-slate-100">
@@ -362,6 +371,8 @@ export function EntityProfileDirectory({
             eyebrow={presentation.asideEyebrow}
             title={presentation.asideTitle}
             description={`${visibleProfiles.length} public ${visibleProfiles.length === 1 ? "profile" : "profiles"}. ${presentation.asideDescription}`}
+            imageSrc={directoryAsset.src}
+            imageAlt={directoryAsset.alt}
             points={presentation.asidePoints}
           />
         }

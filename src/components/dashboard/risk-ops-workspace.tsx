@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { useActionState, useEffect, useMemo, type ReactNode } from "react"
+import { useActionState, useEffect, useMemo, useState, type ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
 import {
   AlertTriangle,
@@ -31,6 +31,7 @@ import { ContractorWorkspaceGuidance } from "@/components/dashboard/contractor-w
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
+import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -2396,103 +2397,178 @@ function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
 
 function ContractPacketForm() {
   const [state, action] = useActionState(createContractPacketAction, contractPacketState)
+  const [activeTemplate, setActiveTemplate] = useState<"blank" | "florida">("blank")
+  const templateValues = activeTemplate === "florida"
+    ? floridaResidentialServiceAgreementTemplate.fields
+    : undefined
 
   useToastState(state)
 
   return (
-    <form action={action} className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
-      <div>
-        <p className="text-sm font-semibold text-slate-950">Create agreement packet</p>
-        <p className="mt-1 text-xs leading-5 text-slate-500">
-          Build the private record first. Send the signing link only after scope, payment terms, and policies are ready.
-        </p>
+    <div className="grid gap-4">
+      <div className="rounded-md border border-amber-200 bg-amber-50/70 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-950">Start from a reviewed structure</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">
+              Use the Florida starter to prefill scope, exclusions, payment timing, change-order rules, and review notes.
+              Edit every field before sending a signing link.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              className="bg-slate-950 text-white hover:bg-slate-800"
+              onClick={() => setActiveTemplate("florida")}
+            >
+              <ListChecks aria-hidden="true" />
+              Use Florida starter
+            </Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setActiveTemplate("blank")}>
+              Start blank
+            </Button>
+          </div>
+        </div>
+        {activeTemplate === "florida" ? (
+          <div className="mt-3 grid gap-2 text-xs leading-5 text-slate-600">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="outline" className="rounded-md border-amber-300 bg-white text-amber-800">
+                Florida-aware
+              </Badge>
+              <Badge variant="outline" className="rounded-md border-amber-300 bg-white text-amber-800">
+                Attorney-review recommended
+              </Badge>
+              <Badge variant="outline" className="rounded-md border-amber-300 bg-white text-amber-800">
+                Private signing packet
+              </Badge>
+            </div>
+            <p>
+              This starter is not legal advice. Florida lien, notice, cancellation, licensing, permit, roofing,
+              and local-code requirements can vary by work type and transaction.
+            </p>
+            <p className="font-medium text-amber-900">
+              Replace the 0 milestone amounts with real deposit, progress, and final-payment amounts before sharing.
+            </p>
+          </div>
+        ) : null}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input name="clientName" placeholder="Client display name" />
-        <Input name="clientLegalName" placeholder="Client legal name, if different" />
-        <Input name="contractorLegalName" placeholder="Your legal business name" />
-        <Input name="projectType" placeholder="Project type" />
-      </div>
+      <form key={activeTemplate} action={action} className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-950">Create agreement packet</p>
+          <p className="mt-1 text-xs leading-5 text-slate-500">
+            Build the private record first. Send the signing link only after scope, payment terms, and policies are ready.
+          </p>
+        </div>
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_150px_150px]">
-        <select name="templateType" defaultValue="service_agreement" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
-          <option value="service_agreement">Service agreement</option>
-          <option value="change_order">Change order</option>
-          <option value="payment_plan">Payment plan</option>
-          <option value="completion_certificate">Completion certificate</option>
-          <option value="notice_of_nonpayment">Notice of non-payment</option>
-        </select>
-        <Input name="projectStartDate" type="date" aria-label="Projected start date" />
-        <Input name="projectEndDate" type="date" aria-label="Projected end date" />
-      </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input name="clientName" placeholder="Client display name" />
+          <Input name="clientLegalName" placeholder="Client legal name, if different" />
+          <Input name="contractorLegalName" placeholder="Your legal business name" />
+          <Input name="projectType" placeholder="Project type" defaultValue={templateValues?.projectType} />
+        </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Input name="packetValue" type="number" placeholder="Agreement value" />
-        <Input name="depositRequired" type="number" placeholder="Deposit required" />
-        <Input name="milestoneCount" type="number" placeholder="Milestone count" />
-      </div>
+        <div className="grid gap-3 sm:grid-cols-[1fr_150px_150px]">
+          <select
+            name="templateType"
+            defaultValue={templateValues?.templateType ?? "service_agreement"}
+            className="h-10 rounded-md border border-input bg-white px-3 text-sm"
+          >
+            <option value="service_agreement">Service agreement</option>
+            <option value="change_order">Change order</option>
+            <option value="payment_plan">Payment plan</option>
+            <option value="completion_certificate">Completion certificate</option>
+            <option value="notice_of_nonpayment">Notice of non-payment</option>
+          </select>
+          <Input name="projectStartDate" type="date" aria-label="Projected start date" />
+          <Input name="projectEndDate" type="date" aria-label="Projected end date" />
+        </div>
 
-      <Textarea
-        name="scopeSummary"
-        placeholder="Scope summary: what job this agreement covers"
-        className="min-h-20"
-      />
-      <Textarea
-        name="includedWork"
-        placeholder="Included work: labor, materials, deliverables, access requirements, cleanup"
-        className="min-h-24"
-      />
-      <Textarea
-        name="excludedWork"
-        placeholder="Excluded work: anything that requires a written change order"
-        className="min-h-20"
-      />
-      <Textarea
-        name="paymentTerms"
-        placeholder="Payment terms: deposit, milestone timing, due dates, accepted payment methods"
-        className="min-h-24"
-      />
-      <Textarea
-        name="milestoneSchedule"
-        placeholder="Milestone schedule, one per line: Deposit before scheduling | 2500 | Before scheduling"
-        className="min-h-24"
-      />
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Input name="packetValue" type="number" placeholder="Agreement value" />
+          <Input name="depositRequired" type="number" placeholder="Deposit required" />
+          <Input
+            name="milestoneCount"
+            type="number"
+            placeholder="Milestone count"
+            defaultValue={templateValues?.milestoneCount}
+          />
+        </div>
 
-      <Accordion type="single" collapsible className="rounded-md border border-slate-200 bg-white px-3">
-        <AccordionItem value="policies" className="border-none">
-          <AccordionTrigger className="text-sm font-semibold text-slate-950">Agreement policies</AccordionTrigger>
-          <AccordionContent className="grid gap-3">
-            <Textarea
-              name="changeOrderPolicy"
-              placeholder="Change-order policy: how added work, material changes, or schedule changes are approved"
-              className="min-h-20"
-            />
-            <Textarea
-              name="cancellationPolicy"
-              placeholder="Cancellation policy: pause, reschedule, materials, completed work, and written notice"
-              className="min-h-20"
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+        <Textarea
+          name="scopeSummary"
+          placeholder="Scope summary: what job this agreement covers"
+          defaultValue={templateValues?.scopeSummary}
+          className="min-h-20"
+        />
+        <Textarea
+          name="includedWork"
+          placeholder="Included work: labor, materials, deliverables, access requirements, cleanup"
+          defaultValue={templateValues?.includedWork}
+          className="min-h-24"
+        />
+        <Textarea
+          name="excludedWork"
+          placeholder="Excluded work: anything that requires a written change order"
+          defaultValue={templateValues?.excludedWork}
+          className="min-h-20"
+        />
+        <Textarea
+          name="paymentTerms"
+          placeholder="Payment terms: deposit, milestone timing, due dates, accepted payment methods"
+          defaultValue={templateValues?.paymentTerms}
+          className="min-h-24"
+        />
+        <Textarea
+          name="milestoneSchedule"
+          placeholder="Milestone schedule, one per line: Deposit before scheduling | 2500 | Before scheduling"
+          defaultValue={templateValues?.milestoneSchedule}
+          className="min-h-24"
+        />
 
-      <Textarea name="nextAction" placeholder="Next contract action before scheduling" className="min-h-20" />
-      <label className="flex items-center gap-2 text-sm text-slate-700">
-        <Checkbox name="requiredBeforeScheduling" />
-        Require this signed packet before scheduling work
-      </label>
-      <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
-        <Signature aria-hidden="true" />
-        Create agreement packet
-      </PendingSubmitButton>
-      <FieldError name="scopeSummary" errors={state.ok ? undefined : state.fieldErrors} />
-      <FieldError name="includedWork" errors={state.ok ? undefined : state.fieldErrors} />
-      <FieldError name="paymentTerms" errors={state.ok ? undefined : state.fieldErrors} />
-      <FieldError name="changeOrderPolicy" errors={state.ok ? undefined : state.fieldErrors} />
-      <FieldError name="cancellationPolicy" errors={state.ok ? undefined : state.fieldErrors} />
-      <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
-    </form>
+        <Accordion type="single" collapsible className="rounded-md border border-slate-200 bg-white px-3">
+          <AccordionItem value="policies" className="border-none">
+            <AccordionTrigger className="text-sm font-semibold text-slate-950">Agreement policies</AccordionTrigger>
+            <AccordionContent className="grid gap-3">
+              <Textarea
+                name="changeOrderPolicy"
+                placeholder="Change-order policy: how added work, material changes, or schedule changes are approved"
+                defaultValue={templateValues?.changeOrderPolicy}
+                className="min-h-20"
+              />
+              <Textarea
+                name="cancellationPolicy"
+                placeholder="Cancellation policy: pause, reschedule, materials, completed work, and written notice"
+                defaultValue={templateValues?.cancellationPolicy}
+                className="min-h-20"
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        <Textarea
+          name="nextAction"
+          placeholder="Next contract action before scheduling"
+          defaultValue={templateValues?.nextAction}
+          className="min-h-20"
+        />
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <Checkbox name="requiredBeforeScheduling" defaultChecked={templateValues?.requiredBeforeScheduling} />
+          Require this signed packet before scheduling work
+        </label>
+        <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
+          <Signature aria-hidden="true" />
+          Create agreement packet
+        </PendingSubmitButton>
+        <FieldError name="scopeSummary" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="includedWork" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="paymentTerms" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="changeOrderPolicy" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="cancellationPolicy" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
+      </form>
+    </div>
   )
 }
 

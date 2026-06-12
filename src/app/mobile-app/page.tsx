@@ -19,9 +19,11 @@ import {
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
+  ProductMockupFrame,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
+import { pageAssets } from "@/lib/page-assets"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import mobileAppConfig from "../../../apps/mobile/app.json"
 
@@ -123,6 +125,8 @@ const faqs = [
   },
 ]
 
+const mobileFieldAppAsset = pageAssets.mobileFieldApp
+
 export default function MobileAppPage() {
   return (
     <main className="bg-slate-100">
@@ -134,28 +138,19 @@ export default function MobileAppPage() {
         primary={primaryMobileCta}
         secondary={{ href: "/signup", label: "Create Account", icon: Smartphone }}
         aside={
-          <div className="space-y-5 text-white">
-            <Smartphone className="size-10 text-amber-300" aria-hidden="true" />
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-300">
-                Current mobile release
-              </p>
-              <p className="mt-2 text-4xl font-semibold">{mobileReleaseVersion}</p>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                Android release with improved login focus, premium auth, safe-area
-                support, and contractor-first mobile workflows.
-              </p>
-            </div>
-            <div className="grid gap-2 text-sm text-slate-300">
-              <span>Android app: Client Bureau</span>
-              <span>Release build: {androidVersionCode}</span>
-              <span>
-                {hasDirectApk
-                  ? "Direct APK install now; Play Store package stays ready for release."
-                  : "Request access while the latest APK link is prepared."}
-              </span>
-            </div>
-          </div>
+          <ProductMockupFrame
+            dark
+            eyebrow={`Release ${mobileReleaseVersion} - build ${androidVersionCode}`}
+            title="Native contractor field app."
+            description={
+              hasDirectApk
+                ? `Version ${mobileReleaseVersion}. Release build: ${androidVersionCode}. Direct APK install now; Play Store package stays ready for release.`
+                : `Version ${mobileReleaseVersion}. Release build: ${androidVersionCode}. Request Android access while the latest APK link is prepared.`
+            }
+            imageSrc={mobileFieldAppAsset.src}
+            imageAlt={mobileFieldAppAsset.alt}
+            points={mobileFieldAppAsset.points}
+          />
         }
       />
 
