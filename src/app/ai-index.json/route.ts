@@ -30,6 +30,11 @@ export async function GET() {
       indexable: false,
     },
     {
+      title: "Platform Overview",
+      url: `${siteUrl}/platform`,
+      intent: "Core product overview for Client Bureau's client checks, public profiles, contracts, evidence, recovery, lien service, and mobile workflows.",
+    },
+    {
       title: "Client Directory",
       url: `${siteUrl}/clients`,
       intent: "Indexable state and city directory for approved public client profiles.",

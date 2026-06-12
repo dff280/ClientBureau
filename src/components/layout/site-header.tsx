@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { ChevronDown, FilePlus2, LogIn, LogOut, Menu, UserCircle } from "lucide-react"
+import { BookOpen, BriefcaseBusiness, ChevronDown, FilePlus2, LogIn, LogOut, Menu, Search, ShieldCheck, UserCircle } from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
@@ -40,6 +40,49 @@ const contractorHeaderNav = [
   { href: "/dashboard/contracts", label: "Contracts", description: "Agreement packets and signing links." },
 ]
 
+const publicHeaderNav = [
+  { href: "/platform", label: "Platform" },
+  { href: "/search", label: "Check a Client" },
+  { href: "/pricing", label: "Pricing" },
+]
+
+const publicHeaderMenus = [
+  {
+    label: "Records",
+    icon: ShieldCheck,
+    items: [
+      { href: "/clients", label: "Client Directory", description: "Approved public client profiles by market." },
+      { href: "/profiles", label: "Profile Directory", description: "Clients, contractors, and subcontractors." },
+      { href: "/profiles/contractor", label: "Contractor Profiles", description: "Business and service-company trust profiles." },
+      { href: "/profiles/subcontractor", label: "Subcontractor Profiles", description: "Trade partner and payment-chain profiles." },
+      { href: "/reports/recent", label: "Recent Reports", description: "Newly approved public report summaries." },
+    ],
+  },
+  {
+    label: "Services",
+    icon: BriefcaseBusiness,
+    items: [
+      { href: "/contractor-contract-template", label: "Contracts", description: "Agreement packets and e-signature workflow." },
+      { href: "/payment-recovery-service", label: "Payment Recovery", description: "Managed Resolution Desk service overview." },
+      { href: "/florida-lien-notice-service", label: "Florida Notices", description: "Notice packet workflow for Florida cases." },
+      { href: "/florida-lien-filing-service", label: "Florida Lien Filing", description: "Filing review, vendor routing, and recording proof." },
+      { href: "/mobile-app", label: "Android App", description: "Native mobile workspace for contractors." },
+    ],
+  },
+  {
+    label: "Resources",
+    icon: BookOpen,
+    items: [
+      { href: "/how-it-works", label: "How It Works", description: "Search, document, contract, and resolve." },
+      { href: "/resources", label: "Resource Hub", description: "Policies, guides, and methodology." },
+      { href: "/score-methodology", label: "Client Rating Methodology", description: "How ratings and risk context are shown." },
+      { href: "/business-rating-methodology", label: "Business & Trade Ratings", description: "Contractor and subcontractor profile scoring." },
+      { href: "/about", label: "About", description: "Why Client Bureau exists." },
+      { href: "/contact", label: "Contact", description: "Support, policy, and service questions." },
+    ],
+  },
+]
+
 export function SiteHeader() {
   const pathname = usePathname()
   const [session, setSession] = useState<SessionState>({
@@ -71,7 +114,7 @@ export function SiteHeader() {
   const authNav = session.authenticated
     ? [...contractorHeaderNav, ...contractorPrimaryNav.slice(2).filter((item) => item.label !== "Contracts")]
     : publicPrimaryNav
-  const desktopNav = session.authenticated ? contractorHeaderNav : publicPrimaryNav
+  const desktopNav = session.authenticated ? contractorHeaderNav : publicHeaderNav
   const moreNav = session.authenticated ? contractorPrimaryNav.slice(3).filter((item) => item.label !== "Contracts") : []
 
   return (
@@ -89,6 +132,39 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {!session.authenticated ? (
+            <>
+              {publicHeaderMenus.map((menu) => {
+                const Icon = menu.icon
+
+                return (
+                  <DropdownMenu key={menu.label}>
+                    <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950">
+                      {menu.label}
+                      <ChevronDown className="size-4" aria-hidden="true" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80">
+                      <DropdownMenuLabel className="flex items-center gap-2">
+                        <Icon className="size-4 text-amber-700" aria-hidden="true" />
+                        {menu.label}
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      {menu.items.map((item) => (
+                        <DropdownMenuItem key={item.href} asChild>
+                          <Link href={item.href}>
+                            <span className="grid gap-0.5">
+                              <span>{item.label}</span>
+                              <span className="text-xs font-normal text-slate-500">{item.description}</span>
+                            </span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )
+              })}
+            </>
+          ) : null}
           {moreNav.length > 0 ? (
             <DropdownMenu>
               <DropdownMenuTrigger className="inline-flex items-center gap-1 transition hover:text-slate-950">
@@ -127,7 +203,22 @@ export function SiteHeader() {
                   <BrandMark />
                 </SheetTitle>
               </SheetHeader>
-              <nav className="mt-8 grid gap-2 text-sm font-medium">
+              {!session.authenticated ? (
+                <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+                      <Search className="size-4" aria-hidden="true" />
+                    </span>
+                    <div>
+                      <p className="font-semibold text-slate-950">Start with a client check.</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-700">
+                        Search first, then decide whether to contract, watch, report, or open a private service workflow.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+              <nav className="mt-5 grid gap-2 text-sm font-medium">
                 {authNav.map((item) => (
                   <Link
                     key={item.href}

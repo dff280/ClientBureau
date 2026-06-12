@@ -203,6 +203,7 @@ const publicContentPages = [
 ]
 
 const corePublicPages = [
+  "/platform",
   "/pricing",
   "/how-it-works",
   "/about",

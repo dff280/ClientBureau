@@ -266,6 +266,7 @@ const audienceTiles = [
 ]
 
 const discoveryLinks = [
+  { href: "/platform", label: "Platform overview" },
   { href: "/clients", label: "Client directory" },
   { href: "/clients/florida", label: "Florida profiles" },
   { href: "/clients/orlando-fl", label: "Orlando reports" },
@@ -431,8 +432,8 @@ export default async function Home() {
                   </Link>
                 </Button>
                 <Button asChild variant="ghost" className="h-11 text-slate-100 hover:bg-white/10 hover:text-white">
-                  <Link href="/how-it-works">
-                    How Client Bureau works
+                  <Link href="/platform">
+                    Explore the platform
                     <ArrowRight aria-hidden="true" />
                   </Link>
                 </Button>
@@ -465,6 +466,32 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="border-b border-slate-200 bg-white">
+        <div className="bureau-container grid gap-6 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-700">A new category for business owners</p>
+            <h2 className="mt-3 text-3xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+              The first bureau built from the contractor side of the job.
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+              Review platforms have served customers for years. Client Bureau gives contractors, subcontractors, and service businesses a serious way to check clients, document work, and protect payment before a job becomes expensive.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              ["Before", "Search client context before you take the job."],
+              ["During", "Keep contracts, changes, and evidence organized."],
+              ["After", "Use recovery and lien-service workflows when payment needs structure."],
+            ].map(([label, text]) => (
+              <div key={label} className="rounded-md border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase text-amber-700">{label}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">{text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="bureau-section bg-white">
         <div className="bureau-container grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
           <div className="space-y-6">
@@ -475,7 +502,8 @@ export default async function Home() {
             />
             <div className="rounded-md border border-amber-200 bg-amber-50 p-5">
               <p className="text-2xl font-semibold leading-tight text-slate-950">
-                Client Bureau turns “I hope this client pays” into a repeatable intake, contract, evidence, recovery, and response workflow.
+                Client Bureau turns &quot;I hope this client pays&quot; into a repeatable intake, contract, evidence,
+                recovery, and response workflow.
               </p>
             </div>
           </div>

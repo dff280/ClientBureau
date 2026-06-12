@@ -56,6 +56,7 @@ Core positioning: Check the client before you take the job.
 ## Key Pages
 
 - [Home](${siteUrl}/)
+- [Platform Overview](${siteUrl}/platform)
 - [Pricing](${siteUrl}/pricing)
 - [How It Works](${siteUrl}/how-it-works)
 - [Resources](${siteUrl}/resources)

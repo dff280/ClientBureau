@@ -10,6 +10,7 @@ export type NavigationGroup = {
 }
 
 export const publicPrimaryNav: NavigationItem[] = [
+  { href: "/platform", label: "Platform", description: "See the full client-check, contract, evidence, recovery, and lien-service system." },
   { href: "/search", label: "Check a Client", description: "Search client history before accepting work." },
   { href: "/how-it-works", label: "How It Works", description: "See the protection workflow." },
   { href: "/pricing", label: "Pricing", description: "Choose a business protection plan." },
@@ -76,6 +77,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
     title: "Learn the Platform",
     links: [
       { href: "/how-it-works", label: "How It Works", description: "Search, decide, document, and resolve." },
+      { href: "/platform", label: "Platform Overview", description: "The complete Client Bureau system for checking clients and protecting jobs." },
       { href: "/score-methodology", label: "Client Rating Methodology", description: "How client ratings, risk levels, and confidence are presented." },
       { href: "/business-rating-methodology", label: "Business & Trade Ratings", description: "How public contractor and subcontractor profile ratings are calculated." },
       { href: "/pricing", label: "Pricing", description: "Plans for contractors, service businesses, teams, and enterprise review." },
@@ -117,6 +119,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Platform",
     links: [
       { href: "/search", label: "Check a Client" },
+      { href: "/platform", label: "Platform" },
       { href: "/how-it-works", label: "How It Works" },
       { href: "/pricing", label: "Pricing" },
       { href: "/resources", label: "Resources" },
