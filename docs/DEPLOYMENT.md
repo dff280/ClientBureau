@@ -263,7 +263,7 @@ If this is a fresh VPS or `/opt/ClientBureau` is missing, run the latest deploy 
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
 ```
 
-The helper pulls `main`, writes `GIT_COMMIT_SHA` and `GIT_BRANCH` into `.env.production`, rebuilds Docker, prunes old images, and prints `/api/version` plus `/api/health`.
+The helper pulls `main`, writes `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, rebuilds Docker, prunes old images, and prints `/api/version` plus `/api/health`.
 
 Confirm the deployed app is serving the expected release:
 
@@ -272,7 +272,7 @@ curl https://clientbureau.com/api/version
 curl https://clientbureau.com/api/health
 ```
 
-The `/api/version` endpoint returns non-secret release identity information such as the app version, optional commit environment variable, data mode, and platform feature mode.
+The `/api/version` endpoint returns non-secret release identity information such as the app version, optional commit environment variable, release date, data mode, and platform feature mode. `/sitemap.xml` uses the same release date for static public pages, while profile and directory URLs use their own record update dates.
 
 ## 8. Launch Checklist
 

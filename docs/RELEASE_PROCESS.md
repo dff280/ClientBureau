@@ -94,7 +94,7 @@ If `/opt/ClientBureau` does not exist yet, run the latest deploy script directly
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
 ```
 
-The deploy script pulls `main`, stamps `GIT_COMMIT_SHA` and `GIT_BRANCH` into `.env.production`, rebuilds Docker, prunes old images, and prints the live version/health endpoints.
+The deploy script pulls `main`, stamps `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, rebuilds Docker, prunes old images, and prints the live version/health endpoints. The release date is also used by `/sitemap.xml` for static public-page `lastmod` values, so Google receives stable freshness signals instead of a new timestamp on every sitemap request.
 
 Post-deploy checks:
 

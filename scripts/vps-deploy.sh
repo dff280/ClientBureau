@@ -42,11 +42,13 @@ fi
 
 RELEASE_COMMIT="$(git rev-parse HEAD)"
 RELEASE_VERSION="$(awk -F'"' '/"version":/ { print $4; exit }' package.json)"
+RELEASE_DATE="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 SITE_URL="$(grep -E '^NEXT_PUBLIC_SITE_URL=' .env.production | cut -d= -f2- | tr -d '\r')"
 SITE_URL="${SITE_URL:-https://clientbureau.com}"
 
 upsert_env "GIT_COMMIT_SHA" "$RELEASE_COMMIT"
 upsert_env "GIT_BRANCH" "$BRANCH"
+upsert_env "RELEASE_DATE" "$RELEASE_DATE"
 
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --build
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --force-recreate --no-deps caddy

@@ -1,11 +1,22 @@
 import { acquisitionPages } from "@/lib/acquisition-pages"
 import { getSiteUrl } from "@/lib/env"
+import {
+  getPublicBusinessProfilesService,
+  getPublicClientProfilesService,
+  getPublicEntityProfilesService,
+} from "@/lib/repositories/client-bureau-service"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
+import { entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   const siteUrl = getSiteUrl()
+  const [clientProfiles, businessProfiles, entityProfiles] = await Promise.all([
+    getPublicClientProfilesService(),
+    getPublicBusinessProfilesService(),
+    getPublicEntityProfilesService(),
+  ])
   const publicPages = [
     {
       title: "Home",
@@ -64,6 +75,44 @@ export async function GET() {
       intent: `${page.kind} landing page for ${page.description}`,
     })),
   ]
+  const publicProfileExamples = {
+    clientProfiles: clientProfiles
+      .filter((profile) => profile.isPublic)
+      .slice(0, 12)
+      .map((profile) => ({
+        title: `${profile.firstName} ${profile.lastName} client profile`,
+        url: `${siteUrl}/client/${profile.publicSlug}`,
+        location: `${profile.city}, ${profile.state}`,
+        lastUpdated: profile.updatedAt,
+        publicSignals: {
+          reportCount: profile.reportCount,
+          riskLevel: profile.riskLevel,
+        },
+      })),
+    businessProfiles: businessProfiles.slice(0, 12).map((profile) => ({
+      title: `${profile.businessName} business profile`,
+      url: `${siteUrl}/business/${profile.publicSlug}`,
+      location: `${profile.city}, ${profile.state}`,
+      trade: profile.trade,
+      lastUpdated: profile.lastUpdated,
+      publicSignals: {
+        ratingGrade: profile.ratingGrade,
+        ratingConfidence: profile.ratingConfidence,
+      },
+    })),
+    unifiedProfiles: entityProfiles.slice(0, 18).map((profile) => ({
+      title: `${profile.displayName} ${profileTypeLabel(profile.profileType)} profile`,
+      url: `${siteUrl}${entityProfileHref(profile)}`,
+      profileType: profile.profileType,
+      location: `${profile.city}, ${profile.state}`,
+      lastUpdated: profile.updatedAt,
+      publicSignals: {
+        ratingBand: profile.ratingBand,
+        reportCount: profile.reportCount,
+        evidenceOnFileCount: profile.evidenceOnFileCount,
+      },
+    })),
+  }
 
   return Response.json(
     {
@@ -100,6 +149,7 @@ export async function GET() {
         "Contract, recovery, lien, and evidence workflows are private business records unless separately moderated for public display.",
       ],
       publicPages,
+      publicProfileExamples,
       generatedAt: new Date().toISOString(),
     },
     {

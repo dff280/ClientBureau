@@ -79,6 +79,18 @@ function businessProfileLinks(html) {
     .filter((path) => path && path !== "/businesses")
 }
 
+function entityProfileLinks(html, profileType) {
+  return [...html.matchAll(new RegExp(`href=["']([^"']*\\/profiles\\/${profileType}\\/[^"']+)["']`, "gi"))]
+    .map((match) => {
+      try {
+        return new URL(match[1], expectedSiteUrl).pathname
+      } catch {
+        return ""
+      }
+    })
+    .filter(Boolean)
+}
+
 function claimProfileLinks(html) {
   return [...html.matchAll(/href=["']([^"']*\/claim-profile\?[^"']+)["']/gi)]
     .map((match) => {
@@ -110,6 +122,19 @@ function sitemapProfilePath(xml) {
 
 function sitemapLocs(xml) {
   return [...xml.matchAll(/<loc>(.*?)<\/loc>/gi)].map((match) => match[1])
+}
+
+function sitemapEntry(xml, loc) {
+  const escapedLoc = loc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const match = xml.match(new RegExp(`<url>\\s*<loc>${escapedLoc}<\\/loc>([\\s\\S]*?)<\\/url>`, "i"))
+
+  return match?.[1] ?? ""
+}
+
+function sitemapLastmod(xml, loc) {
+  const entry = sitemapEntry(xml, loc)
+
+  return extract(entry, /<lastmod>(.*?)<\/lastmod>/is)
 }
 
 const home = await read("/")
@@ -448,8 +473,33 @@ if (businessesPageForClaim.response.ok) {
 }
 
 const sitemap = await read("/sitemap.xml")
+const versionInfo = await read("/api/version")
 const profilePath = sitemapProfilePath(sitemap.text)
 const sitemapPublicLocs = sitemap.response.ok ? sitemapLocs(sitemap.text) : []
+let versionJson = null
+
+try {
+  versionJson = versionInfo.response.ok ? JSON.parse(versionInfo.text) : null
+} catch {
+  versionJson = null
+}
+
+if (versionInfo.response.ok && versionJson?.releaseDate) {
+  pass("/api/version release date present", versionJson.releaseDate)
+} else {
+  fail("/api/version release date present", versionInfo.response.ok ? "missing releaseDate" : String(versionInfo.response.status))
+}
+
+if (sitemap.response.ok && versionJson?.releaseDate) {
+  const homepageLastmod = sitemapLastmod(sitemap.text, expectedSiteUrl)
+  const expectedLastmod = versionJson.releaseDate.slice(0, 10)
+
+  if (homepageLastmod.startsWith(expectedLastmod)) {
+    pass("Sitemap homepage lastmod matches release date", homepageLastmod)
+  } else {
+    fail("Sitemap homepage lastmod matches release date", `${homepageLastmod || "missing"} expected ${expectedLastmod}`)
+  }
+}
 
 if (profilePath) pass("Sitemap includes at least one public client profile", profilePath)
 else fail("Sitemap includes at least one public client profile")
@@ -460,6 +510,59 @@ for (const path of ["/profiles", "/profiles/client", "/profiles/contractor", "/p
   if (sitemapPublicLocs.includes(expectedLoc)) pass(`Sitemap includes ${path}`, expectedLoc)
   else fail(`Sitemap includes ${path}`, "missing")
 }
+
+async function verifyEntityProfileDetail(profileType) {
+  const directoryPage = await read(`/profiles/${profileType}`)
+
+  if (!directoryPage.response.ok) {
+    fail(`/profiles/${profileType} detail source returns 200`, String(directoryPage.response.status))
+    return
+  }
+
+  const profilePath = [...new Set(entityProfileLinks(directoryPage.text, profileType))][0]
+
+  if (!profilePath) {
+    fail(`/profiles/${profileType} exposes a profile detail link`, "missing")
+    return
+  }
+
+  const profilePage = await read(profilePath)
+
+  if (!profilePage.response.ok) {
+    fail(`${profilePath} returns 200`, String(profilePage.response.status))
+    return
+  }
+
+  pass(`${profilePath} returns 200`)
+
+  for (const type of ["WebPage", "ProfilePage", "Organization", "BreadcrumbList", "ItemList"]) {
+    if (profilePage.text.includes(`"@type":"${type}"`) || profilePage.text.includes(`"@type": "${type}"`)) {
+      pass(`${profilePath} ${type} schema present`)
+    } else {
+      fail(`${profilePath} ${type} schema present`)
+    }
+  }
+
+  if (
+    !profilePage.text.includes("AggregateRating") &&
+    !profilePage.text.includes("\"Review\"") &&
+    !profilePage.text.includes("ratingValue")
+  ) {
+    pass(`${profilePath} avoids rating-rich-result markup`)
+  } else {
+    fail(`${profilePath} avoids rating-rich-result markup`)
+  }
+
+  const privateDataLeaks = findPublicPrivateDataLeaks(profilePage.text, { includeContactIdentifiers: true })
+  if (privateDataLeaks.length === 0) {
+    pass(`${profilePath} public private-data safety`)
+  } else {
+    fail(`${profilePath} public private-data safety`, privateDataLeaks.join(", "))
+  }
+}
+
+await verifyEntityProfileDetail("contractor")
+await verifyEntityProfileDetail("subcontractor")
 
 const publicProfile = profilePath ? await read(profilePath) : { response: { ok: false, status: "missing" }, text: "" }
 if (publicProfile.response.ok) {

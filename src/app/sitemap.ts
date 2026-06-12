@@ -10,6 +10,7 @@ import { entityProfileHref } from "@/lib/entity-profiles"
 import { getClientDirectory } from "@/lib/client-directory"
 import { acquisitionPages } from "@/lib/acquisition-pages"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
+import { getReleaseLastModified } from "@/lib/release"
 import { profileTypes } from "@/lib/types"
 
 const siteUrl = getSiteUrl()
@@ -17,149 +18,149 @@ const siteUrl = getSiteUrl()
 export const dynamic = "force-dynamic"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date()
+  const releaseLastModified = getReleaseLastModified()
   const publicRoutes: MetadataRoute.Sitemap = [
     {
       url: siteUrl,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "weekly",
       priority: 1,
     },
     {
       url: `${siteUrl}/pricing`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${siteUrl}/resources`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.65,
     },
     {
       url: `${siteUrl}/mobile-app`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.62,
     },
     {
       url: `${siteUrl}/clients`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "weekly",
       priority: 0.75,
     },
     {
       url: `${siteUrl}/businesses`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "weekly",
       priority: 0.7,
     },
     {
       url: `${siteUrl}/profiles`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "weekly",
       priority: 0.74,
     },
     ...profileTypes.map((profileType) => ({
       url: `${siteUrl}/profiles/${profileType}`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "weekly" as const,
       priority: profileType === "client" ? 0.72 : 0.7,
     })),
     {
       url: `${siteUrl}/claim-profile`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.56,
     },
     {
       url: `${siteUrl}/business-rating-methodology`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.55,
     },
     {
       url: `${siteUrl}/payment-recovery-service`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.65,
     },
     {
       url: `${siteUrl}/florida-lien-notice-service`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${siteUrl}/florida-lien-filing-service`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.65,
     },
     ...acquisitionPages.map((page) => ({
       url: `${siteUrl}${page.path}`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly" as const,
       priority: page.kind === "guide" ? 0.66 : 0.72,
     })),
     {
       url: `${siteUrl}/about`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
       url: `${siteUrl}/contact`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/enterprise`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/how-it-works`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.7,
     },
     {
       url: `${siteUrl}/terms`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
       url: `${siteUrl}/privacy`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
       url: `${siteUrl}/report-policy`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/dispute-policy`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/moderation-policy`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.5,
     },
     {
       url: `${siteUrl}/score-methodology`,
-      lastModified: now,
+      lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.5,
     },
@@ -190,7 +191,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }))
   const landingRoutes = allSeoLandingPages.map((page) => ({
     url: `${siteUrl}${page.canonicalPath}`,
-    lastModified: now,
+    lastModified: releaseLastModified,
     changeFrequency: "weekly" as const,
     priority: page.kind === "clients" ? 0.75 : 0.7,
   }))

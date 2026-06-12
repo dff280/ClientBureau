@@ -325,6 +325,22 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "WebPage",
+        "@id": `${profileUrl}#webpage`,
+        url: profileUrl,
+        name: `${profile.displayName} in ${profile.city}, ${profile.state}: Client Bureau profile`,
+        description: profile.safeDescription,
+        datePublished: profile.createdAt,
+        dateModified: profile.updatedAt,
+        isPartOf: {
+          "@id": `${siteUrl}/#website`,
+        },
+        about: { "@id": `${profileUrl}#subject` },
+        mainEntity: { "@id": `${profileUrl}#subject` },
+        breadcrumb: { "@id": `${profileUrl}#breadcrumb` },
+        hasPart: { "@id": `${profileUrl}#approved-report-summaries` },
+      },
+      {
         "@type": "ProfilePage",
         "@id": `${profileUrl}#profilepage`,
         url: profileUrl,
