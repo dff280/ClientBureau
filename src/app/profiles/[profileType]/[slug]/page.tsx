@@ -2,7 +2,19 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import type React from "react"
-import { ArrowRight, BadgeCheck, BriefcaseBusiness, FileText, MessageSquare, ShieldCheck } from "lucide-react"
+import {
+  ArrowRight,
+  BadgeCheck,
+  BriefcaseBusiness,
+  Building2,
+  ClipboardCheck,
+  FileText,
+  Handshake,
+  MessageSquare,
+  ShieldCheck,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react"
 
 import { PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
 import { RiskBadge } from "@/components/client/risk-badge"
@@ -25,6 +37,226 @@ function toProfileType(value: string): ProfileType | undefined {
   return profileTypes.includes(value as ProfileType) ? (value as ProfileType) : undefined
 }
 
+type EntityProfilePresentation = {
+  heroDescription: string
+  dossierEyebrow: string
+  scoreLabel: string
+  scoreCaption: string
+  proofTypeText: string
+  proofSubtypeText: string
+  proofReportsText: string
+  proofEvidenceText: string
+  profileVisibilityText: string
+  verificationFallback: string
+  claimCta: string
+  insightEyebrow: string
+  insightTitle: string
+  insightDescription: string
+  insightCards: Array<{
+    icon: LucideIcon
+    title: string
+    text: string
+  }>
+  projectEyebrow: string
+  projectTitle: string
+  projectDescription: string
+  relationshipEyebrow: string
+  reportEyebrow: string
+  reportTitle: string
+  reportDescription: string
+  responseTitle: string
+  responseText: string
+  accountTitle: string
+  accountText: string
+  accountCta: string
+  accent: {
+    icon: string
+    panel: string
+    badge: string
+    text: string
+  }
+}
+
+function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePresentation {
+  if (profileType === "contractor") {
+    return {
+      heroDescription:
+        "This contractor and service-business profile shows approved public business context: verification signals, service-area records, public project history, response indicators, and claim/correction paths. Private identifiers and raw files stay sealed.",
+      dossierEyebrow: "Business trust dossier",
+      scoreLabel: "Business profile indicator",
+      scoreCaption: "A public-safe profile signal based on approved context, verification, project activity, and moderation status.",
+      proofTypeText: "Contractor records are grouped around customer-facing business activity and project responsibility.",
+      proofSubtypeText: "Subtypes help distinguish general contractors, service businesses, specialty contractors, agencies, and property-service companies.",
+      proofReportsText: "Approved public summaries show documented business/project context only.",
+      proofEvidenceText: "Evidence indicators can support project context without publishing raw files.",
+      profileVisibilityText: "Business trust profile",
+      verificationFallback: "Business moderation signals only",
+      claimCta: "Claim or Verify Business Profile",
+      insightEyebrow: "Business readiness",
+      insightTitle: "Contractor profiles focus on public business trust.",
+      insightDescription:
+        "A contractor profile should quickly answer whether this is a claimed, documented, customer-facing business with public project context and a path to correct the record.",
+      insightCards: [
+        {
+          icon: Building2,
+          title: "Business identity",
+          text: "Shows business name, service area, subtype, claim status, and public verification signals when available.",
+        },
+        {
+          icon: ClipboardCheck,
+          title: "Project oversight",
+          text: "Frames approved records around project history, client-facing documentation, and moderated summaries.",
+        },
+        {
+          icon: ShieldCheck,
+          title: "Correction rights",
+          text: "Keeps profile claiming, correction, and response paths visible without exposing private contact data.",
+        },
+      ],
+      projectEyebrow: "Business project graph",
+      projectTitle: "Public project and service records",
+      projectDescription:
+        "Contractor project records connect approved summaries, evidence indicators, service locations, and resolution updates. Private files and internal notes are not shown.",
+      relationshipEyebrow: "Business relationship context",
+      reportEyebrow: "Business report context",
+      reportTitle: "Approved contractor-profile summaries",
+      reportDescription:
+        "Published summaries are moderated for business-profile context, client-facing project history, and response/correction fairness.",
+      responseTitle: "Response and correction path",
+      responseText:
+        "A contractor or service business can submit a response, dispute, correction request, or resolution update for moderation review.",
+      accountTitle: "Protect your contractor record",
+      accountText:
+        "Claim your profile, monitor public context, document client experiences, organize evidence, and keep your business record accurate.",
+      accountCta: "Create account",
+      accent: {
+        icon: "bg-emerald-100 text-emerald-800",
+        panel: "border-emerald-200 bg-emerald-50/70",
+        badge: "border-emerald-200 bg-emerald-50 text-emerald-800",
+        text: "text-emerald-700",
+      },
+    }
+  }
+
+  if (profileType === "subcontractor") {
+    return {
+      heroDescription:
+        "This subcontractor and trade-professional profile shows approved public trade context: specialty scope, GC/sub relationship signals, documentation readiness, payment-chain indicators, and claim/correction paths. Private identifiers and raw files stay sealed.",
+      dossierEyebrow: "Trade partner dossier",
+      scoreLabel: "Trade profile indicator",
+      scoreCaption: "A public-safe profile signal based on approved trade context, documentation, relationships, and moderation status.",
+      proofTypeText: "Subcontractor records are grouped around specialty work, crew roles, and contractor-to-subcontractor relationships.",
+      proofSubtypeText: "Subtypes help distinguish installers, crews, labor providers, licensed subcontractors, and specialty trades.",
+      proofReportsText: "Approved public summaries show documented trade and payment-chain context only.",
+      proofEvidenceText: "Evidence indicators can support scope, completion, retainage, or payment-chain context without publishing raw files.",
+      profileVisibilityText: "Trade partner profile",
+      verificationFallback: "Trade moderation signals only",
+      claimCta: "Claim or Verify Trade Profile",
+      insightEyebrow: "Trade readiness",
+      insightTitle: "Subcontractor profiles focus on scope, relationships, and payment-chain context.",
+      insightDescription:
+        "A subcontractor profile should quickly answer what trade role existed, whether the relationship was GC/sub or business-to-business, and what documentation is on file.",
+      insightCards: [
+        {
+          icon: Wrench,
+          title: "Trade specialization",
+          text: "Shows specialty trade, crew, installer, labor-provider, or licensed-subcontractor context.",
+        },
+        {
+          icon: Handshake,
+          title: "GC/sub relationship",
+          text: "Separates subcontractor-to-contractor and contractor-to-subcontractor records from direct client jobs.",
+        },
+        {
+          icon: ClipboardCheck,
+          title: "Payment-chain records",
+          text: "Highlights scope documentation, retainage/payment indicators, evidence status, and resolution context.",
+        },
+      ],
+      projectEyebrow: "Trade project graph",
+      projectTitle: "Scope, crew, and payment-chain records",
+      projectDescription:
+        "Subcontractor project records connect trade scope, business-to-business relationships, evidence indicators, and payment/resolution context. Raw files stay private.",
+      relationshipEyebrow: "GC/sub relationship context",
+      reportEyebrow: "Trade report context",
+      reportTitle: "Approved subcontractor-profile summaries",
+      reportDescription:
+        "Published summaries are moderated for trade scope, contractor/subcontractor relationship context, payment-chain issues, and response/correction fairness.",
+      responseTitle: "Trade profile response path",
+      responseText:
+        "A subcontractor or trade professional can submit a response, dispute, correction request, or resolution update for moderation review.",
+      accountTitle: "Protect your trade partner record",
+      accountText:
+        "Claim your profile, document GC/sub relationships, organize evidence, track payment-chain context, and keep your trade record accurate.",
+      accountCta: "Create account",
+      accent: {
+        icon: "bg-blue-100 text-blue-800",
+        panel: "border-blue-200 bg-blue-50/70",
+        badge: "border-blue-200 bg-blue-50 text-blue-800",
+        text: "text-blue-700",
+      },
+    }
+  }
+
+  return {
+    heroDescription:
+      "This public profile shows approved Client Bureau context only: moderated summaries, response indicators, evidence-on-file labels, and public record status. Private identifiers and raw files stay sealed.",
+    dossierEyebrow: "Official profile dossier",
+    scoreLabel: "Profile indicator",
+    scoreCaption: "A public-safe profile signal based on approved context and moderation status.",
+    proofTypeText: "Records are grouped by the role in the business relationship.",
+    proofSubtypeText: "Subtypes help organize homeowners, businesses, contractors, and trade professionals.",
+    proofReportsText: "Only admin-approved summaries are shown on public pages.",
+    proofEvidenceText: "Raw documents and uploads are private.",
+    profileVisibilityText: "Approved public content only",
+    verificationFallback: "Moderation signals only",
+    claimCta: "Claim or Correct Profile",
+    insightEyebrow: "Profile context",
+    insightTitle: "Public profiles show approved context only.",
+    insightDescription:
+      "Client Bureau keeps public profile context focused on moderated summaries, response rights, and evidence indicators without publishing private identifiers.",
+    insightCards: [
+      {
+        icon: ShieldCheck,
+        title: "Moderated record",
+        text: "Public pages display approved summaries and public-safe profile facts only.",
+      },
+      {
+        icon: FileText,
+        title: "Documented context",
+        text: "Evidence indicators can support context without exposing raw uploads.",
+      },
+      {
+        icon: MessageSquare,
+        title: "Response rights",
+        text: "Reported parties can respond, dispute, correct, or update profile context.",
+      },
+    ],
+    projectEyebrow: "Project/job graph",
+    projectTitle: "Connected project records",
+    projectDescription:
+      "Project records connect reports, evidence indicators, responses, and resolution updates. Public pages show only approved summary context.",
+    relationshipEyebrow: "Relationship context",
+    reportEyebrow: "Moderated report context",
+    reportTitle: "Approved public summaries",
+    reportDescription:
+      "Reports are contractor-submitted or relationship-submitted experiences reviewed for public summary language before publication.",
+    responseTitle: "Response and correction path",
+    responseText:
+      "Reported parties can submit a response, dispute, correction request, or resolution update for moderation review.",
+    accountTitle: "Business-owner protection",
+    accountText:
+      "Contractors and service businesses can check public context, save searches, and document real project experiences.",
+    accountCta: "Create account",
+    accent: {
+      icon: "bg-amber-100 text-amber-800",
+      panel: "border-amber-200 bg-amber-50/70",
+      badge: "border-amber-200 bg-amber-50 text-amber-800",
+      text: "text-amber-700",
+    },
+  }
+}
+
 export async function generateMetadata({ params }: EntityProfilePageProps): Promise<Metadata> {
   const { profileType: rawProfileType, slug } = await params
   const profileType = toProfileType(rawProfileType)
@@ -35,7 +267,11 @@ export async function generateMetadata({ params }: EntityProfilePageProps): Prom
 
   const title = `${profile.displayName} ${profile.city}, ${profile.state} | Client Bureau ${profileTypeLabel(profile.profileType)} Profile`
   const description =
-    `Moderated Client Bureau profile for ${profile.displayName} in ${profile.city}, ${profile.state}: documented experiences, response context, and private evidence indicators.`
+    profile.profileType === "contractor"
+      ? `Public contractor and service-business profile for ${profile.displayName} in ${profile.city}, ${profile.state}: verification, project context, and response paths.`
+      : profile.profileType === "subcontractor"
+        ? `Public subcontractor and trade-professional profile for ${profile.displayName} in ${profile.city}, ${profile.state}: trade scope, relationship context, and evidence indicators.`
+        : `Moderated Client Bureau profile for ${profile.displayName} in ${profile.city}, ${profile.state}: documented experiences, response context, and private evidence indicators.`
 
   return {
     title,
@@ -67,6 +303,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const reportHref = `/submit-report?profileType=${profile.profileType}&profileSubtype=${encodeURIComponent(String(profile.profileSubtype ?? ""))}&profileSlug=${encodeURIComponent(profile.slug)}&city=${encodeURIComponent(profile.city)}&state=${encodeURIComponent(profile.state)}`
   const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
   const responseHref = `/client-response?profile=${encodeURIComponent(profile.profileHref)}`
+  const presentation = getEntityProfilePresentation(profile.profileType)
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",
@@ -125,15 +362,15 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
       <PremiumHero
         eyebrow={`${profileTypeLabel(profile.profileType)} public profile`}
         title={`${profile.displayName} in ${profile.city}, ${profile.state}`}
-        description="This public profile shows approved Client Bureau context only: moderated summaries, response indicators, evidence-on-file labels, and public record status. Private identifiers and raw files stay sealed."
+        description={presentation.heroDescription}
         primary={{ href: "/search", label: "Check Another Profile", icon: ShieldCheck }}
         secondary={{ href: reportHref, label: "Report an Experience", icon: FileText }}
         aside={
           <ProductMockupFrame
             dark
-            eyebrow="Official profile dossier"
-            title={`${profile.ratingScore}/100 profile indicator`}
-            description={`${profile.reportCount} approved public ${profile.reportCount === 1 ? "report" : "reports"} with ${profile.evidenceSummaryLabel.toLowerCase()}.`}
+            eyebrow={presentation.dossierEyebrow}
+            title={`${profile.ratingScore}/100 ${presentation.scoreLabel.toLowerCase()}`}
+            description={`${profile.reportCount} approved public ${profile.reportCount === 1 ? "report" : "reports"} with ${profile.evidenceSummaryLabel.toLowerCase()}. ${presentation.scoreCaption}`}
             points={[
               claimedStatusLabel(profile.claimedStatus),
               profile.responseStatusLabel,
@@ -145,10 +382,10 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
       <PremiumProofStrip
         dark
         items={[
-          { label: "Profile type", value: profileTypeLabel(profile.profileType), text: "Records are grouped by the role in the business relationship." },
-          { label: "Subtype", value: String(profile.profileSubtype ?? "General profile"), text: "Subtypes help organize homeowners, businesses, contractors, and trade professionals." },
-          { label: "Public reports", value: String(profile.reportCount), text: "Only admin-approved summaries are shown on public pages." },
-          { label: "Evidence", value: profile.evidenceOnFileCount > 0 ? "On file" : "Available", text: "Raw documents and uploads are private." },
+          { label: "Profile type", value: profileTypeLabel(profile.profileType), text: presentation.proofTypeText },
+          { label: "Subtype", value: String(profile.profileSubtype ?? "General profile"), text: presentation.proofSubtypeText },
+          { label: "Public reports", value: String(profile.reportCount), text: presentation.proofReportsText },
+          { label: "Evidence", value: profile.evidenceOnFileCount > 0 ? "On file" : "Available", text: presentation.proofEvidenceText },
           { label: "Response rights", value: profile.responseStatusLabel, text: "Reported parties can respond, dispute, or request correction." },
         ]}
       />
@@ -160,13 +397,15 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
               <CardContent className="space-y-5 p-6">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">Profile indicator</p>
+                    <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${presentation.accent.text}`}>
+                      {presentation.scoreLabel}
+                    </p>
                     <p className="mt-2 text-4xl font-black text-slate-950">{profile.ratingScore}</p>
                   </div>
                   {profile.profileType === "client" && ["Low", "Moderate", "Elevated", "High"].includes(profile.ratingBand) ? (
                     <RiskBadge riskLevel={profile.ratingBand as "Low" | "Moderate" | "Elevated" | "High"} />
                   ) : (
-                    <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase text-amber-800">
+                    <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase ${presentation.accent.badge}`}>
                       {profile.ratingBand}
                     </span>
                   )}
@@ -175,14 +414,14 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                   <ProfileFact label="City / state" value={`${profile.city}, ${profile.state}`} />
                   <ProfileFact label="Subtype" value={String(profile.profileSubtype ?? "General profile")} />
                   <ProfileFact label="Claim status" value={claimedStatusLabel(profile.claimedStatus)} />
-                  <ProfileFact label="Verification" value={profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : "Moderation signals only"} />
+                  <ProfileFact label="Verification" value={profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : presentation.verificationFallback} />
                   <ProfileFact label="Evidence" value={profile.evidenceSummaryLabel} />
-                  <ProfileFact label="Public visibility" value="Approved public content only" />
+                  <ProfileFact label="Public visibility" value={presentation.profileVisibilityText} />
                 </div>
                 <Button asChild className="w-full bg-slate-950 text-white hover:bg-slate-800">
                   <Link href={claimHref}>
                     <BadgeCheck aria-hidden="true" />
-                    Claim or Correct Profile
+                    {presentation.claimCta}
                   </Link>
                 </Button>
               </CardContent>
@@ -190,14 +429,39 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           </aside>
 
           <div className="space-y-6">
+            <Card className={`rounded-md shadow-sm ${presentation.accent.panel}`}>
+              <CardContent className="p-6">
+                <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${presentation.accent.text}`}>
+                  {presentation.insightEyebrow}
+                </p>
+                <h2 className="mt-2 text-2xl font-black text-slate-950">{presentation.insightTitle}</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">{presentation.insightDescription}</p>
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  {presentation.insightCards.map((item) => {
+                    const Icon = item.icon
+
+                    return (
+                      <div key={item.title} className="rounded-md border border-white/70 bg-white/75 p-4 shadow-sm">
+                        <span className={`flex size-10 items-center justify-center rounded-md ${presentation.accent.icon}`}>
+                          <Icon className="size-5" aria-hidden="true" />
+                        </span>
+                        <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+                        <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+                      </div>
+                    )
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardContent className="p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Project/job graph</p>
-                    <h2 className="mt-2 text-2xl font-black text-slate-950">Connected project records</h2>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{presentation.projectEyebrow}</p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-950">{presentation.projectTitle}</h2>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                      Project records connect reports, evidence indicators, responses, and resolution updates. Public pages show only approved summary context.
+                      {presentation.projectDescription}
                     </p>
                   </div>
                   <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase text-amber-800">
@@ -235,7 +499,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 </div>
                 {profile.relationships.length > 0 ? (
                   <div className="mt-5 rounded-md border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Relationship context</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{presentation.relationshipEyebrow}</p>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {profile.relationships.slice(0, 4).map((relationship) => (
                         <span key={relationship.id} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-700">
@@ -252,10 +516,10 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
               <CardContent className="p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">Moderated report context</p>
-                    <h2 className="mt-2 text-2xl font-black text-slate-950">Approved public summaries</h2>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">{presentation.reportEyebrow}</p>
+                    <h2 className="mt-2 text-2xl font-black text-slate-950">{presentation.reportTitle}</h2>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                      Reports are contractor-submitted or relationship-submitted experiences reviewed for public summary language before publication.
+                      {presentation.reportDescription}
                     </p>
                   </div>
                   <Button asChild variant="outline">
@@ -294,17 +558,19 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
             <div className="grid gap-4 md:grid-cols-2">
               <ProfileModule
                 icon={<MessageSquare className="size-5" aria-hidden="true" />}
-                title="Response and correction path"
-                text="Reported parties can submit a response, dispute, correction request, or resolution update for moderation review."
+                title={presentation.responseTitle}
+                text={presentation.responseText}
                 href={responseHref}
                 cta="Submit response"
+                iconClassName={presentation.accent.icon}
               />
               <ProfileModule
                 icon={<BriefcaseBusiness className="size-5" aria-hidden="true" />}
-                title="Business-owner protection"
-                text="Contractors and service businesses can check public context, save searches, and document real project experiences."
+                title={presentation.accountTitle}
+                text={presentation.accountText}
                 href="/signup"
-                cta="Create account"
+                cta={presentation.accountCta}
+                iconClassName={presentation.accent.icon}
               />
             </div>
           </div>
@@ -327,19 +593,21 @@ function ProfileModule({
   cta,
   href,
   icon,
+  iconClassName = "bg-amber-100 text-amber-800",
   text,
   title,
 }: {
   cta: string
   href: string
   icon: React.ReactNode
+  iconClassName?: string
   text: string
   title: string
 }) {
   return (
     <Card className="rounded-md border-slate-200 bg-white shadow-sm">
       <CardContent className="p-6">
-        <div className="flex size-10 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+        <div className={`flex size-10 items-center justify-center rounded-md ${iconClassName}`}>
           {icon}
         </div>
         <h3 className="mt-4 text-lg font-black text-slate-950">{title}</h3>

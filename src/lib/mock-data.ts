@@ -63,6 +63,14 @@ export const users: User[] = [
     accountType: "contractor",
     createdAt: "2026-01-12T14:00:00.000Z",
   },
+  {
+    id: "user_subcontractor_01",
+    email: "operations@brightlineelectric.com",
+    fullName: "Drew Santos",
+    role: "contractor",
+    accountType: "subcontractor",
+    createdAt: "2026-02-18T14:00:00.000Z",
+  },
 ]
 
 export const contractorProfiles: ContractorProfile[] = [
@@ -77,6 +85,23 @@ export const contractorProfiles: ContractorProfile[] = [
     verificationStatus: "pending",
     verificationBadges: ["Verified business", "Verified email", "Verified phone"],
     createdAt: "2026-02-03T14:00:00.000Z",
+  },
+  {
+    id: "contractor_02",
+    userId: "user_subcontractor_01",
+    businessName: "Bright Line Electric",
+    trade: "Licensed electrical subcontractor",
+    businessType: "Licensed subcontractor",
+    city: "Orlando",
+    state: "FL",
+    licenseNumber: "FL-EC-38104",
+    serviceArea: "Central Florida residential and light commercial projects",
+    companySize: "4-10 crew members",
+    yearsInBusiness: "7 years",
+    primaryGoal: "Verify trade readiness and document payment-chain context",
+    verificationStatus: "verified",
+    verificationBadges: ["Verified business", "Verified license", "Verified insurance"],
+    createdAt: "2026-02-19T14:00:00.000Z",
   },
 ]
 

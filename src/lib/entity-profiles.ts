@@ -410,7 +410,9 @@ export function searchEntityProfiles(
         nextAction:
           profile.profileType === "client"
             ? "Check reported client context before accepting work"
-            : "Review business profile and documented project context",
+            : profile.profileType === "subcontractor"
+              ? "Review trade scope, GC/sub context, and payment-chain signals"
+              : "Review business profile, verification, and public project context",
       } satisfies EntityProfileSearchResult
     })
     .filter((profile) => {

@@ -35,10 +35,10 @@ function descriptionForProfileType(profileType: ProfileType) {
   }
 
   if (profileType === "subcontractor") {
-    return "Search public Client Bureau profiles for subcontractors, installers, crews, labor providers, and specialty trade professionals."
+    return "Search public subcontractor and trade-professional profiles by trade scope, GC/sub relationship context, and payment-chain signals."
   }
 
-  return "Search public Client Bureau profiles for contractors, service businesses, trade companies, and project-based businesses."
+  return "Search public Client Bureau contractor and service-business profiles with verification, service-area context, and moderated project records."
 }
 
 export async function generateMetadata({ params }: ProfileTypeDirectoryProps): Promise<Metadata> {
