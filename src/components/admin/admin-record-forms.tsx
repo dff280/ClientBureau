@@ -239,6 +239,17 @@ export function AdminClientEditor({
             <p className="mt-1 text-xs leading-5 text-rose-800">
               Use only for duplicate or unsafe records. This action creates an audit event.
             </p>
+            <label className="mt-3 block text-xs font-semibold uppercase text-rose-900" htmlFor={`${client.id}-delete-confirm`}>
+              Type DELETE to confirm
+            </label>
+            <Input
+              id={`${client.id}-delete-confirm`}
+              name="deleteConfirmation"
+              pattern="DELETE"
+              required
+              placeholder="DELETE"
+              className="mt-2 border-rose-200 bg-white"
+            />
             <Button type="submit" variant="destructive" size="sm" className="mt-3">
               <Trash2 aria-hidden="true" />
               Delete client
@@ -414,6 +425,17 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
             <p className="mt-1 text-xs leading-5 text-rose-800">
               Use only for duplicate, abandoned, or unsafe records. This action creates an audit event.
             </p>
+            <label className="mt-3 block text-xs font-semibold uppercase text-rose-900" htmlFor={`${contractor.id}-delete-confirm`}>
+              Type DELETE to confirm
+            </label>
+            <Input
+              id={`${contractor.id}-delete-confirm`}
+              name="deleteConfirmation"
+              pattern="DELETE"
+              required
+              placeholder="DELETE"
+              className="mt-2 border-rose-200 bg-white"
+            />
             <Button type="submit" variant="destructive" size="sm" className="mt-3">
               <Trash2 aria-hidden="true" />
               Delete business

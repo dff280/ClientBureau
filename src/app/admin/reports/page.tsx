@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import type { LucideIcon } from "lucide-react"
-import { ClipboardCheck, FileText, History, MessageSquareText, ShieldCheck, UploadCloud } from "lucide-react"
+import { AlertTriangle, BadgeCheck, ClipboardCheck, FileText, History, MessageSquareText, ShieldCheck, UploadCloud } from "lucide-react"
 
 import { AdminActionOutcomePanel } from "@/components/admin/admin-crm-ui"
 import { AdminModerationCrm } from "@/components/admin/admin-moderation-crm"
@@ -34,6 +34,15 @@ export default async function AdminReportsPage() {
   const published = reviews.filter((item) => item.review.status === "approved").length
   const evidence = reviews.filter((item) => item.evidence.length > 0).length
   const discussions = workspace.discussions.filter((item) => item.status === "pending").length
+  const disputeReviews = reviews.filter((item) => item.review.status === "needs_dispute_review").length
+  const highValueReviews = reviews.filter((item) => (item.report?.amountUnpaid ?? 0) >= 5000).length
+  const positiveReviews = reviews.filter((item) =>
+    ["Positive experience", "Would work with again"].includes(item.report?.reportCategory ?? ""),
+  ).length
+  const needsMoreInfoReviews = reviews.filter((item) =>
+    (item.review.notes ?? "").toLowerCase().includes("needs more information") ||
+    (item.review.notes ?? "").toLowerCase().includes("needs-more-info"),
+  ).length
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -61,6 +70,49 @@ export default async function AdminReportsPage() {
           <StatCard label="Published" value={published} helper="Approved report review records" icon={ClipboardCheck} tone="emerald" />
           <StatCard label="Discussion queue" value={discussions} helper="Related community entries waiting" icon={MessageSquareText} tone={discussions > 0 ? "amber" : "slate"} href="/admin/discussions" />
         </div>
+        <DashboardSection
+          eyebrow="Queue lanes"
+          title="Triage by decision risk before opening a record"
+          description="Use these lanes to prioritize high-value payment issues, dispute context, positive reports, evidence-backed records, and hold notes."
+        >
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+            <QueueLane
+              icon={AlertTriangle}
+              label="High value"
+              value={highValueReviews}
+              detail="Reports with $5,000 or more listed as unpaid."
+              tone={highValueReviews > 0 ? "amber" : "slate"}
+            />
+            <QueueLane
+              icon={MessageSquareText}
+              label="Dispute review"
+              value={disputeReviews}
+              detail="Reports with dispute or response context needing careful review."
+              tone={disputeReviews > 0 ? "rose" : "slate"}
+            />
+            <QueueLane
+              icon={BadgeCheck}
+              label="Positive reports"
+              value={positiveReviews}
+              detail="Positive client experiences should publish without unpaid-dollar framing."
+              tone={positiveReviews > 0 ? "emerald" : "slate"}
+            />
+            <QueueLane
+              icon={UploadCloud}
+              label="Evidence-backed"
+              value={evidence}
+              detail="Private evidence available for moderator confidence."
+              tone={evidence > 0 ? "blue" : "slate"}
+            />
+            <QueueLane
+              icon={FileText}
+              label="Needs more info"
+              value={needsMoreInfoReviews}
+              detail="Records with hold or information-request notes."
+              tone={needsMoreInfoReviews > 0 ? "amber" : "slate"}
+            />
+          </div>
+        </DashboardSection>
         <DashboardSection
           eyebrow="Approval standard"
           title="Publish only what is safe, documented, and moderated"
@@ -115,6 +167,43 @@ export default async function AdminReportsPage() {
         <AdminReviewPanel items={reviews} />
       </div>
     </section>
+  )
+}
+
+function QueueLane({
+  detail,
+  icon: Icon,
+  label,
+  tone,
+  value,
+}: {
+  detail: string
+  icon: LucideIcon
+  label: string
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+  value: number
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-slate-50 text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    rose: "border-rose-200 bg-rose-50 text-rose-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950",
+  }[tone]
+
+  return (
+    <article className={`rounded-md border p-4 ${toneClass}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+          <p className="mt-2 text-3xl font-semibold">{value}</p>
+        </div>
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-white/70">
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-6 opacity-75">{detail}</p>
+    </article>
   )
 }
 

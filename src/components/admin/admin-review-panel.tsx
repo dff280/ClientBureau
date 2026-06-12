@@ -69,11 +69,47 @@ function statusLabel(status: AdminReview["status"]) {
   return status
 }
 
-function reviewPriority(item: AdminReviewItem) {
-  if (item.review.status === "queued") return "Ready"
-  if (item.review.status === "needs_dispute_review") return "Dispute"
-  if (item.review.status === "approved") return "Published"
-  return "Closed"
+function reportKind(item: AdminReviewItem) {
+  const category = item.report?.reportCategory
+  if (category === "Positive experience" || category === "Would work with again") return "Positive report"
+  if (item.report?.amountUnpaid && item.report.amountUnpaid > 0) return "Payment issue"
+  if (item.review.status === "needs_dispute_review" || item.report?.disputeStatus) return "Dispute context"
+  return "Client experience"
+}
+
+function priorityLevel(item: AdminReviewItem): {
+  label: string
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+} {
+  if (item.review.status === "needs_dispute_review") return { label: "Dispute review", tone: "rose" }
+  if ((item.report?.amountUnpaid ?? 0) >= 5000) return { label: "High value", tone: "amber" }
+  if (item.evidence.length > 0 || item.report?.evidenceAttached) return { label: "Documented", tone: "blue" }
+  if (reportKind(item) === "Positive report") return { label: "Positive", tone: "emerald" }
+  return { label: "Standard", tone: "slate" }
+}
+
+function evidenceReadiness(item: AdminReviewItem) {
+  if (item.evidence.length > 0) return `${item.evidence.length} private file${item.evidence.length === 1 ? "" : "s"}`
+  if (item.report?.evidenceAttached) return "Evidence indicated"
+  return "No evidence label"
+}
+
+function publishReadiness(item: AdminReviewItem, summary: string) {
+  const checklist = checklistProgress(item)
+  const blockers = [
+    !item.client ? "missing client profile" : null,
+    !item.report ? "missing report record" : null,
+    summary.trim().length < 40 ? "public summary too short" : null,
+    checklist.total > 0 && checklist.complete < checklist.total ? "checklist incomplete" : null,
+    !(item.evidence.length > 0 || item.report?.evidenceAttached || reportKind(item) === "Positive report")
+      ? "evidence not confirmed"
+      : null,
+  ].filter(Boolean) as string[]
+
+  return {
+    blockers,
+    ready: blockers.length === 0,
+  }
 }
 
 function filterReview(item: AdminReviewItem, filter: ReviewFilter) {
@@ -333,6 +369,7 @@ function QueueButton({
   const checklist = checklistProgress(item)
   const amountUnpaid = report?.amountUnpaid ?? 0
   const contractAmount = report?.contractAmount ?? 0
+  const priority = priorityLevel(item)
 
   return (
     <div
@@ -363,17 +400,19 @@ function QueueButton({
               selected ? "border-white/20 text-white" : "border-slate-200 text-slate-600",
             )}
           >
-            {reviewPriority(item)}
+            {priority.label}
           </span>
         </div>
-        <div className={cn("mt-3 flex items-center gap-2 text-xs", selected ? "text-slate-300" : "text-slate-500")}>
+        <div className={cn("mt-3 flex flex-wrap items-center gap-2 text-xs", selected ? "text-slate-300" : "text-slate-500")}>
           {status === "queued" ? <Clock3 className="size-3.5" aria-hidden="true" /> : null}
           {status === "needs_dispute_review" ? <AlertTriangle className="size-3.5" aria-hidden="true" /> : null}
           {status === "approved" ? <CheckCircle2 className="size-3.5" aria-hidden="true" /> : null}
           {status === "rejected" ? <XCircle className="size-3.5" aria-hidden="true" /> : null}
           <span className="capitalize">{statusLabel(status)}</span>
           <span>/</span>
-          <span>{item.evidence.length} evidence files</span>
+          <span>{reportKind(item)}</span>
+          <span>/</span>
+          <span>{evidenceReadiness(item)}</span>
         </div>
         <div className={cn("mt-3 grid gap-2 rounded-md p-2 text-xs", selected ? "bg-white/10" : "bg-slate-50")}>
           <div className="flex items-center justify-between gap-2">
@@ -385,6 +424,10 @@ function QueueButton({
             <span className="font-semibold">
               {amountUnpaid > 0 ? `${money(amountUnpaid)} unpaid` : `${money(contractAmount)} contract`}
             </span>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className={selected ? "text-slate-300" : "text-slate-500"}>Response</span>
+            <span className="font-semibold">{report?.responseStatus ?? "No response yet"}</span>
           </div>
           <div>
             <div className="flex items-center justify-between gap-2">
@@ -487,6 +530,29 @@ function ModerationWorkspace({
   const [moderatorNote, setModeratorNote] = useState(item.review.notes ?? "")
   const needsInfoNote =
     "Needs more information: request clearer identity, evidence, payment timeline, contract terms, or dispute context before this report can be published."
+  const readiness = publishReadiness(item, summary)
+  const priority = priorityLevel(item)
+  const decisionPresets = [
+    {
+      label: "Approve with edits",
+      note:
+        "Approved with edits: public summary was adjusted for neutral language, private identifiers were excluded, and evidence/context was reviewed privately.",
+    },
+    {
+      label: "Needs more info",
+      note: needsInfoNote,
+    },
+    {
+      label: "Private info issue",
+      note:
+        "Hold for privacy review: remove private contact details, street address, raw evidence references, or unsupported identity details before publication.",
+    },
+    {
+      label: "Neutrality issue",
+      note:
+        "Hold for summary rewrite: public copy needs more factual, response-aware language and should avoid labels, accusations, or legal conclusions.",
+    },
+  ]
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
@@ -509,6 +575,12 @@ function ModerationWorkspace({
                   report {report.status}
                 </Badge>
               ) : null}
+              <Badge variant="outline" className="rounded-md">
+                {reportKind(item)}
+              </Badge>
+              <Badge variant="outline" className="rounded-md">
+                {priority.label}
+              </Badge>
             </div>
             <h2 className="text-2xl font-semibold text-slate-950">{clientName(item)}</h2>
             <p className="text-sm leading-6 text-slate-600">
@@ -554,6 +626,43 @@ function ModerationWorkspace({
           ) : null}
 
           <ReviewPathStrip item={item} summary={summary} />
+
+          <div className="grid gap-3 md:grid-cols-4">
+            <OperationsSignal
+              label="Priority"
+              value={priority.label}
+              detail={
+                item.review.status === "needs_dispute_review"
+                  ? "Dispute context should be reviewed before publication."
+                  : "Use value, evidence, and status to triage."
+              }
+              tone={priority.tone}
+            />
+            <OperationsSignal
+              label="Evidence"
+              value={evidenceReadiness(item)}
+              detail="Evidence stays private and appears publicly only as a summary label."
+              tone={item.evidence.length > 0 ? "blue" : "slate"}
+            />
+            <OperationsSignal
+              label="Response"
+              value={report?.responseStatus ?? "No response yet"}
+              detail="Client response or dispute context should be moderated before display."
+              tone={
+                report?.responseStatus === "Resolved"
+                  ? "emerald"
+                  : report?.responseStatus === "Disputed"
+                    ? "rose"
+                    : "slate"
+              }
+            />
+            <OperationsSignal
+              label="Publish readiness"
+              value={readiness.ready ? "Ready" : "Review"}
+              detail={readiness.ready ? "No visible blockers from current review data." : readiness.blockers.join(", ")}
+              tone={readiness.ready ? "emerald" : "amber"}
+            />
+          </div>
 
           <WorkflowSection
             step="1"
@@ -698,15 +807,28 @@ function ModerationWorkspace({
                   placeholder="Moderator note or information request"
                   className="min-h-24 bg-white"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setModeratorNote(needsInfoNote)}
-                >
-                  <AlertTriangle aria-hidden="true" />
-                  Use needs-more-info note
-                </Button>
+                <div className="grid gap-2">
+                  <p className="text-xs font-semibold uppercase text-slate-500">Decision reason presets</p>
+                  {decisionPresets.map((preset) => (
+                    <Button
+                      key={preset.label}
+                      type="button"
+                      variant="outline"
+                      className="justify-start text-left"
+                      onClick={() => setModeratorNote(preset.note)}
+                    >
+                      <AlertTriangle aria-hidden="true" />
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
                 <Separator />
+                {!readiness.ready ? (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+                    <p className="font-semibold uppercase">Readiness blockers</p>
+                    <p className="mt-1">{readiness.blockers.join(", ")}</p>
+                  </div>
+                ) : null}
                 <div className="grid gap-2">
                   <PendingSubmitButton
                     name="decision"
@@ -801,6 +923,34 @@ function ReviewPathStrip({ item, summary }: { item: AdminReviewItem; summary: st
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+function OperationsSignal({
+  detail,
+  label,
+  tone,
+  value,
+}: {
+  detail: string
+  label: string
+  tone: "slate" | "amber" | "emerald" | "rose" | "blue"
+  value: string
+}) {
+  const toneClass = {
+    slate: "border-slate-200 bg-slate-50 text-slate-950",
+    amber: "border-amber-200 bg-amber-50 text-amber-950",
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-950",
+    rose: "border-rose-200 bg-rose-50 text-rose-950",
+    blue: "border-sky-200 bg-sky-50 text-sky-950",
+  }[tone]
+
+  return (
+    <div className={cn("rounded-md border p-3", toneClass)}>
+      <p className="text-xs font-semibold uppercase opacity-70">{label}</p>
+      <p className="mt-2 text-sm font-semibold leading-5">{value}</p>
+      <p className="mt-1 text-xs leading-5 opacity-75">{detail}</p>
     </div>
   )
 }
