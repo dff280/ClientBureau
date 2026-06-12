@@ -2,7 +2,7 @@
 
 Date: June 10, 2026
 
-Status note: production is live on Supabase with `DATA_MODE=supabase` and `PLATFORM_FEATURE_DATA_MODE=supabase`. The unified reputation graph schema is applied and `/api/health` reports live ops active.
+Status note updated June 12, 2026: production is live on Supabase with `DATA_MODE=supabase`. `PLATFORM_FEATURE_DATA_MODE=mock` is the safe setting until migration `0019_contractor_subcontractor_rating_transparency.sql` is applied and `/api/health` reports `platformCanUseSupabase: true`. Core auth, reports, admin approval, public profiles, and SEO routes remain live.
 
 ## Core Positioning
 

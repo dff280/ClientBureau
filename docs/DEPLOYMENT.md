@@ -42,6 +42,7 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0016_project_job_reputation_graph.sql`
    - `supabase/migrations/0017_project_job_graph_backfill.sql`
    - `supabase/migrations/0018_response_graph_links.sql`
+   - `supabase/migrations/0019_contractor_subcontractor_rating_transparency.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -196,15 +197,15 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0018` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Use `mock` only as a rollback if an advanced ops workflow needs review.
+Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0019` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Use `mock` as the safe mode while the newest profile-rating columns are missing or if an advanced ops workflow needs review.
 
-If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, or response graph columns, first confirm all migrations through `0018` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
+If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, or rating transparency columns, first confirm all migrations through `0019` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
 
 ```text
 supabase/migrations/0013_live_platform_schema_backfill.sql
 ```
 
-That migration is idempotent and exists as a production repair pass for databases that received only part of the platform schema rollout. It does not replace the multi-profile and reputation graph migrations `0014` through `0018`.
+That migration is idempotent and exists as a production repair pass for databases that received only part of the platform schema rollout. It does not replace the multi-profile, reputation graph, and rating transparency migrations `0014` through `0019`.
 
 For the unified reputation graph rollout, use [GRAPH_MIGRATION_RUNBOOK.md](GRAPH_MIGRATION_RUNBOOK.md). It generates one paste-ready SQL bundle for migrations `0014` through `0018`:
 
@@ -213,6 +214,8 @@ npm run migrations:graph:file
 ```
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show Supabase-backed platform mode before a normal production release.
+
+After applying `0019`, publish at least one real, verified subcontractor/trade-professional profile before running acquisition campaigns against `/profiles/subcontractor`. Do not create fake public profiles to satisfy SEO checks.
 
 After the required tables are verified, enable live-backed platform operations:
 

@@ -2,7 +2,7 @@
 
 Version: `0.2.0`
 
-Current status note: this audit is historical. As of June 10, 2026, production is live on Supabase with `PLATFORM_FEATURE_DATA_MODE=supabase`, the reputation graph schema is applied, and `/api/health` reports live ops active. Use `docs/LIVE_WORKFLOW_QA_RUNBOOK.md` and `npm run verify:live` for the current release gate.
+Current status note: this audit is historical. As of June 12, 2026, production is live on Supabase for core flows with `DATA_MODE=supabase`; advanced platform mode is intentionally safe-gated with `PLATFORM_FEATURE_DATA_MODE=mock` until migration `0019_contractor_subcontractor_rating_transparency.sql` is applied and `/api/health` reports `platformCanUseSupabase: true`. Use `docs/LIVE_WORKFLOW_QA_RUNBOOK.md` and `npm run verify:live` for the current release gate.
 
 ## Audit Scope
 

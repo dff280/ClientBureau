@@ -1,6 +1,6 @@
 # Client Bureau Reputation Graph Migration Runbook
 
-Use this when production `/api/health` reports missing unified profile, project/job graph, or response graph columns.
+Use this when production `/api/health` reports missing unified profile, project/job graph, response graph, or rating transparency columns.
 
 ## 1. Generate The SQL Bundle
 
@@ -31,6 +31,14 @@ The bundle contains migrations:
 - `0016_project_job_reputation_graph.sql`
 - `0017_project_job_graph_backfill.sql`
 - `0018_response_graph_links.sql`
+
+After that graph bundle succeeds, run the rating transparency migration separately:
+
+```text
+supabase/migrations/0019_contractor_subcontractor_rating_transparency.sql
+```
+
+Migration `0019` adds contractor/subcontractor rating transparency columns, business-role report fields, and the `profile_rating_events` table. It is additive and safe to rerun.
 
 If Supabase reports that the graph tables already exist but `/api/health` still shows missing graph columns, run this smaller repair file instead:
 
@@ -68,7 +76,7 @@ After Supabase finishes the SQL:
 curl https://clientbureau.com/api/health
 ```
 
-Expected values:
+Expected values after migrations through `0019`:
 
 ```json
 {

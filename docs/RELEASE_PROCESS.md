@@ -180,7 +180,7 @@ After the fix passes checks, merge it into `main`, deploy, and add a patch chang
 - Do not put server passwords into shell commands or commit history.
 - Prefer SSH keys for deploy access.
 - Public pages must not expose raw emails, phone numbers, street addresses, raw evidence files, pending reports, rejected reports, private contract content, or internal admin notes.
-- `PLATFORM_FEATURE_DATA_MODE=supabase` is the production target after readiness checks pass. Roll back to `mock` only if an advanced ops workflow needs review.
+- `PLATFORM_FEATURE_DATA_MODE=supabase` is the production target after readiness checks pass, including migration `0019_contractor_subcontractor_rating_transparency.sql`. Roll back to `mock` only if an advanced ops workflow needs review.
 
 ## Release Checklist
 
