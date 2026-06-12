@@ -318,6 +318,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const presentation = getEntityProfilePresentation(profile.profileType)
   const ratingFactors = profile.relatedContractor?.ratingFactors ?? profile.ratingFactors ?? []
   const ratingSummary = profile.relatedContractor?.ratingSummary ?? profile.ratingPublicNote ?? presentation.methodologyDescription
+  const methodologyHref = profile.profileType === "client" ? "/score-methodology" : "/business-rating-methodology"
+  const methodologyLabel = profile.profileType === "client" ? "Score methodology" : "Business & trade ratings"
   const subjectType = profile.profileType === "client" ? "Person" : "Organization"
   const structuredData = {
     "@context": "https://schema.org",
@@ -361,7 +363,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           position: index + 1,
           item: {
             "@type": "CreativeWork",
-            name: `${report.reportCategory} contractor-submitted summary`,
+            name: `${report.reportCategory} approved Client Bureau summary`,
             text: report.publicSummary,
             dateCreated: report.createdAt,
           },
@@ -447,6 +449,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
               <RatingMethodPanel
                 accentText={presentation.accent.text}
                 factors={ratingFactors}
+                methodologyHref={methodologyHref}
+                methodologyLabel={methodologyLabel}
                 score={profile.ratingScore}
                 summary={ratingSummary}
                 title={presentation.methodologyTitle}
@@ -547,8 +551,8 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                     </p>
                   </div>
                   <Button asChild variant="outline">
-                    <Link href="/score-methodology">
-                      Score methodology
+                    <Link href={methodologyHref}>
+                      {methodologyLabel}
                       <ArrowRight aria-hidden="true" />
                     </Link>
                   </Button>
@@ -616,12 +620,16 @@ function ProfileFact({ label, value }: { label: string; value: string }) {
 function RatingMethodPanel({
   accentText,
   factors,
+  methodologyHref,
+  methodologyLabel,
   score,
   summary,
   title,
 }: {
   accentText: string
   factors: BusinessRatingFactor[]
+  methodologyHref: string
+  methodologyLabel: string
   score: number
   summary: string
   title: string
@@ -668,9 +676,17 @@ function RatingMethodPanel({
             <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{summary}</p>
           </div>
-          <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-right">
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Current score</p>
-            <p className="mt-1 text-3xl font-black text-slate-950">{score}/100</p>
+          <div className="space-y-3">
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Current score</p>
+              <p className="mt-1 text-3xl font-black text-slate-950">{score}/100</p>
+            </div>
+            <Button asChild variant="outline" className="w-full">
+              <Link href={methodologyHref}>
+                {methodologyLabel}
+                <ArrowRight aria-hidden="true" />
+              </Link>
+            </Button>
           </div>
         </div>
         <div className="mt-6 grid gap-4">

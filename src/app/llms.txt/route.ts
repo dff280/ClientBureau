@@ -69,7 +69,7 @@ Core positioning: Check the client before you take the job.
 - [Enterprise](${siteUrl}/enterprise)
 - [Rating Methodology](${siteUrl}/score-methodology)
 - [Business Profiles](${siteUrl}/businesses)
-- [Business Rating Methodology](${siteUrl}/business-rating-methodology)
+- [Business & Trade Rating Methodology](${siteUrl}/business-rating-methodology)
 - [Payment Recovery Service](${siteUrl}/payment-recovery-service)
 - [Florida Lien Notice Service](${siteUrl}/florida-lien-notice-service)
 - [Florida Lien Filing Service](${siteUrl}/florida-lien-filing-service)

@@ -17,7 +17,7 @@ import { JsonLd, getFaqSchema } from "@/lib/seo"
 export const metadata: Metadata = {
   title: "Contractor Resources",
   description:
-    "Resources for checking clients, understanding scores, documenting reports, response rights, moderation standards, contracts, and recovery workflows.",
+    "Resources for checking clients, understanding client scores, business and trade ratings, reports, response rights, contracts, and recovery workflows.",
   alternates: {
     canonical: "/resources",
   },
@@ -52,7 +52,7 @@ const faqs = [
   {
     question: "What should contractors read first?",
     answer:
-      "Start with How It Works, Rating Methodology, and Report Policy to understand search, ratings, moderation, and public reporting standards.",
+      "Start with How It Works, Client Rating Methodology, Business & Trade Ratings, and Report Policy to understand search, ratings, moderation, and public reporting standards.",
   },
   {
     question: "Can clients respond to a public profile?",
@@ -73,9 +73,9 @@ export default function ResourcesPage() {
       <PremiumHero
         eyebrow="Client Bureau Resources"
         title="Clear operating standards for checking clients and protecting your business."
-        description="Use these guides to understand client search, score methodology, report standards, contracts, evidence, response rights, payment recovery, and Florida lien workflows."
+        description="Use these guides to understand client search, client score methodology, business and trade ratings, report standards, contracts, evidence, response rights, payment recovery, and Florida lien workflows."
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
-        secondary={{ href: "/score-methodology", label: "Score methodology", icon: BookOpenCheck }}
+        secondary={{ href: "/business-rating-methodology", label: "Business & trade ratings", icon: BookOpenCheck }}
         aside={
           <div className="space-y-4 text-white">
             <BookOpenCheck className="size-9 text-amber-300" aria-hidden="true" />

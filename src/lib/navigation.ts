@@ -76,8 +76,8 @@ export const resourceNavigationGroups: NavigationGroup[] = [
     title: "Learn the Platform",
     links: [
       { href: "/how-it-works", label: "How It Works", description: "Search, decide, document, and resolve." },
-      { href: "/score-methodology", label: "Rating Methodology", description: "How ratings, risk levels, and confidence are presented." },
-      { href: "/business-rating-methodology", label: "Business Rating", description: "How public contractor and service-business ratings are calculated." },
+      { href: "/score-methodology", label: "Client Rating Methodology", description: "How client ratings, risk levels, and confidence are presented." },
+      { href: "/business-rating-methodology", label: "Business & Trade Ratings", description: "How public contractor and subcontractor profile ratings are calculated." },
       { href: "/pricing", label: "Pricing", description: "Plans for contractors, service businesses, teams, and enterprise review." },
       { href: "/mobile-app", label: "Mobile App", description: "Download the Android contractor app and review mobile workflows." },
       { href: "/enterprise", label: "Enterprise", description: "Team workflows, moderation controls, and account support." },
@@ -123,8 +123,8 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/mobile-app", label: "Mobile App" },
       { href: "/clients", label: "Client Directory" },
       { href: "/enterprise", label: "Enterprise" },
-      { href: "/score-methodology", label: "Rating Methodology" },
-      { href: "/business-rating-methodology", label: "Business Rating" },
+      { href: "/score-methodology", label: "Client Ratings" },
+      { href: "/business-rating-methodology", label: "Business & Trade Ratings" },
     ],
   },
   {

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSiteUrl } from "@/lib/env"
 
 export const metadata: Metadata = {
-  title: "Business Rating Methodology",
+  title: "Business & Trade Rating Methodology",
   description:
     "Learn how Client Bureau rates contractor business profiles and subcontractor trade partner profiles with role-specific trust factors.",
   alternates: {
@@ -82,7 +82,7 @@ export default function BusinessRatingMethodologyPage() {
   return (
     <main className="bg-slate-100">
       <PremiumHero
-        eyebrow="Business Rating methodology"
+        eyebrow="Business & trade rating methodology"
         title="How Client Bureau business and trade ratings work."
         description="Client Bureau now uses role-specific rating models: one for contractor business reliability and one for subcontractor trade partner reliability. Both are public trust signals, not customer star reviews."
         primary={{ href: "/businesses", label: "Browse business profiles", icon: Building2 }}
