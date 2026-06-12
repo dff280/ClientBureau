@@ -454,6 +454,12 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 <div className="grid gap-3 text-sm text-slate-700">
                   <ProfileFact label="City / state" value={`${profile.city}, ${profile.state}`} />
                   <ProfileFact label="Subtype" value={String(profile.profileSubtype ?? "General profile")} />
+                  <ProfileFact
+                    label="Capabilities"
+                    value={profile.accountCapabilities?.length
+                      ? profile.accountCapabilities.map(profileTypeLabel).join(", ")
+                      : profileTypeLabel(profile.profileType)}
+                  />
                   <ProfileFact label="Claim status" value={claimedStatusLabel(profile.claimedStatus)} />
                   <ProfileFact label="Verification" value={profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : presentation.verificationFallback} />
                   <ProfileFact label="Evidence" value={profile.evidenceSummaryLabel} />

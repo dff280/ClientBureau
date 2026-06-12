@@ -59,6 +59,8 @@ import {
   defaultProfileSubtype,
   deriveEntityProfiles,
   entityProfileHref,
+  entityProfileHrefs,
+  profileSupportsType,
   publicProjectSummaryFromReport,
   reportConfidenceLevel as graphReportConfidenceLevel,
   searchEntityProfiles,
@@ -257,6 +259,16 @@ describe("Client Bureau unified profiles", () => {
     expect(entityProfileHref(clientProfile!)).toBe(`/profiles/client/${clientProfile!.slug}`)
   })
 
+  it("builds role-specific profile hrefs when an account supports multiple capabilities", () => {
+    const superiorProfile = entityProfiles.find((profile) => profile.businessName === "Superior Renovations & Painting")
+
+    expect(superiorProfile).toBeTruthy()
+    expect(profileSupportsType(superiorProfile!, "contractor")).toBe(true)
+    expect(profileSupportsType(superiorProfile!, "subcontractor")).toBe(true)
+    expect(entityProfileHref(superiorProfile!, "subcontractor")).toBe(`/profiles/subcontractor/${superiorProfile!.slug}`)
+    expect(entityProfileHrefs(superiorProfile!)).toContain(`/profiles/subcontractor/${superiorProfile!.slug}`)
+  })
+
   it("filters unified search by profile type and state", () => {
     const results = searchEntityProfiles(entityProfiles, "Orlando", {
       state: "FL",
@@ -266,6 +278,18 @@ describe("Client Bureau unified profiles", () => {
     expect(results.length).toBeGreaterThan(0)
     expect(results.every((profile) => profile.profileType === "client")).toBe(true)
     expect(results.every((profile) => profile.state === "FL")).toBe(true)
+  })
+
+  it("returns subcontractor capability views from profile search without duplicating accounts", () => {
+    const results = searchEntityProfiles(entityProfiles, "Superior", {
+      state: "FL",
+      profileType: "subcontractor",
+    })
+
+    const superiorResult = results.find((profile) => profile.businessName === "Superior Renovations & Painting")
+    expect(superiorResult).toBeTruthy()
+    expect(superiorResult?.profileType).toBe("subcontractor")
+    expect(superiorResult?.profileHref).toBe(`/profiles/subcontractor/${superiorResult?.slug}`)
   })
 
   it("creates stable slugs for subcontractor profiles", () => {

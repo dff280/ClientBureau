@@ -29,7 +29,7 @@ import {
 } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { claimedStatusLabel, deriveEntityProfiles, entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
+import { claimedStatusLabel, deriveEntityProfiles, entityProfileHref, profileSupportsType, profileTypeLabel } from "@/lib/entity-profiles"
 import { getAdminWorkspaceDataService, getProfileClaimsService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type EntityProfile, type ProfileClaim, type ProfileType } from "@/lib/types"
 
@@ -85,13 +85,13 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
 
     return (
       (!query || haystack.includes(query)) &&
-      (!type || profile.profileType === type) &&
+      (!type || profileSupportsType(profile, type)) &&
       (status === "all" || profile.claimedStatus === status || (status === "public" ? profile.isPublic : status === "private" ? !profile.isPublic : false))
     )
   })
   const publicCount = profiles.filter((profile) => profile.isPublic).length
   const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed" || profile.claimedStatus === "verified").length
-  const subcontractorProfiles = profiles.filter((profile) => profile.profileType === "subcontractor")
+  const subcontractorProfiles = profiles.filter((profile) => profileSupportsType(profile, "subcontractor"))
   const publicSubcontractorCount = subcontractorProfiles.filter((profile) => profile.isPublic).length
   const verifiedSubcontractorCount = subcontractorProfiles.filter((profile) =>
     ["claimed", "verified"].includes(profile.claimedStatus) || profile.verificationBadges?.length,
@@ -173,7 +173,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Trade inventory</p>
                   <p className="mt-2 text-3xl font-semibold">{publicSubcontractorCount}</p>
                   <p className="mt-1 text-sm leading-6">
-                    Public subcontractor profiles currently available. Live SEO warns until at least one real verified profile is published.
+                    Public subcontractor-capable profiles currently available. Live SEO warns until at least one real verified trade profile is published.
                   </p>
                 </div>
                 <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-white text-blue-800">
@@ -404,6 +404,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                   { label: "Claim status", value: claimedStatusLabel(profile.claimedStatus) },
                   { label: "Subtype", value: String(profile.profileSubtype ?? "General profile") },
                   { label: "Verification", value: profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : profile.verificationLevel ?? "Moderation only" },
+                  { label: "Capabilities", value: profile.accountCapabilities?.length ? profile.accountCapabilities.map(profileTypeLabel).join(", ") : profileTypeLabel(profile.profileType) },
                   { label: "Rating / band", value: `${profile.ratingScore} / ${profile.ratingBand}` },
                   { label: "Reports", value: profile.reportCount },
                   { label: "Positive reports", value: profile.positiveReportCount },
@@ -422,7 +423,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                     </Button>
                     {profile.isPublic ? (
                       <Button asChild variant="outline">
-                        <Link href={entityProfileHref(profile)} target="_blank">
+                        <Link href={entityProfileHref(profile, type)} target="_blank">
                           <Eye aria-hidden="true" />
                           Public profile
                         </Link>

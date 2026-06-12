@@ -6,7 +6,7 @@ import {
   getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
-import { entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
+import { entityProfileHrefs, profileTypeForView, profileTypeLabel } from "@/lib/entity-profiles"
 
 export const dynamic = "force-dynamic"
 
@@ -105,18 +105,29 @@ export async function GET() {
         ratingConfidence: profile.ratingConfidence,
       },
     })),
-    unifiedProfiles: entityProfiles.slice(0, 18).map((profile) => ({
-      title: `${profile.displayName} ${profileTypeLabel(profile.profileType)} profile`,
-      url: `${siteUrl}${entityProfileHref(profile)}`,
-      profileType: profile.profileType,
-      location: `${profile.city}, ${profile.state}`,
-      lastUpdated: profile.updatedAt,
-      publicSignals: {
-        ratingBand: profile.ratingBand,
-        reportCount: profile.reportCount,
-        evidenceOnFileCount: profile.evidenceOnFileCount,
-      },
-    })),
+    unifiedProfiles: entityProfiles
+      .flatMap((profile) =>
+        entityProfileHrefs(profile).map((href) => {
+          const profileType = profileTypeForView(
+            profile,
+            href.includes("/profiles/subcontractor/") ? "subcontractor" : href.includes("/profiles/client/") ? "client" : "contractor",
+          )
+
+          return {
+            title: `${profile.displayName} ${profileTypeLabel(profileType)} profile`,
+            url: `${siteUrl}${href}`,
+            profileType,
+            location: `${profile.city}, ${profile.state}`,
+            lastUpdated: profile.updatedAt,
+            publicSignals: {
+              ratingBand: profile.ratingBand,
+              reportCount: profile.reportCount,
+              evidenceOnFileCount: profile.evidenceOnFileCount,
+            },
+          }
+        }),
+      )
+      .slice(0, 18),
   }
 
   return Response.json(

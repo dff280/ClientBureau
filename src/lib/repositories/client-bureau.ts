@@ -1,6 +1,7 @@
 import {
   buildPublicEntityProfile,
   deriveEntityProfiles,
+  profileSupportsType,
   reportConfidenceLevel,
   searchEntityProfiles,
 } from "@/lib/entity-profiles"
@@ -426,7 +427,7 @@ export function getPublicEntityProfiles(): EntityProfile[] {
 }
 
 export function getPublicEntityProfile(profileType: EntityProfile["profileType"], slug: string): PublicEntityProfile | undefined {
-  const profile = getPublicEntityProfiles().find((item) => item.profileType === profileType && item.slug === slug)
+  const profile = getPublicEntityProfiles().find((item) => item.slug === slug && profileSupportsType(item, profileType))
   if (!profile) return undefined
 
   const reports =
@@ -444,6 +445,7 @@ export function getPublicEntityProfile(profileType: EntityProfile["profileType"]
 
   return buildPublicEntityProfile({
     profile,
+    requestedProfileType: profileType,
     reports,
     relatedClient,
     relatedContractor,

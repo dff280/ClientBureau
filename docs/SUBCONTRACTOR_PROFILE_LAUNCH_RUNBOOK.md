@@ -9,7 +9,7 @@ Client Bureau should publish real subcontractor and trade-professional profiles 
 A public subcontractor profile is ready when staff can confirm:
 
 - The record represents a real subcontractor, installer, crew, labor provider, specialty trade, or trade business.
-- `profile_type` is `subcontractor`.
+- `profile_type` is `subcontractor`, or `account_capabilities` includes `subcontractor` when the same business legitimately works as both a contractor and subcontractor.
 - The public display name, city, state, and subtype are accurate.
 - The subtype clearly describes the trade role, such as licensed subcontractor, installer, crew, labor provider, or specialty trade.
 - Claim status, verification status, or moderator notes support why the record can be public.
@@ -22,13 +22,14 @@ A public subcontractor profile is ready when staff can confirm:
 
 1. Open `/admin/profiles`.
 2. Filter profile type to `Subcontractor / trade pro`.
-3. Review the “Subcontractor launch readiness” section.
+3. Review the "Subcontractor launch readiness" section.
 4. Confirm the record has:
    - trade subtype
    - city/state
    - public-safe profile summary
    - claim or verification context
-   - rating model set to Trade Partner Reliability
+   - profile type or account capability set for subcontractor/trade work
+   - rating model set to Trade Partner Reliability when the public view is a subcontractor/trade profile
    - moderator note for the publication decision
 5. Preview the public profile.
 6. Publish only after the profile passes privacy and moderation review.
@@ -42,6 +43,8 @@ select
   id,
   display_name,
   business_name,
+  profile_type,
+  account_capabilities,
   city,
   state,
   profile_subtype,
@@ -54,6 +57,7 @@ select
   updated_at
 from public.entity_profiles
 where profile_type = 'subcontractor'
+   or account_capabilities @> array['subcontractor']::text[]
 order by is_public desc, updated_at desc;
 ```
 
@@ -72,4 +76,3 @@ Expected outcome:
 - `/profiles/subcontractor/[slug]` returns `200`.
 - The profile has safe `WebPage`, `ProfilePage`, `Organization`, `BreadcrumbList`, and `ItemList` schema.
 - There is no `AggregateRating`, fake review star markup, raw evidence, private identifier, pending content, rejected content, or admin note.
-

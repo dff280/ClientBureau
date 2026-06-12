@@ -6,7 +6,7 @@ import {
   getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { getClientDirectory } from "@/lib/client-directory"
-import { entityProfileHref, profileTypeLabel } from "@/lib/entity-profiles"
+import { entityProfileHrefs, profileTypeForView, profileTypeLabel } from "@/lib/entity-profiles"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
 
 export const dynamic = "force-dynamic"
@@ -28,8 +28,13 @@ export async function GET() {
     .map((profile) => `- [${profile.businessName} business profile](${siteUrl}/business/${profile.publicSlug})`)
     .join("\n")
   const entityLinks = entityProfiles
-    .slice(0, 8)
-    .map((profile) => `- [${profile.displayName} ${profileTypeLabel(profile.profileType)} profile](${siteUrl}${entityProfileHref(profile)})`)
+    .flatMap((profile) =>
+      entityProfileHrefs(profile).map((href) => {
+        const profileType = profileTypeForView(profile, href.includes("/profiles/subcontractor/") ? "subcontractor" : href.includes("/profiles/client/") ? "client" : "contractor")
+        return `- [${profile.displayName} ${profileTypeLabel(profileType)} profile](${siteUrl}${href})`
+      }),
+    )
+    .slice(0, 10)
     .join("\n")
   const directoryLinks = getClientDirectory(profiles)
     .flatMap((state) => [

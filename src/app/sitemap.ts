@@ -6,7 +6,7 @@ import {
   getPublicClientProfilesService,
   getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
-import { entityProfileHref } from "@/lib/entity-profiles"
+import { entityProfileHrefs } from "@/lib/entity-profiles"
 import { getClientDirectory } from "@/lib/client-directory"
 import { acquisitionPages } from "@/lib/acquisition-pages"
 import { allSeoLandingPages } from "@/lib/seo-landing-pages"
@@ -189,12 +189,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly" as const,
     priority: 0.75,
   }))
-  const entityRoutes = entityProfiles.map((profile) => ({
-    url: `${siteUrl}${entityProfileHref(profile)}`,
-    lastModified: new Date(profile.updatedAt),
-    changeFrequency: "weekly" as const,
-    priority: profile.profileType === "client" ? 0.9 : 0.76,
-  }))
+  const entityRoutes = entityProfiles.flatMap((profile) =>
+    entityProfileHrefs(profile).map((href) => ({
+      url: `${siteUrl}${href}`,
+      lastModified: new Date(profile.updatedAt),
+      changeFrequency: "weekly" as const,
+      priority: href.startsWith("/profiles/client") ? 0.9 : 0.76,
+    })),
+  )
   const landingRoutes = allSeoLandingPages.map((page) => ({
     url: `${siteUrl}${page.canonicalPath}`,
     lastModified: releaseLastModified,

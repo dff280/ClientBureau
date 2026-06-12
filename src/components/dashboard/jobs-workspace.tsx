@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useActionState } from "react"
-import { ArrowRight, BriefcaseBusiness, MapPin, Plus, Trash2, Users } from "lucide-react"
+import { ArrowRight, BriefcaseBusiness, ClipboardList, FileText, MapPin, Plus, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react"
 
 import {
   addProjectJobParticipantAction,
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { profileTypeLabel } from "@/lib/entity-profiles"
 import type { ActionResult, EntityProfile, ProjectJob, ProjectJobDetail, ProjectJobParticipant } from "@/lib/types"
 import {
   jobBillingRelationships,
@@ -202,6 +203,24 @@ export function JobsWorkspace({ accounts, jobs }: { accounts: EntityProfile[]; j
 
   return (
     <div className="space-y-6">
+      <section className="overflow-hidden rounded-md border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-5 text-white shadow-sm">
+        <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Private project files</p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-normal">Jobs connect the real work, the site, and every person involved.</h2>
+            <p className="mt-3 text-sm leading-6 text-slate-300">
+              Use Jobs before the work starts and keep them updated during the project. A job is private by default:
+              public profiles never show addresses, access codes, internal notes, or participant notes.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <JobValueCard icon={MapPin} title="Site info" text="Property, schedule, access, parking, and safety notes." />
+            <JobValueCard icon={ClipboardList} title="Scope" text="Included work, trade category, amount due, and private notes." />
+            <JobValueCard icon={Users} title="Roles" text="Attach the same account as different roles on different jobs." />
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Private jobs" value={jobs.length} helper="Project records in this account." icon={BriefcaseBusiness} />
         <StatCard label="Active" value={jobs.filter((job) => !["completed", "cancelled", "archived"].includes(job.status)).length} helper="Open or scheduled work." icon={MapPin} tone="blue" />
@@ -209,20 +228,34 @@ export function JobsWorkspace({ accounts, jobs }: { accounts: EntityProfile[]; j
       </div>
 
       <DashboardSection
-        eyebrow="Create job"
-        title="Start a private job record"
-        description="A job connects the real project, property, scope, schedule, and the accounts playing roles on that specific job."
+        eyebrow="Start here"
+        title="Create a private job record"
+        description="Create one job for each real project. Then attach the client, property owner, contractor, subcontractor, vendor, or crew profiles that belong to that specific job."
       >
-        <form action={formAction} className="space-y-5">
-          <JobFormFields />
-          <FieldError name="title" errors={state.ok ? undefined : state.fieldErrors} />
-          <FieldError name="addressLine1" errors={state.ok ? undefined : state.fieldErrors} />
-          <ActionMessage state={state} />
-          <PendingSubmitButton className="bg-slate-950 text-white hover:bg-slate-800" pendingText="Creating job...">
-            <Plus aria-hidden="true" />
-            Create job
-          </PendingSubmitButton>
-        </form>
+        <details open={jobs.length === 0 || Boolean(state.message)} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 sm:flex-row sm:items-center">
+            <span>
+              <span className="font-semibold text-slate-950">{jobs.length === 0 ? "Create your first job" : "Create another job"}</span>
+              <span className="mt-1 block text-sm leading-6 text-slate-600">
+                Keep the full form hidden until you need it, so the dashboard stays simple.
+              </span>
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white">
+              <Plus className="size-4" aria-hidden="true" />
+              Open form
+            </span>
+          </summary>
+          <form action={formAction} className="mt-5 space-y-5 rounded-md border border-slate-200 bg-white p-4">
+            <JobFormFields />
+            <FieldError name="title" errors={state.ok ? undefined : state.fieldErrors} />
+            <FieldError name="addressLine1" errors={state.ok ? undefined : state.fieldErrors} />
+            <ActionMessage state={state} />
+            <PendingSubmitButton className="bg-slate-950 text-white hover:bg-slate-800" pendingText="Creating job...">
+              <Plus aria-hidden="true" />
+              Create job
+            </PendingSubmitButton>
+          </form>
+        </details>
       </DashboardSection>
 
       <DashboardSection
@@ -343,6 +376,13 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
         <StatCard label="Value" value={`$${job.contractAmount.toLocaleString()}`} helper="Private contract value." tone="emerald" />
       </div>
 
+      <div className="grid gap-3 lg:grid-cols-4">
+        <JobActionLink href="/dashboard/contracts" icon={FileText} title="Create contract packet" text="Turn the job scope into a private signing packet." />
+        <JobActionLink href="/submit-report" icon={ClipboardList} title="Report an experience" text="Document client, contractor, or subcontractor context." />
+        <JobActionLink href="/dashboard/evidence" icon={ShieldCheck} title="Organize evidence" text="Attach invoices, photos, contracts, and messages privately." />
+        <JobActionLink href="/dashboard/recovery" icon={BriefcaseBusiness} title="Payment recovery" text="Open a managed case if payment becomes an issue." />
+      </div>
+
       <DashboardSection
         eyebrow="Job information"
         title="Edit job details"
@@ -363,6 +403,13 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
         title="Attach existing accounts to this job"
         description="Assign roles for this job only. The underlying account can be a contractor on one job and a subcontractor on another."
       >
+        <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          <p className="font-semibold">Important: account type is not the same as role on this job.</p>
+          <p className="mt-1">
+            Pick an existing account/profile, then choose what role it played on this project. Removing a participant only removes that role from this job. It does not delete the account, public profile, reports, or history.
+          </p>
+        </div>
+
         <form action={addAction} className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4">
           <input type="hidden" name="jobId" value={job.id} />
           <ParticipantFormFields accounts={accounts} />
@@ -381,10 +428,15 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
               <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
                 <div>
                   <h3 className="font-semibold text-slate-950">{participant.profile?.displayName ?? participant.profileId}</h3>
-                  <p className="mt-1 text-sm text-slate-600">
-                    {labelize(participant.role)} / {labelize(participant.participantStatus)}
-                    {participant.hiredByProfileId ? ` / hired by ${accounts.find((account) => account.id === participant.hiredByProfileId)?.displayName ?? "linked account"}` : ""}
-                  </p>
+                  <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-4">
+                    <ParticipantFact label="Role on this job" value={labelize(participant.role)} />
+                    <ParticipantFact label="Account type" value={participant.profile ? profileTypeLabel(participant.profile.profileType) : "Existing profile"} />
+                    <ParticipantFact label="Status" value={labelize(participant.participantStatus)} />
+                    <ParticipantFact
+                      label="Hired by / reports to"
+                      value={participant.hiredByProfileId ? accounts.find((account) => account.id === participant.hiredByProfileId)?.displayName ?? "Linked account" : "Not specified"}
+                    />
+                  </div>
                   {participant.scopeAssigned ? <p className="mt-2 text-sm leading-6 text-slate-600">{participant.scopeAssigned}</p> : null}
                 </div>
                 <form action={removeAction}>
@@ -392,7 +444,7 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
                   <input type="hidden" name="participantId" value={participant.id} />
                   <PendingSubmitButton variant="outline" pendingText="Removing...">
                     <Trash2 aria-hidden="true" />
-                    Remove from job
+                    Remove role from job
                   </PendingSubmitButton>
                 </form>
               </div>
@@ -425,6 +477,56 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
       <Button asChild variant="outline">
         <Link href="/dashboard/jobs">Back to all jobs</Link>
       </Button>
+    </div>
+  )
+}
+
+function JobValueCard({
+  icon: Icon,
+  text,
+  title,
+}: {
+  icon: LucideIcon
+  text: string
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-white/10 bg-white/10 p-4">
+      <Icon className="size-5 text-amber-300" aria-hidden="true" />
+      <h3 className="mt-3 font-semibold text-white">{title}</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-300">{text}</p>
+    </div>
+  )
+}
+
+function JobActionLink({
+  href,
+  icon: Icon,
+  text,
+  title,
+}: {
+  href: string
+  icon: LucideIcon
+  text: string
+  title: string
+}) {
+  return (
+    <Link href={href} className="group rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300">
+      <Icon className="size-5 text-amber-700" aria-hidden="true" />
+      <h3 className="mt-3 font-semibold text-slate-950">{title}</h3>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+      <span className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-amber-700">
+        Open tool <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </Link>
+  )
+}
+
+function ParticipantFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-1 font-semibold text-slate-900">{value}</p>
     </div>
   )
 }

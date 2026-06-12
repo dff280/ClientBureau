@@ -20,6 +20,7 @@ import {
   buildPublicEntityProfile,
   defaultProfileSubtype,
   duplicateGroupKey,
+  profileSupportsType,
   searchEntityProfiles,
 } from "@/lib/entity-profiles"
 import {
@@ -2056,18 +2057,20 @@ export async function getPublicEntityProfileSupabase(
   slug: string,
 ): Promise<PublicEntityProfile | undefined> {
   const supabase = createServiceClient()
-  const { data: profileRow, error } = await supabase
+  const { data: profileRows, error } = await supabase
     .from("entity_profiles")
     .select("*")
-    .eq("profile_type", profileType)
     .eq("slug", slug)
     .eq("is_public", true)
-    .maybeSingle()
+    .order("updated_at", { ascending: false })
 
   if (error) throw new Error(error.message)
-  if (!profileRow) return undefined
+  const profiles = (profileRows ?? []).map(mapEntityProfile)
+  const profile =
+    profiles.find((candidate) => candidate.profileType === profileType) ??
+    profiles.find((candidate) => profileSupportsType(candidate, profileType))
+  if (!profile) return undefined
 
-  const profile = mapEntityProfile(profileRow)
   let reports: ClientReport[] = []
 
   if (profile.legacyClientId) {
@@ -2110,7 +2113,7 @@ export async function getPublicEntityProfileSupabase(
         ...profile,
         ratingScore: relatedContractor.ratingScore,
         ratingBand: relatedContractor.ratingGrade,
-        ratingModel: profile.profileType === "subcontractor" ? "subcontractor_trade_partner_reliability" as const : "contractor_business_reliability" as const,
+        ratingModel: profileType === "subcontractor" ? "subcontractor_trade_partner_reliability" as const : "contractor_business_reliability" as const,
         ratingVersion: "business-rating-v2",
         ratingConfidence: relatedContractor.ratingConfidence,
         ratingFactors: relatedContractor.ratingFactors,
@@ -2126,6 +2129,7 @@ export async function getPublicEntityProfileSupabase(
 
   return buildPublicEntityProfile({
     profile: normalizedProfile,
+    requestedProfileType: profileType,
     reports,
     relatedClient,
     relatedContractor,

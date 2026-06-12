@@ -92,8 +92,50 @@ export function reportConfidenceLabel(level: ReportConfidenceLevel) {
   return labels[level]
 }
 
-export function entityProfileHref(profile: Pick<EntityProfile, "profileType" | "slug">) {
-  return `/profiles/${profile.profileType}/${profile.slug}`
+export function profileSupportsType(
+  profile: Pick<EntityProfile, "profileType" | "accountCapabilities">,
+  profileType: ProfileType,
+) {
+  return profile.profileType === profileType || Boolean(profile.accountCapabilities?.includes(profileType))
+}
+
+export function profileTypeForView(
+  profile: Pick<EntityProfile, "profileType" | "accountCapabilities">,
+  requestedType?: ProfileType,
+) {
+  return requestedType && profileSupportsType(profile, requestedType) ? requestedType : profile.profileType
+}
+
+export function entityProfileHref(
+  profile: Pick<EntityProfile, "profileType" | "slug" | "accountCapabilities">,
+  requestedType?: ProfileType,
+) {
+  return `/profiles/${profileTypeForView(profile, requestedType)}/${profile.slug}`
+}
+
+export function entityProfileHrefs(profile: Pick<EntityProfile, "profileType" | "slug" | "accountCapabilities">) {
+  const profileTypes = [profile.profileType, ...(profile.accountCapabilities ?? [])]
+    .filter((type, index, list): type is ProfileType => Boolean(type) && list.indexOf(type) === index)
+
+  return profileTypes.map((profileType) => entityProfileHref(profile, profileType))
+}
+
+export function entityProfileForView<T extends EntityProfile>(profile: T, requestedType?: ProfileType): T {
+  const profileType = profileTypeForView(profile, requestedType)
+
+  if (profileType === profile.profileType) return profile
+
+  return {
+    ...profile,
+    profileType,
+    profileSubtype: profile.profileSubtype ?? defaultProfileSubtype(profileType),
+    ratingModel:
+      profileType === "subcontractor"
+        ? "subcontractor_trade_partner_reliability"
+        : profileType === "contractor"
+          ? "contractor_business_reliability"
+          : profile.ratingModel,
+  }
 }
 
 export function buildEntityProfileSlug(input: {
@@ -316,12 +358,14 @@ export function deriveEntityProfiles(input: {
 
 export function buildPublicEntityProfile(input: {
   profile: EntityProfile
+  requestedProfileType?: ProfileType
   reports: ClientReport[]
   projects?: PublicProjectJobSummary[]
   relationships?: ProfileRelationship[]
   relatedClient?: ClientProfile
   relatedContractor?: PublicBusinessProfile
 }): PublicEntityProfile {
+  const profile = entityProfileForView(input.profile, input.requestedProfileType)
   const approvedReports = input.reports.filter((report) => report.status === "approved")
   const projectSummaries =
     input.projects ??
@@ -334,31 +378,31 @@ export function buildPublicEntityProfile(input: {
       .map(relationshipFromReport)
       .filter((item): item is ProfileRelationship => Boolean(item))
   const responseStatusLabel =
-    input.profile.responseCount > 0
+    profile.responseCount > 0
       ? "Public response on file"
-      : input.profile.claimedStatus === "claim_pending"
+      : profile.claimedStatus === "claim_pending"
         ? "Claim in review"
-        : input.profile.claimedStatus === "claimed" || input.profile.claimedStatus === "verified"
-          ? claimedStatusLabel(input.profile.claimedStatus)
-          : input.profile.claimedStatus === "disputed"
+        : profile.claimedStatus === "claimed" || profile.claimedStatus === "verified"
+          ? claimedStatusLabel(profile.claimedStatus)
+          : profile.claimedStatus === "disputed"
             ? "Claim disputed"
         : "Right of response available"
   const evidenceSummaryLabel =
-    input.profile.evidenceOnFileCount > 0
-      ? `${input.profile.evidenceOnFileCount} private evidence ${input.profile.evidenceOnFileCount === 1 ? "item" : "items"} on file`
+    profile.evidenceOnFileCount > 0
+      ? `${profile.evidenceOnFileCount} private evidence ${profile.evidenceOnFileCount === 1 ? "item" : "items"} on file`
       : "Evidence can be reviewed privately"
 
   return {
-    ...input.profile,
+    ...profile,
     reports: approvedReports,
     projects: projectSummaries,
     relationships,
     relatedClient: input.relatedClient,
     relatedContractor: input.relatedContractor,
-    safeDescription: `${profileTypeLabel(input.profile.profileType)} profile with moderated Client Bureau context. Public pages show approved summaries only.`,
+    safeDescription: `${profileTypeLabel(profile.profileType)} profile with moderated Client Bureau context. Public pages show approved summaries only.`,
     responseStatusLabel,
     evidenceSummaryLabel,
-    profileHref: entityProfileHref(input.profile),
+    profileHref: entityProfileHref(profile, input.requestedProfileType),
   }
 }
 
@@ -389,10 +433,11 @@ export function searchEntityProfiles(
         .toLowerCase()
       const exactMatch = normalizedQuery.length > 0 && searchable.includes(normalizedQuery)
       const locationMatch = Boolean(filters.state && normalizeStateCode(profile.state) === normalizeStateCode(filters.state))
-      const typeMatch = Boolean(
-        filters.profileType &&
-        (profile.profileType === filters.profileType || profile.accountCapabilities?.includes(filters.profileType)),
-      )
+      const requestedProfileType = filters.profileType && profileSupportsType(profile, filters.profileType)
+        ? filters.profileType
+        : undefined
+      const displayProfile = entityProfileForView(profile, requestedProfileType)
+      const typeMatch = Boolean(filters.profileType && profileSupportsType(profile, filters.profileType))
       const profileTypeBoost = profile.profileType === "client" ? 8 : 4
       const matchScore =
         (exactMatch ? 60 : 0) +
@@ -403,15 +448,15 @@ export function searchEntityProfiles(
         Math.min(profile.positiveReportCount * 2, 8)
 
       return {
-        ...profile,
+        ...displayProfile,
         matchedBy: normalizedQuery
           ? exactMatch
             ? "Name, business, location, or profile context"
             : "Profile type and public record context"
           : "Public profile directory",
         matchScore,
-        profileHref: entityProfileHref(profile),
-        profileTypeLabel: profileTypeLabel(profile.profileType),
+        profileHref: entityProfileHref(profile, requestedProfileType),
+        profileTypeLabel: profileTypeLabel(displayProfile.profileType),
         latestSummary: profile.publicSummary,
         evidenceOnFile: profile.evidenceOnFileCount > 0,
         responseContext:
@@ -423,9 +468,9 @@ export function searchEntityProfiles(
                 ? claimedStatusLabel(profile.claimedStatus)
               : "Response available",
         nextAction:
-          profile.profileType === "client"
+          displayProfile.profileType === "client"
             ? "Check reported client context before accepting work"
-            : profile.profileType === "subcontractor"
+            : displayProfile.profileType === "subcontractor"
               ? "Review trade scope, GC/sub context, and payment-chain signals"
               : "Review business profile, verification, and public project context",
       } satisfies EntityProfileSearchResult
@@ -441,8 +486,7 @@ export function searchEntityProfiles(
       const matchesState = !filters.state || normalizeStateCode(profile.state) === normalizeStateCode(filters.state)
       const matchesType =
         !filters.profileType ||
-        profile.profileType === filters.profileType ||
-        Boolean(profile.accountCapabilities?.includes(filters.profileType))
+        profileSupportsType(profile, filters.profileType)
       const matchesRisk = !filters.riskLevel || profile.ratingBand === filters.riskLevel
 
       return profile.isPublic && matchesQuery && matchesState && matchesType && matchesRisk
