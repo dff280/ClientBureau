@@ -173,6 +173,33 @@ export default function SearchScreen() {
               body="Open the public profile for approved context, or save this search to watch it later."
             />
           ) : null}
+          {result.data.results.length ? (
+            <Card>
+              <View style={styles.rowBetween}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardTitle}>{result.data.results.length} profile match{result.data.results.length === 1 ? "" : "es"}</Text>
+                  <Text style={styles.body}>
+                    Save this search or share Client Bureau before you quote, schedule, or collect a deposit.
+                  </Text>
+                </View>
+                <StatusPill label={state} tone="gold" />
+              </View>
+              <IconActionRow
+                icon={Save}
+                title={currentQuerySaved ? "Search saved" : "Save this search"}
+                body={currentQuerySaved ? "This lookup is saved in your account." : "Keep this lookup handy while the lead is active."}
+                badge={currentQuerySaved ? "Saved" : undefined}
+                onPress={() => saveSearch(result.data.results.length)}
+              />
+              <IconActionRow
+                icon={UserPlus}
+                title="Invite another contractor"
+                body="Share the search-before-the-job workflow with someone who needs it."
+                badge="Share"
+                onPress={inviteContractorToClientBureau}
+              />
+            </Card>
+          ) : null}
           {result.data.results.map((item) => (
             <Card key={item.id}>
               <View style={styles.rowBetween}>
@@ -227,7 +254,7 @@ export default function SearchScreen() {
               />
             </Card>
           ))}
-              {!result.data.results.length ? (
+          {!result.data.results.length ? (
             <>
               {result.data.suggestions.length ? (
                 <Card>
@@ -277,27 +304,6 @@ export default function SearchScreen() {
                 onPress={inviteContractorToClientBureau}
               />
             </>
-          ) : (
-            <IconActionRow
-              icon={Save}
-              title={currentQuerySaved ? "Search saved" : "Save this search"}
-              body={
-                currentQuerySaved
-                  ? "This lookup is saved in your account for later follow-up."
-                  : "Keep this client lookup in your account for later follow-up."
-              }
-              badge={currentQuerySaved ? "Saved" : undefined}
-              onPress={() => saveSearch(result.data.results.length)}
-            />
-          )}
-          {result.data.results.length ? (
-            <IconActionRow
-              icon={UserPlus}
-              title="Invite another contractor"
-              body="Share the app with a contractor who should search before taking the job."
-              badge="Share"
-              onPress={inviteContractorToClientBureau}
-            />
           ) : null}
         </>
       ) : result && !result.ok ? (

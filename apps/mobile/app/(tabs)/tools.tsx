@@ -2,7 +2,7 @@ import { router } from "expo-router"
 import { Bell, ClipboardCheck, FileSignature, FolderLock, Landmark, Search, ShieldCheck, TrendingUp } from "lucide-react-native"
 import { Fragment } from "react"
 
-import { BureauHero, CommandCard, InsightCard, LaunchChecklist, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge, styles } from "@/components/ui"
+import { BureauHero, CommandCard, InsightCard, Screen, SectionHeader, StatusPill, ToolCard, TrustBadge, styles } from "@/components/ui"
 import { View } from "react-native"
 
 const tools = [
@@ -64,6 +64,30 @@ const tools = [
   },
 ] as const
 
+const stageCards = [
+  {
+    label: "Before",
+    title: "Check and set terms",
+    body: "Search the lead, watch the profile, and create contract terms before committing.",
+    icon: Search,
+    href: "/search",
+  },
+  {
+    label: "During",
+    title: "Document the job",
+    body: "Keep evidence, change orders, project context, and reports organized privately.",
+    icon: FolderLock,
+    href: "/tools/evidence",
+  },
+  {
+    label: "After",
+    title: "Resolve payment issues",
+    body: "Use Payment Recovery or Florida Lien Service when payment needs structure.",
+    icon: TrendingUp,
+    href: "/tools/recovery",
+  },
+] as const
+
 export default function ToolsScreen() {
   const groups = ["Before the job", "During the job", "After an issue"] as const
 
@@ -89,30 +113,18 @@ export default function ToolsScreen() {
         body="Search before you accept. Contracts before you schedule. Evidence and recovery when payment or project facts need documentation."
         tone="gold"
       />
-      <LaunchChecklist
-        title="Use tools in order"
-        items={[
-          { label: "Before the job: search, watch, and set contract terms", done: true },
-          { label: "During the job: preserve evidence and document facts", done: true },
-          { label: "After an issue: use recovery or Florida lien service when payment needs structure", done: true },
-        ]}
-      />
       <View style={styles.metricGrid}>
-        <CommandCard
-          icon={Search}
-          label="Before"
-          title="Check first"
-          body="Search and watch clients before you commit labor or materials."
-          onPress={() => router.push("/search")}
-        />
-        <CommandCard
-          icon={TrendingUp}
-          label="After"
-          title="Resolve faster"
-          body="Use recovery or Florida lien service when payment needs structure."
-          tone="gold"
-          onPress={() => router.push("/tools/recovery")}
-        />
+        {stageCards.map((stage, index) => (
+          <CommandCard
+            key={stage.label}
+            icon={stage.icon}
+            label={stage.label}
+            title={stage.title}
+            body={stage.body}
+            tone={index === 0 ? "gold" : "light"}
+            onPress={() => router.push(stage.href)}
+          />
+        ))}
       </View>
       <SectionHeader
         title="Choose by job stage"

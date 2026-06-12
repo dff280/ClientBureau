@@ -35,7 +35,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#07111f"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

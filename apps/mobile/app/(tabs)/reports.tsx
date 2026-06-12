@@ -166,14 +166,6 @@ export default function ReportsScreen() {
         body="Use this for payment issues, positive experiences, disputes, and project context."
         onPress={() => setShowForm(!showForm)}
       />
-      <LaunchChecklist
-        title="Before submitting"
-        items={[
-          { label: "Choose positive experience or payment/project issue", done: Boolean(form.reportCategory) },
-          { label: "Use neutral public wording and private detail fields", done: form.reportSummary.trim().length > 0 || form.detailedExperience.trim().length > 0 },
-          { label: "Attach supporting evidence later from the web dashboard when available", done: false },
-        ]}
-      />
       <Message tone={message?.includes("correct") ? "error" : "success"} text={message} />
 
       {result.ok && result.data.drafts.length ? (
@@ -213,6 +205,14 @@ export default function ReportsScreen() {
               <StatusPill label="Admin reviewed" tone="blue" />
             </View>
           </Card>
+          <LaunchChecklist
+            title="Before submitting"
+            items={[
+              { label: "Choose positive experience or payment/project issue", done: Boolean(form.reportCategory) },
+              { label: "Use neutral public wording and private detail fields", done: form.reportSummary.trim().length > 0 || form.detailedExperience.trim().length > 0 },
+              { label: "Attach supporting evidence later from the web dashboard when available", done: false },
+            ]}
+          />
           <FormStepPanel step="Step 1" title="Client identity" body="Use the client information you have from the real project record.">
             <Field label="Client first name" value={form.firstName} onChangeText={(v) => setForm({ ...form, firstName: v })} />
             <Field label="Client last name" value={form.lastName} onChangeText={(v) => setForm({ ...form, lastName: v })} />

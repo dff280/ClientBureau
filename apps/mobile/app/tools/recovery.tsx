@@ -124,44 +124,44 @@ export default function RecoveryScreen() {
           <MetricMini label="Due" value={`$${totalDue.toLocaleString()}`} />
         </View>
       ) : null}
-      <LaunchChecklist
-        title="Recovery case readiness"
-        items={[
-          { label: "Client and location identified", done: form.clientName.trim().length > 0 && form.city.trim().length > 0 },
-          { label: "Amount due and invoice age entered", done: Number(form.amountDue || 0) > 0 && Number(form.invoiceAgeDays || 0) > 0 },
-          { label: "Factual case summary prepared", done: form.summary.trim().length > 10 },
-        ]}
-      />
       {showForm ? (
         <>
-        <FormStepPanel
-          step="Step 1"
-          title="Client and project location"
-          body="Give staff enough context to identify the case without publishing private identifiers."
-        >
-          <Field label="Client name" value={form.clientName} onChangeText={(v) => setForm({ ...form, clientName: v })} />
-          <Field keyboardType="email-address" label="Client email (private)" value={form.clientEmail} onChangeText={(v) => setForm({ ...form, clientEmail: v })} />
-          <Field label="City" value={form.city} onChangeText={(v) => setForm({ ...form, city: v })} />
-          <ChoiceRow label="State" options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
-        </FormStepPanel>
-        <FormStepPanel
-          step="Step 2"
-          title="Amount and invoice age"
-          body="These details help prioritize next actions and document the timeline."
-        >
-          <Field keyboardType="numeric" label="Amount due" value={form.amountDue} onChangeText={(v) => setForm({ ...form, amountDue: v })} />
-          <Field keyboardType="numeric" label="Invoice age in days" value={form.invoiceAgeDays} onChangeText={(v) => setForm({ ...form, invoiceAgeDays: v })} />
-          <ChoiceRow label="Preferred channel" options={["email", "phone", "letter", "client_portal"]} value={form.preferredChannel} onChange={(v) => setForm({ ...form, preferredChannel: v })} />
-        </FormStepPanel>
-        <FormStepPanel
-          step="Step 3"
-          title="What happened?"
-          body="Keep it factual. Staff can ask for more details if documents are missing."
-        >
-          <Field multiline label="Case summary" value={form.summary} onChangeText={(v) => setForm({ ...form, summary: v })} />
-          <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
-          <PrimaryButton loading={busy} onPress={submit} title="Submit recovery case" />
-        </FormStepPanel>
+        <LaunchChecklist
+          title="Recovery case readiness"
+          items={[
+            { label: "Client and location identified", done: form.clientName.trim().length > 0 && form.city.trim().length > 0 },
+            { label: "Amount due and invoice age entered", done: Number(form.amountDue || 0) > 0 && Number(form.invoiceAgeDays || 0) > 0 },
+            { label: "Factual case summary prepared", done: form.summary.trim().length > 10 },
+          ]}
+        />
+          <FormStepPanel
+            step="Step 1"
+            title="Client and project location"
+            body="Give staff enough context to identify the case without publishing private identifiers."
+          >
+            <Field label="Client name" value={form.clientName} onChangeText={(v) => setForm({ ...form, clientName: v })} />
+            <Field keyboardType="email-address" label="Client email (private)" value={form.clientEmail} onChangeText={(v) => setForm({ ...form, clientEmail: v })} />
+            <Field label="City" value={form.city} onChangeText={(v) => setForm({ ...form, city: v })} />
+            <ChoiceRow label="State" options={["FL", "GA", "AL", "SC", "NC", "TX"]} value={form.state} onChange={(v) => setForm({ ...form, state: v })} />
+          </FormStepPanel>
+          <FormStepPanel
+            step="Step 2"
+            title="Amount and invoice age"
+            body="These details help prioritize next actions and document the timeline."
+          >
+            <Field keyboardType="numeric" label="Amount due" value={form.amountDue} onChangeText={(v) => setForm({ ...form, amountDue: v })} />
+            <Field keyboardType="numeric" label="Invoice age in days" value={form.invoiceAgeDays} onChangeText={(v) => setForm({ ...form, invoiceAgeDays: v })} />
+            <ChoiceRow label="Preferred channel" options={["email", "phone", "letter", "client_portal"]} value={form.preferredChannel} onChange={(v) => setForm({ ...form, preferredChannel: v })} />
+          </FormStepPanel>
+          <FormStepPanel
+            step="Step 3"
+            title="What happened?"
+            body="Keep it factual. Staff can ask for more details if documents are missing."
+          >
+            <Field multiline label="Case summary" value={form.summary} onChangeText={(v) => setForm({ ...form, summary: v })} />
+            <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
+            <PrimaryButton loading={busy} onPress={submit} title="Submit recovery case" />
+          </FormStepPanel>
         </>
       ) : (
         <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />

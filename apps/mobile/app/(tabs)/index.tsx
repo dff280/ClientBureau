@@ -17,7 +17,6 @@ import {
   PrimaryButton,
   Screen,
   SectionHeader,
-  SuggestionChip,
   StatusTimeline,
   StatusPill,
   TrustBadge,
@@ -53,14 +52,14 @@ export default function HomeScreen() {
   return (
     <Screen
       eyebrow="Home"
-      title={`Welcome${user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}.`}
-      body="Start with a client search, then move into reports, contracts, recovery, or evidence when the job needs protection."
+      title={`Today's work${user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}.`}
+      body="Check the client first, then pick the right protection workflow for where the job stands."
       badge="Secure"
     >
       <BureauHero
         eyebrow="Mobile command center"
         title="Check the client before you take the job."
-        body="Start with search, then move into contracts, evidence, recovery, or lien service when the job needs structure."
+        body="Search first. Then set terms, preserve evidence, or open a private service case when the job needs structure."
       >
         <StatusPill label={dashboard.subscription?.tier ?? "Free plan"} tone="gold" />
         <Text style={[styles.cardTitle, { color: "#ffffff", fontSize: 22 }]}>
@@ -73,22 +72,38 @@ export default function HomeScreen() {
         <PrimaryButton title="Check a Client" tone="light" onPress={() => router.push("/search")} />
       </BureauHero>
 
+      <ActionDock>
+        <Text style={styles.cardTitle}>Start here</Text>
+        <Text style={styles.body}>
+          Most contractors only need three moves from the phone: check the lead, set the terms, or document an issue.
+        </Text>
+        <IconActionRow
+          icon={Search}
+          title="Check a Client"
+          body="Run the search before scheduling, quoting, or buying materials."
+          badge="First"
+          onPress={() => router.push("/search")}
+        />
+        <IconActionRow
+          icon={FileSignature}
+          title="Create contract packet"
+          body="Prepare scope, payment terms, and signing links before work starts."
+          onPress={() => router.push("/tools/contracts")}
+        />
+        <IconActionRow
+          icon={TrendingUp}
+          title="Get help recovering payment"
+          body="Open a private Resolution Desk case when an invoice needs structured follow-up."
+          onPress={() => router.push("/tools/recovery")}
+        />
+      </ActionDock>
+
       <View style={styles.metricGrid}>
         <MetricTile label="Searches saved" value={dashboard.stats.savedSearches} helper="Use before accepting work" />
         <MetricTile label="Reports filed" value={dashboard.stats.reportsSubmitted} helper="Private until approved" />
         <MetricTile label="Watched clients" value={counts?.watchlist ?? 0} helper={`${counts?.alerts ?? 0} alert(s)`} />
         <MetricTile label="Open recovery" value={counts?.managedRecoveryCases ?? 0} helper="Resolution Desk" tone="gold" />
       </View>
-
-      <LaunchChecklist
-        title="Launch-ready workspace"
-        items={[
-          { label: "Search a lead before scheduling or buying materials", done: dashboard.stats.savedSearches > 0 },
-          { label: "Create contract packet before the job starts", done: (counts?.contractPackets ?? 0) > 0 },
-          { label: "Keep private evidence ready for reports or service cases", done: (counts?.evidenceItems ?? dashboard.stats.evidenceItems) > 0 },
-          { label: "Use recovery or lien service only when a payment issue needs structure", done: (counts?.managedRecoveryCases ?? 0) + (counts?.floridaLienCases ?? 0) > 0 },
-        ]}
-      />
 
       <SectionHeader
         title="Today's work"
@@ -113,6 +128,15 @@ export default function HomeScreen() {
           onPress={() => router.push("/tools/contracts")}
         />
       </View>
+
+      <LaunchChecklist
+        title="Workspace readiness"
+        items={[
+          { label: "Search a lead before scheduling or buying materials", done: dashboard.stats.savedSearches > 0 },
+          { label: "Create contract packet before the job starts", done: (counts?.contractPackets ?? 0) > 0 },
+          { label: "Keep private evidence ready for reports or service cases", done: (counts?.evidenceItems ?? dashboard.stats.evidenceItems) > 0 },
+        ]}
+      />
 
       <SectionHeader
         title="Alerts and readiness"
@@ -141,38 +165,6 @@ export default function HomeScreen() {
           onPress={() => router.push("/tools/evidence")}
         />
       </View>
-
-      <ActionDock>
-        <Text style={styles.cardTitle}>Next best action</Text>
-        <Text style={styles.body}>
-          Pick the workflow that matches where the job stands. Records stay private unless a report is approved for public display.
-        </Text>
-        <View style={styles.chipRail}>
-          <SuggestionChip label="New lead" tone="gold" onPress={() => router.push("/search")} />
-          <SuggestionChip label="Need a contract" onPress={() => router.push("/tools/contracts")} />
-          <SuggestionChip label="Unpaid invoice" onPress={() => router.push("/tools/recovery")} />
-        </View>
-        <IconActionRow
-          icon={Search}
-          title="Check a Client"
-          body="Search public profiles, private matches, and saved signals."
-          badge="Start here"
-          onPress={() => router.push("/search")}
-        />
-        <IconActionRow
-          icon={ClipboardCheck}
-          title="Document a client experience"
-          body="Submit a positive report or payment issue for moderation."
-          onPress={() => router.push("/reports")}
-        />
-        <IconActionRow
-          icon={UserPlus}
-          title="Invite another contractor"
-          body="Share Client Bureau with someone who should check clients before taking jobs."
-          badge="Share"
-          onPress={inviteContractorToClientBureau}
-        />
-      </ActionDock>
 
       <InsightCard
         icon={ClipboardCheck}
@@ -209,6 +201,13 @@ export default function HomeScreen() {
         title="Review all tools"
         body="Search, contracts, reports, recovery, lien service, evidence, and watchlist."
         onPress={() => router.push("/tools")}
+      />
+      <IconActionRow
+        icon={UserPlus}
+        title="Invite another contractor"
+        body="Share Client Bureau with someone who should check clients before taking jobs."
+        badge="Share"
+        onPress={inviteContractorToClientBureau}
       />
       <IconActionRow
         icon={Share2}

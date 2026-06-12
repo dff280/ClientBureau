@@ -5,10 +5,11 @@ import type { ColorValue } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 
 import { LoadingState } from "@/components/ui"
+import { colors, radius } from "@/lib/theme"
 import { useAuth } from "@/providers/auth-provider"
 
-function TabIcon({ icon: Icon, color }: { icon: LucideIcon; color: ColorValue }) {
-  return <Icon color={String(color)} size={22} strokeWidth={2.4} />
+function TabIcon({ icon: Icon, color, focused }: { icon: LucideIcon; color: ColorValue; focused: boolean }) {
+  return <Icon color={String(color)} size={focused ? 23 : 21} strokeWidth={focused ? 2.7 : 2.25} />
 }
 
 export default function TabLayout() {
@@ -28,20 +29,31 @@ export default function TabLayout() {
       }}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#b89135",
-        tabBarInactiveTintColor: "#667085",
+        tabBarActiveBackgroundColor: colors.goldSoft,
+        tabBarActiveTintColor: colors.navy,
+        tabBarInactiveTintColor: colors.muted,
         tabBarHideOnKeyboard: true,
+        tabBarIconStyle: {
+          marginBottom: 1,
+        },
+        tabBarItemStyle: {
+          borderRadius: radius.md,
+          marginHorizontal: 3,
+          marginVertical: 6,
+          paddingVertical: 4,
+        },
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#d7deea",
+          backgroundColor: colors.white,
+          borderTopColor: colors.line,
           borderTopWidth: 1,
-          height: 64 + bottomInset,
-          minHeight: 64 + bottomInset,
+          height: 72 + bottomInset,
+          minHeight: 72 + bottomInset,
           paddingBottom: bottomInset,
-          paddingTop: 10,
+          paddingHorizontal: 8,
+          paddingTop: 8,
           shadowColor: "#020617",
-          shadowOpacity: 0.08,
-          shadowRadius: 16,
+          shadowOpacity: 0.1,
+          shadowRadius: 18,
           shadowOffset: { width: 0, height: -8 },
           elevation: 8,
         },
@@ -56,35 +68,35 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <TabIcon color={color} icon={Home} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} icon={Home} />,
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: "Search",
-          tabBarIcon: ({ color }) => <TabIcon color={color} icon={Search} />,
+          title: "Check",
+          tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} icon={Search} />,
         }}
       />
       <Tabs.Screen
         name="reports"
         options={{
           title: "Reports",
-          tabBarIcon: ({ color }) => <TabIcon color={color} icon={FileText} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} icon={FileText} />,
         }}
       />
       <Tabs.Screen
         name="tools"
         options={{
           title: "Tools",
-          tabBarIcon: ({ color }) => <TabIcon color={color} icon={BriefcaseBusiness} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} icon={BriefcaseBusiness} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
           title: "Account",
-          tabBarIcon: ({ color }) => <TabIcon color={color} icon={UserCircle} />,
+          tabBarIcon: ({ color, focused }) => <TabIcon color={color} focused={focused} icon={UserCircle} />,
         }}
       />
     </Tabs>

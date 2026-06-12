@@ -120,52 +120,52 @@ export default function ContractsScreen() {
           <MetricMini label="Links" value={linkReadyPackets} />
         </View>
       ) : null}
-      <LaunchChecklist
-        title="Agreement packet readiness"
-        items={[
-          { label: "Client and project identified", done: form.clientName.trim().length > 0 && form.projectType.trim().length > 0 },
-          { label: "Scope and included work summarized", done: form.scopeSummary.trim().length > 0 || form.includedWork.trim().length > 0 },
-          { label: "Payment terms and deposit recorded", done: form.paymentTerms.trim().length > 0 || Number(form.depositRequired || 0) > 0 },
-        ]}
-      />
       {showForm ? (
         <>
-        <FormStepPanel
-          step="Step 1"
-          title="Client and packet type"
-          body="Start with the client, project, and agreement template."
-        >
-          <Field label="Client name" value={form.clientName} onChangeText={(v) => setForm({ ...form, clientName: v })} />
-          <Field label="Project type" value={form.projectType} onChangeText={(v) => setForm({ ...form, projectType: v })} />
-          <ChoiceRow
-            label="Template"
-            options={["service_agreement", "change_order", "payment_plan"]}
-            value={form.templateType}
-            onChange={(v) => setForm({ ...form, templateType: v })}
+          <LaunchChecklist
+            title="Agreement packet readiness"
+            items={[
+              { label: "Client and project identified", done: form.clientName.trim().length > 0 && form.projectType.trim().length > 0 },
+              { label: "Scope and included work summarized", done: form.scopeSummary.trim().length > 0 || form.includedWork.trim().length > 0 },
+              { label: "Payment terms and deposit recorded", done: form.paymentTerms.trim().length > 0 || Number(form.depositRequired || 0) > 0 },
+            ]}
           />
-        </FormStepPanel>
-        <FormStepPanel
-          step="Step 2"
-          title="Agreement value and payment terms"
-          body="Record deposit, milestone, and payment expectations clearly."
-        >
-          <Field keyboardType="numeric" label="Agreement value" value={form.packetValue} onChangeText={(v) => setForm({ ...form, packetValue: v })} />
-          <Field keyboardType="numeric" label="Deposit required" value={form.depositRequired} onChangeText={(v) => setForm({ ...form, depositRequired: v })} />
-          <Field keyboardType="numeric" label="Milestone count" value={form.milestoneCount} onChangeText={(v) => setForm({ ...form, milestoneCount: v })} />
-          <Field label="Payment terms" multiline value={form.paymentTerms} onChangeText={(v) => setForm({ ...form, paymentTerms: v })} />
-        </FormStepPanel>
-        <FormStepPanel
-          step="Step 3"
-          title="Scope and change-order rules"
-          body="Keep the packet useful by separating included work from later changes."
-        >
-          <Field label="Scope summary" multiline value={form.scopeSummary} onChangeText={(v) => setForm({ ...form, scopeSummary: v })} />
-          <Field label="Included work" multiline value={form.includedWork} onChangeText={(v) => setForm({ ...form, includedWork: v })} />
-          <Field label="Change-order policy" multiline value={form.changeOrderPolicy} onChangeText={(v) => setForm({ ...form, changeOrderPolicy: v })} />
-          <Field label="Cancellation policy" multiline value={form.cancellationPolicy} onChangeText={(v) => setForm({ ...form, cancellationPolicy: v })} />
-          <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
-          <PrimaryButton loading={busy} title="Create agreement packet" onPress={submit} />
-        </FormStepPanel>
+          <FormStepPanel
+            step="Step 1"
+            title="Client and packet type"
+            body="Start with the client, project, and agreement template."
+          >
+            <Field label="Client name" value={form.clientName} onChangeText={(v) => setForm({ ...form, clientName: v })} />
+            <Field label="Project type" value={form.projectType} onChangeText={(v) => setForm({ ...form, projectType: v })} />
+            <ChoiceRow
+              label="Template"
+              options={["service_agreement", "change_order", "payment_plan"]}
+              value={form.templateType}
+              onChange={(v) => setForm({ ...form, templateType: v })}
+            />
+          </FormStepPanel>
+          <FormStepPanel
+            step="Step 2"
+            title="Agreement value and payment terms"
+            body="Record deposit, milestone, and payment expectations clearly."
+          >
+            <Field keyboardType="numeric" label="Agreement value" value={form.packetValue} onChangeText={(v) => setForm({ ...form, packetValue: v })} />
+            <Field keyboardType="numeric" label="Deposit required" value={form.depositRequired} onChangeText={(v) => setForm({ ...form, depositRequired: v })} />
+            <Field keyboardType="numeric" label="Milestone count" value={form.milestoneCount} onChangeText={(v) => setForm({ ...form, milestoneCount: v })} />
+            <Field label="Payment terms" multiline value={form.paymentTerms} onChangeText={(v) => setForm({ ...form, paymentTerms: v })} />
+          </FormStepPanel>
+          <FormStepPanel
+            step="Step 3"
+            title="Scope and change-order rules"
+            body="Keep the packet useful by separating included work from later changes."
+          >
+            <Field label="Scope summary" multiline value={form.scopeSummary} onChangeText={(v) => setForm({ ...form, scopeSummary: v })} />
+            <Field label="Included work" multiline value={form.includedWork} onChangeText={(v) => setForm({ ...form, includedWork: v })} />
+            <Field label="Change-order policy" multiline value={form.changeOrderPolicy} onChangeText={(v) => setForm({ ...form, changeOrderPolicy: v })} />
+            <Field label="Cancellation policy" multiline value={form.cancellationPolicy} onChangeText={(v) => setForm({ ...form, cancellationPolicy: v })} />
+            <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
+            <PrimaryButton loading={busy} title="Create agreement packet" onPress={submit} />
+          </FormStepPanel>
         </>
       ) : (
         <Message text={message} tone={message?.includes("correct") ? "error" : "success"} />
