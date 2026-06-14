@@ -2,7 +2,7 @@
 
 Date: June 14, 2026
 
-Status note updated June 14, 2026: production is live on Supabase with `DATA_MODE=supabase`. Migration `0019_contractor_subcontractor_rating_transparency.sql` and the job participant graph migration have been applied in production, and `/api/health` is expected to report `platformCanUseSupabase: true` when the VPS is on the current release. `PLATFORM_FEATURE_DATA_MODE=supabase` is the target production setting; use `mock` only as a temporary rollback if an advanced dashboard/admin workflow needs review.
+Status note updated June 14, 2026: production is live on Supabase with `DATA_MODE=supabase` and `PLATFORM_FEATURE_DATA_MODE=supabase`. Migration `0019_contractor_subcontractor_rating_transparency.sql` and the job participant graph migration have been applied in production, and `/api/health` reports `platformCanUseSupabase: true` with all required platform tables and columns present. Use `mock` only as a temporary rollback if an advanced dashboard/admin workflow needs review.
 
 ## Core Positioning
 
@@ -98,6 +98,7 @@ API and system routes:
 - Admin report approval and publication flow that recalculates score/risk and creates or updates public profiles.
 - Public SEO profiles with moderated summaries, score explanations, positive reports, dispute context, evidence summaries, and right-of-response.
 - Search by name, business, city/state, private identifier intent, risk level, and category.
+- Profile-aware search and directory flows preserve contractor/subcontractor/client filters and canonical trade categories across suggestions, saved-search UI, claim/report CTAs, signup handoff, and report submission defaults.
 - Positive and concern report submission workflows with zod validation and server actions.
 - Contractor dashboard with Jobs, participant roles, pipeline, watchlist, monitoring, drafts, intake assessments, evidence, recovery, Florida lien service, contracts, signing links, account status, activity, and reports.
 - Contract signing token route and client signature form.
