@@ -62,6 +62,10 @@ All notable Client Bureau product changes should be documented here before a rel
 - Improved unified search result cards with a premium dossier layout, clearer rating and match context, watch/profile/report/correction actions, and safer public-privacy copy.
 - Improved public profile share cards with a native share action, clipboard fallback, clearer confirmation states, and stronger private-data safety copy.
 - Improved public business profile claiming so business-profile CTAs preserve the exact profile type/slug, direct claims land in a clear verification workflow, and generic claims explain the account-first path.
+- Improved shared public mobile navigation with grouped records, services, resources, dashboard tool groups, and admin access for admin users.
+- Improved admin navigation active states for saved query views such as All Reports and Client Responses.
+- Reduced mobile clutter on dashboard tool pages by collapsing detailed tool explanations behind a compact "How this tool works" panel.
+- Added `npm run verify:live:release-candidate` to combine public live verification, live SEO, and strict authenticated contractor/admin QA into one final release-candidate gate.
 
 ## 0.4.2 - Live Workflow QA and Graph Readiness Polish
 

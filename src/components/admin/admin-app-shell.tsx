@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   ClipboardCheck,
   History,
@@ -48,12 +48,16 @@ export function AdminAppShell({
   children: React.ReactNode
 }) {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const currentSearch = searchParams.toString()
   const isActiveAdminLink = (href: string) => {
-    const [hrefPath] = href.split("?")
+    const [hrefPath, hrefSearch = ""] = href.split("?")
 
-    if (href.includes("?")) return false
+    if (hrefSearch) {
+      return hrefPath === pathname && hrefSearch === currentSearch
+    }
 
-    return hrefPath === pathname
+    return hrefPath === pathname && currentSearch === ""
   }
 
   return (

@@ -8,7 +8,7 @@ import { BookOpen, BriefcaseBusiness, ChevronDown, FilePlus2, LogIn, LogOut, Men
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { contractorPrimaryNav, publicPrimaryNav } from "@/lib/navigation"
+import { contractorDashboardGroups, contractorPrimaryNav, publicPrimaryNav } from "@/lib/navigation"
 import { corePositioning } from "@/lib/product-positioning"
 import { publicSocialLinks } from "@/lib/public-site"
 import {
@@ -114,12 +114,6 @@ export function SiteHeader() {
   }, [pathname])
 
   const promotedContractorHrefs = new Set(contractorHeaderNav.map((item) => item.href))
-  const authNav = session.authenticated
-    ? uniqueNavItems([
-        ...contractorHeaderNav,
-        ...contractorPrimaryNav.filter((item) => !promotedContractorHrefs.has(item.href)),
-      ])
-    : publicPrimaryNav
   const desktopNav = session.authenticated ? contractorHeaderNav : publicHeaderNav
   const moreNav = session.authenticated
     ? contractorPrimaryNav.filter((item) => !promotedContractorHrefs.has(item.href))
@@ -229,21 +223,48 @@ export function SiteHeader() {
                   </div>
                 </div>
               ) : null}
-              <nav className="mt-5 grid gap-2 text-sm font-medium">
-                {authNav.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
-                  >
-                    <span className="font-semibold">{item.label}</span>
-                    {item.description ? (
-                      <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">
-                        {item.description}
-                      </span>
+              <nav className="mt-5 grid gap-4 text-sm font-medium">
+                {session.authenticated ? (
+                  <>
+                    {contractorDashboardGroups.map((group) => (
+                      <div key={group.title} className="grid gap-2">
+                        <p className="px-1 text-xs font-semibold uppercase text-amber-700">{group.title}</p>
+                        {group.links.map((item) => (
+                          <MobileNavLink key={`${group.title}-${item.href}-${item.label}`} item={item} />
+                        ))}
+                      </div>
+                    ))}
+                    {session.role === "admin" ? (
+                      <div className="grid gap-2">
+                        <p className="px-1 text-xs font-semibold uppercase text-amber-700">Admin</p>
+                        <MobileNavLink
+                          item={{
+                            href: "/admin",
+                            label: "Admin Command Center",
+                            description: "Review reports, profiles, discussions, recovery, contracts, and audit activity.",
+                          }}
+                        />
+                      </div>
                     ) : null}
-                  </Link>
-                ))}
+                  </>
+                ) : (
+                  <>
+                    <div className="grid gap-2">
+                      <p className="px-1 text-xs font-semibold uppercase text-amber-700">Start</p>
+                      {publicPrimaryNav.map((item) => (
+                        <MobileNavLink key={item.href} item={item} />
+                      ))}
+                    </div>
+                    {publicHeaderMenus.map((group) => (
+                      <div key={group.label} className="grid gap-2">
+                        <p className="px-1 text-xs font-semibold uppercase text-amber-700">{group.label}</p>
+                        {group.items.map((item) => (
+                          <MobileNavLink key={`${group.label}-${item.href}`} item={item} />
+                        ))}
+                      </div>
+                    ))}
+                  </>
+                )}
                 {publicSocialLinks.length > 0 ? (
                   <div className="mt-3 border-t border-slate-200 pt-3">
                     <p className="mb-2 text-xs font-semibold uppercase text-slate-500">Social</p>
@@ -366,14 +387,26 @@ export function SiteHeader() {
   )
 }
 
-function uniqueNavItems(items: typeof contractorPrimaryNav) {
-  const seen = new Set<string>()
-
-  return items.filter((item) => {
-    const key = `${item.href}-${item.label}`
-    if (seen.has(key)) return false
-    seen.add(key)
-
-    return true
-  })
+function MobileNavLink({
+  item,
+}: {
+  item: {
+    description?: string
+    href: string
+    label: string
+  }
+}) {
+  return (
+    <Link
+      href={item.href}
+      className="touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
+    >
+      <span className="font-semibold">{item.label}</span>
+      {item.description ? (
+        <span className="mt-1 block text-xs font-normal leading-5 text-slate-500">
+          {item.description}
+        </span>
+      ) : null}
+    </Link>
+  )
 }

@@ -21,6 +21,7 @@
     "seo:check:local": "node scripts/run-local-seo-check.mjs",
     "verify:local": "node scripts/verify-local-release.mjs",
     "verify:live": "node scripts/verify-live-release.mjs",
+    "verify:live:release-candidate": "node scripts/verify-live-release-candidate.mjs",
     "verify:live:auth": "node scripts/verify-live-auth-workflows.mjs",
     "verify:live:auth:strict": "node scripts/verify-live-auth-workflows.mjs --strict",
     "migrations:graph:print": "node scripts/print-graph-migrations.mjs",

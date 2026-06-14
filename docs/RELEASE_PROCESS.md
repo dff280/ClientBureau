@@ -140,6 +140,16 @@ Remove-Item Env:ADMIN_QA_PASSWORD
 
 The authenticated verifier checks the live health gate, loads local credentials from `.env.qa.local` when present, logs in through the real `/api/auth/login` route, checks session JSON, opens the full contractor/admin route set with the returned cookies, verifies expected workspace content and no-store private pages, and confirms a contractor account cannot enter `/admin`. The normal command skips account-specific checks cleanly when QA credentials are not configured; the strict command fails when credentials are missing.
 
+For a final release-candidate gate, use the combined live verifier:
+
+```powershell
+Copy-Item .env.qa.example .env.qa.local
+notepad .env.qa.local
+npm run verify:live:release-candidate
+```
+
+`verify:live:release-candidate` runs the public live verifier, live SEO crawl, and strict authenticated contractor/admin QA in order. It should be the final automated check before declaring a production update fully ready. If it fails on missing QA credentials, create disposable contractor/admin QA accounts, fill `.env.qa.local`, and rerun the command.
+
 To intentionally inspect production without comparing release identity, run:
 
 ```powershell
@@ -206,6 +216,7 @@ Before pushing `main`:
 - `npm run seo:check:local` passes after `npm run build`, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.
 - `npm run mobile:check` passes.
 - `npm run verify:live` passes after the VPS rebuild.
+- `npm run verify:live:release-candidate` passes before final release sign-off when disposable contractor/admin QA credentials are available.
 - `npm run verify:live:auth:strict` passes when disposable QA credentials are configured, or `npm run verify:live:auth` reports skipped account checks during non-release inspection.
 - Manual logged-in QA follows `docs/LIVE_WORKFLOW_QA_RUNBOOK.md`.
 - Browser QA covers the changed public/dashboard/admin routes.
