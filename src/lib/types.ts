@@ -1519,7 +1519,14 @@ export interface SavedSearch {
   query: string
   city?: string
   state?: string
+  riskLevel?: RiskLevel
+  category?: ReportCategory
+  profileType?: ProfileType
+  tradeCategory?: string
+  resultCount?: number
+  source?: "local" | "mock" | "supabase"
   createdAt: string
+  lastRunAt?: string
 }
 
 export type SearchSuggestionKind =
@@ -1552,6 +1559,8 @@ export interface SavedClientSearch {
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  profileType?: ProfileType
+  tradeCategory?: string
   resultCount: number
   source: "local" | "mock" | "supabase"
   createdAt: string
@@ -1573,6 +1582,8 @@ export interface SearchAnalyticsEvent {
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  profileType?: ProfileType
+  tradeCategory?: string
   resultCount?: number
   eventType: SearchAnalyticsEventType
   source: "search_page" | "profile_page" | "directory" | "dashboard"

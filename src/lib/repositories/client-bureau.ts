@@ -704,16 +704,22 @@ export function saveClientSearch(userId: string | undefined, input: SavedClientS
     search.query.toLowerCase() === query.toLowerCase() &&
     search.state === input.state?.toUpperCase() &&
     search.riskLevel === input.riskLevel &&
-    search.category === input.category,
+    search.category === input.category &&
+    search.profileType === input.profileType &&
+    search.tradeCategory === input.tradeCategory,
   )
   const record: SavedClientSearch = {
-    id: existingIndex >= 0 ? savedClientSearchRecords[existingIndex].id : `saved_client_search_${Date.now()}`,
+    id: existingIndex >= 0
+      ? savedClientSearchRecords[existingIndex].id
+      : `saved_client_search_${Date.now()}_${savedClientSearchRecords.length + 1}`,
     contractorId: userId,
     query,
     city: input.city,
     state: input.state?.toUpperCase(),
     riskLevel: input.riskLevel,
     category: input.category,
+    profileType: input.profileType,
+    tradeCategory: input.tradeCategory,
     resultCount: input.resultCount,
     source: "mock",
     createdAt: existingIndex >= 0 ? savedClientSearchRecords[existingIndex].createdAt : now,
@@ -747,6 +753,8 @@ export function recordSearchEvent(userId: string | undefined, input: SearchAnaly
     state: input.state?.toUpperCase(),
     riskLevel: input.riskLevel,
     category: input.category,
+    profileType: input.profileType,
+    tradeCategory: input.tradeCategory,
     resultCount: input.resultCount,
     eventType: input.eventType,
     source: input.source,

@@ -60,6 +60,8 @@ export type MobileSavedSearch = {
   state?: string
   riskLevel?: string
   category?: string
+  profileType?: string
+  tradeCategory?: string
   resultCount: number
   createdAt: string
   lastRunAt?: string
@@ -303,7 +305,9 @@ export function sanitizeSavedSearchForMobile(search: SavedSearch | SavedClientSe
     state: search.state,
     riskLevel: "riskLevel" in search ? search.riskLevel : undefined,
     category: "category" in search ? search.category : undefined,
-    resultCount: "resultCount" in search ? search.resultCount : 0,
+    profileType: "profileType" in search ? search.profileType : undefined,
+    tradeCategory: "tradeCategory" in search ? search.tradeCategory : undefined,
+    resultCount: ("resultCount" in search ? search.resultCount : undefined) ?? 0,
     createdAt: search.createdAt,
     lastRunAt: "lastRunAt" in search ? search.lastRunAt : undefined,
   }

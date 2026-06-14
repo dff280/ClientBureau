@@ -509,6 +509,7 @@ export const searchSchema = z.object({
   riskLevel: z.enum(riskLevels).optional(),
   category: z.enum(reportCategories).optional(),
   profileType: z.enum(profileTypes).optional(),
+  tradeCategory: z.string().trim().max(120, "Keep trade category under 120 characters.").optional().transform((value) => value || undefined),
 })
 
 export const profileClaimSchema = z.object({
@@ -571,6 +572,8 @@ export const savedClientSearchSchema = z.object({
   state: stateCode("State").optional(),
   riskLevel: z.enum(riskLevels).optional(),
   category: z.enum(reportCategories).optional(),
+  profileType: z.enum(profileTypes).optional(),
+  tradeCategory: z.string().trim().max(120, "Keep trade category under 120 characters.").optional().transform((value) => value || undefined),
   resultCount: z.coerce
     .number({ error: "Result count must be a number." })
     .int("Result count must be a whole number.")
@@ -588,6 +591,8 @@ export const searchAnalyticsEventSchema = z.object({
   state: stateCode("State").optional(),
   riskLevel: z.enum(riskLevels).optional(),
   category: z.enum(reportCategories).optional(),
+  profileType: z.enum(profileTypes).optional(),
+  tradeCategory: z.string().trim().max(120).optional().transform((value) => value || undefined),
   resultCount: z.coerce.number().int().min(0).max(100000).optional(),
   eventType: z.enum([
     "search_submitted",

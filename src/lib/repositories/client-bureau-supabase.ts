@@ -276,6 +276,16 @@ function isMissingReportIntakeColumnError(error: { message?: string; code?: stri
   )
 }
 
+function isMissingSavedSearchFilterColumnError(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return (
+    error?.code === "42703" ||
+    message.includes("profile_type") ||
+    message.includes("trade_category")
+  )
+}
+
 function isMissingClaimPendingStatusError(error: { message?: string; code?: string } | null | undefined) {
   const message = error?.message?.toLowerCase() ?? ""
 
@@ -310,6 +320,8 @@ function mapSavedClientSearch(row: SavedClientSearchRow): SavedClientSearch {
     state: row.state ?? undefined,
     riskLevel: row.risk_level ?? undefined,
     category: row.category ?? undefined,
+    profileType: row.profile_type ?? undefined,
+    tradeCategory: row.trade_category ?? undefined,
     resultCount: row.result_count,
     source: row.source === "local" || row.source === "mock" ? row.source : "supabase",
     createdAt: row.created_at,
@@ -325,6 +337,8 @@ function mapSearchAnalyticsEvent(row: SearchAnalyticsEventRow): SearchAnalyticsE
     state: row.state ?? undefined,
     riskLevel: row.risk_level ?? undefined,
     category: row.category ?? undefined,
+    profileType: row.profile_type ?? undefined,
+    tradeCategory: row.trade_category ?? undefined,
     resultCount: row.result_count ?? undefined,
     eventType: row.event_type as SearchAnalyticsEvent["eventType"],
     source: row.source as SearchAnalyticsEvent["source"],
@@ -2638,6 +2652,8 @@ export async function saveClientSearchSupabase(
   const contractor = await getOrCreateContractorProfileForUser(userId)
   const query = input.query?.trim() || "All public profiles"
   const state = input.state?.toUpperCase() ?? null
+  const profileType = input.profileType ?? null
+  const tradeCategory = input.tradeCategory ?? null
   const now = new Date().toISOString()
   const existingQuery = supabase
     .from("saved_client_searches")
@@ -2653,23 +2669,46 @@ export async function saveClientSearchSupabase(
   const existing = (existingRows ?? []).find((row) =>
     (row.state ?? null) === state &&
     (row.risk_level ?? null) === (input.riskLevel ?? null) &&
-    (row.category ?? null) === (input.category ?? null),
+    (row.category ?? null) === (input.category ?? null) &&
+    (row.profile_type ?? null) === profileType &&
+    (row.trade_category ?? null) === tradeCategory,
   )
 
   if (existing) {
-    const { data, error } = await supabase
+    const updatePayload = {
+      city: input.city ?? null,
+      state,
+      risk_level: input.riskLevel ?? null,
+      category: input.category ?? null,
+      profile_type: profileType,
+      trade_category: tradeCategory,
+      result_count: input.resultCount,
+      last_run_at: now,
+    }
+    const legacyUpdatePayload = {
+      city: updatePayload.city,
+      state: updatePayload.state,
+      risk_level: updatePayload.risk_level,
+      category: updatePayload.category,
+      result_count: updatePayload.result_count,
+      last_run_at: updatePayload.last_run_at,
+    }
+    const result = await supabase
       .from("saved_client_searches")
-      .update({
-        city: input.city ?? null,
-        state,
-        risk_level: input.riskLevel ?? null,
-        category: input.category ?? null,
-        result_count: input.resultCount,
-        last_run_at: now,
-      })
+      .update(updatePayload)
       .eq("id", existing.id)
       .select("*")
       .single()
+    const fallbackResult =
+      result.error && isMissingSavedSearchFilterColumnError(result.error)
+        ? await supabase
+            .from("saved_client_searches")
+            .update(legacyUpdatePayload)
+            .eq("id", existing.id)
+            .select("*")
+            .single()
+        : result
+    const { data, error } = fallbackResult
 
     if (isMissingRelationError(error)) return undefined
     if (error) throw new Error(error.message)
@@ -2677,21 +2716,44 @@ export async function saveClientSearchSupabase(
     return mapSavedClientSearch(data)
   }
 
-  const { data, error } = await supabase
+  const insertPayload = {
+    contractor_id: contractor.id,
+    query,
+    city: input.city ?? null,
+    state,
+    risk_level: input.riskLevel ?? null,
+    category: input.category ?? null,
+    profile_type: profileType,
+    trade_category: tradeCategory,
+    result_count: input.resultCount,
+    source: "supabase" as const,
+    last_run_at: now,
+  }
+  const legacyInsertPayload = {
+    contractor_id: insertPayload.contractor_id,
+    query: insertPayload.query,
+    city: insertPayload.city,
+    state: insertPayload.state,
+    risk_level: insertPayload.risk_level,
+    category: insertPayload.category,
+    result_count: insertPayload.result_count,
+    source: insertPayload.source,
+    last_run_at: insertPayload.last_run_at,
+  }
+  const result = await supabase
     .from("saved_client_searches")
-    .insert({
-      contractor_id: contractor.id,
-      query,
-      city: input.city ?? null,
-      state,
-      risk_level: input.riskLevel ?? null,
-      category: input.category ?? null,
-      result_count: input.resultCount,
-      source: "supabase",
-      last_run_at: now,
-    })
+    .insert(insertPayload)
     .select("*")
     .single()
+  const fallbackResult =
+    result.error && isMissingSavedSearchFilterColumnError(result.error)
+      ? await supabase
+          .from("saved_client_searches")
+          .insert(legacyInsertPayload)
+          .select("*")
+          .single()
+      : result
+  const { data, error } = fallbackResult
 
   if (isMissingRelationError(error)) return undefined
   if (error) throw new Error(error.message)
@@ -2720,20 +2782,42 @@ export async function recordSearchEventSupabase(
 ): Promise<SearchAnalyticsEvent | undefined> {
   const supabase = createServiceClient()
   const contractor = userId ? await getOrCreateContractorProfileForUser(userId).catch(() => undefined) : undefined
-  const { data, error } = await supabase
+  const insertPayload = {
+    contractor_id: contractor?.id ?? null,
+    query: input.query ?? null,
+    state: input.state?.toUpperCase() ?? null,
+    risk_level: input.riskLevel ?? null,
+    category: input.category ?? null,
+    profile_type: input.profileType ?? null,
+    trade_category: input.tradeCategory ?? null,
+    result_count: input.resultCount ?? null,
+    event_type: input.eventType,
+    source: input.source,
+  }
+  const legacyInsertPayload = {
+    contractor_id: insertPayload.contractor_id,
+    query: insertPayload.query,
+    state: insertPayload.state,
+    risk_level: insertPayload.risk_level,
+    category: insertPayload.category,
+    result_count: insertPayload.result_count,
+    event_type: insertPayload.event_type,
+    source: insertPayload.source,
+  }
+  const result = await supabase
     .from("search_analytics_events")
-    .insert({
-      contractor_id: contractor?.id ?? null,
-      query: input.query ?? null,
-      state: input.state?.toUpperCase() ?? null,
-      risk_level: input.riskLevel ?? null,
-      category: input.category ?? null,
-      result_count: input.resultCount ?? null,
-      event_type: input.eventType,
-      source: input.source,
-    })
+    .insert(insertPayload)
     .select("*")
     .single()
+  const fallbackResult =
+    result.error && isMissingSavedSearchFilterColumnError(result.error)
+      ? await supabase
+          .from("search_analytics_events")
+          .insert(legacyInsertPayload)
+          .select("*")
+          .single()
+      : result
+  const { data, error } = fallbackResult
 
   if (isMissingRelationError(error)) return undefined
   if (error) throw new Error(error.message)
@@ -2827,7 +2911,14 @@ export async function getContractorDashboardSupabase(userId: string) {
           query: search.query,
           city: search.city ?? undefined,
           state: search.state ?? undefined,
+          riskLevel: search.risk_level ?? undefined,
+          category: search.category ?? undefined,
+          profileType: search.profile_type ?? undefined,
+          tradeCategory: search.trade_category ?? undefined,
+          resultCount: search.result_count,
+          source: (search.source === "local" || search.source === "mock" ? search.source : "supabase") as SavedSearch["source"],
           createdAt: search.created_at,
+          lastRunAt: search.last_run_at ?? undefined,
         })),
     subscription: subscriptionRow ? mapSubscription(subscriptionRow) : undefined,
   }

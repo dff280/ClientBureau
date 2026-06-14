@@ -61,6 +61,12 @@ interface InitialSavedSearch {
   query: string
   city?: string
   state?: string
+  riskLevel?: RiskLevel
+  category?: ReportCategory
+  profileType?: ProfileType
+  tradeCategory?: string
+  resultCount?: number
+  createdAt?: string
 }
 
 interface SavedSearchRecord extends InitialSavedSearch {
@@ -170,7 +176,7 @@ export function SearchCommandCenter({
     () =>
       initialSavedSearches.map((item) => ({
         ...item,
-        createdAt: new Date().toISOString(),
+        createdAt: item.createdAt ?? new Date().toISOString(),
       })),
     [initialSavedSearches],
   )
@@ -240,6 +246,8 @@ export function SearchCommandCenter({
     if (stateFilter) formData.set("state", stateFilter)
     if (riskFilter) formData.set("riskLevel", riskFilter)
     if (categoryFilter) formData.set("category", categoryFilter)
+    if (profileType) formData.set("profileType", profileType)
+    if (tradeValue) formData.set("tradeCategory", tradeValue)
     formData.set("resultCount", String(resultCount))
     formData.set("eventType", eventType)
     formData.set("source", "search_page")
@@ -288,6 +296,8 @@ export function SearchCommandCenter({
     if (nextSearch.state) formData.set("state", nextSearch.state)
     if (nextSearch.riskLevel) formData.set("riskLevel", nextSearch.riskLevel)
     if (nextSearch.category) formData.set("category", nextSearch.category)
+    if (nextSearch.profileType) formData.set("profileType", nextSearch.profileType)
+    if (nextSearch.tradeCategory) formData.set("tradeCategory", nextSearch.tradeCategory)
     formData.set("resultCount", String(nextSearch.resultCount ?? 0))
 
     startSaveSearchTransition(() => {
@@ -308,8 +318,8 @@ export function SearchCommandCenter({
             state: result.data.state,
             riskLevel: result.data.riskLevel,
             category: result.data.category,
-            profileType: nextSearch.profileType,
-            tradeCategory: nextSearch.tradeCategory,
+            profileType: result.data.profileType,
+            tradeCategory: result.data.tradeCategory,
             resultCount: result.data.resultCount,
             createdAt: result.data.createdAt,
           }

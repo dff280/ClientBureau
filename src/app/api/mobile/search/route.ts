@@ -31,6 +31,8 @@ export async function GET(request: Request) {
     state: url.searchParams.get("state") || undefined,
     riskLevel: url.searchParams.get("risk") ?? url.searchParams.get("riskLevel") ?? undefined,
     category: url.searchParams.get("category") ?? undefined,
+    profileType: url.searchParams.get("profileType") ?? undefined,
+    tradeCategory: url.searchParams.get("tradeCategory") ?? undefined,
   })
 
   if (!parsed.success) {
@@ -41,6 +43,8 @@ export async function GET(request: Request) {
     state: parsed.data.state,
     riskLevel: parsed.data.riskLevel,
     category: parsed.data.category,
+    profileType: parsed.data.profileType,
+    tradeCategory: parsed.data.tradeCategory,
   }
   const results = await searchClientsService(parsed.data.query, filters)
   const previews = results.map(toSearchPreviewProfile)
@@ -51,6 +55,8 @@ export async function GET(request: Request) {
     state: parsed.data.state,
     riskLevel: parsed.data.riskLevel,
     category: parsed.data.category,
+    profileType: parsed.data.profileType,
+    tradeCategory: parsed.data.tradeCategory,
     resultCount: results.length,
     eventType: results.length ? "search_submitted" : "no_result",
     source: "search_page",

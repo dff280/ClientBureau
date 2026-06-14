@@ -765,6 +765,8 @@ export interface Database {
         state: string | null
         risk_level: RiskLevel | null
         category: ReportCategory | null
+        profile_type: ProfileType | null
+        trade_category: string | null
         result_count: number
         source: string
         created_at: string
@@ -777,6 +779,8 @@ export interface Database {
         state: string | null
         risk_level: RiskLevel | null
         category: ReportCategory | null
+        profile_type: ProfileType | null
+        trade_category: string | null
         result_count: number | null
         event_type: string
         source: string

@@ -135,8 +135,10 @@ import {
   getEntityProfiles,
   getProjectJobDetail,
   getProjectJobs,
+  recordSearchEvent,
   signLienFilingAuthorization,
   searchClients,
+  saveClientSearch,
   removeProjectJobParticipant,
   signContractShare,
   simulateApprovalPublication,
@@ -984,10 +986,14 @@ describe("search and public profiles", () => {
       state: "FL",
       riskLevel: "Elevated",
       category: "Non-payment",
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
       resultCount: 2,
     }).success).toBe(true)
     expect(searchAnalyticsEventSchema.safeParse({
       query: "John Smith",
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
       eventType: "search_submitted",
       source: "search_page",
       resultCount: 1,
@@ -997,6 +1003,46 @@ describe("search and public profiles", () => {
       channel: "referral_badge",
       source: "profile_page",
     }).success).toBe(true)
+  })
+
+  it("persists saved-search profile and trade context", () => {
+    const first = saveClientSearch("contractor_saved_context", {
+      query: "Orlando",
+      state: "FL",
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
+      resultCount: 0,
+    })
+    const duplicate = saveClientSearch("contractor_saved_context", {
+      query: "Orlando",
+      state: "FL",
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
+      resultCount: 1,
+    })
+    const contractorContext = saveClientSearch("contractor_saved_context", {
+      query: "Orlando",
+      state: "FL",
+      profileType: "contractor",
+      tradeCategory: "Electrical",
+      resultCount: 2,
+    })
+    const event = recordSearchEvent("contractor_saved_context", {
+      query: "Orlando",
+      state: "FL",
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
+      resultCount: 0,
+      eventType: "no_result",
+      source: "search_page",
+    })
+
+    expect(duplicate.id).toBe(first.id)
+    expect(duplicate.profileType).toBe("subcontractor")
+    expect(duplicate.tradeCategory).toBe("Electrical")
+    expect(contractorContext.id).not.toBe(first.id)
+    expect(event.profileType).toBe("subcontractor")
+    expect(event.tradeCategory).toBe("Electrical")
   })
 
   it("only returns public profile data with reviewable reports", () => {
