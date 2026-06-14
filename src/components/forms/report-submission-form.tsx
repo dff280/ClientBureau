@@ -334,6 +334,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
               otherName="otherTradeCategoryDetail"
               label={`Trade or service category${isBusinessProfileReport ? " required" : ""}`}
               profileType={subjectProfileType}
+              defaultValue={defaults.tradeCategory}
               required={isBusinessProfileReport}
             />
             <FieldError name="tradeCategory" errors={state.ok ? undefined : state.fieldErrors} />

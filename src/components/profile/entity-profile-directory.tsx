@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
 import { pageAssets } from "@/lib/page-assets"
+import { buildSearchHref } from "@/lib/search-experience"
 import { tradeCategories, tradeCategoryGroups } from "@/lib/trade-taxonomy"
 import { profileTypes, type EntityProfile, type EntityProfileSearchResult, type ProfileType } from "@/lib/types"
 
@@ -294,6 +295,23 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
   }
 }
 
+function buildReportExperienceHref({
+  profileType,
+  state,
+  tradeCategory,
+}: {
+  profileType?: ProfileType
+  state?: string
+  tradeCategory?: string
+}) {
+  const params = new URLSearchParams()
+  if (profileType) params.set("profileType", profileType)
+  if (state) params.set("state", state)
+  if (tradeCategory) params.set("tradeCategory", tradeCategory)
+
+  return `/submit-report${params.size ? `?${params.toString()}` : ""}`
+}
+
 export function getProfileDirectoryFaqs(profileType?: ProfileType) {
   const profileLabel = profileType ? profileTypePluralLabel(profileType).toLowerCase() : "public profiles"
 
@@ -364,6 +382,17 @@ export function EntityProfileDirectory({
         : activeType === "client"
           ? pageAssets.searchDossier
           : pageAssets.searchDossier
+  const privateSearchHref = buildSearchHref({
+    query,
+    state,
+    profileType: activeType,
+    tradeCategory: showTradeFilter ? tradeCategory : undefined,
+  })
+  const reportExperienceHref = buildReportExperienceHref({
+    profileType: activeType,
+    state,
+    tradeCategory: showTradeFilter ? tradeCategory : undefined,
+  })
 
   return (
     <main className="bg-slate-100">
@@ -448,7 +477,7 @@ export function EntityProfileDirectory({
                   </p>
                 </div>
                 <Button asChild variant="outline">
-                  <Link href={activeType ? `/search?profileType=${activeType}` : "/search"}>
+                  <Link href={privateSearchHref}>
                     <FileSearch aria-hidden="true" />
                     Open private check
                   </Link>
@@ -602,7 +631,7 @@ export function EntityProfileDirectory({
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/search">Open private check</Link>
+                    <Link href={privateSearchHref}>Open private check</Link>
                   </Button>
                   {activeType === "subcontractor" ? (
                     <>
@@ -610,7 +639,7 @@ export function EntityProfileDirectory({
                         <Link href="/claim-profile?profileType=subcontractor">Claim trade profile</Link>
                       </Button>
                       <Button asChild variant="outline">
-                        <Link href="/submit-report?profileType=subcontractor">Report trade experience</Link>
+                        <Link href={reportExperienceHref}>Report trade experience</Link>
                       </Button>
                     </>
                   ) : null}

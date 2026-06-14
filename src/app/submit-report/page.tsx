@@ -35,7 +35,8 @@ type SubmitReportSearchParams = Promise<
       | "profileSubtype"
       | "profileId"
       | "projectJobId"
-      | "projectJobTitle",
+      | "projectJobTitle"
+      | "tradeCategory",
       string
     >
   >
