@@ -1,7 +1,7 @@
 # Client Bureau Web Platform Finalization Audit
 
 Date: 2026-06-14  
-Release baseline: `0.4.2` / `299677a`
+Release baseline: `0.4.2` / `576cd57` before this audit-polish pass
 
 Current platform expectation: core and advanced web workflows are Supabase-backed when `/api/health` reports `platformCanUseSupabase: true`. `PLATFORM_FEATURE_DATA_MODE=mock` remains a rollback switch, not the normal launch posture.
 
@@ -178,3 +178,15 @@ Desktop and mobile browser spot-check:
 - Admin side navigation now scrolls cleanly on shorter screens.
 - Acquisition/template pages now share a stronger privacy, moderation, and no-guarantee guardrail section.
 - Client, profile, state, and city directory metadata was cleaned up so browser titles do not duplicate the root `Client Bureau` title template.
+- Subcontractor launch readiness was tightened in `/admin/profiles` so the first public trade profile requires meaningful summary copy, public visibility, verification/claim context, and the Trade Partner Reliability rating model before staff treats it as ready.
+- The subcontractor launch runbook now includes a readiness-scored SQL query and guarded publication SQL for real verified records only.
+- Admin candidate cards now route staff to the source client/business editor when available, with a separate readiness review link for the unified profile queue.
+- Current public SEO infrastructure is sound; the remaining subcontractor warning should clear only after a legitimate real subcontractor profile is published, not through fake inventory.
+
+## Remaining Launch Work
+
+- Publish the first verified public subcontractor/trade profile from real production data.
+- Run signed-in contractor QA for `/dashboard`, `/dashboard/jobs`, `/dashboard/contracts`, `/dashboard/recovery`, `/dashboard/lien-readiness`, `/dashboard/evidence`, and `/dashboard/watchlist`.
+- Run signed-in admin QA for `/admin`, `/admin/reports`, `/admin/profiles`, `/admin/clients`, `/admin/contractors`, `/admin/recovery`, and `/admin/audit-log`.
+- Configure Stripe only when billing is ready to launch; public billing copy should remain conservative until checkout and webhooks pass live test mode.
+- Continue Android polish separately; do not trigger APK/AAB builds until an app release checkpoint is explicitly requested.

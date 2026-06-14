@@ -253,7 +253,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                 </p>
               </div>
               <Button asChild variant="outline">
-                <Link href="/admin/profiles?type=subcontractor&visibility=public">
+                <Link href="/admin/profiles?type=subcontractor">
                   <Search aria-hidden="true" />
                   View trade candidates
                 </Link>
@@ -704,6 +704,12 @@ function SubcontractorLaunchCandidateCard({
   readiness: ReturnType<typeof subcontractorLaunchReadiness>
 }) {
   const previewHref = entityProfileHref(profile, "subcontractor")
+  const manageHref =
+    profile.legacyContractorId
+      ? `/admin/contractors?q=${encodeURIComponent(profile.displayName)}`
+      : profile.legacyClientId
+        ? `/admin/clients?q=${encodeURIComponent(profile.displayName)}`
+        : `/admin/profiles?q=${encodeURIComponent(profile.displayName)}&type=subcontractor`
 
   return (
     <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -742,8 +748,13 @@ function SubcontractorLaunchCandidateCard({
       )}
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild size="sm" variant="outline">
+          <Link href={manageHref}>
+            Manage source record
+          </Link>
+        </Button>
+        <Button asChild size="sm" variant="outline">
           <Link href={`/admin/profiles?q=${encodeURIComponent(profile.displayName)}&type=subcontractor`}>
-            Review record
+            Review readiness
           </Link>
         </Button>
         {profile.isPublic ? (
@@ -769,6 +780,7 @@ function ProfileFact({ label, value }: { label: string; value: string | number }
 
 function subcontractorLaunchReadiness(profile: EntityProfile) {
   const missing: string[] = []
+  const publicSummary = profile.publicSummary?.trim() ?? ""
   const hasVerification =
     ["claimed", "verified"].includes(profile.claimedStatus) ||
     Boolean(profile.verificationBadges?.length) ||
@@ -779,9 +791,12 @@ function subcontractorLaunchReadiness(profile: EntityProfile) {
   if (!profile.city || !profile.state) missing.push("City and state")
   if (!profile.profileSubtype) missing.push("Subcontractor subtype")
   if (!profile.tradeCategory && !profile.profileSubtype) missing.push("Canonical trade category or clear trade subtype")
-  if (!profile.publicSummary) missing.push("Public-safe summary")
+  if (publicSummary.length < 40) missing.push("Neutral public-safe summary")
   if (!hasVerification) missing.push("Claim, verification, or documented moderator context")
   if (!profile.isPublic) missing.push("Public visibility enabled after review")
+  if (profile.ratingModel !== "subcontractor_trade_partner_reliability") {
+    missing.push("Rating model set to Trade Partner Reliability")
+  }
   if (profile.ratingScore <= 0) missing.push("Trade Partner Reliability Rating")
   if (profile.claimedStatus === "disputed") missing.push("Dispute resolved or clearly moderated before launch")
 

@@ -39,32 +39,117 @@ A public subcontractor profile is ready when staff can confirm:
 7. Confirm the public page reads as a trade-partner dossier, not a generic contractor page.
 8. Publish only after the profile passes privacy and moderation review.
 
-## Supabase Review Query
+## Supabase Readiness Query
 
-Use this read-only query to find possible candidates:
+Use this read-only query to find possible candidates and understand why a record is not ready yet:
 
 ```sql
+with candidates as (
+  select
+    id,
+    slug,
+    display_name,
+    business_name,
+    profile_type,
+    account_capabilities,
+    city,
+    state,
+    profile_subtype,
+    trade_category,
+    claimed_status,
+    verification_level,
+    verification_badges,
+    is_public,
+    public_summary,
+    rating_model,
+    rating_score,
+    rating_band,
+    report_count,
+    evidence_on_file_count,
+    updated_at
+  from public.entity_profiles
+  where profile_type = 'subcontractor'
+     or coalesce(account_capabilities, array[]::text[]) @> array['subcontractor']::text[]
+),
+scored as (
+  select
+    *,
+    array_remove(array[
+      case when coalesce(display_name, business_name) is null then 'real business or trade display name' end,
+      case when city is null or state is null then 'city and state' end,
+      case when profile_subtype is null then 'subcontractor subtype' end,
+      case when trade_category is null and profile_subtype is null then 'trade category or clear subtype' end,
+      case when public_summary is null or length(trim(public_summary)) < 40 then 'neutral public-safe summary' end,
+      case
+        when claimed_status not in ('claimed', 'verified')
+         and coalesce(array_length(verification_badges, 1), 0) = 0
+         and coalesce(verification_level, '') not in ('business_verified', 'license_verified', 'insurance_verified', 'admin_verified')
+        then 'claim, verification, or documented moderator context'
+      end,
+      case when is_public is not true then 'public visibility enabled after review' end,
+      case when rating_model is distinct from 'subcontractor_trade_partner_reliability' then 'rating model set to Trade Partner Reliability' end,
+      case when coalesce(rating_score, 0) <= 0 then 'Trade Partner Reliability Rating' end,
+      case when claimed_status = 'disputed' then 'dispute resolved or clearly moderated before launch' end
+    ], null) as missing_fields
+  from candidates
+)
 select
   id,
-  display_name,
-  business_name,
-  profile_type,
-  account_capabilities,
+  slug,
+  coalesce(display_name, business_name) as public_name,
   city,
   state,
   profile_subtype,
+  trade_category,
   claimed_status,
+  verification_level,
   is_public,
+  rating_model,
   rating_score,
   rating_band,
   report_count,
   evidence_on_file_count,
+  greatest(0, 100 - (coalesce(array_length(missing_fields, 1), 0) * 12)) as readiness_score,
+  missing_fields,
   updated_at
-from public.entity_profiles
-where profile_type = 'subcontractor'
-   or account_capabilities @> array['subcontractor']::text[]
-order by is_public desc, updated_at desc;
+from scored
+order by readiness_score desc, is_public desc, updated_at desc;
 ```
+
+## Publication Update Guardrails
+
+Prefer the admin UI for publication because it keeps staff in the moderation workflow. If a record must be adjusted in Supabase, update only the real verified record after reviewing the fields above:
+
+```sql
+-- Replace <profile_id> with the real entity_profiles.id after staff review.
+-- Do not run this for sample, fake, placeholder, or unverified records.
+update public.entity_profiles
+set
+  profile_type = 'subcontractor',
+  account_capabilities = (
+    select array(
+      select distinct value
+      from unnest(coalesce(account_capabilities, array[]::text[]) || array['subcontractor']) as capability(value)
+    )
+  ),
+  rating_model = 'subcontractor_trade_partner_reliability',
+  is_public = true,
+  updated_at = now()
+where id = '<profile_id>'
+  and coalesce(display_name, business_name) is not null
+  and city is not null
+  and state is not null
+  and public_summary is not null
+  and length(trim(public_summary)) >= 40
+  and coalesce(rating_score, 0) > 0
+  and (
+    claimed_status in ('claimed', 'verified')
+    or coalesce(array_length(verification_badges, 1), 0) > 0
+    or coalesce(verification_level, '') in ('business_verified', 'license_verified', 'insurance_verified', 'admin_verified')
+  );
+```
+
+After any direct database adjustment, add or confirm an admin audit note in the Admin CRM explaining why the profile is safe to publish.
 
 ## Post-Publication Checks
 
