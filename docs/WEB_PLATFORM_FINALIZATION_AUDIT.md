@@ -184,6 +184,7 @@ Desktop and mobile browser spot-check:
 - Current public SEO infrastructure is sound; the remaining subcontractor warning should clear only after a legitimate real subcontractor profile is published, not through fake inventory.
 - Admin Settings now surfaces subcontractor/trade-profile activation as a release gate, with direct routing to `/admin/profiles?type=subcontractor` when the first real public profile is still missing.
 - Live release verification now covers the full protected contractor/admin route set, including Jobs, Billing, Activity, Growth, Evidence, Watchlist, every admin queue, admin settings, and admin audit pages.
+- SEO verification now requires every audited public page to be present in `sitemap.xml`, so metadata, public copy, privacy checks, and crawl discovery are verified as one release gate.
 
 ## Remaining Launch Work
 

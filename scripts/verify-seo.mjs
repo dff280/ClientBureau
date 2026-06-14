@@ -525,11 +525,11 @@ if (sitemap.response.ok && versionJson?.releaseDate) {
 if (profilePath) pass("Sitemap includes at least one public client profile", profilePath)
 else fail("Sitemap includes at least one public client profile")
 
-for (const path of ["/profiles", "/profiles/client", "/profiles/contractor", "/profiles/subcontractor"]) {
+for (const path of publicPageChecks.keys()) {
   const expectedLoc = `${expectedSiteUrl}${path}`
 
-  if (sitemapPublicLocs.includes(expectedLoc)) pass(`Sitemap includes ${path}`, expectedLoc)
-  else fail(`Sitemap includes ${path}`, "missing")
+  if (sitemapPublicLocs.includes(expectedLoc)) pass(`Sitemap includes audited public page ${path}`, expectedLoc)
+  else fail(`Sitemap includes audited public page ${path}`, "missing")
 }
 
 async function verifyEntityProfileDetail(profileType) {
