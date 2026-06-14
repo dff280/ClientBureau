@@ -1285,7 +1285,11 @@ describe("public SEO landing pages", () => {
     expect(getSeoLandingPage("clients", "florida")?.canonicalPath).toBe("/clients/florida")
     expect(getSeoLandingPage("reports", "non-payment")?.reportCategory).toBe("Non-payment")
     expect(getSeoLandingPage("industries", "service-businesses")?.title).toContain("Service Businesses")
-    expect(allSeoLandingPages.length).toBe(12)
+    expect(getSeoLandingPage("industries", "subcontractors")?.searchProfileType).toBe("contractor")
+    expect(getSeoLandingPage("industries", "roofing")?.tradeCategory).toBe("Roofing")
+    expect(getSeoLandingPage("industries", "electrical")?.tradeCategory).toBe("Electrical")
+    expect(getSeoLandingPage("industries", "hvac")?.tradeCategory).toBe("HVAC")
+    expect(allSeoLandingPages.length).toBeGreaterThanOrEqual(25)
   })
 
   it("builds state and city directory paths from approved public profiles", () => {

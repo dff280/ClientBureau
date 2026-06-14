@@ -1,4 +1,6 @@
 import type { ClientReport, PublicClientProfile, RiskLevel } from "@/lib/types"
+import type { ProfileType } from "@/lib/types"
+import { tradeCategoryMatches } from "@/lib/trade-taxonomy"
 
 export type SeoLandingKind = "clients" | "reports" | "industries"
 
@@ -18,6 +20,8 @@ export interface SeoLandingPage {
   reportCategory?: ClientReport["reportCategory"]
   riskLevel?: RiskLevel
   industry?: string
+  tradeCategory?: string
+  searchProfileType?: ProfileType
 }
 
 export const clientMarketLandingPages: SeoLandingPage[] = [
@@ -210,6 +214,23 @@ export const industryLandingPages: SeoLandingPage[] = [
     secondaryCta: "Report a service-business experience",
     industry: "service-businesses",
   },
+  {
+    kind: "industries",
+    slug: "subcontractors",
+    title: "Client and Contractor Reports for Subcontractors",
+    h1: "Client Bureau for subcontractors and trade crews",
+    description:
+      "Subcontractors use Client Bureau to check contractors, document project scope, preserve payment-chain context, and review reports.",
+    intro:
+      "Subcontractors and trade crews often work through a hiring contractor, builder, property manager, or service business. Client Bureau helps them review public profile context, document scope, and preserve payment-chain records before an issue grows.",
+    audience: "Specialty trade subcontractors, installers, labor crews, licensed subs, vendors, and trade professionals.",
+    canonicalPath: "/industries/subcontractors",
+    primaryCta: "Search contractor profiles",
+    secondaryCta: "Report a trade relationship",
+    industry: "subcontractors",
+    searchProfileType: "contractor",
+  },
+  ...tradeIndustryLandingPages(),
 ]
 
 export const allSeoLandingPages = [
@@ -231,10 +252,110 @@ export function filterProfilesForLanding(page: SeoLandingPage, profiles: PublicC
     const matchesState = !page.state || profile.state === page.state
     const matchesCity = !page.city || profile.city.toLowerCase() === page.city.toLowerCase()
     const matchesRisk = !page.riskLevel || profile.riskLevel === page.riskLevel
+    const matchesTrade =
+      !page.tradeCategory ||
+      profile.reports.some((report) =>
+        tradeCategoryMatches(report.tradeCategory ?? report.projectType ?? report.jobType, page.tradeCategory),
+      )
     const matchesCategory =
       !page.reportCategory ||
       profile.reports.some((report) => report.reportCategory === page.reportCategory)
 
-    return matchesState && matchesCity && matchesRisk && matchesCategory
+    return matchesState && matchesCity && matchesRisk && matchesTrade && matchesCategory
   })
+}
+
+function tradeIndustryLandingPages(): SeoLandingPage[] {
+  const topTrades = [
+    {
+      slug: "roofing",
+      label: "Roofing",
+      audience: "roofing contractors, roof repair businesses, exterior crews, and roof replacement teams",
+      risk: "materials, tear-off scheduling, weather windows, supplements, and final-payment risk",
+    },
+    {
+      slug: "painting",
+      label: "Painting",
+      audience: "interior painters, exterior painters, repaint crews, and coating contractors",
+      risk: "color approvals, change requests, access windows, punch-list disputes, and final invoice risk",
+    },
+    {
+      slug: "electrical",
+      label: "Electrical",
+      audience: "electricians, electrical contractors, low-voltage crews, and specialty installation teams",
+      risk: "permit coordination, fixture changes, access limitations, inspection timing, and payment-chain context",
+    },
+    {
+      slug: "plumbing",
+      label: "Plumbing",
+      audience: "plumbers, plumbing contractors, sewer repair teams, and service businesses",
+      risk: "emergency work, hidden conditions, fixture changes, inspection issues, and payment documentation",
+    },
+    {
+      slug: "hvac",
+      label: "HVAC",
+      audience: "HVAC contractors, AC repair teams, heating companies, and mechanical service businesses",
+      risk: "equipment ordering, warranty expectations, change approvals, access, and final balance collection",
+    },
+    {
+      slug: "landscaping",
+      label: "Landscaping",
+      audience: "landscapers, irrigation crews, lawn service companies, hardscape teams, and exterior service businesses",
+      risk: "scope changes, seasonal timing, material selections, maintenance expectations, and overdue invoices",
+    },
+    {
+      slug: "pool-and-spa-service",
+      label: "Pool and spa service",
+      audience: "pool builders, pool service companies, resurfacing teams, and spa repair contractors",
+      risk: "progress draws, access, finish selections, weather delays, equipment changes, and payment milestones",
+    },
+    {
+      slug: "flooring",
+      label: "Flooring",
+      audience: "flooring installers, hardwood crews, tile-adjacent trades, carpet teams, and finish contractors",
+      risk: "material selections, subfloor conditions, access, change orders, punch-list items, and final payment",
+    },
+    {
+      slug: "drywall",
+      label: "Drywall",
+      audience: "drywall contractors, hanging crews, finishing crews, texture teams, and remodeling subcontractors",
+      risk: "scope boundaries, damage claims, change orders, schedule stacking, retainage, and payment-chain notes",
+    },
+    {
+      slug: "concrete",
+      label: "Concrete",
+      audience: "concrete contractors, flatwork crews, driveway teams, pool deck crews, and site-work businesses",
+      risk: "site readiness, weather timing, change approvals, finish expectations, and documented acceptance",
+    },
+    {
+      slug: "handyman",
+      label: "Handyman",
+      audience: "handyman businesses, repair technicians, punch-list teams, and small-project service providers",
+      risk: "unclear scope, repeated small changes, access windows, material reimbursement, and final invoice follow-up",
+    },
+    {
+      slug: "residential-remodeler",
+      label: "Residential remodeler",
+      audience: "remodelers, renovation companies, kitchen and bath teams, and residential service businesses",
+      risk: "deposits, scope creep, selections, change orders, progress payments, and homeowner response context",
+    },
+  ] as const
+
+  return topTrades.map((trade) => ({
+    kind: "industries",
+    slug: trade.slug,
+    title: `${trade.label} Client Reports and Contractor Protection`,
+    h1: `Client checks for ${trade.label.toLowerCase()} contractors`,
+    description:
+      `Search Client Bureau before ${trade.label.toLowerCase()} work. Review moderated client reports, private matching, evidence labels, and response context.`,
+    intro:
+      `${trade.label} businesses commit labor, scheduling, materials, and documentation before every job is fully paid. Client Bureau helps teams check public client profile context, document projects, and keep private records around ${trade.risk}.`,
+    audience: `Built for ${trade.audience}.`,
+    canonicalPath: `/industries/${trade.slug}`,
+    primaryCta: `Search ${trade.label.toLowerCase()} client context`,
+    secondaryCta: `Report a ${trade.label.toLowerCase()} client experience`,
+    industry: trade.slug,
+    tradeCategory: trade.label,
+    searchProfileType: "client",
+  }))
 }

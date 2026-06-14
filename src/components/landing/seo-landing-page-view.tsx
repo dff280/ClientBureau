@@ -17,6 +17,7 @@ export function SeoLandingPageView({
   page: SeoLandingPage
   profiles: PublicClientProfile[]
 }) {
+  const primaryHref = getLandingPrimaryHref(page)
   const reports = profiles
     .flatMap((profile) => profile.reports.map((report) => ({ profile, report })))
     .sort((a, b) =>
@@ -38,7 +39,7 @@ export function SeoLandingPageView({
         eyebrow="Moderated client-risk intelligence"
         title={page.h1}
         description={page.intro}
-        primary={{ href: "/search", label: page.primaryCta, icon: Search }}
+        primary={{ href: primaryHref, label: page.primaryCta, icon: Search }}
         secondary={{ href: "/submit-report", label: page.secondaryCta, icon: FilePlus2 }}
         aside={
           <div className="grid gap-4 text-white">
@@ -268,7 +269,7 @@ export function SeoLandingPageView({
         eyebrow="Use this page as a starting point"
         title="Check the client, review the context, and decide the terms before the job starts."
         description="Client Bureau combines public research pages with private tools for contracts, evidence, reports, recovery, and response-aware records."
-        primary={{ href: "/search", label: "Check a Client", icon: Search }}
+        primary={{ href: primaryHref, label: "Check a Client", icon: Search }}
         secondary={{ href: "/clients", label: "Browse directory", icon: ShieldCheck }}
       />
     </main>
@@ -313,6 +314,16 @@ function formatReportPaymentLine(report: PublicClientProfile["reports"][number])
 }
 
 function getLandingContext(page: SeoLandingPage) {
+  if (page.tradeCategory) {
+    return {
+      place: `${page.tradeCategory.toLowerCase()} work`,
+      noun: `${page.tradeCategory.toLowerCase()} client reports`,
+      audience: page.audience,
+      profileFocus:
+        "Trade pages explain how contractors and service businesses can check client context, document scope, and preserve private project records for specific trades without exposing raw private details.",
+    }
+  }
+
   if (page.kind === "clients") {
     const place = page.city && page.state ? `${page.city}, ${page.state}` : page.state ? page.state : "this market"
 
@@ -404,4 +415,14 @@ function getLandingFaqs(page: SeoLandingPage) {
         "Check privately using available client details, add the client to a watchlist, create an intake assessment, or submit a documented report for moderation if you have a real contractor-client experience to report.",
     },
   ]
+}
+
+function getLandingPrimaryHref(page: SeoLandingPage) {
+  if (!page.tradeCategory && !page.searchProfileType) return "/search"
+
+  const params = new URLSearchParams()
+  if (page.searchProfileType) params.set("profileType", page.searchProfileType)
+  if (page.tradeCategory) params.set("tradeCategory", page.tradeCategory)
+
+  return `/search?${params.toString()}`
 }

@@ -1398,6 +1398,8 @@ const linkSources = [
   "/reports/high-risk",
   "/industries/contractors",
   "/industries/service-businesses",
+  "/industries/roofing",
+  "/industries/electrical",
 ]
 const checkedProfileLinks = new Map()
 

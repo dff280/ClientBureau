@@ -249,6 +249,10 @@ const publicContentPages = [
   "/clients/florida/orlando",
   "/reports/non-payment",
   "/industries/contractors",
+  "/industries/subcontractors",
+  "/industries/roofing",
+  "/industries/electrical",
+  "/industries/hvac",
   "/payment-recovery-service",
   "/florida-lien-notice-service",
   "/florida-lien-filing-service",
@@ -275,6 +279,9 @@ const corePublicPages = [
   "/reports/recent",
   "/reports/high-risk",
   "/industries/service-businesses",
+  "/industries/painting",
+  "/industries/plumbing",
+  "/industries/landscaping",
 ]
 
 async function verifyPublicPage(path, options = {}) {
@@ -490,6 +497,8 @@ const publicLinkPages = [
   "/reports/high-risk",
   "/industries/contractors",
   "/industries/service-businesses",
+  "/industries/roofing",
+  "/industries/electrical",
 ]
 const checkedProfileLinks = new Map()
 
