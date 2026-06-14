@@ -9,18 +9,18 @@ const accounts = [
     sessionPath: "/api/session",
     expectedRole: "contractor",
     routes: [
-      "/dashboard",
-      "/dashboard/jobs",
-      "/dashboard/reports",
-      "/dashboard/watchlist",
-      "/dashboard/alerts",
-      "/dashboard/growth",
-      "/dashboard/contracts",
-      "/dashboard/recovery",
-      "/dashboard/lien-readiness",
-      "/dashboard/evidence",
-      "/dashboard/billing",
-      "/dashboard/activity",
+      { path: "/dashboard", expectedText: ["Check a Client", "Today's Work", "Jobs"] },
+      { path: "/dashboard/jobs", expectedText: ["Jobs", "Create job"] },
+      { path: "/dashboard/reports", expectedText: ["Reports", "Report a Client Experience"] },
+      { path: "/dashboard/watchlist", expectedText: ["Watchlist and Alerts", "Check a Client"] },
+      { path: "/dashboard/alerts", expectedText: ["Alerts", "Review alert signals"] },
+      { path: "/dashboard/growth", expectedText: ["Growth Engine", "Invite contractors"] },
+      { path: "/dashboard/contracts", expectedText: ["Contracts", "Create agreement"] },
+      { path: "/dashboard/recovery", expectedText: ["Payment Recovery", "Open recovery case"] },
+      { path: "/dashboard/lien-readiness", expectedText: ["Florida Lien Service", "Start Florida case"] },
+      { path: "/dashboard/evidence", expectedText: ["Evidence Vault", "Review evidence status"] },
+      { path: "/dashboard/billing", expectedText: ["Billing and Account", "Review account status"] },
+      { path: "/dashboard/activity", expectedText: ["Activity", "Review recent activity"] },
     ],
   },
   {
@@ -31,18 +31,18 @@ const accounts = [
     sessionPath: "/api/admin/session",
     expectedRole: "admin",
     routes: [
-      "/admin",
-      "/admin/reports",
-      "/admin/profiles",
-      "/admin/clients",
-      "/admin/contractors",
-      "/admin/discussions",
-      "/admin/uploads",
-      "/admin/contracts",
-      "/admin/recovery",
-      "/admin/audit-log",
-      "/admin/reviews",
-      "/admin/settings",
+      { path: "/admin", expectedText: ["Today's platform operations", "Review Reports"] },
+      { path: "/admin/reports", expectedText: ["Review Reports", "Publish only what is safe"] },
+      { path: "/admin/profiles", expectedText: ["Unified Profile CRM", "Subcontractor launch readiness"] },
+      { path: "/admin/clients", expectedText: ["Manage Client Profiles", "Keep public records clean"] },
+      { path: "/admin/contractors", expectedText: ["Businesses / Users", "Platform users"] },
+      { path: "/admin/discussions", expectedText: ["Review Discussions", "Moderate response context"] },
+      { path: "/admin/uploads", expectedText: ["CSV Intake Desk", "CSV intake operating rules"] },
+      { path: "/admin/contracts", expectedText: ["Contracts", "Private signing system"] },
+      { path: "/admin/recovery", expectedText: ["Recovery Cases", "Florida lien service"] },
+      { path: "/admin/audit-log", expectedText: ["Audit Log", "Filter audit trail"] },
+      { path: "/admin/reviews", redirectedTo: "/admin/reports" },
+      { path: "/admin/settings", expectedText: ["Settings", "Admin operating defaults"] },
     ],
   },
 ]
@@ -59,6 +59,10 @@ function skip(name, detail = "") {
 
 function fail(name, detail = "") {
   checks.push({ ok: false, level: "FAIL", name, detail })
+}
+
+function warn(name, detail = "") {
+  checks.push({ ok: true, level: "WARN", name, detail })
 }
 
 function maskEmail(email = "") {
@@ -137,6 +141,15 @@ async function request(path, options = {}, jar = new Map()) {
 
 function hasNoStoreHeader(response) {
   return /no-store/i.test(response.headers.get("cache-control") ?? "")
+}
+
+function visiblePageText(html) {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
 function streamedRedirectTarget(html) {
@@ -238,10 +251,20 @@ async function verifySession(account, jar) {
 }
 
 async function verifyRoutes(account, jar) {
-  for (const route of account.routes) {
+  for (const routeConfig of account.routes) {
+    const route = typeof routeConfig === "string" ? routeConfig : routeConfig.path
+    const expectedText = typeof routeConfig === "string" ? [] : routeConfig.expectedText
+    const redirectedTo = typeof routeConfig === "string" ? "" : routeConfig.redirectedTo
     const result = await request(route, {}, jar)
 
-    if (result.response.ok) {
+    if (redirectedTo) {
+      const location = result.response.headers.get("location") ?? streamedRedirectTarget(result.text)
+      if (location === redirectedTo || location.endsWith(redirectedTo)) {
+        pass(`${account.kind} ${route} redirects to canonical workspace`, location)
+      } else {
+        fail(`${account.kind} ${route} redirects to canonical workspace`, `expected ${redirectedTo}, got ${location || "none"}`)
+      }
+    } else if (result.response.ok) {
       pass(`${account.kind} ${route} returns 200`)
     } else {
       fail(`${account.kind} ${route} returns 200`, `status=${result.response.status}`)
@@ -257,6 +280,17 @@ async function verifyRoutes(account, jar) {
       pass(`${account.kind} ${route} stays authenticated`)
     } else {
       fail(`${account.kind} ${route} stays authenticated`, "login redirect or login page found")
+    }
+
+    if (result.response.ok && expectedText.length > 0) {
+      const visible = visiblePageText(result.text)
+      const missingText = expectedText.filter((text) => !visible.includes(text))
+
+      if (missingText.length === 0) {
+        pass(`${account.kind} ${route} renders expected workspace content`)
+      } else {
+        fail(`${account.kind} ${route} renders expected workspace content`, `missing: ${missingText.join(", ")}`)
+      }
     }
   }
 }
@@ -274,7 +308,48 @@ async function verifyContractorCannotAccessAdmin(jar) {
   }
 }
 
+async function verifyHealthGate() {
+  const result = await request("/api/health")
+
+  if (!result.response.ok) {
+    fail("/api/health before authenticated QA", `status=${result.response.status}`)
+    return
+  }
+
+  if (hasNoStoreHeader(result.response)) {
+    pass("/api/health no-store before authenticated QA")
+  } else {
+    fail("/api/health no-store before authenticated QA", result.response.headers.get("cache-control") ?? "missing")
+  }
+
+  let json = null
+  try {
+    json = JSON.parse(result.text)
+  } catch {
+    fail("/api/health JSON before authenticated QA", "could not parse response")
+    return
+  }
+
+  if (json.status === "ok") pass("/api/health status before authenticated QA", "ok")
+  else fail("/api/health status before authenticated QA", JSON.stringify(json))
+
+  if (json.readiness?.coreLiveReady === true) pass("/api/health core live readiness", "coreLiveReady=true")
+  else fail("/api/health core live readiness", JSON.stringify(json.readiness ?? null))
+
+  if (json.platformFeatureDataMode === "supabase") {
+    if (json.readiness?.platformCanUseSupabase === true) {
+      pass("/api/health platform Supabase readiness", "platformCanUseSupabase=true")
+    } else {
+      fail("/api/health platform Supabase readiness", JSON.stringify(json.readiness ?? null))
+    }
+  } else {
+    warn("/api/health platform feature mode", `PLATFORM_FEATURE_DATA_MODE=${json.platformFeatureDataMode}`)
+  }
+}
+
 let contractorJar = null
+
+await verifyHealthGate()
 
 for (const account of accounts) {
   if (!account.email || !account.password) {

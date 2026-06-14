@@ -34,7 +34,7 @@ Remove-Item Env:ADMIN_QA_EMAIL
 Remove-Item Env:ADMIN_QA_PASSWORD
 ```
 
-Do not commit QA credentials. If no QA credentials are configured, `npm run verify:live:auth` exits with skipped checks.
+Do not commit QA credentials. If no QA credentials are configured, `npm run verify:live:auth` still checks the live health gate and exits with skipped account-specific checks.
 
 Required result:
 
@@ -49,7 +49,7 @@ Required result:
 - Public pages pass production-copy safety checks: no MVP/demo/mock/test-checkout wording, internal environment names, API/auth implementation terms, or inflammatory blacklist-style language.
 - SEO verification covers core marketing pages, policy pages, service pages, directories, report pages, industry pages, mobile app page, and sampled public profiles.
 - Public profile checks do not expose raw emails, phone numbers, street addresses, raw evidence, private contract snapshots, pending/rejected content, or admin notes.
-- Optional authenticated QA confirms contractor/admin login, session endpoints, route-to-route stability, no-store private pages, and contractor denial from the admin area.
+- Optional authenticated QA confirms the live health gate, contractor/admin login, session endpoints, route-to-route stability, expected private workspace content, no-store private pages, and contractor denial from the admin area.
 - `/profiles/subcontractor` should link to a real public subcontractor detail page before SEO/acquisition campaigns. If no verified subcontractor record exists yet, the SEO verifier may warn instead of failing; do not publish fake subcontractor records. Use `docs/SUBCONTRACTOR_PROFILE_LAUNCH_RUNBOOK.md` for the first public trade profile.
 
 Stripe warnings are acceptable until billing is intentionally enabled.

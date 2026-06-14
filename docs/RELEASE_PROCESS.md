@@ -130,7 +130,7 @@ Remove-Item Env:ADMIN_QA_EMAIL
 Remove-Item Env:ADMIN_QA_PASSWORD
 ```
 
-The authenticated verifier logs in through the real `/api/auth/login` route, checks session JSON, opens the full contractor/admin route set with the returned cookies, verifies private pages are no-store, and confirms a contractor account cannot enter `/admin`. It skips cleanly when QA credentials are not configured.
+The authenticated verifier checks the live health gate, logs in through the real `/api/auth/login` route, checks session JSON, opens the full contractor/admin route set with the returned cookies, verifies expected workspace content and no-store private pages, and confirms a contractor account cannot enter `/admin`. It skips account-specific checks cleanly when QA credentials are not configured.
 
 To intentionally inspect production without comparing release identity, run:
 
