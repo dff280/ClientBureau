@@ -33,6 +33,7 @@ Recommended branch names:
 3. Run the local verification suite.
 
    ```bash
+   npm run route:check
    npm run lint
    npm test
    npm run build
@@ -114,6 +115,8 @@ npm run verify:live
 
 The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, missing unified profile graph routes, missing diagnostic no-store headers, unsafe logged-out protected-route behavior, missing protected-route return paths, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet.
 
+The route inventory verifier should pass before release. It fails when an App Router page lacks metadata, when a private dashboard/admin/auth/workflow page lacks noindex/nofollow robots metadata, or when a new page route is added without being intentionally classified as public/indexable or private/noindex.
+
 When disposable QA credentials are available, also run:
 
 ```powershell
@@ -188,6 +191,7 @@ Before pushing `main`:
 
 - `CHANGELOG.md` has a clear entry.
 - `npm run lint` passes.
+- `npm run route:check` passes.
 - `npm test` passes.
 - `npm run build` passes.
 - `npm run seo:check:local` passes after `npm run build`, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.

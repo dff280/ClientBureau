@@ -143,6 +143,7 @@ Audit focus:
 ## Final Acceptance Gates
 
 - `npm run lint`
+- `npm run route:check`
 - `npm test`
 - `npm run build`
 - `npm run seo:check:local`
@@ -186,6 +187,7 @@ Desktop and mobile browser spot-check:
 - Live release verification now covers the full protected contractor/admin route set, including Jobs, Billing, Activity, Growth, Evidence, Watchlist, Alerts, every admin queue, admin settings, and admin audit pages.
 - Authenticated workflow verification now checks the same route-to-route stability set for disposable contractor/admin QA accounts when credentials are configured.
 - SEO verification now requires every audited public page to be present in `sitemap.xml`, so metadata, public copy, privacy checks, and crawl discovery are verified as one release gate.
+- Route inventory verification now checks every App Router page for metadata, intentional public/private classification, and noindex/nofollow robots metadata on private dashboard/admin/auth/workflow routes.
 
 ## Remaining Launch Work
 

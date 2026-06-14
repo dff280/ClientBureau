@@ -7,6 +7,8 @@ Use this after every production deploy while `DATA_MODE=supabase` is active. Pro
 Run from the local project root after the VPS rebuild:
 
 ```powershell
+npm run route:check
+
 $env:LIVE_BASE_URL="https://clientbureau.com"
 npm run verify:live
 Remove-Item Env:LIVE_BASE_URL
