@@ -413,7 +413,23 @@ export default async function DashboardPage({
         </Card>
       </div>
 
-      <EnterpriseDashboardOverview summary={enterpriseSummary} />
+      <details className="rounded-md border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-5 transition hover:bg-slate-50 sm:flex-row sm:items-center">
+          <span>
+            <span className="block text-xs font-semibold uppercase text-amber-700">Advanced insights</span>
+            <span className="mt-1 block text-xl font-semibold text-slate-950">Business trends and reporting</span>
+            <span className="mt-1 block max-w-3xl text-sm leading-6 text-slate-600">
+              Open this when you want KPI trends, activity feeds, business insights, and deeper report summaries.
+            </span>
+          </span>
+          <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-950">
+            View insights
+          </span>
+        </summary>
+        <div className="border-t border-slate-100 p-5">
+          <EnterpriseDashboardOverview summary={enterpriseSummary} />
+        </div>
+      </details>
     </ClientDashboardShell>
   )
 }

@@ -362,6 +362,8 @@ export function RiskOpsWorkspace({
       tone: "rose" as const,
     },
   ]
+  const toolIntro = (title: string, text: string) =>
+    focusTab ? null : <WorkspaceIntro title={title} text={text} />
 
   return (
     <div className="space-y-6">
@@ -379,10 +381,10 @@ export function RiskOpsWorkspace({
         {!focusTab ? <WorkspaceTabNavigation /> : null}
 
         <TabsContent value="overview" className="space-y-5">
-          <WorkspaceIntro
-            title="Today's work"
-            text="A short work queue for urgent client signals, report drafts, payment follow-up, evidence review, and contract signing links."
-          />
+          {toolIntro(
+            "Today's work",
+            "A short work queue for urgent client signals, report drafts, payment follow-up, evidence review, and contract signing links.",
+          )}
           <Accordion type="multiple" defaultValue={["today", "rooms"]} className="gap-4">
             <AccordionItem value="today" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
               <AccordionTrigger className="py-4 text-base font-semibold text-slate-950">
@@ -434,10 +436,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="pipeline" className="space-y-5">
-          <WorkspaceIntro
-            title="Client pipeline"
-            text="Track leads from first search through screening, contract, active work, payment follow-up, and closeout."
-          />
+          {toolIntro(
+            "Client pipeline",
+            "Track leads from first search through screening, contract, active work, payment follow-up, and closeout.",
+          )}
           <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
             <PipelineCreateForm clients={clients} />
             <div className="space-y-4">
@@ -465,10 +467,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="watchlist" className="space-y-5">
-          <WorkspaceIntro
-            title="Search, watch, and assess before scheduling"
-            text="Use this workspace before accepting new work, approving change orders, or committing crew time."
-          />
+          {toolIntro(
+            "Search, watch, and assess before scheduling",
+            "Use this workspace before accepting new work, approving change orders, or committing crew time.",
+          )}
           <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
@@ -548,10 +550,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="alerts" className="space-y-5">
-          <WorkspaceIntro
-            title="Monitoring alerts"
-            text="Review watched-client changes, dispute updates, resolved-case signals, and rating movement without digging through every tool."
-          />
+          {toolIntro(
+            "Monitoring alerts",
+            "Review watched-client changes, dispute updates, resolved-case signals, and rating movement without digging through every tool.",
+          )}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="flex items-center gap-2 text-xl">
@@ -573,10 +575,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="recovery" className="space-y-5">
-          <WorkspaceIntro
-            title="Get Help Recovering Payment"
-            text="Open a private managed case when an invoice is overdue and you want Client Bureau staff to review documents, contact the client, and seek a contractor-direct resolution."
-          />
+          {toolIntro(
+            "Get Help Recovering Payment",
+            "Open a private managed case when an invoice is overdue and you want Client Bureau staff to review documents, contact the client, and seek a contractor-direct resolution.",
+          )}
           {!focusTab ? (
             <div className="grid gap-3 md:grid-cols-3">
               <ToolExplainer
@@ -731,10 +733,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="lien-readiness" className="space-y-5">
-          <WorkspaceIntro
-            title="Florida Lien Service"
-            text="Create a private Florida notice or claim-of-lien filing case, pay the service fee plus pass-through filing costs, sign authorization, and track attorney/vendor review through recording proof and release."
-          />
+          {toolIntro(
+            "Florida Lien Service",
+            "Create a private Florida notice or claim-of-lien filing case, pay the service fee plus pass-through filing costs, sign authorization, and track attorney/vendor review through recording proof and release.",
+          )}
           {!focusTab ? (
             <div className="grid gap-3 md:grid-cols-3">
               <ToolExplainer
@@ -826,10 +828,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="contracts" className="space-y-5">
-          <WorkspaceIntro
-            title="Contracts"
-            text="Create private agreement links clients can review and sign, invite the client into the workflow, and track signature plus payment timing before work starts."
-          />
+          {toolIntro(
+            "Contracts",
+            "Create private agreement links clients can review and sign, invite the client into the workflow, and track signature plus payment timing before work starts.",
+          )}
           {!focusTab ? (
             <div className="grid gap-3 md:grid-cols-3">
               <ToolExplainer
@@ -915,10 +917,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="reports" className="space-y-5">
-          <WorkspaceIntro
-            title="Reports, Evidence Vault, and submission readiness"
-            text="Continue report drafts, check evidence review, and follow the next recommended documentation step."
-          />
+          {toolIntro(
+            "Reports, Evidence Vault, and submission readiness",
+            "Continue report drafts, check evidence review, and follow the next recommended documentation step.",
+          )}
           <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardHeader className="border-b border-slate-100">
@@ -999,10 +1001,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="evidence" className="space-y-5">
-          <WorkspaceIntro
-            title="Evidence Vault"
-            text="Track invoices, screenshots, contracts, photos, and PDFs as private review records. Public pages only show evidence summaries."
-          />
+          {toolIntro(
+            "Evidence Vault",
+            "Track invoices, screenshots, contracts, photos, and PDFs as private review records. Public pages only show evidence summaries.",
+          )}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
               <CardTitle className="flex items-center gap-2 text-xl">
@@ -1025,10 +1027,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="account" className="space-y-5">
-          <WorkspaceIntro
-            title="Account controls and safeguards"
-            text="Keep verification, security, privacy, and workflow readiness in one compact place."
-          />
+          {toolIntro(
+            "Account controls and safeguards",
+            "Keep verification, security, privacy, and workflow readiness in one compact place.",
+          )}
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
               ["Business verification", "Pending/verified profile status keeps report context accountable."],
@@ -1048,10 +1050,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-5">
-          <WorkspaceIntro
-            title="Billing"
-            text="Review your plan, usage, invoices, and payment settings for Client Bureau contractor tools."
-          />
+          {toolIntro(
+            "Billing",
+            "Review your plan, usage, invoices, and payment settings for Client Bureau contractor tools.",
+          )}
           <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader className="border-b border-slate-100">
@@ -1144,10 +1146,10 @@ export function RiskOpsWorkspace({
         </TabsContent>
 
         <TabsContent value="activity" className="space-y-5">
-          <WorkspaceIntro
-            title="Recent workspace activity"
-            text="Use this timeline to confirm recent reports, saved searches, approvals, evidence changes, and resolution work."
-          />
+          {toolIntro(
+            "Recent workspace activity",
+            "Use this timeline to confirm recent reports, saved searches, approvals, evidence changes, and resolution work.",
+          )}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
         <CardHeader className="border-b border-slate-100">
           <CardTitle className="text-xl">Recent contractor workspace activity</CardTitle>
@@ -1251,13 +1253,13 @@ function CreatePanel({
   title: string
 }) {
   return (
-    <details className="rounded-md border border-slate-200 bg-white shadow-sm" open={defaultOpen}>
-      <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center">
+    <details className="group rounded-md border border-slate-200 bg-white shadow-sm" open={defaultOpen}>
+      <summary className="flex cursor-pointer list-none flex-col justify-between gap-3 p-4 transition hover:bg-slate-50 sm:flex-row sm:items-center">
         <span>
           <span className="block font-semibold text-slate-950">{title}</span>
           <span className="mt-1 block text-sm leading-5 text-slate-600">{text}</span>
         </span>
-        <span className="inline-flex w-fit items-center gap-2 rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
+        <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white">
           <PlusCircle className="size-4" aria-hidden="true" />
           {actionLabel}
         </span>
