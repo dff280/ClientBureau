@@ -9,6 +9,7 @@ import {
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
+  TrustGuardrailStrip,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -90,6 +91,15 @@ export default function ContactPage() {
       />
 
       <PremiumProofStrip items={proof} dark />
+      <TrustGuardrailStrip
+        items={[
+          "Use guided forms for sensitive requests",
+          "Do not send raw evidence by open contact",
+          "Responses and corrections are moderated",
+          "Support routes records to the right workflow",
+        ]}
+        dark
+      />
 
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_380px]">

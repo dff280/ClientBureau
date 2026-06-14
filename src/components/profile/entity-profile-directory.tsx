@@ -16,7 +16,7 @@ import {
 } from "lucide-react"
 
 import { EntityProfileResultCard } from "@/components/search/entity-profile-result-card"
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
@@ -423,6 +423,15 @@ export function EntityProfileDirectory({
           { label: "Reports", value: reportCount.toLocaleString(), text: presentation.proofContext },
           { label: "Evidence", value: evidenceCount.toLocaleString(), text: "Profiles with private evidence indicators." },
         ]}
+      />
+      <TrustGuardrailStrip
+        items={[
+          "Approved profiles only",
+          "Private identifiers hidden",
+          "No raw evidence files",
+          activeType === "subcontractor" ? "Trade context separated" : "Response rights available",
+        ]}
+        dark
       />
 
       <section className="bureau-section bg-white">

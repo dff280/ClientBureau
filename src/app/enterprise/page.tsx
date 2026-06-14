@@ -9,6 +9,7 @@ import {
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
+  TrustGuardrailStrip,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -80,6 +81,15 @@ export default function EnterprisePage() {
       />
 
       <PremiumProofStrip items={proof} dark />
+      <TrustGuardrailStrip
+        items={[
+          "Team access stays controlled",
+          "Public output stays moderated",
+          "Audit records support review",
+          "Private workflow data stays restricted",
+        ]}
+        dark
+      />
 
       <section className="bureau-section">
         <div className="bureau-container space-y-10">

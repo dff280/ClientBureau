@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ArrowRight, MapPinned, Search, ShieldCheck } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
+import { TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { ClientDirectoryCity, ClientDirectoryState } from "@/lib/client-directory"
@@ -47,6 +48,15 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
           ["Approved reports", reportCount.toLocaleString()],
           ["States", states.length.toLocaleString()],
         ]}
+      />
+      <TrustGuardrailStrip
+        items={[
+          "Approved profile links only",
+          "No raw contact identifiers",
+          "Evidence summarized safely",
+          "Client response paths included",
+        ]}
+        dark
       />
       <div className="bureau-container space-y-8 py-10">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -101,6 +111,15 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
           ["Approved reports", state.reportCount.toLocaleString()],
           ["Cities", state.cities.length.toLocaleString()],
         ]}
+      />
+      <TrustGuardrailStrip
+        items={[
+          "State directory is public-safe",
+          "Pending reports hidden",
+          "Private evidence sealed",
+          "Use as one intake signal",
+        ]}
+        dark
       />
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs
@@ -187,6 +206,15 @@ export function ClientDirectoryCityView({
           ["Approved reports", city.reportCount.toLocaleString()],
           ["Last updated", formatDate(city.lastUpdated)],
         ]}
+      />
+      <TrustGuardrailStrip
+        items={[
+          "City profile links are moderated",
+          "No street addresses displayed",
+          "Response context included when approved",
+          "Check before scheduling",
+        ]}
+        dark
       />
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs

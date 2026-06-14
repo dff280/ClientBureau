@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Building2, LockKeyhole, Radar, ShieldCheck } from "lucide-react"
 
 import { SignupForm } from "@/components/forms/auth-forms"
-import { PremiumFeatureCard } from "@/components/marketing/premium-page-shell"
+import { PremiumFeatureCard, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSafePostSignupReturnPath } from "@/lib/auth"
 
@@ -54,6 +54,14 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
           </Card>
         </div>
       </div>
+      <TrustGuardrailStrip
+        items={[
+          "State and trade fields stay structured",
+          "Private identifiers stay private",
+          "Use client response access when appropriate",
+          "Upgrade when daily workflows need it",
+        ]}
+      />
 
       <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[1fr_360px] lg:items-start">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">

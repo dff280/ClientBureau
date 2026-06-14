@@ -10,14 +10,11 @@ export type NavigationGroup = {
 }
 
 export const publicPrimaryNav: NavigationItem[] = [
-  { href: "/platform", label: "Platform", description: "See the full client-check, contract, evidence, recovery, and lien-service system." },
   { href: "/search", label: "Check a Client", description: "Search client history before accepting work." },
-  { href: "/industries", label: "Industries", description: "Browse Client Bureau by trade, service business, and subcontractor workflow." },
+  { href: "/submit-report", label: "Report a Client Experience", description: "Document a real client experience for moderation." },
   { href: "/how-it-works", label: "How It Works", description: "See the protection workflow." },
   { href: "/pricing", label: "Pricing", description: "Choose a business protection plan." },
   { href: "/resources", label: "Resources", description: "Policies, methodology, and contractor guides." },
-  { href: "/about", label: "About", description: "Learn how Client Bureau works." },
-  { href: "/contact", label: "Contact", description: "Reach Client Bureau support and policy teams." },
 ]
 
 export const contractorDashboardNav: NavigationItem[] = [
@@ -124,49 +121,49 @@ export const resourceNavigationGroups: NavigationGroup[] = [
 
 export const footerNavigationGroups: NavigationGroup[] = [
   {
-    title: "Platform",
+    title: "Check a Client",
     links: [
       { href: "/", label: "Home" },
       { href: "/search", label: "Check a Client" },
-      { href: "/platform", label: "Platform" },
-      { href: "/how-it-works", label: "How It Works" },
-      { href: "/pricing", label: "Pricing" },
-      { href: "/resources", label: "Resources" },
-      { href: "/mobile-app", label: "Mobile App" },
-      { href: "/industries", label: "Industries" },
+      { href: "/client-screening-for-contractors", label: "Client Screening" },
       { href: "/clients", label: "Client Directory" },
-      { href: "/enterprise", label: "Enterprise" },
+      { href: "/reports/recent", label: "Recent Reports" },
       { href: "/score-methodology", label: "Client Ratings" },
-      { href: "/business-rating-methodology", label: "Business & Trade Ratings" },
     ],
   },
   {
-    title: "Contractor Tools",
+    title: "Protect a Job",
     links: [
-      { href: "/businesses", label: "Business Profiles" },
+      { href: "/platform", label: "Platform" },
+      { href: "/how-it-works", label: "How It Works" },
+      { href: "/pricing", label: "Pricing" },
       { href: "/submit-report", label: "Report a Client Experience" },
       { href: "/dashboard/jobs", label: "Jobs" },
       { href: "/dashboard/contracts", label: "Contracts" },
-      { href: "/dashboard/growth", label: "Growth Engine" },
-      { href: "/dashboard/recovery", label: "Payment Recovery" },
-      { href: "/dashboard/lien-readiness", label: "Florida Lien Service" },
-      { href: "/payment-recovery-service", label: "Recovery Service" },
-      { href: "/florida-lien-filing-service", label: "Florida Lien Filing" },
-      { href: "/florida-lien-notice-service", label: "Florida Notice to Owner" },
       { href: "/contractor-contract-template", label: "Contract Templates" },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter" },
       { href: "/change-order-template", label: "Change Orders" },
       { href: "/dashboard/evidence", label: "Evidence Vault" },
+      { href: "/mobile-app", label: "Mobile App" },
+    ],
+  },
+  {
+    title: "Get Help",
+    links: [
+      { href: "/payment-recovery-service", label: "Payment Recovery" },
+      { href: "/florida-lien-filing-service", label: "Florida Lien Filing" },
+      { href: "/florida-lien-notice-service", label: "Florida Notice to Owner" },
+      { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide" },
+      { href: "/dashboard/evidence", label: "Evidence Vault" },
+      { href: "/dashboard/recovery", label: "Recovery Workspace" },
+      { href: "/dashboard/lien-readiness", label: "Lien Workspace" },
       { href: "/dashboard/billing", label: "Billing" },
     ],
   },
   {
-    title: "Public Records",
+    title: "Browse Records",
     links: [
-      { href: "/client-response", label: "Client Response" },
       { href: "/claim-profile", label: "Claim a Profile" },
-      { href: "/clients", label: "Client Directory" },
-      { href: "/reports/recent", label: "Recent Reports" },
       { href: "/clients/florida", label: "Florida Profiles" },
       { href: "/clients/florida/orlando", label: "Orlando Profiles" },
       { href: "/profiles", label: "Profile Directory" },
@@ -178,22 +175,19 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/industries/roofing", label: "Roofing" },
       { href: "/industries/electrical", label: "Electrical" },
       { href: "/industries/hvac", label: "HVAC" },
-      { href: "/client-screening-for-contractors", label: "Client Screening" },
-      { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide" },
+      { href: "/businesses", label: "Business Profiles" },
+      { href: "/business-rating-methodology", label: "Business & Trade Ratings" },
     ],
   },
   {
-    title: "Company",
+    title: "Company and Rules",
     links: [
+      { href: "/resources", label: "Resources" },
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
+      { href: "/client-response", label: "Client Response" },
       { href: "/terms", label: "Terms" },
       { href: "/privacy", label: "Privacy" },
-    ],
-  },
-  {
-    title: "Policies",
-    links: [
       { href: "/report-policy", label: "Report Policy" },
       { href: "/dispute-policy", label: "Disputes" },
       { href: "/moderation-policy", label: "Moderation" },

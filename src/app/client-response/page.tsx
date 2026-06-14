@@ -3,7 +3,7 @@ import type { LucideIcon } from "lucide-react"
 import { CheckCircle2, Clock3, FileText, MessageSquareText, Scale, ShieldCheck } from "lucide-react"
 
 import { ClientResponseForm } from "@/components/forms/client-response-form"
-import { PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumHero, PremiumProofStrip, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
@@ -110,6 +110,15 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
         }
       />
       <PremiumProofStrip items={proof} dark />
+      <TrustGuardrailStrip
+        items={[
+          "Verification before display",
+          "Raw documents stay private",
+          "Disputes are labeled carefully",
+          "Resolution updates can add context",
+        ]}
+        dark
+      />
 
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">

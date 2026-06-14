@@ -12,7 +12,7 @@ import {
   UserCheck,
 } from "lucide-react"
 
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { ProfileClaimForm } from "@/components/forms/profile-claim-form"
 import { StateSelect } from "@/components/forms/state-select"
@@ -153,6 +153,15 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
           { label: "Step 2", value: "Verify", text: "Add reasonable business verification and service-area context." },
           { label: "Step 3", value: "Share", text: "Use branded profile links and review requests after real work." },
           { label: "Privacy", value: "Protected", text: "Private account details and evidence remain private." },
+        ]}
+        dark
+      />
+      <TrustGuardrailStrip
+        items={[
+          "Claim review before status changes",
+          "Private business details stay private",
+          "Trade and state data stay structured",
+          "Public edits require moderation",
         ]}
         dark
       />

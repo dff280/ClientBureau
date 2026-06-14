@@ -9,6 +9,8 @@ import {
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
+  PublicJourneyNav,
+  TrustGuardrailStrip,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
@@ -121,6 +123,15 @@ export default function HowItWorksPage() {
         }
       />
       <PremiumProofStrip items={proof} dark />
+      <TrustGuardrailStrip
+        items={[
+          "Search before committing work",
+          "Contracts and evidence stay private",
+          "Reports are moderated before public display",
+          "Clients can respond or request corrections",
+        ]}
+        dark
+      />
 
       <section className="bureau-section bg-white">
         <div className="bureau-container space-y-8">
@@ -142,6 +153,13 @@ export default function HowItWorksPage() {
           </div>
         </div>
       </section>
+
+      <PublicJourneyNav
+        active="protect"
+        eyebrow="Use the path that matches the job"
+        title="One platform, four practical next steps."
+        description="The fastest way to understand Client Bureau is to choose the action you need now: check a client, protect a job, browse records, or get help with payment/documentation."
+      />
 
       <section className="bureau-section bg-slate-100">
         <div className="bureau-container grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">

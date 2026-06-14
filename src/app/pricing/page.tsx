@@ -3,6 +3,7 @@ import Link from "next/link"
 import { ArrowRight, CheckCircle2, FileCheck2, Radar, ReceiptText, ShieldCheck, Signature, Users } from "lucide-react"
 
 import {
+  NextBestStepCard,
   PremiumCtaBand,
   PremiumFeatureCard,
   PremiumHero,
@@ -128,6 +129,19 @@ export default function PricingPage() {
 
       <section className="bureau-section bg-slate-100">
         <div className="bureau-container space-y-10">
+          <NextBestStepCard
+            eyebrow="Most contractors start here"
+            title="Pro Contractor is the everyday operating plan."
+            description="Free is useful for a first check. Pro is the plan for businesses that want Client Bureau in daily intake, contracts, evidence, recovery, and monitoring."
+            primary={{ href: "/signup?plan=pro", label: "Start Pro Contractor", icon: ShieldCheck }}
+            secondary={{ href: "/search", label: "Check a Client First", icon: Radar }}
+            points={[
+              "Client checks before estimates",
+              "Contracts and evidence records",
+              "Recovery and lien-service paths",
+            ]}
+          />
+
           <div className="grid gap-5 lg:grid-cols-4">
             {pricingTiers.map((tier) => (
               <PlanCard key={tier.id} tier={tier} />

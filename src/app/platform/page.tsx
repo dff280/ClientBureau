@@ -17,6 +17,7 @@ import {
 
 import {
   BureauPanel,
+  ComparisonProofBlock,
   GuidedActionPanel,
   PageProofStrip,
   PremiumCtaBand,
@@ -24,6 +25,7 @@ import {
   PremiumHero,
   PremiumSectionHeader,
   ProductMockupFrame,
+  PublicJourneyNav,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { pageAssets } from "@/lib/page-assets"
@@ -146,6 +148,24 @@ const audiences = [
   },
 ]
 
+const comparisonRows = [
+  {
+    label: "Before accepting work",
+    before: "Rely on instinct, a quick web search, or whatever the lead says during intake.",
+    after: "Run a client check, save the search, review response context, and decide terms before scheduling.",
+  },
+  {
+    label: "During the project",
+    before: "Keep contracts, change orders, photos, texts, and invoices scattered across devices.",
+    after: "Keep job records, agreement packets, evidence, and updates organized in one private workspace.",
+  },
+  {
+    label: "When payment stalls",
+    before: "Start from scratch under pressure, with missing proof and unclear next steps.",
+    after: "Open recovery or Florida lien-service workflows with timeline, documentation, and private status records.",
+  },
+]
+
 const faqs = [
   {
     question: "Is Client Bureau a complaint site?",
@@ -191,6 +211,13 @@ export default function PlatformPage() {
 
       <PageProofStrip items={proof} />
 
+      <PublicJourneyNav
+        active="protect"
+        eyebrow="Public map"
+        title="The platform is organized around the job lifecycle."
+        description="Contractors should not have to decode software modules. Start with a client check, then move into contracts, evidence, recovery, or public record review as the job changes."
+      />
+
       <section className="bureau-section bg-white">
         <div className="bureau-container grid gap-8 lg:grid-cols-[0.9fr_1.3fr] lg:items-start">
           <PremiumSectionHeader
@@ -214,6 +241,11 @@ export default function PlatformPage() {
             description="The platform is organized by the same order contractors live through: before the job, during the job, and after an issue."
           />
           <WorkflowTimeline items={workflow} />
+          <ComparisonProofBlock
+            title="The difference is structure before pressure."
+            description="The platform is built to reduce the moment where a contractor realizes the paperwork, client context, and evidence are all scattered after money is already at risk."
+            rows={comparisonRows}
+          />
         </div>
       </section>
 

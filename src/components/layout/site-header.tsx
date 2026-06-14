@@ -43,15 +43,16 @@ const contractorHeaderNav = [
 ]
 
 const publicHeaderNav = [
-  { href: "/platform", label: "Platform" },
   { href: "/search", label: "Check a Client" },
-  { href: "/industries", label: "Industries" },
+  { href: "/submit-report", label: "Report Experience" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/how-it-works", label: "How It Works" },
+  { href: "/resources", label: "Resources" },
 ]
 
 const publicHeaderMenus = [
   {
-    label: "Records",
+    label: "Browse Records",
     icon: ShieldCheck,
     items: [
       { href: "/clients", label: "Client Directory", description: "Approved public client profiles by market." },
@@ -63,13 +64,24 @@ const publicHeaderMenus = [
     ],
   },
   {
-    label: "Services",
+    label: "Protect a Job",
     icon: BriefcaseBusiness,
     items: [
+      { href: "/platform", label: "Platform Overview", description: "Client checks, jobs, contracts, evidence, and services in one workflow." },
       { href: "/contractor-contract-template", label: "Contracts", description: "Agreement packets and e-signature workflow." },
+      { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter", description: "Florida-aware starter packet for scope, payment terms, and review prompts." },
+      { href: "/change-order-template", label: "Change Orders", description: "Document changed scope, cost, schedule, and approval." },
+      { href: "/client-screening-for-contractors", label: "Client Screening", description: "Check client context before accepting work." },
+    ],
+  },
+  {
+    label: "Get Help",
+    icon: BookOpen,
+    items: [
       { href: "/payment-recovery-service", label: "Payment Recovery", description: "Managed Resolution Desk service overview." },
       { href: "/florida-lien-notice-service", label: "Florida Notices", description: "Notice packet workflow for Florida cases." },
       { href: "/florida-lien-filing-service", label: "Florida Lien Filing", description: "Filing review, vendor routing, and recording proof." },
+      { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide", description: "Private documentation steps when payment stalls." },
       { href: "/mobile-app", label: "Android App", description: "Native mobile workspace for contractors." },
     ],
   },
@@ -77,8 +89,6 @@ const publicHeaderMenus = [
     label: "Resources",
     icon: BookOpen,
     items: [
-      { href: "/how-it-works", label: "How It Works", description: "Search, document, contract, and resolve." },
-      { href: "/resources", label: "Resource Hub", description: "Policies, guides, and methodology." },
       { href: "/score-methodology", label: "Client Rating Methodology", description: "How ratings and risk context are shown." },
       { href: "/business-rating-methodology", label: "Business & Trade Ratings", description: "Contractor and subcontractor profile scoring." },
       { href: "/about", label: "About", description: "Why Client Bureau exists." },

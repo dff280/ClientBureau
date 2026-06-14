@@ -2,7 +2,19 @@ import Link from "next/link"
 import Image from "next/image"
 import type { ReactNode } from "react"
 import type { LucideIcon } from "lucide-react"
-import { ArrowRight, CheckCircle2, CircleCheck, Inbox, ShieldCheck } from "lucide-react"
+import {
+  ArrowRight,
+  BadgeCheck,
+  BookOpenCheck,
+  BriefcaseBusiness,
+  CheckCircle2,
+  CircleCheck,
+  ClipboardCheck,
+  HelpCircle,
+  Inbox,
+  Search,
+  ShieldCheck,
+} from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -479,6 +491,243 @@ export function GuidedActionPanel({
       <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap">
         <PremiumButton cta={primary} />
         {secondary ? <PremiumButton cta={secondary} variant="outline" /> : null}
+      </div>
+    </BureauPanel>
+  )
+}
+
+const publicJourneyItems: Array<{
+  href: string
+  label: string
+  title: string
+  text: string
+  icon: LucideIcon
+}> = [
+  {
+    href: "/search",
+    label: "Check a Client",
+    title: "Search before the job",
+    text: "Check public context and private-match options before labor, materials, deposits, or scheduling.",
+    icon: Search,
+  },
+  {
+    href: "/contractor-contract-template",
+    label: "Protect a Job",
+    title: "Set terms and document",
+    text: "Use agreement packets, change orders, evidence records, recovery, and Florida lien-service workflows.",
+    icon: BriefcaseBusiness,
+  },
+  {
+    href: "/profiles",
+    label: "Browse Records",
+    title: "Review public profiles",
+    text: "Browse approved client, contractor, subcontractor, trade, city, and recent-report pages.",
+    icon: BookOpenCheck,
+  },
+  {
+    href: "/resources",
+    label: "Get Help",
+    title: "Understand the rules",
+    text: "Find policies, rating methodology, response paths, contract guidance, and service workflow explainers.",
+    icon: HelpCircle,
+  },
+]
+
+export function PublicJourneyNav({
+  eyebrow = "Choose your path",
+  title = "Four simple ways to use Client Bureau.",
+  description = "Every public page should make the next step obvious. Start with the path that matches what you need right now.",
+  active,
+  dark = false,
+}: {
+  eyebrow?: string
+  title?: string
+  description?: string
+  active?: "check" | "protect" | "browse" | "help"
+  dark?: boolean
+}) {
+  const activeMap = {
+    check: "/search",
+    protect: "/contractor-contract-template",
+    browse: "/profiles",
+    help: "/resources",
+  } satisfies Record<NonNullable<typeof active>, string>
+  const activeHref = active ? activeMap[active] : undefined
+
+  return (
+    <section className={dark ? "bureau-section bg-slate-950 text-white" : "bureau-section bg-white"}>
+      <div className="bureau-container grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+        <PremiumSectionHeader eyebrow={eyebrow} title={title} description={description} dark={dark} />
+        <div className="grid gap-3 sm:grid-cols-2">
+          {publicJourneyItems.map((item) => {
+            const Icon = item.icon
+            const isActive = item.href === activeHref
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "group rounded-md border p-4 shadow-sm transition hover:-translate-y-0.5 sm:p-5",
+                  dark
+                    ? "border-white/10 bg-white/[0.06] text-white hover:border-amber-300/50 hover:bg-white/[0.09]"
+                    : "border-slate-200 bg-slate-50 text-slate-950 hover:border-amber-300 hover:bg-white",
+                  isActive
+                    ? dark
+                      ? "border-amber-300/60 bg-amber-300/10"
+                      : "border-amber-300 bg-amber-50"
+                    : "",
+                )}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <span className={dark ? "flex size-11 items-center justify-center rounded-md bg-amber-300 text-slate-950" : "flex size-11 items-center justify-center rounded-md bg-slate-950 text-amber-300"}>
+                    <Icon className="size-5" aria-hidden="true" />
+                  </span>
+                  <ArrowRight className={dark ? "size-5 text-slate-500 transition group-hover:text-amber-300" : "size-5 text-slate-400 transition group-hover:text-amber-700"} aria-hidden="true" />
+                </div>
+                <p className={dark ? "mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-amber-300" : "mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-amber-700"}>
+                  {item.label}
+                </p>
+                <h3 className={dark ? "mt-2 text-xl font-semibold text-white" : "mt-2 text-xl font-semibold text-slate-950"}>
+                  {item.title}
+                </h3>
+                <p className={dark ? "mt-2 text-sm leading-6 text-slate-300" : "mt-2 text-sm leading-6 text-slate-600"}>
+                  {item.text}
+                </p>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export function NextBestStepCard({
+  eyebrow = "Next best step",
+  title,
+  description,
+  primary,
+  secondary,
+  points = [],
+}: {
+  eyebrow?: string
+  title: string
+  description: string
+  primary: PremiumCta
+  secondary?: PremiumCta
+  points?: string[]
+}) {
+  return (
+    <BureauPanel className="overflow-hidden p-0">
+      <div className="grid gap-0 lg:grid-cols-[1fr_0.42fr]">
+        <div className="p-5 sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">{eyebrow}</p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-normal text-balance text-slate-950 sm:text-3xl">{title}</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
+          {points.length ? (
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              {points.map((point) => (
+                <div key={point} className="flex gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+                  <CheckCircle2 className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+        <div className="grid content-center gap-3 border-t border-slate-200 bg-slate-950 p-5 sm:p-6 lg:border-l lg:border-t-0">
+          <PremiumButton cta={primary} />
+          {secondary ? <PremiumButton cta={secondary} variant="outline" /> : null}
+        </div>
+      </div>
+    </BureauPanel>
+  )
+}
+
+export function TrustGuardrailStrip({
+  items = [
+    "Moderated public summaries",
+    "Private identifiers hidden",
+    "Evidence reviewed privately",
+    "Response and correction paths",
+  ],
+  dark = false,
+}: {
+  items?: string[]
+  dark?: boolean
+}) {
+  return (
+    <div className={dark ? "border-y border-white/10 bg-slate-950 text-white" : "border-y border-slate-200 bg-white"}>
+      <div className="bureau-container grid gap-2 py-4 sm:grid-cols-2 lg:grid-cols-4">
+        {items.map((item) => (
+          <div key={item} className={dark ? "flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.05] p-3 text-sm font-semibold text-slate-200" : "flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-700"}>
+            <ShieldCheck className="size-4 shrink-0 text-amber-500" aria-hidden="true" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function ComparisonProofBlock({
+  eyebrow = "Why it works",
+  title,
+  description,
+  rows,
+}: {
+  eyebrow?: string
+  title: string
+  description: string
+  rows: Array<{ label: string; before: string; after: string }>
+}) {
+  return (
+    <BureauPanel className="overflow-hidden p-0">
+      <div className="grid gap-0 lg:grid-cols-[0.82fr_1.18fr]">
+        <div className="bg-slate-950 p-5 text-white sm:p-6">
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-300">{eyebrow}</p>
+          <h2 className="mt-3 text-2xl font-semibold tracking-normal text-balance sm:text-3xl">{title}</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-300">{description}</p>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {rows.map((row) => (
+            <div key={row.label} className="grid gap-3 p-4 text-sm sm:grid-cols-[0.65fr_1fr_1fr] sm:p-5">
+              <p className="font-semibold text-slate-950">{row.label}</p>
+              <p className="rounded-md border border-slate-200 bg-slate-50 p-3 leading-6 text-slate-600">{row.before}</p>
+              <p className="rounded-md border border-emerald-200 bg-emerald-50 p-3 leading-6 text-emerald-900">{row.after}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </BureauPanel>
+  )
+}
+
+export function PublicPageChecklist({
+  title = "What stays clear",
+  items,
+}: {
+  title?: string
+  items: string[]
+}) {
+  return (
+    <BureauPanel>
+      <div className="flex items-start gap-3">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300">
+          <ClipboardCheck className="size-5" aria-hidden="true" />
+        </span>
+        <div>
+          <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {items.map((item) => (
+              <div key={item} className="flex gap-2 text-sm leading-6 text-slate-600">
+                <BadgeCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </BureauPanel>
   )

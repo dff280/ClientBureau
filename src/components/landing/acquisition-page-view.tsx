@@ -1,7 +1,15 @@
 import Link from "next/link"
 import { ArrowRight, CheckCircle2, ClipboardCheck, FileText, LockKeyhole, Scale, Search, ShieldCheck } from "lucide-react"
 
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
+import {
+  NextBestStepCard,
+  PremiumCtaBand,
+  PremiumHero,
+  PremiumProofStrip,
+  ProductMockupFrame,
+  PublicPageChecklist,
+  TrustGuardrailStrip,
+} from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import type { AcquisitionPage } from "@/lib/acquisition-pages"
@@ -118,8 +126,25 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
         ]}
         dark
       />
+      <TrustGuardrailStrip
+        items={[
+          "Private workflow records",
+          "No legal outcome guarantees",
+          "Public summaries require moderation",
+          "Response and correction paths remain available",
+        ]}
+        dark
+      />
 
       <div className="bureau-container space-y-10 py-10">
+        <NextBestStepCard
+          title={`Use this when: ${page.proofValue.toLowerCase()}.`}
+          description={page.proofDetail}
+          primary={{ href: page.primaryCta.href, label: page.primaryCta.label, icon: Search }}
+          secondary={{ href: page.secondaryCta.href, label: page.secondaryCta.label, icon: ArrowRight }}
+          points={page.useCases.slice(0, 3)}
+        />
+
         <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
@@ -203,6 +228,16 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
             </div>
           </CardContent>
         </Card>
+
+        <PublicPageChecklist
+          title="Plain-English guardrails"
+          items={[
+            "Use Client Bureau to organize records and decisions, not to publish unsupported claims.",
+            "Keep contracts, evidence, job notes, contact details, and service records private unless a moderated summary is approved.",
+            "Use attorney or qualified professional review where legal rights, lien deadlines, or enforceability may matter.",
+            "Keep client response, correction, dispute, and resolution paths available.",
+          ]}
+        />
 
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="space-y-5 p-6">

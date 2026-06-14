@@ -5,7 +5,7 @@ import { Bell, ClipboardCheck, FilePlus2, LockKeyhole, Radar, SearchCheck, Shiel
 
 import { SearchCommandCenter } from "@/components/search/search-command-center"
 import { EntityProfileResultCard } from "@/components/search/entity-profile-result-card"
-import { PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
+import { PremiumHero, PremiumProofStrip, ProductMockupFrame, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
@@ -164,6 +164,15 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           { label: "Profile types", value: "All roles", text: "Clients, contractors, subcontractors, and trade businesses can appear when approved." },
           { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
           { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
+        ]}
+        dark
+      />
+      <TrustGuardrailStrip
+        items={[
+          "Searches are private",
+          "Raw emails and phones stay hidden",
+          "Only approved public content appears",
+          "Save or watch after sign-up",
         ]}
         dark
       />

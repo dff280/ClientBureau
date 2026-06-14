@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { LockKeyhole, Radar, ReceiptText, ShieldCheck } from "lucide-react"
 
 import { LoginForm } from "@/components/forms/auth-forms"
-import { PremiumFeatureCard } from "@/components/marketing/premium-page-shell"
+import { PremiumFeatureCard, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSafeInternalPath } from "@/lib/auth"
 
@@ -57,6 +57,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </Card>
         </div>
       </div>
+      <TrustGuardrailStrip
+        items={[
+          "Secure account workspace",
+          "Private evidence stays private",
+          "Admin areas stay role-protected",
+          "Safe return after login",
+        ]}
+      />
 
       <div className="bureau-container grid gap-8 py-10 lg:grid-cols-[minmax(0,440px)_1fr] lg:items-start">
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">

@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { PublicJourneyNav } from "@/components/marketing/premium-page-shell"
 import { pageAssets } from "@/lib/page-assets"
 import {
   getPublicClientProfileService,
@@ -467,6 +468,13 @@ export default async function Home() {
           })}
         </div>
       </section>
+
+      <PublicJourneyNav
+        active="check"
+        eyebrow="Start where the risk is"
+        title="Search first, then choose the right protection path."
+        description="Client Bureau is easiest to understand as four paths: check the client, protect the job, browse public records, or get help when payment or documentation needs structure."
+      />
 
       <section className="border-b border-slate-200 bg-white">
         <div className="bureau-container grid gap-6 py-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">

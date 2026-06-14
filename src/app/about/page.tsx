@@ -9,6 +9,8 @@ import {
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
+  PublicJourneyNav,
+  TrustGuardrailStrip,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -85,6 +87,21 @@ export default function AboutPage() {
       />
 
       <PremiumProofStrip items={proof} dark />
+      <TrustGuardrailStrip
+        items={[
+          "Contractor-first client checks",
+          "Moderated public records",
+          "Private evidence sealed",
+          "Client response rights",
+        ]}
+        dark
+      />
+      <PublicJourneyNav
+        active="help"
+        eyebrow="What to do next"
+        title="Client Bureau is easiest to understand by action."
+        description="Check a client, protect a job, browse approved records, or get help with policy and workflow questions."
+      />
 
       <section className="bureau-section">
         <div className="bureau-container space-y-10">

@@ -20,6 +20,7 @@ import {
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
+  PublicJourneyNav,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
@@ -155,6 +156,12 @@ export default function MobileAppPage() {
       />
 
       <PremiumProofStrip items={proof} dark />
+      <PublicJourneyNav
+        active="check"
+        eyebrow="Use the app with the web platform"
+        title="Mobile is strongest when the intake path is simple."
+        description="Check the client in the field, then continue into reports, contracts, evidence, recovery, lien service, or public profile research from the web platform."
+      />
 
       <section className="bureau-section">
         <div className="bureau-container space-y-10">
