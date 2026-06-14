@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-service"
+import { tradeCategories, tradeCategoryGroups, tradeCategoryMatches } from "@/lib/trade-taxonomy"
 
 export const metadata: Metadata = {
   title: "Admin Businesses / Users",
@@ -41,6 +42,7 @@ type AdminBusinessesSearchParams = Promise<{
   account?: string
   q?: string
   role?: string
+  tradeCategory?: string
   verification?: string
 }>
 
@@ -50,6 +52,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
   const query = params.q?.trim().toLowerCase() ?? ""
   const account = params.account ?? "all"
   const role = params.role ?? "all"
+  const tradeCategory = params.tradeCategory?.trim() || undefined
   const verification = params.verification ?? "all"
   const verified = data.contractors.filter((contractor) => contractor.verificationStatus === "verified").length
   const pending = data.contractors.filter((contractor) => contractor.verificationStatus === "pending").length
@@ -75,7 +78,11 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
         .join(" ")
         .toLowerCase()
 
-      return (!query || text.includes(query)) && (verification === "all" || contractor.verificationStatus === verification)
+      return (
+        (!query || text.includes(query)) &&
+        (!tradeCategory || tradeCategoryMatches(text, tradeCategory)) &&
+        (verification === "all" || contractor.verificationStatus === verification)
+      )
     })
     .sort((a, b) => contractorPriority(b) - contractorPriority(a))
   const filteredUsers = data.users.filter((user) => {
@@ -185,9 +192,9 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
 
         <AdminFilterBar
           title="Find an account"
-          description="Search by business, owner, email, trade, city, state, or license number."
+          description="Search by business, owner, email, trade, city, state, or license number. Use the trade filter to find contractors, subcontractors, vendors, and service businesses by canonical category."
         >
-          <form className="grid w-full gap-2 sm:w-auto sm:grid-cols-[220px_150px_150px_170px_auto]">
+          <form className="grid w-full gap-2 sm:w-auto sm:grid-cols-[220px_150px_150px_220px_170px_auto]">
             <Input name="q" defaultValue={params.q} placeholder="Search accounts" aria-label="Search accounts" />
             <select name="role" defaultValue={role} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
               <option value="all">All roles</option>
@@ -198,6 +205,23 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
               <option value="all">All accounts</option>
               <option value="business">Business owners</option>
               <option value="client">Client accounts</option>
+            </select>
+            <select name="tradeCategory" defaultValue={tradeCategory ?? ""} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+              <option value="">All trades</option>
+              {tradeCategoryGroups.map((group) => {
+                const groupOptions = tradeCategories.filter((category) => category.group === group)
+                if (groupOptions.length === 0) return null
+
+                return (
+                  <optgroup key={group} label={group}>
+                    {groupOptions.map((category) => (
+                      <option key={category.slug} value={category.label}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                )
+              })}
             </select>
             <select name="verification" defaultValue={verification} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
               <option value="all">All verification</option>
