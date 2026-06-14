@@ -42,6 +42,23 @@ function navigationHrefs(source) {
   return new Set([...source.matchAll(/\bhref\s*:\s*["']([^"']+)["']/g)].map((match) => match[1]))
 }
 
+function normalizeHrefPath(href) {
+  try {
+    return new URL(href, "https://clientbureau.com").pathname.replace(/\/$/, "") || "/"
+  } catch {
+    return href.split("?")[0].replace(/\/$/, "") || "/"
+  }
+}
+
+function routePatternToRegExp(route) {
+  const escaped = route
+    .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    .replace(/\\\[\.{3}[^\\\]]+\\\]/g, ".+")
+    .replace(/\\\[[^\\\]]+\\\]/g, "[^/]+")
+
+  return new RegExp(`^${escaped}$`)
+}
+
 const privateNoindexRoutes = new Set([
   "/admin",
   "/admin/audit-log",
@@ -201,6 +218,7 @@ else fail("Navigation registry exists", "src/lib/navigation.ts missing")
 
 const routeSet = new Set(routes.map((item) => item.route))
 const classifiedRoutes = new Set([...privateNoindexRoutes, ...publicIndexableRoutes])
+const routePatterns = [...routeSet].map((route) => ({ route, pattern: routePatternToRegExp(route) }))
 
 for (const route of [...classifiedRoutes].sort()) {
   if (routeSet.has(route)) pass(`Classified route exists ${route}`)
@@ -240,6 +258,21 @@ for (const href of [...dashboardNavigationHrefs].sort()) {
 for (const href of [...adminNavigationHrefs].sort()) {
   if (navigationHrefSet.has(href)) pass(`Admin navigation exposes ${href}`)
   else fail(`Admin navigation exposes ${href}`, "admin CRM pages and saved views need a discoverable path")
+}
+
+for (const href of [...navigationHrefSet].sort()) {
+  if (/^https?:\/\//i.test(href) || href.startsWith("mailto:") || href.startsWith("tel:")) {
+    pass(`Navigation href is external ${href}`)
+    continue
+  }
+
+  const hrefPath = normalizeHrefPath(href)
+  const matchedRoute = routeSet.has(hrefPath)
+    ? { route: hrefPath }
+    : routePatterns.find((item) => item.pattern.test(hrefPath))
+
+  if (matchedRoute) pass(`Navigation href resolves ${href}`, matchedRoute.route)
+  else fail(`Navigation href resolves ${href}`, "no matching App Router page")
 }
 
 for (const check of checks) {
