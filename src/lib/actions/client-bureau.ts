@@ -1666,9 +1666,10 @@ export async function createLienNoticeDraftAction(
   }
 
   const user = await requireContractorAccess()
+  const input = normalizeReportTradeFields(parsed.data)
 
   try {
-    const noticeDraft = await createLienNoticeDraftService(user.id, parsed.data)
+    const noticeDraft = await createLienNoticeDraftService(user.id, input)
     if (!noticeDraft) return fail("Lien readiness packets are temporarily unavailable.")
 
     revalidatePath("/dashboard")
@@ -1694,9 +1695,10 @@ export async function submitFloridaLienCaseAction(
   }
 
   const user = await requireContractorAccess()
+  const input = normalizeReportTradeFields(parsed.data)
 
   try {
-    const lienCase = await submitFloridaLienCaseService(user.id, parsed.data)
+    const lienCase = await submitFloridaLienCaseService(user.id, input)
     if (!lienCase) return fail("Florida lien service is temporarily unavailable.")
 
     revalidatePath("/dashboard")
@@ -1930,9 +1932,10 @@ export async function createContractWorkspaceItemAction(
   }
 
   const user = await requireContractorAccess()
+  const input = normalizeReportTradeFields(parsed.data)
 
   try {
-    const contractItem = await createContractWorkspaceItemService(user.id, parsed.data)
+    const contractItem = await createContractWorkspaceItemService(user.id, input)
     if (!contractItem) return fail("Contract workspace is temporarily unavailable.")
 
     revalidatePath("/dashboard")

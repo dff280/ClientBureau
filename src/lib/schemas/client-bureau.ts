@@ -742,6 +742,7 @@ export const markRecoveryResolvedSchema = z.object({
 export const lienNoticeDraftSchema = z.object({
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
+  otherProjectTypeDetail: z.string().trim().max(80, "Keep other project type detail under 80 characters.").optional().transform((value) => value || undefined),
   propertyCity: requiredText("Property city"),
   state: stateCode("State"),
   amountDue: money("Amount due"),
@@ -764,6 +765,7 @@ export const floridaLienCaseSchema = z.object({
   legalDescription: z.string().trim().max(1800, "Keep the legal description under 1,800 characters.").optional(),
   contractorRole: z.enum(["direct_contractor", "subcontractor", "supplier", "laborer", "other"]),
   projectType: requiredText("Project type"),
+  otherProjectTypeDetail: z.string().trim().max(80, "Keep other project type detail under 80 characters.").optional().transform((value) => value || undefined),
   contractAmount: money("Contract amount"),
   amountDue: money("Amount due"),
   firstWorkDate: optionalText,
@@ -852,6 +854,7 @@ export const adminRecordLienReleaseSchema = z.object({
 export const contractWorkspaceItemSchema = z.object({
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
+  otherProjectTypeDetail: z.string().trim().max(80, "Keep other project type detail under 80 characters.").optional().transform((value) => value || undefined),
   templateType: z.enum([
     "service_agreement",
     "change_order",

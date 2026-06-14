@@ -29,8 +29,10 @@ import { toast } from "sonner"
 
 import { ContractorWorkspaceGuidance } from "@/components/dashboard/contractor-workspace-guidance"
 import { FieldError } from "@/components/forms/field-error"
+import { FloridaCountySelect } from "@/components/forms/florida-county-select"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -2146,7 +2148,7 @@ function FloridaLienCaseForm() {
         <Input name="ownerName" placeholder="Property owner name" />
       </div>
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_160px]">
-        <Input name="propertyCounty" placeholder="Florida county" />
+        <FloridaCountySelect id="floridaLienPropertyCounty" name="propertyCounty" labelClassName="sr-only" />
         <Input name="propertyCity" placeholder="Property city" />
         <StateSelect id="floridaLienState" name="state" defaultValue="FL" ariaLabel="Florida lien state" />
       </div>
@@ -2160,7 +2162,13 @@ function FloridaLienCaseForm() {
           <option value="other">Other role</option>
         </select>
       </div>
-      <Input name="projectType" placeholder="Project type" />
+      <TradeCategorySelect
+        id="floridaLienProjectType"
+        name="projectType"
+        otherName="otherProjectTypeDetail"
+        label="Project type / trade category"
+        required
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="contractAmount" type="number" placeholder="Contract amount" />
         <Input name="amountDue" type="number" placeholder="Unpaid amount" />
@@ -2283,7 +2291,13 @@ function LienNoticeDraftForm() {
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
       <Input name="clientName" placeholder="Client name" />
-      <Input name="projectType" placeholder="Project type" />
+      <TradeCategorySelect
+        id="lienNoticeProjectType"
+        name="projectType"
+        otherName="otherProjectTypeDetail"
+        label="Project type / trade category"
+        required
+      />
       <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
         <Input name="propertyCity" placeholder="Property city" />
         <StateSelect id="lienNoticeState" name="state" defaultValue="FL" ariaLabel="Lien notice state" />
@@ -2341,7 +2355,13 @@ function ContractWorkspaceForm() {
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
       <Input name="clientName" placeholder="Client name" />
-      <Input name="projectType" placeholder="Project type" />
+      <TradeCategorySelect
+        id="contractWorkspaceProjectType"
+        name="projectType"
+        otherName="otherProjectTypeDetail"
+        label="Project type / trade category"
+        required
+      />
       <select name="templateType" defaultValue="service_agreement" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
         <option value="service_agreement">Service agreement</option>
         <option value="change_order">Change order</option>

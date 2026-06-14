@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { FieldError } from "@/components/forms/field-error"
+import { FloridaCountySelect } from "@/components/forms/florida-county-select"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -475,7 +476,13 @@ function FloridaLienAdminActionForm({
           <option value="county_clerk_manual">County clerk manual</option>
         </select>
         <Input name="recordingVendor" placeholder="Recording vendor" />
-        <Input name="clerkCounty" defaultValue={activeCase?.propertyCounty ?? ""} placeholder="Clerk county" />
+        <FloridaCountySelect
+          id="adminLienClerkCounty"
+          name="clerkCounty"
+          defaultValue={activeCase?.propertyCounty}
+          label="Clerk county"
+          labelClassName="sr-only"
+        />
         <div className="grid gap-3 sm:grid-cols-2">
           <Input name="filedAt" type="date" aria-label="Filed date" />
           <Input name="instrumentNumber" placeholder="Instrument number (if known)" />
