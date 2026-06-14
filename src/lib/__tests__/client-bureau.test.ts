@@ -48,6 +48,7 @@ import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
+  buildSearchHref,
   buildSearchSuggestions,
   buildSearchExperienceStats,
   isPrivateIdentifierSearch,
@@ -943,6 +944,27 @@ describe("search and public profiles", () => {
     expect(ranked[0]?.publicSlug).toBe("john-smith-orlando-fl")
     expect(suggestions.some((suggestion) => suggestion.href === "/client/john-smith-orlando-fl")).toBe(true)
     expect(JSON.stringify(suggestions)).not.toContain("sha256:")
+  })
+
+  it("preserves profile type and trade filters in search URLs", () => {
+    const previews = searchClients("").map(toSearchPreviewProfile)
+    const href = buildSearchHref({
+      query: "Orlando",
+      state: "fl",
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
+    })
+    const suggestions = buildSearchSuggestions(previews, "Orlando", "FL", {
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
+    })
+
+    expect(href).toBe("/search?q=Orlando&state=FL&profileType=subcontractor&tradeCategory=Electrical")
+    expect(suggestions.every((suggestion) =>
+      suggestion.href.startsWith("/client/") ||
+      suggestion.href.includes("profileType=subcontractor"),
+    )).toBe(true)
+    expect(suggestions.some((suggestion) => suggestion.href.includes("tradeCategory=Electrical"))).toBe(true)
   })
 
   it("recognizes private identifier searches without exposing raw identifiers", () => {

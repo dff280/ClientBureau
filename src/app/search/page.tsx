@@ -64,7 +64,7 @@ function reportPrefillHref(query: string, state?: string) {
   return `/submit-report${params.size ? `?${params.toString()}` : ""}`
 }
 
-function signupSearchHref(query: string, state?: string, riskLevel?: RiskLevel, category?: ReportCategory, tradeCategory?: string) {
+function signupSearchHref(query: string, state?: string, riskLevel?: RiskLevel, category?: ReportCategory, profileType?: ProfileType, tradeCategory?: string) {
   const params = new URLSearchParams()
   const nextParams = new URLSearchParams()
 
@@ -72,6 +72,7 @@ function signupSearchHref(query: string, state?: string, riskLevel?: RiskLevel, 
   if (state) nextParams.set("state", state)
   if (riskLevel) nextParams.set("risk", riskLevel)
   if (category) nextParams.set("category", category)
+  if (profileType) nextParams.set("profileType", profileType)
   if (tradeCategory) nextParams.set("tradeCategory", tradeCategory)
 
   params.set("next", `/search${nextParams.size ? `?${nextParams.toString()}` : ""}`)
@@ -146,7 +147,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             />
             {!isAuthenticated ? (
               <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href={signupSearchHref(query, state, riskLevel, category, tradeCategory)}>
+                <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>
                   <LockKeyhole aria-hidden="true" />
                   Create free account
                 </Link>
@@ -169,11 +170,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         <div className="bureau-container space-y-8">
 
         <SearchCommandCenter
-          key={`${query}|${state ?? ""}|${riskLevel ?? ""}|${category ?? ""}|${tradeCategory ?? ""}`}
+          key={`${query}|${state ?? ""}|${riskLevel ?? ""}|${category ?? ""}|${profileType ?? ""}|${tradeCategory ?? ""}`}
           query={query}
           state={state}
           riskLevel={riskLevel}
           category={category}
+          profileType={profileType}
           tradeCategory={tradeCategory}
           profiles={previewProfiles}
           initialSavedSearches={dashboard?.savedSearches}
@@ -221,7 +223,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           query={query}
           resultCount={results.length}
           state={state}
-          signupHref={signupSearchHref(query, state, riskLevel, category, tradeCategory)}
+          signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
         />
 
         {results.length > 0 ? (
@@ -252,7 +254,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                   </Button>
                 ) : (
                   <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                    <Link href={signupSearchHref(query, state, riskLevel, category, tradeCategory)}>Create free account</Link>
+                    <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>Create free account</Link>
                   </Button>
                 )}
                 <Button asChild variant="outline">

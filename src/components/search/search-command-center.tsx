@@ -49,6 +49,7 @@ import {
   reportCategories,
   riskLevels,
   type ActionResult,
+  type ProfileType,
   type ReportCategory,
   type RiskLevel,
   type SavedClientSearch,
@@ -65,6 +66,8 @@ interface InitialSavedSearch {
 interface SavedSearchRecord extends InitialSavedSearch {
   riskLevel?: RiskLevel
   category?: ReportCategory
+  profileType?: ProfileType
+  tradeCategory?: string
   resultCount?: number
   createdAt: string
 }
@@ -74,6 +77,7 @@ interface SearchCommandCenterProps {
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  profileType?: ProfileType
   tradeCategory?: string
   profiles: SearchPreviewProfile[]
   initialSavedSearches?: InitialSavedSearch[]
@@ -82,13 +86,35 @@ interface SearchCommandCenterProps {
 
 const savedSearchStorageKey = "client-bureau.saved-searches"
 
-function savedSearchKey(search: Pick<SavedSearchRecord, "query" | "state" | "riskLevel" | "category">) {
+function savedSearchKey(search: Pick<SavedSearchRecord, "query" | "state" | "riskLevel" | "category" | "profileType" | "tradeCategory">) {
   return [
     search.query.trim().toLowerCase(),
     search.state?.trim().toUpperCase() ?? "",
     search.riskLevel ?? "",
     search.category ?? "",
+    search.profileType ?? "",
+    search.tradeCategory?.trim().toLowerCase() ?? "",
   ].join("|")
+}
+
+function profileTypeSearchLabel(profileType?: ProfileType) {
+  if (profileType === "contractor") return "Contractor and business profiles"
+  if (profileType === "subcontractor") return "Subcontractor and trade profiles"
+  if (profileType === "client") return "Client profiles"
+  return undefined
+}
+
+function savedSearchFilterSummary(search: SavedSearchRecord) {
+  return [
+    search.city,
+    search.state,
+    profileTypeSearchLabel(search.profileType),
+    search.tradeCategory,
+    search.riskLevel,
+    search.category,
+  ]
+    .filter(Boolean)
+    .join(" / ")
 }
 
 function uniqueSavedSearches(searches: SavedSearchRecord[]) {
@@ -113,6 +139,7 @@ export function SearchCommandCenter({
   state,
   riskLevel,
   category,
+  profileType,
   tradeCategory,
   profiles,
   initialSavedSearches = [],
@@ -180,8 +207,12 @@ export function SearchCommandCenter({
   }, [filteredProfiles, liveQuery, privateIdentifierIntent])
 
   const suggestions = useMemo(
-    () => buildSearchSuggestions(profiles, liveQuery, stateFilter || undefined),
-    [liveQuery, profiles, stateFilter],
+    () =>
+      buildSearchSuggestions(profiles, liveQuery, stateFilter || undefined, {
+        profileType,
+        tradeCategory: tradeValue || undefined,
+      }),
+    [liveQuery, profileType, profiles, stateFilter, tradeValue],
   )
 
   function buildSearchEventFormData(
@@ -216,6 +247,8 @@ export function SearchCommandCenter({
       state: stateFilter || undefined,
       riskLevel: riskFilter,
       category: categoryFilter,
+      profileType,
+      tradeCategory: tradeValue || undefined,
       resultCount: filteredProfiles.length,
       createdAt: new Date().toISOString(),
     }
@@ -259,6 +292,8 @@ export function SearchCommandCenter({
             state: result.data.state,
             riskLevel: result.data.riskLevel,
             category: result.data.category,
+            profileType: nextSearch.profileType,
+            tradeCategory: nextSearch.tradeCategory,
             resultCount: result.data.resultCount,
             createdAt: result.data.createdAt,
           }
@@ -302,6 +337,7 @@ export function SearchCommandCenter({
     state: stateValue,
     riskLevel: riskFilter,
     category: categoryFilter,
+    profileType,
     tradeCategory: tradeValue || undefined,
   })
 
@@ -340,6 +376,7 @@ export function SearchCommandCenter({
                     className="h-14 rounded-md border-slate-300 bg-white pl-12 text-base shadow-sm"
                     aria-label="Check clients"
                   />
+                  {profileType ? <input type="hidden" name="profileType" value={profileType} /> : null}
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[120px_1fr_1fr_1fr_auto]">
@@ -619,13 +656,14 @@ export function SearchCommandCenter({
                           state: search.state,
                           riskLevel: search.riskLevel,
                           category: search.category,
+                          profileType: search.profileType,
+                          tradeCategory: search.tradeCategory,
                         })}
                         className="min-w-0 flex-1 text-sm"
                       >
                         <span className="block truncate font-semibold">{search.query}</span>
                         <span className="block truncate text-xs text-slate-300">
-                          {[search.city, search.state, search.riskLevel, search.category].filter(Boolean).join(" / ") ||
-                            "All filters"}
+                          {savedSearchFilterSummary(search) || "All filters"}
                         </span>
                       </Link>
                       <button

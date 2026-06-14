@@ -1,5 +1,5 @@
 import { reportCategories } from "@/lib/types"
-import type { ClientSearchResult, ReportCategory, RiskLevel, SearchSuggestion } from "@/lib/types"
+import type { ClientSearchResult, ProfileType, ReportCategory, RiskLevel, SearchSuggestion } from "@/lib/types"
 
 export interface SearchPreviewProfile {
   id: string
@@ -114,12 +114,14 @@ export function buildSearchHref({
   state,
   riskLevel,
   category,
+  profileType,
   tradeCategory,
 }: {
   query?: string
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  profileType?: ProfileType
   tradeCategory?: string
 }) {
   const params = new URLSearchParams()
@@ -128,6 +130,7 @@ export function buildSearchHref({
   if (state?.trim()) params.set("state", state.trim().toUpperCase())
   if (riskLevel) params.set("risk", riskLevel)
   if (category) params.set("category", category)
+  if (profileType) params.set("profileType", profileType)
   if (tradeCategory) params.set("tradeCategory", tradeCategory)
 
   return `/search${params.size ? `?${params.toString()}` : ""}`
@@ -183,6 +186,7 @@ export function buildSearchSuggestions(
   profiles: SearchPreviewProfile[],
   query: string,
   state?: string,
+  filters: { profileType?: ProfileType; tradeCategory?: string } = {},
 ): SearchSuggestion[] {
   const value = query.trim().toLowerCase()
   const suggestions: SearchSuggestion[] = []
@@ -200,7 +204,7 @@ export function buildSearchSuggestions(
       kind: "private_identifier",
       label: "Run a private identifier check",
       description: "Phone and email searches use private matching and never display raw identifiers publicly.",
-      href: buildSearchHref({ query, state }),
+      href: buildSearchHref({ query, state, profileType: filters.profileType, tradeCategory: filters.tradeCategory }),
       query,
       state,
       score: 100,
@@ -239,7 +243,12 @@ export function buildSearchSuggestions(
       kind: "market",
       label: `Search ${label}`,
       description: "City and state client profile directory signal.",
-      href: buildSearchHref({ query: query || profile.city, state: profile.state }),
+      href: buildSearchHref({
+        query: query || profile.city,
+        state: profile.state,
+        profileType: filters.profileType,
+        tradeCategory: filters.tradeCategory,
+      }),
       query: query || profile.city,
       state: profile.state,
       score: 40,
@@ -255,7 +264,13 @@ export function buildSearchSuggestions(
       kind: "category",
       label: category,
       description: "Filter by contractor-submitted report type.",
-      href: buildSearchHref({ query, state, category }),
+      href: buildSearchHref({
+        query,
+        state,
+        category,
+        profileType: filters.profileType,
+        tradeCategory: filters.tradeCategory,
+      }),
       query,
       state,
       category,
