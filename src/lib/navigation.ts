@@ -106,6 +106,7 @@ export const resourceNavigationGroups: NavigationGroup[] = [
       { href: "/reports/recent", label: "Recent Reports", description: "Approved public client-report context." },
       { href: "/reports/non-payment", label: "Non-Payment Reports", description: "Moderated reports involving payment issues." },
       { href: "/clients/florida", label: "Florida Profiles", description: "SEO-visible public profiles by market." },
+      { href: "/clients/florida/orlando", label: "Orlando Profiles", description: "Approved public client profiles in the Orlando market." },
       { href: "/profiles", label: "Profile Directory", description: "Unified public profiles for clients, contractors, and subcontractors." },
       { href: "/profiles/contractor", label: "Contractor Profiles", description: "Public contractor and service-business profile records." },
       { href: "/profiles/subcontractor", label: "Subcontractor Profiles", description: "Public subcontractor and trade professional records." },
@@ -120,6 +121,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
   {
     title: "Platform",
     links: [
+      { href: "/", label: "Home" },
       { href: "/search", label: "Check a Client" },
       { href: "/platform", label: "Platform" },
       { href: "/how-it-works", label: "How It Works" },
@@ -156,9 +158,11 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Public Records",
     links: [
       { href: "/client-response", label: "Client Response" },
+      { href: "/claim-profile", label: "Claim a Profile" },
       { href: "/clients", label: "Client Directory" },
       { href: "/reports/recent", label: "Recent Reports" },
       { href: "/clients/florida", label: "Florida Profiles" },
+      { href: "/clients/florida/orlando", label: "Orlando Profiles" },
       { href: "/profiles", label: "Profile Directory" },
       { href: "/profiles/contractor", label: "Contractor Profiles" },
       { href: "/profiles/subcontractor", label: "Subcontractor Profiles" },

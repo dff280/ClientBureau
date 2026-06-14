@@ -115,7 +115,7 @@ npm run verify:live
 
 The verifier automatically compares production against the local `package.json` version and current Git commit. It fails for stale version/commit identity, broken public profile links, profile loading shells, missing core Supabase readiness, bad canonicals, missing unified profile graph routes, missing diagnostic no-store headers, unsafe logged-out protected-route behavior, missing protected-route return paths, and public privacy leaks. It warns for expected rollout gaps such as Stripe not being configured yet.
 
-The route inventory verifier should pass before release. It fails when an App Router page lacks metadata, when a private dashboard/admin/auth/workflow page lacks noindex/nofollow robots metadata, or when a new page route is added without being intentionally classified as public/indexable or private/noindex.
+The route inventory verifier should pass before release. It fails when an App Router page lacks metadata, when a private dashboard/admin/auth/workflow page lacks noindex/nofollow robots metadata, when a new page route is added without being intentionally classified as public/indexable or private/noindex, or when important public, dashboard, or admin routes are missing from the navigation registry.
 
 When disposable QA credentials are available, also run:
 

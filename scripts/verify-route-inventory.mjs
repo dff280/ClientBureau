@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url"
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const appDir = path.join(rootDir, "src", "app")
+const navigationFile = path.join(rootDir, "src", "lib", "navigation.ts")
 
 const checks = []
 
@@ -37,6 +38,10 @@ function hasNoindexRobots(source) {
   return /robots\s*:/.test(source) && /index\s*:\s*false/.test(source) && /follow\s*:\s*false/.test(source)
 }
 
+function navigationHrefs(source) {
+  return new Set([...source.matchAll(/\bhref\s*:\s*["']([^"']+)["']/g)].map((match) => match[1]))
+}
+
 const privateNoindexRoutes = new Set([
   "/admin",
   "/admin/audit-log",
@@ -60,6 +65,77 @@ const privateNoindexRoutes = new Set([
   "/search",
   "/signup",
   "/submit-report",
+])
+
+const publicNavigationHrefs = new Set([
+  "/",
+  "/about",
+  "/business-rating-methodology",
+  "/businesses",
+  "/change-order-template",
+  "/claim-profile",
+  "/client-response",
+  "/client-screening-for-contractors",
+  "/clients",
+  "/clients/florida",
+  "/clients/florida/orlando",
+  "/contact",
+  "/contractor-contract-template",
+  "/enterprise",
+  "/florida-contractor-agreement-template",
+  "/florida-lien-filing-service",
+  "/florida-lien-notice-service",
+  "/homeowner-wont-pay-contractor",
+  "/how-it-works",
+  "/industries/contractors",
+  "/mobile-app",
+  "/payment-recovery-service",
+  "/platform",
+  "/pricing",
+  "/profiles",
+  "/profiles/contractor",
+  "/profiles/subcontractor",
+  "/report-policy",
+  "/reports/non-payment",
+  "/reports/recent",
+  "/resources",
+  "/score-methodology",
+  "/search",
+  "/terms",
+  "/privacy",
+])
+
+const dashboardNavigationHrefs = new Set([
+  "/dashboard",
+  "/search",
+  "/dashboard/jobs",
+  "/dashboard/reports",
+  "/submit-report",
+  "/dashboard/watchlist",
+  "/dashboard/growth",
+  "/dashboard/contracts",
+  "/dashboard/recovery",
+  "/dashboard/lien-readiness",
+  "/dashboard/evidence",
+  "/dashboard/alerts",
+  "/dashboard/billing",
+  "/dashboard/activity",
+])
+
+const adminNavigationHrefs = new Set([
+  "/admin",
+  "/admin/reports",
+  "/admin/profiles",
+  "/admin/clients",
+  "/admin/contractors",
+  "/admin/discussions",
+  "/admin/discussions?view=responses",
+  "/admin/reports?view=all",
+  "/admin/uploads",
+  "/admin/recovery",
+  "/admin/contracts",
+  "/admin/audit-log",
+  "/admin/settings",
 ])
 
 const publicIndexableRoutes = new Set([
@@ -108,6 +184,8 @@ if (!existsSync(appDir)) {
 }
 
 const pageFiles = existsSync(appDir) ? walk(appDir).filter((file) => path.basename(file) === "page.tsx").sort() : []
+const navigationSource = existsSync(navigationFile) ? readFileSync(navigationFile, "utf8") : ""
+const navigationHrefSet = navigationHrefs(navigationSource)
 const routes = pageFiles.map((filePath) => {
   const route = routeFromPageFile(filePath)
   const source = readFileSync(filePath, "utf8")
@@ -117,6 +195,9 @@ const routes = pageFiles.map((filePath) => {
 
 if (routes.length >= 50) pass("App page route inventory", `${routes.length} page route(s)`)
 else fail("App page route inventory", `${routes.length} page route(s)`)
+
+if (existsSync(navigationFile)) pass("Navigation registry exists", navigationFile)
+else fail("Navigation registry exists", "src/lib/navigation.ts missing")
 
 const routeSet = new Set(routes.map((item) => item.route))
 const classifiedRoutes = new Set([...privateNoindexRoutes, ...publicIndexableRoutes])
@@ -144,6 +225,21 @@ for (const { route, source } of routes.filter((item) => privateNoindexRoutes.has
 for (const { route, source } of routes.filter((item) => publicIndexableRoutes.has(item.route))) {
   if (!hasNoindexRobots(source)) pass(`${route} is not statically noindexed`)
   else fail(`${route} is not statically noindexed`, "public routes should remain indexable unless intentionally reclassified")
+}
+
+for (const href of [...publicNavigationHrefs].sort()) {
+  if (navigationHrefSet.has(href)) pass(`Public navigation exposes ${href}`)
+  else fail(`Public navigation exposes ${href}`, "add the page to primary, resource, or footer navigation")
+}
+
+for (const href of [...dashboardNavigationHrefs].sort()) {
+  if (navigationHrefSet.has(href)) pass(`Dashboard navigation exposes ${href}`)
+  else fail(`Dashboard navigation exposes ${href}`, "dashboard users need a discoverable path to this tool")
+}
+
+for (const href of [...adminNavigationHrefs].sort()) {
+  if (navigationHrefSet.has(href)) pass(`Admin navigation exposes ${href}`)
+  else fail(`Admin navigation exposes ${href}`, "admin CRM pages and saved views need a discoverable path")
 }
 
 for (const check of checks) {
