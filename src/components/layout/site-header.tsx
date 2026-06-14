@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { BookOpen, BriefcaseBusiness, ChevronDown, FilePlus2, LogIn, LogOut, Menu, Search, ShieldCheck, UserCircle } from "lucide-react"
+import { BookOpen, ChevronDown, FilePlus2, LogIn, LogOut, Menu, Search, UserCircle } from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
@@ -44,51 +44,32 @@ const contractorHeaderNav = [
 
 const publicHeaderNav = [
   { href: "/search", label: "Check a Client" },
-  { href: "/submit-report", label: "Report Experience" },
-  { href: "/pricing", label: "Pricing" },
   { href: "/how-it-works", label: "How It Works" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/resources", label: "Resources" },
 ]
 
 const publicHeaderMenus = [
   {
-    label: "Browse Records",
-    icon: ShieldCheck,
+    label: "More",
+    icon: BookOpen,
     items: [
+      { href: "/submit-report", label: "Report a Client Experience", description: "Document a real client experience for moderation." },
+      { href: "/platform", label: "Platform Overview", description: "Client checks, jobs, contracts, evidence, and services in one workflow." },
       { href: "/clients", label: "Client Directory", description: "Approved public client profiles by market." },
       { href: "/profiles", label: "Profile Directory", description: "Clients, contractors, and subcontractors." },
       { href: "/profiles/contractor", label: "Contractor Profiles", description: "Business and service-company trust profiles." },
       { href: "/profiles/subcontractor", label: "Subcontractor Profiles", description: "Trade partner and payment-chain profiles." },
-      { href: "/industries", label: "Industries and Trades", description: "Browse pages by trade, business type, and subcontractor workflow." },
       { href: "/reports/recent", label: "Recent Reports", description: "Newly approved public report summaries." },
-    ],
-  },
-  {
-    label: "Protect a Job",
-    icon: BriefcaseBusiness,
-    items: [
-      { href: "/platform", label: "Platform Overview", description: "Client checks, jobs, contracts, evidence, and services in one workflow." },
       { href: "/contractor-contract-template", label: "Contracts", description: "Agreement packets and e-signature workflow." },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter", description: "Florida-aware starter packet for scope, payment terms, and review prompts." },
       { href: "/change-order-template", label: "Change Orders", description: "Document changed scope, cost, schedule, and approval." },
       { href: "/client-screening-for-contractors", label: "Client Screening", description: "Check client context before accepting work." },
-    ],
-  },
-  {
-    label: "Get Help",
-    icon: BookOpen,
-    items: [
       { href: "/payment-recovery-service", label: "Payment Recovery", description: "Managed Resolution Desk service overview." },
       { href: "/florida-lien-notice-service", label: "Florida Notices", description: "Notice packet workflow for Florida cases." },
       { href: "/florida-lien-filing-service", label: "Florida Lien Filing", description: "Filing review, vendor routing, and recording proof." },
       { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide", description: "Private documentation steps when payment stalls." },
       { href: "/mobile-app", label: "Android App", description: "Native mobile workspace for contractors." },
-    ],
-  },
-  {
-    label: "Resources",
-    icon: BookOpen,
-    items: [
       { href: "/score-methodology", label: "Client Rating Methodology", description: "How ratings and risk context are shown." },
       { href: "/business-rating-methodology", label: "Business & Trade Ratings", description: "Contractor and subcontractor profile scoring." },
       { href: "/about", label: "About", description: "Why Client Bureau exists." },
