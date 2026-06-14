@@ -679,6 +679,7 @@ if (llmsTxt.response.ok) {
     `${expectedSiteUrl}/clients`,
     `${expectedSiteUrl}/profiles`,
     `${expectedSiteUrl}/profiles/contractor`,
+    `${expectedSiteUrl}/industries`,
     `${expectedSiteUrl}/mobile-app`,
     `${expectedSiteUrl}/payment-recovery-service`,
     `${expectedSiteUrl}/florida-lien-filing-service`,
@@ -751,7 +752,13 @@ if (aiIndex.response.ok && aiIndex.json) {
     }
   }
 
-  for (const requiredUrl of [`${expectedSiteUrl}/`, `${expectedSiteUrl}/pricing`, `${expectedSiteUrl}/clients`, `${expectedSiteUrl}/mobile-app`]) {
+  for (const requiredUrl of [
+    `${expectedSiteUrl}/`,
+    `${expectedSiteUrl}/pricing`,
+    `${expectedSiteUrl}/clients`,
+    `${expectedSiteUrl}/industries`,
+    `${expectedSiteUrl}/mobile-app`,
+  ]) {
     if (aiUrls.includes(requiredUrl)) {
       pass(`/ai-index.json public page ${requiredUrl}`)
     } else {
@@ -1396,6 +1403,7 @@ const linkSources = [
   "/reports/recent",
   "/reports/non-payment",
   "/reports/high-risk",
+  "/industries",
   "/industries/contractors",
   "/industries/service-businesses",
   "/industries/roofing",

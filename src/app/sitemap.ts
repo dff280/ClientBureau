@@ -68,6 +68,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.74,
     },
+    {
+      url: `${siteUrl}/industries`,
+      lastModified: releaseLastModified,
+      changeFrequency: "weekly",
+      priority: 0.73,
+    },
     ...profileTypes.map((profileType) => ({
       url: `${siteUrl}/profiles/${profileType}`,
       lastModified: releaseLastModified,

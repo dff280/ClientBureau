@@ -55,6 +55,11 @@ export async function GET() {
       intent: "Indexable public directory for subcontractor, installer, crew, and specialty trade professional profiles.",
     },
     {
+      title: "Industries and Trades",
+      url: `${siteUrl}/industries`,
+      intent: "Indexable hub for contractors, subcontractors, service businesses, and high-demand trade pages.",
+    },
+    {
       title: "Pricing",
       url: `${siteUrl}/pricing`,
       intent: "Plan comparison for contractors, service businesses, teams, and enterprise buyers.",

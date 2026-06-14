@@ -70,6 +70,7 @@ Core positioning: Check the client before you take the job.
 - [Unified Profile Directory](${siteUrl}/profiles)
 - [Contractor Profiles](${siteUrl}/profiles/contractor)
 - [Subcontractor Profiles](${siteUrl}/profiles/subcontractor)
+- [Industries and Trades](${siteUrl}/industries)
 - [About Client Bureau](${siteUrl}/about)
 - [Contact Client Bureau](${siteUrl}/contact)
 - [Enterprise](${siteUrl}/enterprise)

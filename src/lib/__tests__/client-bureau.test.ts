@@ -476,6 +476,7 @@ describe("product positioning", () => {
     expect(publicPrimaryNav.map((item) => item.label)).toEqual([
       "Platform",
       "Check a Client",
+      "Industries",
       "How It Works",
       "Pricing",
       "Resources",
@@ -1311,6 +1312,7 @@ describe("public SEO landing pages", () => {
     expect(urls).toContain("https://clientbureau.com/profiles/client")
     expect(urls).toContain("https://clientbureau.com/profiles/contractor")
     expect(urls).toContain("https://clientbureau.com/profiles/subcontractor")
+    expect(urls).toContain("https://clientbureau.com/industries")
     expect(urls).toContain("https://clientbureau.com/business-rating-methodology")
     expect(urls).toContain("https://clientbureau.com/business/ridgebuild-contracting-orlando-fl")
     expect(urls).toContain("https://clientbureau.com/clients/florida")
