@@ -75,6 +75,14 @@ export function ClientDashboardShell({
 }) {
   const PrimaryIcon = primaryAction?.icon
   const SecondaryIcon = secondaryAction?.icon
+  const dashboardLinks = contractorDashboardGroups.flatMap((group) => group.links)
+  const activeItem =
+    mobileDashboardLinks.find((item) => item.href === activeHref) ??
+    [...dashboardLinks]
+      .filter((item) => item.href !== "/dashboard")
+      .sort((a, b) => b.href.length - a.href.length)
+      .find((item) => activeHref === item.href || activeHref.startsWith(`${item.href}/`)) ??
+    mobileDashboardLinks.find((item) => item.href === "/dashboard")
 
   return (
     <section className="bureau-paper min-h-screen">
@@ -120,7 +128,9 @@ export function ClientDashboardShell({
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase text-amber-700">Tools</p>
-              <p className="text-sm text-slate-600">Jump to the task you need now.</p>
+              <p className="text-sm text-slate-600">
+                {activeItem ? `Current tool: ${activeItem.label}` : "Jump to the task you need now."}
+              </p>
             </div>
             <Badge variant="outline" className="rounded-md border-slate-200 bg-slate-50 text-slate-700">
               Private
@@ -165,6 +175,15 @@ export function ClientDashboardShell({
               Pick the job you are trying to handle.
             </p>
           </div>
+          {activeItem ? (
+            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <p className="text-xs font-semibold uppercase text-amber-700">Current tool</p>
+              <p className="mt-1 text-sm font-semibold text-amber-950">{activeItem.label}</p>
+              {activeItem.description ? (
+                <p className="mt-1 text-xs leading-5 text-amber-900">{activeItem.description}</p>
+              ) : null}
+            </div>
+          ) : null}
           <nav className="space-y-4" aria-label="Contractor dashboard">
             {contractorDashboardGroups.map((group) => (
               <div key={group.title}>

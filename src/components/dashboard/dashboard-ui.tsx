@@ -363,11 +363,11 @@ export function ToolQuickStart({
           <p className="text-xs font-semibold uppercase text-amber-700">{eyebrow}</p>
           <h2 className="mt-1 text-2xl font-semibold tracking-normal text-slate-950">{title}</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p>
-          <details className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 sm:hidden">
+          <details className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3">
             <summary className="cursor-pointer text-sm font-semibold text-slate-950">
-              How this tool works
+              What this tool does, when to use it, and what stays private
             </summary>
-            <div className="mt-3 grid gap-3">
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
               {details.map((item) => (
                 <div key={item.label} className="rounded-md border border-slate-200 bg-white p-3">
                   <p className="text-xs font-semibold uppercase text-slate-500">{item.label}</p>
@@ -376,14 +376,6 @@ export function ToolQuickStart({
               ))}
             </div>
           </details>
-          <div className="mt-4 hidden gap-3 sm:grid md:grid-cols-3">
-            {details.map((item) => (
-              <div key={item.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs font-semibold uppercase text-slate-500">{item.label}</p>
-                <p className="mt-1 text-sm leading-6 text-slate-600">{item.text}</p>
-              </div>
-            ))}
-          </div>
         </div>
         <aside className="border-t border-slate-200 bg-slate-950 p-5 text-white lg:border-l lg:border-t-0">
           <p className="text-xs font-semibold uppercase text-amber-300">Private workspace</p>

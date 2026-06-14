@@ -59,6 +59,10 @@ export function AdminAppShell({
 
     return hrefPath === pathname && currentSearch === ""
   }
+  const activeAdminItem =
+    adminNav.find((item) => isActiveAdminLink(item.href)) ??
+    adminNav.find((item) => item.href.split("?")[0] === pathname) ??
+    adminNavigationGroups[0]?.links[0]
 
   return (
     <AdminActionTokenProvider token={adminActionToken}>
@@ -76,6 +80,15 @@ export function AdminAppShell({
             </div>
 
             <nav className="mobile-scrollbar flex-1 space-y-5 overflow-y-auto p-4">
+              {activeAdminItem ? (
+                <div className="rounded-md border border-amber-300/25 bg-amber-300/10 p-3">
+                  <p className="text-xs font-semibold uppercase text-amber-300">Current queue</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{activeAdminItem.label}</p>
+                  {activeAdminItem.description ? (
+                    <p className="mt-1 text-xs leading-5 text-slate-300">{activeAdminItem.description}</p>
+                  ) : null}
+                </div>
+              ) : null}
               {adminNavigationGroups.map((group) => (
                 <div key={group.title} className="space-y-1">
                   <p className="px-3 text-xs font-semibold uppercase text-slate-500">{group.title}</p>
@@ -141,6 +154,12 @@ export function AdminAppShell({
                 </Link>
               </Button>
             </div>
+            {activeAdminItem ? (
+              <div className="mt-3 rounded-md border border-white/10 bg-white/5 p-3">
+                <p className="text-xs font-semibold uppercase text-amber-300">Current queue</p>
+                <p className="mt-1 text-sm font-semibold text-white">{activeAdminItem.label}</p>
+              </div>
+            ) : null}
             <nav className="mobile-scrollbar mt-3 flex gap-2 overflow-x-auto">
               {adminNav.map((item) => (
                 <Link
