@@ -43,6 +43,7 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0017_project_job_graph_backfill.sql`
    - `supabase/migrations/0018_response_graph_links.sql`
    - `supabase/migrations/0019_contractor_subcontractor_rating_transparency.sql`
+   - `supabase/migrations/0020_job_participants_flexible_roles.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -197,9 +198,9 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0019` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Use `mock` as the safe mode while the newest profile-rating columns are missing or if an advanced ops workflow needs review.
+Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0020` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Use `mock` as the safe mode while the newest profile-rating or Jobs participant columns are missing, or if an advanced ops workflow needs review.
 
-If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, or rating transparency columns, first confirm all migrations through `0019` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
+If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, rating transparency, or flexible Jobs participant columns, first confirm all migrations through `0020` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
 
 ```text
 supabase/migrations/0013_live_platform_schema_backfill.sql
@@ -215,7 +216,7 @@ npm run migrations:graph:file
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show Supabase-backed platform mode before a normal production release.
 
-After applying `0019`, publish at least one real, verified subcontractor/trade-professional profile before running acquisition campaigns against `/profiles/subcontractor`. Do not create fake public profiles to satisfy SEO checks.
+After applying `0019` and `0020`, publish at least one real, verified subcontractor/trade-professional profile before running acquisition campaigns against `/profiles/subcontractor`. Do not create fake public profiles to satisfy SEO checks.
 
 After the required tables are verified, enable live-backed platform operations:
 
@@ -266,9 +267,9 @@ If this is a fresh VPS or `/opt/client-bureau` is missing, run the latest deploy
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
 ```
 
-The helper pulls `main`, writes `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, rebuilds Docker, prunes old images, and prints `/api/version` plus `/api/health`.
+The helper pulls `main`, writes `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, stops any old legacy `clientbureau` Compose containers, rebuilds the canonical `client-bureau` Docker stack, prunes old images, and prints `/api/version` plus `/api/health`.
 
-Production should use the lowercase path `/opt/client-bureau` and Compose project name `client-bureau`. If an older checkout exists at `/opt/ClientBureau`, do not deploy from both paths. After confirming the lowercase deployment is healthy, remove any old duplicate Compose project with:
+Production should use the lowercase path `/opt/client-bureau` and Compose project name `client-bureau`. If an older checkout exists at `/opt/ClientBureau`, do not deploy manually from both paths. The deploy helper automatically stops old legacy Compose containers before starting the canonical stack. After confirming the lowercase deployment is healthy, remove the old checkout with:
 
 ```bash
 CLEANUP_LEGACY_COMPOSE=1 bash scripts/vps-deploy.sh

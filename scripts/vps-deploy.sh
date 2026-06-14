@@ -30,6 +30,37 @@ upsert_env() {
   fi
 }
 
+compose_project_container_ids() {
+  local project_name="$1"
+
+  docker ps -aq --filter "label=com.docker.compose.project=${project_name}" || true
+}
+
+stop_legacy_compose_project_if_needed() {
+  if [ "$APP_DIR" = "$LEGACY_APP_DIR" ] || [ "$COMPOSE_PROJECT_NAME" = "$LEGACY_COMPOSE_PROJECT_NAME" ]; then
+    return 0
+  fi
+
+  local legacy_container_ids
+  legacy_container_ids="$(compose_project_container_ids "$LEGACY_COMPOSE_PROJECT_NAME")"
+
+  if [ -z "$legacy_container_ids" ]; then
+    return 0
+  fi
+
+  echo ""
+  echo "Stopping legacy Compose project ${LEGACY_COMPOSE_PROJECT_NAME} before canonical deploy."
+  echo "This prevents duplicate Caddy/app containers from competing for ports 80 and 443."
+
+  if [ -f "$LEGACY_APP_DIR/docker-compose.yml" ]; then
+    docker compose -p "$LEGACY_COMPOSE_PROJECT_NAME" -f "$LEGACY_APP_DIR/docker-compose.yml" down --remove-orphans || true
+  else
+    # Fall back to removing containers by Compose label if the old checkout was deleted first.
+    # shellcheck disable=SC2086
+    docker rm -f $legacy_container_ids || true
+  fi
+}
+
 if [ ! -d "$APP_DIR/.git" ]; then
   mkdir -p /opt
   git clone "$REPO_URL" "$APP_DIR"
@@ -56,18 +87,22 @@ upsert_env "GIT_COMMIT_SHA" "$RELEASE_COMMIT"
 upsert_env "GIT_BRANCH" "$BRANCH"
 upsert_env "RELEASE_DATE" "$RELEASE_DATE"
 
+stop_legacy_compose_project_if_needed
+
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --build
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --force-recreate --no-deps caddy
 docker compose -p "$COMPOSE_PROJECT_NAME" ps
 
-if [ "${CLEANUP_LEGACY_COMPOSE:-0}" = "1" ] && [ "$COMPOSE_PROJECT_NAME" != "$LEGACY_COMPOSE_PROJECT_NAME" ] && [ -d "$LEGACY_APP_DIR" ]; then
+if [ "${CLEANUP_LEGACY_COMPOSE:-0}" = "1" ] && [ "$APP_DIR" != "$LEGACY_APP_DIR" ] && [ "$COMPOSE_PROJECT_NAME" != "$LEGACY_COMPOSE_PROJECT_NAME" ] && [ -d "$LEGACY_APP_DIR" ]; then
   echo ""
-  echo "Cleaning up legacy Compose project ${LEGACY_COMPOSE_PROJECT_NAME} from ${LEGACY_APP_DIR}."
+  echo "Cleaning up legacy checkout at ${LEGACY_APP_DIR}."
   docker compose -p "$LEGACY_COMPOSE_PROJECT_NAME" -f "$LEGACY_APP_DIR/docker-compose.yml" down --remove-orphans || true
+  rm -rf "$LEGACY_APP_DIR"
 elif [ -d "$LEGACY_APP_DIR/.git" ] && [ "$APP_DIR" != "$LEGACY_APP_DIR" ]; then
   echo ""
   echo "Legacy checkout detected at ${LEGACY_APP_DIR}."
-  echo "If an old duplicate Compose project is running, clean it up with:"
+  echo "The deploy helper automatically stops any old legacy Compose containers before starting the canonical stack."
+  echo "After confirming production is healthy, remove the old checkout with:"
   echo "  CLEANUP_LEGACY_COMPOSE=1 bash scripts/vps-deploy.sh"
 fi
 

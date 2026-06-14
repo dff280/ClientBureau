@@ -92,7 +92,7 @@ If `/opt/client-bureau` does not exist yet, run the latest deploy script directl
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
 ```
 
-The deploy script pulls `main`, stamps `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, rebuilds Docker, prunes old images, and prints the live version/health endpoints. The release date is also used by `/sitemap.xml` for static public-page `lastmod` values, so Google receives stable freshness signals instead of a new timestamp on every sitemap request.
+The deploy script pulls `main`, stamps `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, stops any old legacy `clientbureau` Compose containers, rebuilds the canonical `client-bureau` Docker stack, prunes old images, and prints the live version/health endpoints. The release date is also used by `/sitemap.xml` for static public-page `lastmod` values, so Google receives stable freshness signals instead of a new timestamp on every sitemap request.
 
 Post-deploy checks:
 
@@ -182,7 +182,7 @@ After the fix passes checks, merge it into `main`, deploy, and add a patch chang
 - Do not put server passwords into shell commands or commit history.
 - Prefer SSH keys for deploy access.
 - Public pages must not expose raw emails, phone numbers, street addresses, raw evidence files, pending reports, rejected reports, private contract content, or internal admin notes.
-- `PLATFORM_FEATURE_DATA_MODE=supabase` is the production target after readiness checks pass, including migration `0019_contractor_subcontractor_rating_transparency.sql`. Roll back to `mock` only if an advanced ops workflow needs review.
+- `PLATFORM_FEATURE_DATA_MODE=supabase` is the production target after readiness checks pass, including migrations `0019_contractor_subcontractor_rating_transparency.sql` and `0020_job_participants_flexible_roles.sql`. Roll back to `mock` only if an advanced ops workflow needs review.
 
 ## Release Checklist
 
