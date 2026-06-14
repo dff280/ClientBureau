@@ -114,11 +114,13 @@ export function buildSearchHref({
   state,
   riskLevel,
   category,
+  tradeCategory,
 }: {
   query?: string
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  tradeCategory?: string
 }) {
   const params = new URLSearchParams()
 
@@ -126,6 +128,7 @@ export function buildSearchHref({
   if (state?.trim()) params.set("state", state.trim().toUpperCase())
   if (riskLevel) params.set("risk", riskLevel)
   if (category) params.set("category", category)
+  if (tradeCategory) params.set("tradeCategory", tradeCategory)
 
   return `/search${params.size ? `?${params.toString()}` : ""}`
 }

@@ -14,6 +14,7 @@ import {
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { DashboardSection, StatusBadge, StatCard } from "@/components/dashboard/dashboard-ui"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -95,14 +96,21 @@ function JobFormFields({ job }: { job?: ProjectJob }) {
         <SelectField label="Job status" name="status" options={projectJobStatuses} defaultValue={job?.status ?? "lead"} />
         <SelectField label="Job type" name="jobType" options={projectJobTypes} defaultValue={job?.jobType ?? "direct_client_job"} />
         <SelectField label="Priority" name="priority" options={projectJobPriorities} defaultValue={job?.priority ?? "normal"} />
-        <div className="grid gap-2">
-          <Label htmlFor="projectType">Service type</Label>
-          <Input id="projectType" name="projectType" defaultValue={job?.projectType} placeholder="Painting, remodeling, flooring" required />
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor="tradeCategory">Trade category</Label>
-          <Input id="tradeCategory" name="tradeCategory" defaultValue={job?.tradeCategory} placeholder="Pool deck painting" />
-        </div>
+        <TradeCategorySelect
+          id="projectType"
+          name="projectType"
+          otherName="otherProjectTypeDetail"
+          defaultValue={job?.projectType}
+          label="Service type"
+          required
+        />
+        <TradeCategorySelect
+          id="tradeCategory"
+          name="tradeCategory"
+          otherName="otherTradeCategoryDetail"
+          defaultValue={job?.tradeCategory}
+          label="Trade category"
+        />
         <div className="grid gap-2">
           <Label htmlFor="contractAmount">Contract value</Label>
           <Input id="contractAmount" name="contractAmount" type="number" min="0" step="0.01" defaultValue={job?.contractAmount ?? 0} required />

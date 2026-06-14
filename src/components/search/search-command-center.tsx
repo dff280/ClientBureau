@@ -44,6 +44,7 @@ import {
   type SearchPreviewProfile,
 } from "@/lib/search-experience"
 import { usStates } from "@/lib/locations"
+import { tradeCategories, tradeCategoryGroups } from "@/lib/trade-taxonomy"
 import {
   reportCategories,
   riskLevels,
@@ -73,6 +74,7 @@ interface SearchCommandCenterProps {
   state?: string
   riskLevel?: RiskLevel
   category?: ReportCategory
+  tradeCategory?: string
   profiles: SearchPreviewProfile[]
   initialSavedSearches?: InitialSavedSearch[]
   isAuthenticated?: boolean
@@ -111,6 +113,7 @@ export function SearchCommandCenter({
   state,
   riskLevel,
   category,
+  tradeCategory,
   profiles,
   initialSavedSearches = [],
   isAuthenticated = false,
@@ -119,6 +122,7 @@ export function SearchCommandCenter({
   const [stateValue, setStateValue] = useState(state ?? "")
   const [riskValue, setRiskValue] = useState<RiskLevel | "">(riskLevel ?? "")
   const [categoryValue, setCategoryValue] = useState<ReportCategory | "">(category ?? "")
+  const [tradeValue, setTradeValue] = useState(tradeCategory ?? "")
   const initialSavedRecords = useMemo(
     () =>
       initialSavedSearches.map((item) => ({
@@ -298,6 +302,7 @@ export function SearchCommandCenter({
     state: stateValue,
     riskLevel: riskFilter,
     category: categoryFilter,
+    tradeCategory: tradeValue || undefined,
   })
 
   return (
@@ -337,7 +342,7 @@ export function SearchCommandCenter({
                   />
                 </div>
 
-                <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto]">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[120px_1fr_1fr_1fr_auto]">
                   <select
                     name="state"
                     value={stateValue}
@@ -379,6 +384,29 @@ export function SearchCommandCenter({
                         {item}
                       </option>
                     ))}
+                  </select>
+                  <select
+                    name="tradeCategory"
+                    value={tradeValue}
+                    onChange={(event) => setTradeValue(event.target.value)}
+                    className="h-11 rounded-md border border-input bg-background px-3 text-sm text-slate-700 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                    aria-label="Filter by trade or service"
+                  >
+                    <option value="">All trades and services</option>
+                    {tradeCategoryGroups.map((group) => {
+                      const options = tradeCategories.filter((item) => item.group === group)
+                      if (options.length === 0) return null
+
+                      return (
+                        <optgroup key={group} label={group}>
+                          {options.map((item) => (
+                            <option key={item.slug} value={item.label}>
+                              {item.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )
+                    })}
                   </select>
                   <Button className="h-11 w-full justify-center bg-slate-950 px-6 text-white hover:bg-slate-800 md:w-auto" type="submit">
                     Check

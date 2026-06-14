@@ -55,6 +55,13 @@ import {
   toSearchPreviewProfile,
 } from "@/lib/search-experience"
 import {
+  getTradeBySlug,
+  normalizeTradeCategory,
+  otherTradeLabel,
+  tradeCategoryMatches,
+  tradeOptionsForProfileType,
+} from "@/lib/trade-taxonomy"
+import {
   buildEntityProfileSlug,
   defaultProfileSubtype,
   deriveEntityProfiles,
@@ -311,6 +318,33 @@ describe("Client Bureau unified profiles", () => {
 
     const results = searchEntityProfiles(entityProfiles, "Homeowner")
     expect(results.some((profile) => profile.profileType === "client")).toBe(true)
+  })
+
+  it("normalizes U.S. trade and service categories for clean intake data", () => {
+    expect(getTradeBySlug("pressure-washing")?.label).toBe("Pressure washing")
+    expect(normalizeTradeCategory("AC repair")).toBe("HVAC")
+    expect(normalizeTradeCategory(otherTradeLabel, "marine dock repair and lift service")).toBe(
+      "Other specialty trade: marine dock repair and lift service",
+    )
+
+    const subcontractorOptions = tradeOptionsForProfileType("subcontractor").map((category) => category.label)
+    expect(subcontractorOptions).toContain("Electrical")
+    expect(subcontractorOptions).toContain("Painting")
+  })
+
+  it("filters profile search by canonical trade categories and aliases", () => {
+    const electricalResults = searchEntityProfiles(entityProfiles, "", {
+      profileType: "subcontractor",
+      tradeCategory: "Electrical",
+    })
+    expect(electricalResults.some((profile) => profile.businessName === "Bright Line Electric")).toBe(true)
+
+    const paintingResults = searchEntityProfiles(entityProfiles, "", {
+      profileType: "subcontractor",
+      tradeCategory: "Painting",
+    })
+    expect(paintingResults.some((profile) => profile.businessName === "Superior Renovations & Painting")).toBe(true)
+    expect(tradeCategoryMatches("pressure cleaning exterior flatwork", "Pressure washing")).toBe(true)
   })
 
   it("marks unclaimed public profiles as claim pending after a profile claim", () => {

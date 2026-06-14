@@ -4,6 +4,7 @@ import { mobileJson } from "@/lib/mobile-api"
 import { signupSchema } from "@/lib/schemas/client-bureau"
 import { createServiceClient } from "@/lib/supabase/service"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeTradeCategory } from "@/lib/trade-taxonomy"
 import type { User } from "@/lib/types"
 
 export const dynamic = "force-dynamic"
@@ -32,16 +33,20 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return mobileJson(fail("Please correct the account fields.", zodFieldErrors(parsed.error)), 400)
   }
+  const input = {
+    ...parsed.data,
+    trade: normalizeTradeCategory(parsed.data.trade, parsed.data.otherTradeDetail),
+  }
 
   if (getDataMode() !== "supabase") {
     return mobileJson(
       ok(
         {
           id: "user_local_mobile_signup",
-          email: parsed.data.email,
-          fullName: parsed.data.fullName,
+          email: input.email,
+          fullName: input.fullName,
           role: "contractor",
-          accountType: parsed.data.accountType,
+          accountType: input.accountType,
           createdAt: new Date().toISOString(),
         } satisfies User,
         "Account created for local mobile testing.",
@@ -52,14 +57,14 @@ export async function POST(request: Request) {
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
+    email: input.email,
+    password: input.password,
     options: {
       data: {
-        full_name: parsed.data.fullName,
-        business_name: parsed.data.businessName,
-        trade: parsed.data.trade,
-        account_type: parsed.data.accountType,
+        full_name: input.fullName,
+        business_name: input.businessName,
+        trade: input.trade,
+        account_type: input.accountType,
       },
     },
   })
@@ -72,8 +77,8 @@ export async function POST(request: Request) {
     const service = createServiceClient()
     const { error: userError } = await service.from("users").upsert({
       id: data.user.id,
-      email: parsed.data.email,
-      full_name: parsed.data.fullName,
+      email: input.email,
+      full_name: input.fullName,
       role: "contractor",
     })
 
@@ -81,7 +86,7 @@ export async function POST(request: Request) {
 
     const { error: accountTypeError } = await service
       .from("users")
-      .update({ account_type: parsed.data.accountType })
+      .update({ account_type: input.accountType })
       .eq("id", data.user.id)
 
     if (accountTypeError && !isMissingOnboardingColumn(accountTypeError)) {
@@ -91,11 +96,11 @@ export async function POST(request: Request) {
     const { error: contractorError } = await service.from("contractor_profiles").upsert(
       {
         user_id: data.user.id,
-        business_name: parsed.data.businessName,
-        trade: parsed.data.trade,
-        city: parsed.data.city,
-        state: parsed.data.state.toUpperCase(),
-        license_number: parsed.data.licenseNumber ?? null,
+        business_name: input.businessName,
+        trade: input.trade,
+        city: input.city,
+        state: input.state.toUpperCase(),
+        license_number: input.licenseNumber ?? null,
         verification_status: "pending",
       },
       { onConflict: "user_id" },
@@ -104,13 +109,13 @@ export async function POST(request: Request) {
     if (contractorError) return mobileJson(fail(contractorError.message), 400)
 
     const optionalProfileFields = {
-      business_type: parsed.data.businessType ?? null,
-      business_phone: parsed.data.businessPhone ?? null,
-      website_url: parsed.data.websiteUrl || null,
-      service_area: parsed.data.serviceArea || null,
-      company_size: parsed.data.companySize ?? null,
-      years_in_business: parsed.data.yearsInBusiness ?? null,
-      primary_goal: parsed.data.primaryGoal ?? null,
+      business_type: input.businessType ?? null,
+      business_phone: input.businessPhone ?? null,
+      website_url: input.websiteUrl || null,
+      service_area: input.serviceArea || null,
+      company_size: input.companySize ?? null,
+      years_in_business: input.yearsInBusiness ?? null,
+      primary_goal: input.primaryGoal ?? null,
     }
     const hasOptionalProfileFields = Object.values(optionalProfileFields).some(Boolean)
 
@@ -130,10 +135,10 @@ export async function POST(request: Request) {
     ok(
       {
         id: data.user?.id ?? "pending-email-confirmation",
-        email: parsed.data.email,
-        fullName: parsed.data.fullName,
+        email: input.email,
+        fullName: input.fullName,
         role: "contractor",
-        accountType: parsed.data.accountType,
+        accountType: input.accountType,
         createdAt: data.user?.created_at ?? new Date().toISOString(),
       } satisfies User,
       data.user

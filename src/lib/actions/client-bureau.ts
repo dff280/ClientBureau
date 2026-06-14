@@ -191,6 +191,7 @@ import type { ClientReportInput } from "@/lib/schemas/client-bureau"
 import { buildEntityProfileSlug } from "@/lib/entity-profiles"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
+import { normalizeTradeCategory } from "@/lib/trade-taxonomy"
 
 const emptyStructuredReportFields = {
   clientType: undefined,
@@ -205,7 +206,10 @@ const emptyStructuredReportFields = {
   relationshipVerificationSummary: undefined,
   jobAddress: undefined,
   tradeCategory: undefined,
+  otherTradeCategoryDetail: undefined,
   jobType: undefined,
+  otherJobTypeDetail: undefined,
+  otherProjectTypeDetail: undefined,
   jobStartDate: undefined,
   jobCompletionDate: undefined,
   jobStatus: undefined,
@@ -244,7 +248,10 @@ const emptyStructuredReportFields = {
   | "relationshipVerificationSummary"
   | "jobAddress"
   | "tradeCategory"
+  | "otherTradeCategoryDetail"
   | "jobType"
+  | "otherJobTypeDetail"
+  | "otherProjectTypeDetail"
   | "jobStartDate"
   | "jobCompletionDate"
   | "jobStatus"
@@ -270,6 +277,33 @@ const emptyStructuredReportFields = {
   | "evidenceSupport"
   | "desiredResolution"
 >
+
+function normalizeSignupTrade<T extends { otherTradeDetail?: string; trade: string }>(input: T): T {
+  return {
+    ...input,
+    trade: normalizeTradeCategory(input.trade, input.otherTradeDetail),
+  }
+}
+
+function normalizeReportTradeFields<
+  T extends {
+    jobType?: string
+    otherJobTypeDetail?: string
+    otherProjectTypeDetail?: string
+    otherTradeCategoryDetail?: string
+    projectType: string
+    tradeCategory?: string
+  },
+>(input: T): T {
+  return {
+    ...input,
+    jobType: input.jobType ? normalizeTradeCategory(input.jobType, input.otherJobTypeDetail) : input.jobType,
+    projectType: normalizeTradeCategory(input.projectType, input.otherProjectTypeDetail),
+    tradeCategory: input.tradeCategory
+      ? normalizeTradeCategory(input.tradeCategory, input.otherTradeCategoryDetail)
+      : input.tradeCategory,
+  }
+}
 
 function evidenceFilesFromForm(formData: FormData) {
   return formData
@@ -440,8 +474,9 @@ export async function submitClientReportAction(
   }
 
   const user = await requireContractorAccess()
+  const input = normalizeReportTradeFields(parsed.data)
 
-  const report = await submitClientReportService(buildPrivateReportTimeline(parsed.data), user.id, evidenceFilesFromForm(formData))
+  const report = await submitClientReportService(buildPrivateReportTimeline(input), user.id, evidenceFilesFromForm(formData))
 
   revalidatePath("/dashboard")
   revalidatePath("/admin/reviews")
@@ -449,7 +484,7 @@ export async function submitClientReportAction(
 
   return ok(
     report,
-    isPositiveReportCategory(parsed.data.reportCategory)
+    isPositiveReportCategory(input.reportCategory)
       ? "Positive client report received. It is now queued for moderation review."
       : "Report received. It is now queued for moderation review.",
   )
@@ -739,20 +774,21 @@ export async function signupAction(
     return fail("Please correct the highlighted account fields.", zodFieldErrors(parsed.error))
   }
 
-  const redirectTo = getPostSignupRedirectPath(parsed.data.accountType, formData.get("next"))
+  const input = normalizeSignupTrade(parsed.data)
+  const redirectTo = getPostSignupRedirectPath(input.accountType, formData.get("next"))
 
   if (getDataMode() === "supabase") {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
+      email: input.email,
+      password: input.password,
       options: {
         emailRedirectTo: `${getSiteUrl()}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
         data: {
-          full_name: parsed.data.fullName,
-          business_name: parsed.data.businessName,
-          trade: parsed.data.trade,
-          account_type: parsed.data.accountType,
+          full_name: input.fullName,
+          business_name: input.businessName,
+          trade: input.trade,
+          account_type: input.accountType,
         },
       },
     })
@@ -763,8 +799,8 @@ export async function signupAction(
       const service = createServiceClient()
       const { error: userError } = await service.from("users").upsert({
         id: data.user.id,
-        email: parsed.data.email,
-        full_name: parsed.data.fullName,
+        email: input.email,
+        full_name: input.fullName,
         role: "contractor",
       })
 
@@ -772,7 +808,7 @@ export async function signupAction(
 
       const { error: accountTypeError } = await service
         .from("users")
-        .update({ account_type: parsed.data.accountType })
+        .update({ account_type: input.accountType })
         .eq("id", data.user.id)
 
       if (accountTypeError && !isMissingOnboardingColumn(accountTypeError)) {
@@ -782,11 +818,11 @@ export async function signupAction(
       const { error: contractorError } = await service.from("contractor_profiles").upsert(
         {
           user_id: data.user.id,
-          business_name: parsed.data.businessName,
-          trade: parsed.data.trade,
-          city: parsed.data.city,
-          state: parsed.data.state.toUpperCase(),
-          license_number: parsed.data.licenseNumber ?? null,
+          business_name: input.businessName,
+          trade: input.trade,
+          city: input.city,
+          state: input.state.toUpperCase(),
+          license_number: input.licenseNumber ?? null,
           verification_status: "pending",
         },
         { onConflict: "user_id" },
@@ -795,13 +831,13 @@ export async function signupAction(
       if (contractorError) return fail(contractorError.message)
 
       const optionalProfileFields = {
-        business_type: parsed.data.businessType ?? null,
-        business_phone: parsed.data.businessPhone ?? null,
-        website_url: parsed.data.websiteUrl || null,
-        service_area: parsed.data.serviceArea || null,
-        company_size: parsed.data.companySize ?? null,
-        years_in_business: parsed.data.yearsInBusiness ?? null,
-        primary_goal: parsed.data.primaryGoal ?? null,
+        business_type: input.businessType ?? null,
+        business_phone: input.businessPhone ?? null,
+        website_url: input.websiteUrl || null,
+        service_area: input.serviceArea || null,
+        company_size: input.companySize ?? null,
+        years_in_business: input.yearsInBusiness ?? null,
+        primary_goal: input.primaryGoal ?? null,
       }
       const hasOptionalProfileFields = Object.values(optionalProfileFields).some(Boolean)
 
@@ -821,24 +857,24 @@ export async function signupAction(
         .select("id")
         .eq("user_id", data.user.id)
         .maybeSingle()
-      const profileType = parsed.data.accountType === "client" ? "client" : parsed.data.accountType
+      const profileType = input.accountType === "client" ? "client" : input.accountType
       const profileSlug = buildEntityProfileSlug({
         profileType,
-        displayName: parsed.data.businessName,
-        businessName: profileType === "client" ? undefined : parsed.data.businessName,
-        city: parsed.data.city,
-        state: parsed.data.state,
+        displayName: input.businessName,
+        businessName: profileType === "client" ? undefined : input.businessName,
+        city: input.city,
+        state: input.state,
       })
       const { error: entityProfileError } = await service
         .from("entity_profiles")
         .upsert(
           {
             profile_type: profileType,
-            display_name: parsed.data.businessName,
-            legal_name_private: parsed.data.fullName,
-            business_name: profileType === "client" ? null : parsed.data.businessName,
-            city: parsed.data.city,
-            state: parsed.data.state.toUpperCase(),
+            display_name: input.businessName,
+            legal_name_private: input.fullName,
+            business_name: profileType === "client" ? null : input.businessName,
+            city: input.city,
+            state: input.state.toUpperCase(),
             slug: profileSlug,
             legacy_contractor_id: profileType === "client" ? null : (contractorProfileRow?.id ?? null),
             claimed_status: "claimed",
@@ -862,15 +898,15 @@ export async function signupAction(
     return ok(
       {
         id: data.user?.id ?? "pending-email-confirmation",
-        email: parsed.data.email,
-        fullName: parsed.data.fullName,
+        email: input.email,
+        fullName: input.fullName,
         role: "contractor",
-        accountType: parsed.data.accountType,
+        accountType: input.accountType,
         redirectTo,
         createdAt: data.user?.created_at ?? new Date().toISOString(),
       },
       data.user
-        ? parsed.data.accountType === "client"
+        ? input.accountType === "client"
           ? "Client account created. You can respond, request correction, or claim a profile."
           : "Contractor account created. You can now use protected Client Bureau tools."
         : "Signup received. Check your email to confirm the account.",
@@ -878,16 +914,16 @@ export async function signupAction(
   }
 
   return ok(
-      {
-        id: "user_local_signup",
-        email: parsed.data.email,
-        fullName: parsed.data.fullName,
-        role: "contractor",
-        accountType: parsed.data.accountType,
-        redirectTo,
-        createdAt: new Date().toISOString(),
-      },
-    parsed.data.accountType === "client"
+    {
+      id: "user_local_signup",
+      email: input.email,
+      fullName: input.fullName,
+      role: "contractor",
+      accountType: input.accountType,
+      redirectTo,
+      createdAt: new Date().toISOString(),
+    },
+    input.accountType === "client"
       ? "Client account created. You can respond, request correction, or claim a profile."
       : "Contractor account created. You can now continue with Client Bureau tools.",
   )
@@ -1121,9 +1157,10 @@ export async function adminUpdateContractorAction(
 
   const { admin } = adminResult
   let contractor: ContractorProfile
+  const input = normalizeSignupTrade(parsed.data)
 
   try {
-    contractor = await updateAdminContractorRecordService({ ...parsed.data, reviewer: admin })
+    contractor = await updateAdminContractorRecordService({ ...input, reviewer: admin })
   } catch (error) {
     return fail(actionErrorMessage(error, "Contractor profile could not be updated."))
   }
@@ -1992,9 +2029,10 @@ export async function createProjectJobAction(
   }
 
   const user = await requireContractorAccess()
+  const input = normalizeReportTradeFields(parsed.data)
 
   try {
-    const job = await createProjectJobService(user.id, parsed.data)
+    const job = await createProjectJobService(user.id, input)
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/jobs")
     return ok(job, "Job created. Add participants next.")
@@ -2014,9 +2052,10 @@ export async function updateProjectJobAction(
   }
 
   const user = await requireContractorAccess()
+  const input = normalizeReportTradeFields(parsed.data)
 
   try {
-    const job = await updateProjectJobService(user.id, parsed.data)
+    const job = await updateProjectJobService(user.id, input)
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/jobs")
     revalidatePath(`/dashboard/jobs/${job.id}`)

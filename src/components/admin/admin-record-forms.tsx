@@ -22,6 +22,7 @@ import { AdminActionTokenInput } from "@/components/admin/admin-action-token-con
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -374,7 +375,18 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <LabeledInput label="Business" name="businessName" defaultValue={contractor.businessName} errors={state.ok ? undefined : state.fieldErrors} />
-                <LabeledInput label="Trade" name="trade" defaultValue={contractor.trade} errors={state.ok ? undefined : state.fieldErrors} />
+                <div>
+                  <TradeCategorySelect
+                    id={`${contractor.id}-trade`}
+                    name="trade"
+                    otherName="otherTradeDetail"
+                    defaultValue={contractor.trade}
+                    label="Trade or service"
+                    profileType={contractor.trade.toLowerCase().includes("subcontract") ? "subcontractor" : "contractor"}
+                    required
+                  />
+                  <FieldError name="trade" errors={state.ok ? undefined : state.fieldErrors} />
+                </div>
                 <LabeledSelect label="Business type" name="businessType" defaultValue={contractor.businessType ?? ""} options={businessTypes} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledInput label="Website optional" name="websiteUrl" defaultValue={contractor.websiteUrl ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
                 <div className="sm:col-span-2">

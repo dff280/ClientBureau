@@ -1,6 +1,7 @@
 import { buildBusinessSlug } from "@/lib/business-rating"
 import { normalizeStateCode } from "@/lib/locations"
 import { buildClientProfileSlug } from "@/lib/slug"
+import { normalizeTradeCategory, tradeCategoryMatches, tradeSearchAliases } from "@/lib/trade-taxonomy"
 import {
   isPositiveReportCategory,
   type ClientProfile,
@@ -308,11 +309,13 @@ export function deriveEntityProfiles(input: {
       isSubcontractor ||
       contractor.primaryGoal?.toLowerCase().includes("subcontract") ||
       contractor.serviceArea?.toLowerCase().includes("subcontract")
+    const tradeCategory = normalizeTradeCategory(contractor.trade)
 
     return {
       id: `entity_contractor_${contractor.id}`,
       profileType: isSubcontractor ? "subcontractor" : "contractor",
       profileSubtype: isSubcontractor ? contractor.businessType ?? "Individual trade professional" : contractor.businessType ?? "Service business",
+      tradeCategory,
       accountCapabilities: supportsSubcontractorWork ? ["contractor", "subcontractor"] : ["contractor"],
       displayName: contractor.businessName,
       businessName: contractor.businessName,
@@ -345,8 +348,8 @@ export function deriveEntityProfiles(input: {
       evidenceOnFileCount: reports.filter((report) => report.evidenceAttached).length,
       responseCount: 0,
       publicSummary: isSubcontractor
-        ? "Trade partner profile with verification context, documented scope signals, and moderated payment-chain activity."
-        : "Business profile with verification context and moderated project activity.",
+        ? `${tradeCategory} trade partner profile with verification context, documented scope signals, and moderated payment-chain activity.`
+        : `${tradeCategory} business profile with verification context and moderated project activity.`,
       isPublic: true,
       createdAt: contractor.createdAt,
       updatedAt: publicBusiness?.lastUpdated ?? contractor.createdAt,
@@ -423,10 +426,13 @@ export function searchEntityProfiles(
         profile.slug,
         profile.profileType,
         profile.profileSubtype,
+        profile.tradeCategory,
         profile.verificationLevel,
         profile.verificationBadges?.join(" "),
         profile.ratingBand,
         profile.publicSummary,
+        ...tradeSearchAliases(profile.profileSubtype),
+        ...tradeSearchAliases(profile.tradeCategory),
       ]
         .filter(Boolean)
         .join(" ")
@@ -488,8 +494,18 @@ export function searchEntityProfiles(
         !filters.profileType ||
         profileSupportsType(profile, filters.profileType)
       const matchesRisk = !filters.riskLevel || profile.ratingBand === filters.riskLevel
+      const tradeText = [
+        profile.displayName,
+        profile.businessName,
+        profile.profileSubtype,
+        profile.tradeCategory,
+        profile.publicSummary,
+      ]
+        .filter(Boolean)
+        .join(" ")
+      const matchesTrade = !filters.tradeCategory || tradeCategoryMatches(tradeText, filters.tradeCategory)
 
-      return profile.isPublic && matchesQuery && matchesState && matchesType && matchesRisk
+      return profile.isPublic && matchesQuery && matchesState && matchesType && matchesRisk && matchesTrade
     })
     .sort((a, b) => b.matchScore - a.matchScore || b.reportCount - a.reportCount)
 }

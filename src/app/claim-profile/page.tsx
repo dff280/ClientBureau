@@ -16,6 +16,7 @@ import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/mar
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { ProfileClaimForm } from "@/components/forms/profile-claim-form"
 import { StateSelect } from "@/components/forms/state-select"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -215,7 +216,12 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
                     {profile ? <input type="hidden" name="profile" value={profile} /> : null}
                     <div className="grid gap-3 md:grid-cols-2">
                       <Input aria-label="Business name" name="businessName" placeholder="Business name" />
-                      <Input aria-label="Trade or service type" name="trade" placeholder="Trade or service type" />
+                      <TradeCategorySelect
+                        id="claimProfileTrade"
+                        name="trade"
+                        otherName="otherTradeDetail"
+                        label="Trade or service type"
+                      />
                       <Input aria-label="City" name="city" placeholder="City" />
                       <StateSelect id="claimProfileState" name="state" ariaLabel="State" />
                       <Input

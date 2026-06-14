@@ -7,6 +7,7 @@ import { toast } from "sonner"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -326,14 +327,26 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
             </p>
             <FieldError name="projectJobTitle" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="tradeCategory">Trade or service category{isBusinessProfileReport ? " required" : ""}</Label>
-            <Input id="tradeCategory" name="tradeCategory" placeholder="Painting, roofing, remodeling, HVAC" />
+          <div>
+            <TradeCategorySelect
+              id="tradeCategory"
+              name="tradeCategory"
+              otherName="otherTradeCategoryDetail"
+              label={`Trade or service category${isBusinessProfileReport ? " required" : ""}`}
+              profileType={subjectProfileType}
+              required={isBusinessProfileReport}
+            />
             <FieldError name="tradeCategory" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="projectType">Project type</Label>
-            <Input id="projectType" name="projectType" placeholder="Kitchen remodel" />
+          <div>
+            <TradeCategorySelect
+              id="projectType"
+              name="projectType"
+              otherName="otherProjectTypeDetail"
+              label="Primary service type"
+              profileType={subjectProfileType}
+              required
+            />
             <FieldError name="projectType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">

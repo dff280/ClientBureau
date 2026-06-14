@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -201,9 +202,14 @@ export function SignupForm({ redirectTo }: { redirectTo?: string }) {
             </select>
             <FieldError name="businessType" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="trade">Trade, service, or relationship context</Label>
-            <Input id="trade" name="trade" placeholder="Residential remodeling or homeowner response" />
+          <div>
+            <TradeCategorySelect
+              id="trade"
+              name="trade"
+              otherName="otherTradeDetail"
+              label="Trade, service, or relationship context"
+              required
+            />
             <FieldError name="trade" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">

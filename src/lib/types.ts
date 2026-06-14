@@ -455,6 +455,7 @@ export interface EntityProfile {
   id: string
   profileType: ProfileType
   profileSubtype?: ProfileSubtype | string
+  tradeCategory?: string
   accountCapabilities?: ProfileType[]
   displayName: string
   legalNamePrivate?: string
@@ -1608,6 +1609,7 @@ export interface SearchFilters {
   riskLevel?: RiskLevel
   category?: ReportCategory
   profileType?: ProfileType
+  tradeCategory?: string
 }
 
 export interface ClientSearchResult extends ClientProfile {
