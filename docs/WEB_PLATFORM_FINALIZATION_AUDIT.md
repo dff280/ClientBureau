@@ -1,7 +1,7 @@
 # Client Bureau Web Platform Finalization Audit
 
 Date: 2026-06-14  
-Release baseline: `0.4.2` / `2b15c4f` before this settings-polish pass
+Release baseline: `0.4.2` / current production commit from `/api/version`
 
 Current platform expectation: core and advanced web workflows are Supabase-backed when `/api/health` reports `platformCanUseSupabase: true`. `PLATFORM_FEATURE_DATA_MODE=mock` remains a rollback switch, not the normal launch posture.
 
@@ -190,6 +190,11 @@ Desktop and mobile browser spot-check:
 - Route inventory verification now checks every App Router page for metadata, intentional public/private classification, and noindex/nofollow robots metadata on private dashboard/admin/auth/workflow routes.
 - Private workspace verification now audits every contractor dashboard and admin CRM page for page-specific metadata descriptions, noindex/nofollow rules, professional page shells, clear action paths, empty/setup-state handling, private navigation resolution, and focused dashboard tool coverage.
 - Admin page metadata descriptions were filled in across the command center, audit log, client profiles, businesses/users, discussions, unified profiles, reports redirect, settings, and CSV intake so internal pages feel finished and remain machine-readable without becoming indexable.
+- Public mobile navigation now groups Start, Records, Services, and Resources instead of presenting one flat list.
+- Logged-in mobile navigation now mirrors dashboard tool groups and surfaces admin command center access for admin users.
+- Admin navigation now treats query views such as Client Responses and All Reports as active views when their query string matches.
+- Dashboard tool pages collapse detailed explanatory copy behind `How this tool works` on small screens to reduce mobile scroll while preserving desktop guidance.
+- `npm run verify:live:release-candidate` now chains live public release verification, live SEO, and strict authenticated contractor/admin QA as the final production sign-off command.
 
 ## Remaining Launch Work
 
