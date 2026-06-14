@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
-  title: "How Client Bureau Works",
+  title: "How It Works",
   description:
     "Learn how contractors and service businesses use Client Bureau to check clients, set terms, document jobs, protect payment, and publish moderated reports.",
   alternates: {
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Before", value: "Check", text: "Search client profiles before committing labor, materials, or schedule." },
+  { label: "Before", value: "Check", text: "Check client profiles before committing labor, materials, or schedule." },
   { label: "During", value: "Document", text: "Keep contracts, invoices, photos, approvals, and change orders organized." },
   { label: "After", value: "Protect", text: "Track payment issues, recovery cases, lien-service readiness, and resolution." },
   { label: "Public", value: "Moderate", text: "Approved summaries and client responses build safer public context." },
@@ -35,7 +35,7 @@ const system = [
     icon: Search,
     phase: "01",
     title: "Check the client before you take the job",
-    text: "Search by name, business, city, state, phone, email, or job context. Sensitive identifiers are used for private matching and are not displayed publicly.",
+    text: "Check by name, business, city, state, or private-match context. Sensitive identifiers are used for matching and are not displayed publicly.",
     href: "/search",
     cta: "Check a Client",
   },
@@ -106,7 +106,7 @@ export default function HowItWorksPage() {
     <>
       <PremiumHero
         eyebrow="How it works"
-        title="Search before the job. Document during the job. Protect payment after the job."
+        title="Check before the job. Document during the job. Protect payment after the job."
         description="Client Bureau is a business-owner protection workflow for contractors and service businesses: check clients, set terms, document work, recover payment professionally, and publish moderated public records only when appropriate."
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
         secondary={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
@@ -134,7 +134,7 @@ export default function HowItWorksPage() {
             <ProductMockupFrame
               eyebrow="Operating system"
               title="Every step creates a stronger private record."
-              description="Search context, contract terms, evidence, recovery notes, and lien-service readiness stay organized as the project moves forward."
+              description="Client-check context, contract terms, evidence, recovery notes, and lien-service readiness stay organized as the project moves forward."
               imageSrc={evidenceVaultAsset.src}
               imageAlt={evidenceVaultAsset.alt}
               points={["Private evidence by default", "Moderated summaries only", "Response and correction path"]}
@@ -179,7 +179,7 @@ export default function HowItWorksPage() {
               <p className="text-sm font-semibold uppercase text-amber-300">What contractors get</p>
               <p className="text-2xl font-semibold">A repeatable process before the job becomes expensive.</p>
               <p className="text-sm leading-6 text-slate-300">
-                Search first, set terms, document everything, and escalate carefully when payment or dispute risk appears.
+                Check first, set terms, document everything, and escalate carefully when payment or dispute risk appears.
               </p>
             </CardContent>
           </Card>

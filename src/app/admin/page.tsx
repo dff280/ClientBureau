@@ -160,7 +160,7 @@ export default async function AdminHomePage() {
               description="Keep public profile identity, city/state, rating, response, and visibility fields clean."
               cta="Manage profiles"
               tone="slate"
-              steps={["Search the client profile", "Check public/private field boundaries", "Save visibility or rating changes with an audit note"]}
+              steps={["Find the client profile", "Check public/private field boundaries", "Save visibility or rating changes with an audit note"]}
             />
             <GuidedActionPanel
               href="/admin/recovery"
@@ -487,7 +487,7 @@ function ReleaseQaPanel({ health }: { health: Awaited<ReturnType<typeof getLaunc
     },
     {
       title: "Saved records",
-      detail: "Create or update one safe test record in dashboard tools, refresh, and verify it remains attached to the account.",
+      detail: "Create or update one safe QA record in dashboard tools, refresh, and verify it remains attached to the account.",
       href: "/dashboard",
       action: "Open dashboard",
       ready: health.readiness.platformCanUseSupabase,

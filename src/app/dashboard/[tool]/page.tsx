@@ -201,7 +201,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       },
     ],
     primaryAction: { href: "/dashboard/contracts", icon: Signature, label: "Create agreement" },
-    secondaryAction: { href: "/search", icon: Search, label: "Search first" },
+    secondaryAction: { href: "/search", icon: Search, label: "Check first" },
     nextActions: [
       {
         detail: "Create the agreement packet before scheduling work, ordering materials, or accepting scope changes.",
@@ -252,7 +252,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
       {
         detail: "Create or finish the report that the evidence supports.",
         href: "/submit-report",
-        label: "Submit report",
+        label: "Report a client experience",
       },
       {
         detail: "Open payment recovery when evidence supports overdue invoice follow-up.",
@@ -446,7 +446,7 @@ const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
     primaryAction: { href: "/search", icon: Search, label: "Check a Client" },
     nextActions: [
       {
-        detail: "Search first when a lead, homeowner, property owner, or customer asks for work.",
+        detail: "Check first when a lead, homeowner, property owner, or customer asks for work.",
         href: "/search",
         label: "Check a Client",
         primary: true,

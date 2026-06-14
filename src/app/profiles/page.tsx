@@ -7,9 +7,9 @@ import { getPublicEntityProfilesService, searchProfilesService } from "@/lib/rep
 import { profileTypes, type ProfileType } from "@/lib/types"
 
 export const metadata: Metadata = {
-  title: "Public Profile Directory | Client Bureau",
+  title: "Public Profile Directory",
   description:
-    "Search public Client Bureau profiles for clients, contractors, service businesses, subcontractors, and trade professionals.",
+    "Check public Client Bureau profiles for clients, contractors, service businesses, subcontractors, and trade professionals.",
   alternates: {
     canonical: `${getSiteUrl()}/profiles`,
   },

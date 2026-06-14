@@ -1254,7 +1254,7 @@ describe("public SEO landing pages", () => {
     })
 
     expect(String(metadata.title)).toContain("John Smith")
-    expect(String(metadata.title)).toContain("Client Bureau Profile")
+    expect(String(metadata.title)).toContain("Public Client Profile")
     expect(String(metadata.description)).toContain("moderated contractor-submitted")
     expect(JSON.stringify(metadata.openGraph)).toContain("/client/john-smith-orlando-fl/opengraph-image")
   })

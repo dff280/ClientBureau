@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
-  title: "About Client Bureau",
+  title: "About",
   description:
     "Client Bureau helps contractors and service businesses check clients, document projects, protect payment, and handle response-aware reports.",
   alternates: {
@@ -154,7 +154,7 @@ export default function AboutPage() {
               <div>
                 <p className="text-xs font-semibold uppercase text-amber-700">Product doctrine</p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">
-                  Search before the job. Document during the job. Protect payment after the job.
+                  Check before the job. Document during the job. Protect payment after the job.
                 </h2>
                 <p className="mt-3 text-sm leading-6 text-slate-600">
                   Client Bureau connects client checks, report documentation, contract packets,

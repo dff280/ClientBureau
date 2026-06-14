@@ -409,7 +409,7 @@ export function RiskOpsWorkspace({
             </AccordionItem>
             <AccordionItem value="rooms" className="rounded-md border border-slate-200 bg-white px-4 shadow-sm">
               <AccordionTrigger className="py-4 text-base font-semibold text-slate-950">
-                Client Work Files
+                Job Files
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <div className="grid gap-5 lg:grid-cols-[360px_1fr]">
@@ -420,8 +420,8 @@ export function RiskOpsWorkspace({
                     ))}
                     {riskOps.riskRooms.length === 0 ? (
                       <EmptyState
-                        title="No client work files yet"
-                        text="Create one private file per important client to group searches, reports, evidence, recovery notes, and contract signing links."
+                        title="No job files yet"
+                        text="Create one private file per important client or project to group checks, reports, evidence, recovery notes, and contract signing links."
                       />
                     ) : null}
                   </div>

@@ -1036,7 +1036,7 @@ if (searchPage.response.ok) {
   const requiredSearchTexts = [
     "Check a Client Before You Take the Job.",
     "Server-verified results",
-    "Search decision guide",
+    "Client check guide",
     "Public results show approved context only",
     "Report a Client Experience",
   ]

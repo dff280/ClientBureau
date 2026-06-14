@@ -200,7 +200,7 @@ export function ClientDirectoryCityView({
           <CardContent className="grid gap-4 p-6 lg:grid-cols-[1fr_280px] lg:items-center">
             <div>
               <h2 className="text-2xl font-semibold text-slate-950">
-                Search before scheduling work in {city.name}.
+                Check before scheduling work in {city.name}.
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Review approved profile context, then document your own experience or use Client

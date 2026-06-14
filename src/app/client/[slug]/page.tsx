@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: ClientProfilePageProps): Prom
 
   const name = `${profile.firstName} ${profile.lastName}`
   const location = `${profile.city}, ${profile.state}`
-  const title = `${name} ${profile.city} ${profile.state} Client Bureau Profile`
+  const title = `${name} ${profile.city} ${profile.state} Public Client Profile`
   const description = `${name} in ${location}: Client Bureau Rating, moderated contractor-submitted reports, response context, and evidence-on-file summaries.`
   const profileUrl = `${siteUrl}/client/${profile.publicSlug}`
   const imageUrl = `${profileUrl}/opengraph-image`

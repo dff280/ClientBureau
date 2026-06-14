@@ -71,7 +71,7 @@ export function AdminAppShell({
               </div>
             </div>
 
-            <nav className="flex-1 space-y-5 p-4">
+            <nav className="mobile-scrollbar flex-1 space-y-5 overflow-y-auto p-4">
               {adminNavigationGroups.map((group) => (
                 <div key={group.title} className="space-y-1">
                   <p className="px-3 text-xs font-semibold uppercase text-slate-500">{group.title}</p>
@@ -137,7 +137,7 @@ export function AdminAppShell({
                 </Link>
               </Button>
             </div>
-            <nav className="mt-3 flex gap-2 overflow-x-auto">
+            <nav className="mobile-scrollbar mt-3 flex gap-2 overflow-x-auto">
               {adminNav.map((item) => (
                 <Link
                   key={item.href}

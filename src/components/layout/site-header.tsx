@@ -22,6 +22,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -36,6 +37,7 @@ type SessionState = {
 const contractorHeaderNav = [
   { href: "/dashboard", label: "Dashboard", description: "Daily work queue and business tools." },
   { href: "/search", label: "Check a Client", description: "Check a client before accepting work." },
+  { href: "/dashboard/jobs", label: "Jobs", description: "Private project files, site details, scope, and participants." },
   { href: "/submit-report", label: "Report Experience", description: "Document a client experience for moderation." },
   { href: "/dashboard/contracts", label: "Contracts", description: "Agreement packets and signing links." },
 ]
@@ -111,11 +113,17 @@ export function SiteHeader() {
     }
   }, [pathname])
 
+  const promotedContractorHrefs = new Set(contractorHeaderNav.map((item) => item.href))
   const authNav = session.authenticated
-    ? [...contractorHeaderNav, ...contractorPrimaryNav.slice(2).filter((item) => item.label !== "Contracts")]
+    ? uniqueNavItems([
+        ...contractorHeaderNav,
+        ...contractorPrimaryNav.filter((item) => !promotedContractorHrefs.has(item.href)),
+      ])
     : publicPrimaryNav
   const desktopNav = session.authenticated ? contractorHeaderNav : publicHeaderNav
-  const moreNav = session.authenticated ? contractorPrimaryNav.slice(3).filter((item) => item.label !== "Contracts") : []
+  const moreNav = session.authenticated
+    ? contractorPrimaryNav.filter((item) => !promotedContractorHrefs.has(item.href))
+    : []
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/92 shadow-sm shadow-slate-950/[0.03] backdrop-blur">
@@ -202,6 +210,9 @@ export function SiteHeader() {
                 <SheetTitle>
                   <BrandMark />
                 </SheetTitle>
+                <SheetDescription>
+                  Navigate Client Bureau tools, public records, services, and account actions.
+                </SheetDescription>
               </SheetHeader>
               {!session.authenticated ? (
                 <div className="mt-6 rounded-md border border-amber-200 bg-amber-50 p-4">
@@ -212,7 +223,7 @@ export function SiteHeader() {
                     <div>
                       <p className="font-semibold text-slate-950">Start with a client check.</p>
                       <p className="mt-1 text-xs leading-5 text-slate-700">
-                        Search first, then decide whether to contract, watch, report, or open a private service workflow.
+                        Check the client, then decide whether to contract, watch, report, or open a private service workflow.
                       </p>
                     </div>
                   </div>
@@ -353,4 +364,16 @@ export function SiteHeader() {
       </div>
     </header>
   )
+}
+
+function uniqueNavItems(items: typeof contractorPrimaryNav) {
+  const seen = new Set<string>()
+
+  return items.filter((item) => {
+    const key = `${item.href}-${item.label}`
+    if (seen.has(key)) return false
+    seen.add(key)
+
+    return true
+  })
 }

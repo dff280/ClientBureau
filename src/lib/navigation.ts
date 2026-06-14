@@ -137,6 +137,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
     links: [
       { href: "/businesses", label: "Business Profiles" },
       { href: "/submit-report", label: "Report a Client Experience" },
+      { href: "/dashboard/jobs", label: "Jobs" },
       { href: "/dashboard/contracts", label: "Contracts" },
       { href: "/dashboard/growth", label: "Growth Engine" },
       { href: "/dashboard/recovery", label: "Payment Recovery" },

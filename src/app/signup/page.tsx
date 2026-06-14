@@ -72,7 +72,7 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
         <aside className="space-y-4">
           <PremiumFeatureCard
             icon={Radar}
-            title="Search before scheduling"
+            title="Check before scheduling"
             text="Check client records before committing labor, materials, deposits, or crew time."
           />
           <PremiumFeatureCard

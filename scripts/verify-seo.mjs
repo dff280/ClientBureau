@@ -377,7 +377,7 @@ await verifyNoindexWorkflowPage("/signup", {
 })
 await verifyNoindexWorkflowPage("/search", {
   requestPath: "/search?q=John&state=FL",
-  requiredText: ["Check a Client Before You Take the Job.", "Server-verified results", "Search decision guide"],
+  requiredText: ["Check a Client Before You Take the Job.", "Server-verified results", "Client check guide"],
 })
 await verifyNoindexWorkflowPage("/client-response", {
   requiredText: ["Client response", "Respond, dispute, correct, or update a Client Bureau profile.", "Fairness is part of the product."],

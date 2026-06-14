@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: ClientsLandingPageProps): Pro
     if (!state) return { title: "Client Reports" }
 
     return {
-      title: `${state.name} Client Bureau Profiles | Client Directory`,
+      title: `${state.name} Public Client Profiles | Client Directory`,
       description: `Browse approved Client Bureau public client profiles in ${state.name} by city with moderated contractor-submitted report context.`,
       alternates: {
         canonical: `${siteUrl}/clients/${state.slug}`,

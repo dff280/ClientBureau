@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowRight, CheckCircle2, FileText, LockKeyhole, Search } from "lucide-react"
+import { ArrowRight, CheckCircle2, ClipboardCheck, FileText, LockKeyhole, Scale, Search, ShieldCheck } from "lucide-react"
 
 import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
@@ -111,7 +111,7 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
 
       <PremiumProofStrip
         items={[
-          { label: "Before work", value: "Search", text: "Check client context before committing time, labor, materials, or deposits." },
+          { label: "Before work", value: "Check", text: "Check client context before committing time, labor, materials, or deposits." },
           { label: "During work", value: "Document", text: "Use contracts, change orders, evidence, and project records." },
           { label: "After work", value: "Resolve", text: "Track reports, response context, recovery workflows, and updates." },
           { label: "Privacy", value: "Protected", text: "Private identifiers and raw evidence stay out of public pages." },
@@ -168,6 +168,42 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
           ))}
         </div>
 
+        <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="p-0">
+            <div className="grid gap-0 lg:grid-cols-[0.86fr_1.14fr]">
+              <div className="bg-slate-950 p-6 text-white">
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-300">
+                  Launch-ready guardrails
+                </p>
+                <h2 className="mt-3 text-2xl font-semibold tracking-normal">
+                  Useful business tools, careful public records.
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-slate-300">
+                  Every Client Bureau workflow should help contractors make cleaner decisions without turning a
+                  dispute, template, or service case into unsupported public claims.
+                </p>
+              </div>
+              <div className="grid gap-3 p-5 md:grid-cols-3">
+                <GuardrailCard
+                  icon={ShieldCheck}
+                  title="Private by default"
+                  text="Contracts, evidence, job records, contact details, and service notes stay account-only unless approved public summaries are created."
+                />
+                <GuardrailCard
+                  icon={ClipboardCheck}
+                  title="Moderated before publishing"
+                  text="Public profile context should be factual, response-aware, and approved before it reaches searchable profile pages."
+                />
+                <GuardrailCard
+                  icon={Scale}
+                  title="No outcome guarantees"
+                  text="Templates and services support documentation and workflow; they do not guarantee payment, legal outcome, lien priority, or enforceability."
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="space-y-5 p-6">
             <div className="grid gap-4 lg:grid-cols-[1fr_260px] lg:items-end">
@@ -220,10 +256,30 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
       <PremiumCtaBand
         eyebrow="Ready to protect the next job?"
         title="Check the client first, then document the work with Client Bureau."
-        description="Use search, reports, contracts, evidence, and response-aware workflows to make better business decisions."
+        description="Use client checks, reports, contracts, evidence, and response-aware workflows to make better business decisions."
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
         secondary={{ href: "/submit-report", label: "Report a Client Experience", icon: FileText }}
       />
     </main>
+  )
+}
+
+function GuardrailCard({
+  icon: Icon,
+  text,
+  title,
+}: {
+  icon: typeof ShieldCheck
+  text: string
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <span className="flex size-10 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+        <Icon className="size-5" aria-hidden="true" />
+      </span>
+      <h3 className="mt-3 font-semibold text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
   )
 }

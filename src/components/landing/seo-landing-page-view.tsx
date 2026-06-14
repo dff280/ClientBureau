@@ -53,7 +53,7 @@ export function SeoLandingPageView({
       <PremiumProofStrip
         items={[
           { label: "Public content", value: "Approved", text: "Only moderated profile and report context appears on these pages." },
-          { label: "Search intent", value: "High signal", text: "Built for contractors checking specific client, city, and report context." },
+          { label: "Client-check intent", value: "High signal", text: "Built for contractors checking specific client, city, and report context." },
           { label: "Fairness", value: "Response-aware", text: "Client responses and disputes are included only after review." },
           { label: "Privacy", value: "Protected", text: "Raw contact details, evidence files, and internal notes stay private." },
         ]}
@@ -76,9 +76,9 @@ export function SeoLandingPageView({
           </Card>
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
-              <p className="text-sm font-semibold uppercase text-amber-700">Search first workflow</p>
+              <p className="text-sm font-semibold uppercase text-amber-700">Check-first workflow</p>
               <div className="grid gap-3 sm:grid-cols-2">
-                {["Search public profile context", "Review rating factors and balances", "Check response or dispute context", "Document your own experience"].map((step, index) => (
+                {["Check public profile context", "Review rating factors and balances", "Check response or dispute context", "Document your own experience"].map((step, index) => (
                   <div key={step} className="rounded-md border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold uppercase text-slate-500">Step {index + 1}</p>
                     <p className="mt-1 font-semibold text-slate-950">{step}</p>
@@ -192,7 +192,7 @@ export function SeoLandingPageView({
               <CardContent className="p-8 text-center">
                 <h3 className="text-2xl font-semibold text-slate-950">No approved public profiles match this page yet.</h3>
                 <p className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Client Bureau publishes profiles only after admin approval. Search privately or submit a documented report for moderation.
+                  Client Bureau publishes profiles only after admin approval. Check privately or submit a documented report for moderation.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
@@ -233,7 +233,7 @@ export function SeoLandingPageView({
                   <h3 className="text-2xl font-semibold text-slate-950">No approved report summaries are listed yet.</h3>
                   <p className="mt-2 text-sm leading-6 text-slate-600">
                     Client Bureau keeps this page available for public research while moderation builds the approved record set.
-                    Contractors can still search privately, create a watchlist item, or report a documented client experience for review.
+                    Contractors can still check privately, create a watchlist item, or report a documented client experience for review.
                   </p>
                 </div>
                 <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
@@ -266,7 +266,7 @@ export function SeoLandingPageView({
       </div>
       <PremiumCtaBand
         eyebrow="Use this page as a starting point"
-        title="Search the client, review the context, and decide the terms before the job starts."
+        title="Check the client, review the context, and decide the terms before the job starts."
         description="Client Bureau combines public research pages with private tools for contracts, evidence, reports, recovery, and response-aware records."
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
         secondary={{ href: "/clients", label: "Browse directory", icon: ShieldCheck }}
@@ -349,7 +349,7 @@ function getLandingSections(page: SeoLandingPage) {
 
   return [
     {
-      eyebrow: "Search intent",
+      eyebrow: "Client-check intent",
       title: `What ${context.noun} help you evaluate`,
       body:
         "Client Bureau pages are designed for practical pre-job review. They help a business owner decide whether to proceed normally, ask for clearer terms, request a deposit, prepare a contract packet, or document the job more carefully.",
@@ -376,7 +376,7 @@ function getLandingSections(page: SeoLandingPage) {
       body:
         "A Client Bureau page is one intake signal. Contractors should combine it with contracts, deposits, change-order controls, communication records, and their own judgment before accepting work.",
       points: [
-        "Search before scheduling labor, buying materials, extending terms, or starting custom work.",
+        "Check before scheduling labor, buying materials, extending terms, or starting custom work.",
         "Document your own project timeline and submit updates if a payment or dispute is resolved.",
         "Use private workflow tools for managed recovery, Florida lien service records, and contract tracking without exposing private files publicly.",
       ],
@@ -401,7 +401,7 @@ function getLandingFaqs(page: SeoLandingPage) {
     {
       question: "What should I do if no public profile appears?",
       answer:
-        "Search privately using available client details, add the client to a watchlist, create an intake assessment, or submit a documented report for moderation if you have a real contractor-client experience to report.",
+        "Check privately using available client details, add the client to a watchlist, create an intake assessment, or submit a documented report for moderation if you have a real contractor-client experience to report.",
     },
   ]
 }

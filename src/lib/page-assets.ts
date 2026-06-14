@@ -53,8 +53,8 @@ export const pageAssets = {
     src: "/images/client-bureau-platform-hero-bright.webp",
     alt: "Client Bureau premium platform preview for contractors and service businesses.",
     title: "Client Bureau platform",
-    description: "Search, contract, document, recover, and monitor from one contractor business-protection workspace.",
-    points: ["Search before the job", "Document during the job", "Protect payment after"],
+    description: "Check, contract, document, recover, and monitor from one contractor business-protection workspace.",
+    points: ["Check before the job", "Document during the job", "Protect payment after"],
   },
 } satisfies Record<string, PageAsset>
 

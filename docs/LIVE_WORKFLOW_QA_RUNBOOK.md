@@ -1,6 +1,6 @@
 # Client Bureau Live Workflow QA Runbook
 
-Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through migration `0019`.
+Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency and flexible Jobs participant roles.
 
 ## 1. Release And Health Gate
 
@@ -39,7 +39,7 @@ Required result:
 - `/api/version` shows the expected package version and Git commit.
 - `/api/health` reports `coreLiveReady: true`.
 - If `PLATFORM_FEATURE_DATA_MODE=supabase`, `/api/health` must also report `platformCanUseSupabase: true` and `recommendedPlatformFeatureDataMode: supabase`.
-- If `PLATFORM_FEATURE_DATA_MODE=mock`, `/api/health` may warn that migration `0019` or another advanced-platform column is still needed; core auth, reports, admin approval, and public profiles should remain live.
+- If `PLATFORM_FEATURE_DATA_MODE=mock`, `/api/health` may warn that a newer advanced-platform column is missing or that an ops workflow is in rollback mode; core auth, reports, admin approval, and public profiles should remain live.
 - `/api/version`, `/api/health`, `/api/session`, and `/api/admin/session` include `Cache-Control: no-store`.
 - Logged-out dashboard, submit-report, and admin routes redirect to safe internal `/login` URLs, preserve the expected `next` return path, and include `Cache-Control: no-store`.
 - Sitemap includes approved `/client/...` pages and unified `/profiles/...` graph pages.
@@ -57,9 +57,10 @@ Stripe warnings are acceptable until billing is intentionally enabled.
 Use a real contractor/business-owner account.
 
 1. Log in and open `/dashboard`.
-2. Visit each dashboard route: Reports, Watchlist, Growth, Contracts, Payment Recovery, Florida Lien Service, Evidence Vault, Alerts, Billing, Activity.
+2. Visit each dashboard route: Jobs, Reports, Watchlist, Growth, Contracts, Payment Recovery, Florida Lien Service, Evidence Vault, Alerts, Billing, Activity.
 3. Confirm each route loads content or a clear empty state, never a blank page.
 4. Create or update one safe test record in each live-backed tool:
+   - create a private Job and add a participant role
    - save a search or watch a client
    - save a report draft
    - create an agreement packet

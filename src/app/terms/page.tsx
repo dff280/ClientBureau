@@ -43,7 +43,7 @@ export default function TermsPage() {
             title: "Permitted platform use",
             body: "Client Bureau is built for business owners, contractors, service companies, and authorized team members who need to evaluate client context before accepting work and document project experiences after the fact.",
             bullets: [
-              "Search public client profiles and private-match context for business intake decisions.",
+              "Check public client profiles and private-match context for business intake decisions.",
               "Submit documented contractor experiences that are specific, relevant, and written in good faith.",
               "Use dashboards, watchlists, contract packets, recovery notes, Florida lien service records, and evidence vault records as private business workflow tools.",
               "Do not submit content that you know is false, misleading, harassing, irrelevant, discriminatory, or designed to reveal private information.",

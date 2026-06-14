@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl()
 
   return {
-    title: "Client Directory | Client Bureau Public Profiles",
+    title: "Client Directory Public Profiles",
     description:
       "Browse approved Client Bureau public client profiles by state and city with moderated contractor-submitted report context.",
     alternates: {

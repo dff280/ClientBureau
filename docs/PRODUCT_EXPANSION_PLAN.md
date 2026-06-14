@@ -4,7 +4,7 @@ Client Bureau should feel like a contractor trust operations platform, not a com
 
 ## Product Positioning
 
-- Primary message: Search before you sign.
+- Primary message: Check the client before you take the job.
 - Product category: moderated client-risk intelligence and contractor workflow records.
 - Avoid: blacklist, shaming, automated debt collection, legal filing, public exposure of private identifiers.
 - Use: documented contractor experiences, private matching, evidence reviewed privately, client response, moderated summaries, agreement links, payment follow-up records.
@@ -19,7 +19,7 @@ Client Bureau should feel like a contractor trust operations platform, not a com
 2. Contractor command center
    - Three plain-language workflows: Screen & decide, Agree & sign, Document & resolve.
    - Client pipeline tracks where each potential or active job sits.
-   - Client Work Files connect searches, reports, evidence, contracts, payment follow-up, and resolution history.
+   - Job Files connect client checks, reports, evidence, contracts, payment follow-up, and resolution history.
 
 3. Client agreement and invite path
    - Contractors create private agreement links.
@@ -41,9 +41,9 @@ Client Bureau should feel like a contractor trust operations platform, not a com
 - Make advanced tools collapsible or tabbed so contractors are not forced into long-scroll workflows.
 - Keep admin pages dense but grouped by queue, record type, safeguard, and audit trail.
 
-### Phase 2: Client Work Files
+### Phase 2: Job Files
 
-- Make Client Work Files the central private record for each important client.
+- Make Job Files the central private record for each important client or project.
 - Each file should show:
   - Search/match history.
   - Watchlist alerts.

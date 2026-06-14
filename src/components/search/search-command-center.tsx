@@ -336,9 +336,9 @@ export function SearchCommandCenter({
                       setLiveQuery(event.target.value)
                       setSavedMessage("")
                     }}
-                    placeholder="Search a client by name, business, city, phone, or email"
+                    placeholder="Check a client by name, business, city, phone, or email"
                     className="h-14 rounded-md border-slate-300 bg-white pl-12 text-base shadow-sm"
-                    aria-label="Search clients"
+                    aria-label="Check clients"
                   />
                 </div>
 
@@ -420,7 +420,7 @@ export function SearchCommandCenter({
                   icon={Search}
                   label="Step 1"
                   title="Match the client"
-                  text="Search by name, business, city, state, phone, or email. Private identifiers support matching without appearing publicly."
+                  text="Check by name, business, city, state, phone, or email. Private identifiers support matching without appearing publicly."
                 />
                 <SearchWorkflowStep
                   icon={ShieldCheck}
@@ -561,7 +561,7 @@ export function SearchCommandCenter({
             <aside className="premium-hero-surface border-t border-slate-200 bg-slate-950 p-4 text-white sm:p-5 lg:p-6 xl:border-l xl:border-t-0">
               <div className="flex items-center gap-2 text-amber-300">
                 <BarChart3 className="size-5" aria-hidden="true" />
-                <p className="text-sm font-semibold uppercase">Search intelligence</p>
+                <p className="text-sm font-semibold uppercase">Client-check intelligence</p>
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 <div className="rounded-md border border-white/10 bg-white/5 p-3">

@@ -17,7 +17,7 @@ import { profileTypes, reportCategories, riskLevels, type ProfileType, type Repo
 export const metadata: Metadata = {
   title: "Check a Client",
   description:
-    "Search Client Bureau for client, contractor, subcontractor, and service-business profiles with moderated public context.",
+    "Check Client Bureau for client, contractor, subcontractor, and service-business profiles with moderated public context.",
   alternates: {
     canonical: "/search",
   },
@@ -124,21 +124,21 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       <PremiumHero
         eyebrow={isAuthenticated ? "Contractor account active" : "Limited public preview"}
         title="Check a Client Before You Take the Job."
-        description="Search names, businesses, cities, private-match identifiers, categories, and public profiles before you risk labor, materials, scheduling, deposits, or final invoice exposure."
-        primary={{ href: "#client-search", label: "Start Search", icon: Radar }}
+        description="Check names, businesses, cities, private-match context, categories, and public profiles before you risk labor, materials, scheduling, deposits, or final invoice exposure."
+        primary={{ href: "#client-search", label: "Run Client Check", icon: Radar }}
         secondary={{ href: reportPrefillHref(query, state), label: "Report a Client Experience", icon: FilePlus2 }}
         aside={
           <div className="space-y-4">
             <ProductMockupFrame
               dark
               eyebrow={isAuthenticated ? "Private matching enabled" : "Public preview"}
-              title="Search intelligence, not guesswork."
+              title="Client-check intelligence, not guesswork."
               description={
                 isAuthenticated
                   ? "Use names, businesses, cities, phone, or email to support private matching while public results stay carefully moderated."
                   : query
                     ? `Create a free account to save "${query}" and continue into watchlists, private matching, and report workflows.`
-                    : "Search is private. Raw phone numbers, emails, addresses, and evidence files are not displayed on public profiles."
+                    : "Client checks are private. Raw phone numbers, emails, addresses, and evidence files are not displayed on public profiles."
               }
               imageSrc={searchDossierAsset.src}
               imageAlt={searchDossierAsset.alt}
@@ -157,7 +157,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
       />
       <PremiumProofStrip
         items={[
-          { label: "Search by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
+          { label: "Check by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
           { label: "Profile types", value: "All roles", text: "Clients, contractors, subcontractors, and trade businesses can appear when approved." },
           { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
           { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
@@ -322,8 +322,8 @@ function SearchActivationGuide({
     <Card className="rounded-md border-slate-200 bg-white shadow-sm">
       <CardContent className="grid gap-5 p-5 lg:grid-cols-[280px_1fr]">
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase text-amber-700">Search decision guide</p>
-          <h2 className="mt-2 text-xl font-semibold text-slate-950">What to do with this search</h2>
+          <p className="text-xs font-semibold uppercase text-amber-700">Client check guide</p>
+          <h2 className="mt-2 text-xl font-semibold text-slate-950">What to do with this client check</h2>
           <p className={`mt-2 text-sm leading-6 ${resultTone}`}>{resultCopy}</p>
           <div className="mt-4 flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
             <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />

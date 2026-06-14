@@ -16,7 +16,7 @@ import { getPublicContactInfo } from "@/lib/env"
 import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
-  title: "Contact Client Bureau",
+  title: "Contact",
   description:
     "Contact Client Bureau for contractor accounts, enterprise inquiries, client responses, correction requests, moderation questions, and support.",
   alternates: {

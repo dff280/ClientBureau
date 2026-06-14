@@ -95,7 +95,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       {
         label: "Check a client",
         href: "/search",
-        description: "Search client context before sending an agreement.",
+        description: "Check client context before sending an agreement.",
       },
     ],
     faqs: [
@@ -362,7 +362,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       href: "/signup",
     },
     proofLabel: "Core action",
-    proofValue: "Search before you sign",
+    proofValue: "Check before the job",
     proofDetail:
       "Use Client Bureau before committing crews, labor, materials, custom orders, scheduling, deposits, or extended payment terms.",
     useCases: [
@@ -371,7 +371,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       "You need to save a search, monitor a client, or document your own project experience.",
     ],
     workflow: [
-      "Search by name, business, city, state, phone, email, or private identifier intent.",
+      "Check by name, business, city, state, or private matching context.",
       "Review approved public profiles, rating context, evidence-on-file labels, and response status.",
       "Save the search, add the client to your watchlist, or create a private project file.",
       "Use contracts, evidence, recovery, and report tools if the project moves forward.",
@@ -402,10 +402,10 @@ export const acquisitionPages: AcquisitionPage[] = [
       {
         question: "What is client screening for contractors?",
         answer:
-          "It is a pre-job review process where contractors search for approved client profile context, reported experiences, response information, and private match signals before accepting work.",
+          "It is a pre-job review process where contractors check approved client profile context, reported experiences, response information, and private match signals before accepting work.",
       },
       {
-        question: "Can I search by phone or email?",
+        question: "Can I check by phone or email?",
         answer:
           "Yes, but raw phone numbers and emails should be used only as private matching signals. Client Bureau does not display those identifiers publicly.",
       },

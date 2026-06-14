@@ -30,7 +30,7 @@ import { pageAssets } from "@/lib/page-assets"
 import { getFaqSchema, JsonLd } from "@/lib/seo"
 
 export const metadata: Metadata = {
-  title: "Client Bureau Platform | Contractor Business Protection",
+  title: "Platform for Contractor Business Protection",
   description:
     "Explore Client Bureau's client checks, public profiles, contracts, evidence vault, payment recovery, Florida lien service, and mobile tools.",
   alternates: {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Primary action", value: "Check first", text: "Search before labor, materials, scheduling, deposits, or final terms." },
+  { label: "Primary action", value: "Check first", text: "Check before labor, materials, scheduling, deposits, or final terms." },
   { label: "Public records", value: "Moderated", text: "Profiles show approved summaries and response context, not private files." },
   { label: "Private tools", value: "End to end", text: "Contracts, evidence, recovery, lien service, and alerts stay in the business workspace." },
   { label: "Audience", value: "Contractors", text: "Built for trade businesses, service companies, subs, and professional operators." },
@@ -49,7 +49,7 @@ const modules = [
   {
     icon: Search,
     title: "Client risk intelligence",
-    text: "Search clients, homeowners, businesses, project leads, city/state context, private-match signals, payment indicators, and approved report summaries.",
+    text: "Check clients, homeowners, businesses, project leads, city/state context, private-match signals, payment indicators, and approved report summaries.",
   },
   {
     icon: Building2,
@@ -83,7 +83,7 @@ const workflow = [
     phase: "01",
     icon: Search,
     title: "Check the client",
-    text: "Search before you take the job. Review approved public context, private-match guidance, positive signals, disputes, and response status.",
+    text: "Check before you take the job. Review approved public context, private-match guidance, positive signals, disputes, and response status.",
     href: "/search",
     cta: "Check a Client",
   },
@@ -148,7 +148,7 @@ const audiences = [
 
 const faqs = [
   {
-    question: "Is Client Bureau a blacklist?",
+    question: "Is Client Bureau a complaint site?",
     answer:
       "No. Client Bureau is a moderated business-protection platform for documented experiences, public profile context, private matching, evidence summaries, positive reports, and response rights.",
   },
@@ -283,7 +283,7 @@ export default function PlatformPage() {
       <PremiumCtaBand
         eyebrow="Client Bureau"
         title="Check the client before the job gets expensive."
-        description="Search public context, preserve private records, and use the right workflow before the next project creates avoidable risk."
+        description="Check public context, preserve private records, and use the right workflow before the next project creates avoidable risk."
         primary={{ href: "/search", label: "Check a Client", icon: Search }}
         secondary={{ href: "/signup", label: "Create Free Account", icon: LockKeyhole }}
       />

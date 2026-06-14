@@ -224,7 +224,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
               <LaunchChecklistCard
                 icon={BriefcaseBusiness}
                 title="Identity is real"
-                detail="Use a real subcontractor, installer, crew, labor provider, or specialty trade. Do not create placeholder records for SEO."
+                detail="Use a real subcontractor, installer, crew, labor provider, or specialty trade. Do not publish unverified records just to fill directory coverage."
               />
               <LaunchChecklistCard
                 icon={ClipboardCheck}

@@ -34,31 +34,31 @@ type ProfileDirectoryCopy = {
 const directoryCopy: Record<ProfileType | "all", ProfileDirectoryCopy> = {
   all: {
     eyebrow: "Unified profile directory",
-    title: "Search public profiles for clients, contractors, and subcontractors.",
+    title: "Check public profiles for clients, contractors, and subcontractors.",
     description:
       "Browse approved Client Bureau profile records across clients, homeowners, contractors, service businesses, subcontractors, and trade professionals. Public pages show moderated summaries and safe profile context only.",
-    primaryLabel: "Search all profiles",
+    primaryLabel: "Check all profiles",
   },
   client: {
     eyebrow: "Client and customer profiles",
     title: "Find client, homeowner, property owner, and customer profiles.",
     description:
       "Review public client profiles with approved contractor-submitted summaries, response context, evidence-on-file labels, and city/state profile records before taking work.",
-    primaryLabel: "Search client profiles",
+    primaryLabel: "Check client profiles",
   },
   contractor: {
     eyebrow: "Contractor profiles",
     title: "Find contractor and service business profiles.",
     description:
       "Review public contractor and service-business profiles with verification signals, service-area context, documented project history, and profile claiming paths.",
-    primaryLabel: "Search contractor profiles",
+    primaryLabel: "Check contractor profiles",
   },
   subcontractor: {
     eyebrow: "Subcontractor profiles",
     title: "Find subcontractor and trade professional profiles.",
     description:
       "Review public subcontractor and trade professional profiles for trade scope, GC/sub relationship context, documentation readiness, and payment-chain signals.",
-    primaryLabel: "Search subcontractor profiles",
+    primaryLabel: "Check subcontractor profiles",
   },
 }
 
@@ -215,7 +215,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       quickStartCards: [
         {
           icon: Search,
-          title: "Search before committing",
+          title: "Check before committing",
           text: "Review public profile context before scheduling labor, ordering materials, or extending payment terms.",
         },
         {
@@ -232,7 +232,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       faqTitle: "Client profile discovery without exposing private identifiers.",
       faqDescription:
         "Client profiles help business owners inspect approved reported context while keeping raw evidence and sensitive identifiers private.",
-      ctaTitle: "Search a client privately before you take the job.",
+      ctaTitle: "Check a client privately before you take the job.",
       ctaDescription:
         "Create an account to use private matching, save searches, watch client profiles, and document client experiences safely.",
       accent: {
@@ -261,7 +261,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
     quickStartEyebrow: "Profile graph",
     quickStartTitle: "One directory, three relationship roles.",
     quickStartDescription:
-      "Use Client Bureau public profiles to understand the role someone played in the business relationship before moving into private saved searches, watchlists, contracts, or reports.",
+      "Use Client Bureau public profiles to understand the role someone played in the business relationship before moving into private checks, watchlists, contracts, or reports.",
     quickStartCards: [
       {
         icon: UsersRound,
@@ -284,7 +284,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       "These directories help people find approved Client Bureau profiles while keeping sensitive information, raw evidence, and internal moderation details private.",
     ctaTitle: "Use public profiles for discovery, then use your private dashboard to act.",
     ctaDescription:
-      "Create an account to save searches, watch profiles, build contract packets, organize evidence, open recovery cases, and document client experiences safely.",
+      "Create an account to save checks, watch profiles, build contract packets, organize evidence, open recovery cases, and document client experiences safely.",
     accent: {
       icon: "bg-slate-950 text-amber-300",
       selected: "border-slate-950 bg-slate-950 text-white",
@@ -304,14 +304,14 @@ export function getProfileDirectoryFaqs(profileType?: ProfileType) {
         "Client Bureau profile directories show public-safe profile records, city/state context, verification signals, approved report indicators, and response paths. Raw private identifiers and raw evidence are not displayed.",
     },
     {
-      question: "Can I search contractors, subcontractors, and clients?",
+      question: "Can I check contractors, subcontractors, and clients?",
       answer:
         "Yes. The public directory supports client, contractor, service business, subcontractor, and trade professional profiles when those records are approved for public display.",
     },
     {
-      question: "When should I use private search instead?",
+      question: "When should I use a private client check instead?",
       answer:
-        "Use private dashboard search when you need saved searches, watchlists, private matching, or account-specific actions. Public directories are designed for approved profile discovery and SEO-safe browsing.",
+        "Use the private dashboard check when you need saved searches, watchlists, private matching, or account-specific actions. Public directories are designed for approved profile discovery and SEO-safe browsing.",
     },
   ]
 }
@@ -439,25 +439,25 @@ export function EntityProfileDirectory({
             <CardContent className="space-y-5 p-5">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-amber-700">Profile search</p>
+                  <p className="text-xs font-semibold uppercase text-amber-700">Profile check</p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">
-                    Search by name, business, trade, city, or state.
+                    Check by name, business, trade, city, or state.
                   </h2>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                    Use this public directory for broad profile discovery. Use the private dashboard search when phone, email, saved searches, and watchlists matter.
+                    Use this public directory for broad profile discovery. Use the private dashboard search when private matching, saved searches, and watchlists matter.
                   </p>
                 </div>
                 <Button asChild variant="outline">
                   <Link href={activeType ? `/search?profileType=${activeType}` : "/search"}>
                     <FileSearch aria-hidden="true" />
-                    Open private search
+                    Open private check
                   </Link>
                 </Button>
               </div>
 
               <form action={searchPath} className={showTradeFilter ? "grid gap-3 lg:grid-cols-[1fr_150px_220px_auto]" : "grid gap-3 lg:grid-cols-[1fr_150px_180px_auto]"}>
                 <input
-                  aria-label="Search public profiles"
+                  aria-label="Check public profiles"
                   className="h-11 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
                   defaultValue={query}
                   name="q"
@@ -589,10 +589,10 @@ export function EntityProfileDirectory({
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
                   {activeType === "subcontractor" && !hasDirectoryFilters
-                    ? "The directory is ready for real subcontractor and trade-professional records once staff verify identity, trade scope, public-safe summary, claim status, and visibility. No placeholder records are published for SEO."
+                    ? "Verified trade profiles appear only after staff confirm identity, trade scope, public-safe summary, claim status, and visibility. Unverified records stay private."
                     : activeType === "subcontractor"
-                      ? "Verified trade profiles appear after claim, moderation, and public visibility review. You can claim a trade profile, report a documented GC/sub experience, or use private search for saved-search and watchlist actions."
-                      : "Clear the search, choose another state, or use the private search workflow for account-level saved searches and watchlist actions."}
+                      ? "Verified trade profiles appear after claim, moderation, and public visibility review. You can claim a trade profile, report a documented GC/sub experience, or use private checks for saved-search and watchlist actions."
+                      : "Clear the search, choose another state, or use the private check workflow for account-level saved searches and watchlist actions."}
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
@@ -602,7 +602,7 @@ export function EntityProfileDirectory({
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/search">Open private search</Link>
+                    <Link href="/search">Open private check</Link>
                   </Button>
                   {activeType === "subcontractor" ? (
                     <>

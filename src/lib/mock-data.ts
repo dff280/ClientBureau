@@ -1534,8 +1534,8 @@ export const contractorActivity: ContractorActivityItem[] = [
   {
     id: "activity_02",
     contractorId: "contractor_01",
-    title: "Profile search saved",
-    description: "Orlando client intake search was saved for later review.",
+    title: "Client check saved",
+    description: "Orlando client intake check was saved for later review.",
     createdAt: "2026-05-28T13:15:00.000Z",
     tone: "neutral",
   },

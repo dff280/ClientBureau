@@ -278,7 +278,7 @@ export async function generateMetadata({ params }: EntityProfilePageProps): Prom
   const profile = await getPublicEntityProfileService(profileType, slug)
   if (!profile) return {}
 
-  const title = `${profile.displayName} ${profile.city}, ${profile.state} | Client Bureau ${profileTypeLabel(profile.profileType)} Profile`
+  const title = `${profile.displayName} ${profile.city}, ${profile.state} ${profileTypeLabel(profile.profileType)} Profile`
   const description =
     profile.profileType === "contractor"
       ? `Public contractor and service-business profile for ${profile.displayName} in ${profile.city}, ${profile.state}: verification, project context, and response paths.`

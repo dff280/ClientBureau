@@ -49,7 +49,7 @@ export async function POST(request: Request) {
           accountType: input.accountType,
           createdAt: new Date().toISOString(),
         } satisfies User,
-        "Account created for local mobile testing.",
+        "Account created.",
       ),
       201,
     )

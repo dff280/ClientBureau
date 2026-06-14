@@ -24,11 +24,11 @@ const workflowModes: WorkflowMode[] = [
   {
     title: "Screen & decide",
     eyebrow: "Before you accept work",
-    text: "Search the client, review positive and concern reports, check private-match signals, and decide what contract or deposit controls are needed.",
+    text: "Check the client, review positive and concern reports, review private-match signals, and decide what contract or deposit controls are needed.",
     cta: "Check a Client",
     href: "/search",
     icon: Search,
-    tools: ["Search", "Watchlist", "Intake assessment"],
+    tools: ["Client check", "Watchlist", "Intake assessment"],
   },
   {
     title: "Agree & sign",
@@ -57,11 +57,11 @@ const workspaceGuide = [
   },
   {
     title: "Watchlist",
-    text: "Search profiles, check private matches, monitor alerts, and save both positive and concern context before accepting work.",
+    text: "Check profiles, review private matches, monitor alerts, and save both positive and concern context before accepting work.",
   },
   {
-    title: "Client Work Files",
-    text: "One private file per important client tying together searches, reports, evidence, payment follow-up, and agreement links.",
+    title: "Job Files",
+    text: "One private file per important client or project tying together checks, reports, evidence, payment follow-up, and agreement links.",
   },
   {
     title: "Contracts",

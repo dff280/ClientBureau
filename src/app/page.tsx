@@ -49,9 +49,9 @@ import {
 } from "@/lib/seo"
 
 export const metadata: Metadata = {
-  title: "Client Bureau | Check Client Ratings Before You Take the Job",
+  title: "Client Bureau | Check a Client Before You Take the Job",
   description:
-    "Search client ratings, payment-risk indicators, contractor-submitted reports, and response context before risking labor, materials, crew time, and profit.",
+    "Check clients before accepting work. Review moderated reports, payment-risk signals, private matching, evidence summaries, and response context.",
   alternates: {
     canonical: "/",
   },
@@ -67,7 +67,7 @@ const platformHeroAsset = pageAssets.platformHero
 const heroTrustSignals = [
   {
     icon: Search,
-    title: "Search-first intake",
+    title: "Check-first intake",
     text: "Look up names, businesses, locations, and private-match identifiers before you schedule the job.",
   },
   {
@@ -99,7 +99,7 @@ const platformPillars = [
     icon: Search,
     label: "Check",
     title: "Client risk intelligence",
-    text: "Search client ratings, report history, private-match signals, and response context before taking the job.",
+    text: "Check client profiles, report history, private-match signals, and response context before taking the job.",
   },
   {
     icon: Signature,
@@ -159,7 +159,7 @@ const protectionSystem = [
     phase: "01",
     icon: Search,
     title: "Check the client",
-    text: "Search public profiles, private-match signals, report counts, positive history, payment context, and response/dispute status before you commit.",
+    text: "Check public profiles, private-match signals, report counts, positive history, payment context, and response/dispute status before you commit.",
     href: "/search",
     cta: primarySearchCta,
   },
@@ -214,7 +214,7 @@ const searchPreviewDetails = [
   {
     label: "Payment context",
     value: "Reported issues + positive history",
-    text: "Search results can show both concerning and positive contractor-submitted experiences.",
+    text: "Client checks can show both concerning and positive contractor-submitted experiences.",
   },
   {
     label: "Evidence status",
@@ -223,7 +223,7 @@ const searchPreviewDetails = [
   },
   {
     label: "Next action",
-    value: "Search, watch, contract, report",
+    value: "Check, watch, contract, report",
     text: "Every result should guide the business owner toward a practical next step.",
   },
 ]
@@ -367,7 +367,7 @@ export default async function Home() {
                   {heroHeadline}
                 </h1>
                 <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                  Search reported payment issues, disputes, chargebacks, and documented client experiences before
+                  Check reported payment issues, disputes, chargebacks, and documented client experiences before
                   you commit labor, materials, scheduling, deposits, or profit.
                 </p>
                 <div className="flex flex-wrap items-center gap-3">
@@ -382,14 +382,14 @@ export default async function Home() {
 
               <form action="/search" className="grid max-w-4xl gap-3 rounded-md border border-amber-200/30 bg-white p-2 shadow-[0_26px_80px_rgba(0,0,0,0.38)] sm:grid-cols-[1fr_auto]">
                 <label htmlFor="homepage-client-search" className="sr-only">
-                  Search for a client
+                  Check a client
                 </label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                   <Input
                     id="homepage-client-search"
                     name="q"
-                    placeholder="Search by client name, business, phone, email, city, or state"
+                    placeholder="Check by client name, business, city, state, or private match"
                     className="h-14 border-0 pl-12 text-base text-slate-950 shadow-none focus-visible:ring-0"
                   />
                 </div>
@@ -400,7 +400,7 @@ export default async function Home() {
 
               <div className="flex max-w-4xl flex-wrap gap-2 text-xs font-semibold text-slate-300">
                 <span className="rounded-md border border-amber-300/30 bg-amber-300/10 px-3 py-1.5 text-amber-200">
-                  Try a search:
+                  Try a client check:
                 </span>
                 {heroSearchExamples.map((example) => (
                   <Link
@@ -416,7 +416,7 @@ export default async function Home() {
               <div className="flex max-w-4xl items-start gap-2 rounded-md border border-white/10 bg-slate-950/55 px-3 py-2 text-sm leading-6 text-slate-300 backdrop-blur">
                 <LockKeyhole className="mt-0.5 size-4 shrink-0 text-amber-200" aria-hidden="true" />
                 <p>
-                  Searches are private. Raw phone numbers, emails, street addresses, and evidence files are never shown on public profiles.
+                  Client checks are private. Raw phone numbers, emails, street addresses, and evidence files are never shown on public profiles.
                 </p>
               </div>
 
@@ -481,7 +481,7 @@ export default async function Home() {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             {[
-              ["Before", "Search client context before you take the job."],
+              ["Before", "Check client context before you take the job."],
               ["During", "Keep contracts, changes, and evidence organized."],
               ["After", "Use recovery and lien-service workflows when payment needs structure."],
             ].map(([label, text]) => (
@@ -530,7 +530,7 @@ export default async function Home() {
           <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
             <SectionIntro
               eyebrow="The Client Protection System"
-              title="Search before the job. Document during the job. Protect payment after the job."
+              title="Check before the job. Document during the job. Protect payment after the job."
               text="This is the product doctrine. Client Bureau is not just a place to publish client reports. It is becoming the operating system for business owners who need better client decisions before, during, and after work is performed."
             />
             <Button asChild variant="outline">
@@ -552,9 +552,9 @@ export default async function Home() {
         <div className="bureau-container grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <div className="space-y-6">
             <SectionIntro
-              eyebrow="What search should show"
-              title="A client search should feel like a business decision file, not a gossip result."
-              text="Search results should help a contractor understand the record quickly: who matched, what was reported, what evidence is on file, whether the client responded, and what the safest next action is."
+              eyebrow="What a client check should show"
+              title="A client check should feel like a business decision file, not a gossip result."
+              text="Client checks should help a contractor understand the record quickly: who matched, what was reported, what evidence is on file, whether the client responded, and what the safest next action is."
               dark
             />
             <div className="grid gap-3">
@@ -649,7 +649,7 @@ export default async function Home() {
             <SectionIntro
               eyebrow="Built for the people taking the risk"
               title="Contractors, service businesses, and professional teams finally get a client-check layer."
-              text="Customers have had review platforms for years. Client Bureau gives business owners a professional way to search clients, document projects, protect payment, publish moderated records, and create a fair response path."
+              text="Customers have had review platforms for years. Client Bureau gives business owners a professional way to check clients, document projects, protect payment, publish moderated records, and create a fair response path."
             />
             <Button asChild variant="outline">
               <Link href="/resources">
@@ -699,7 +699,7 @@ export default async function Home() {
               Check the client before your time, materials, and reputation are already on the line.
             </h2>
             <p className="max-w-2xl text-sm leading-6 text-slate-300">
-              Make Client Bureau part of every serious intake: search the client, set clear terms, document the work,
+              Make Client Bureau part of every serious intake: check the client, set clear terms, document the work,
               protect payment, and keep the public record fair when a client responds or resolves the issue.
             </p>
           </div>
@@ -869,7 +869,7 @@ function SearchIntelligencePreview({
     <div className="rounded-md border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-slate-950/40">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <p className="text-xs font-semibold uppercase text-amber-300">Search result preview</p>
+          <p className="text-xs font-semibold uppercase text-amber-300">Client check preview</p>
           <h3 className="mt-2 text-2xl font-semibold text-white">
             What a business owner should understand in seconds
           </h3>
@@ -883,7 +883,7 @@ function SearchIntelligencePreview({
         <HeroProfilePreview item={item} />
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        {["Save search", "Watch client", "Create contract"].map((action) => (
+        {["Save check", "Watch client", "Create contract"].map((action) => (
           <div key={action} className="rounded-md border border-white/10 bg-slate-950/40 p-3 text-sm font-semibold text-slate-200">
             {action}
           </div>
@@ -1104,7 +1104,7 @@ function HeroCommandPanel({
             </div>
             <p className="mt-3 text-xl font-semibold text-white">Client decision record</p>
             <p className="mt-1 text-sm leading-6 text-slate-300">
-              Search context, payment indicators, evidence status, and next actions in one place.
+              Client-check context, payment indicators, evidence status, and next actions in one place.
             </p>
           </div>
           <div className="hidden rounded-md border border-amber-300/30 bg-amber-300/10 px-3 py-2 text-right sm:block">
@@ -1120,7 +1120,7 @@ function HeroCommandPanel({
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs font-semibold text-slate-300">
-          {["Search", "Save", "Report", "Contract", "Resolve"].map((step) => (
+          {["Check", "Save", "Report", "Contract", "Resolve"].map((step) => (
             <span key={step} className="rounded-md border border-white/10 px-2.5 py-1">
               {step}
             </span>
@@ -1166,7 +1166,7 @@ function HeroProfilePreview({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase text-amber-200">Client Bureau Rating preview</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">What a search result shows</h2>
+              <h2 className="mt-2 text-2xl font-semibold text-white">What a client check shows</h2>
             </div>
             <ShieldCheck className="size-7 text-amber-200" aria-hidden="true" />
           </div>

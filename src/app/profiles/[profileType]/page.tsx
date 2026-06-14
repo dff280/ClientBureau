@@ -32,14 +32,14 @@ function titleForProfileType(profileType: ProfileType) {
 
 function descriptionForProfileType(profileType: ProfileType) {
   if (profileType === "client") {
-    return "Search public Client Bureau profiles for clients, homeowners, customers, property owners, and businesses contractors worked for."
+    return "Check public Client Bureau profiles for clients, homeowners, customers, property owners, and businesses contractors worked for."
   }
 
   if (profileType === "subcontractor") {
-    return "Search public subcontractor and trade-professional profiles by trade scope, GC/sub relationship context, and payment-chain signals."
+    return "Check public subcontractor and trade-professional profiles by trade scope, GC/sub relationship context, and payment-chain signals."
   }
 
-  return "Search public Client Bureau contractor and service-business profiles with verification, service-area context, and moderated project records."
+  return "Check public Client Bureau contractor and service-business profiles with verification, service-area context, and moderated project records."
 }
 
 export async function generateMetadata({ params }: ProfileTypeDirectoryProps): Promise<Metadata> {
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: ProfileTypeDirectoryProps): P
 
   if (!profileType) return {}
 
-  const title = `${titleForProfileType(profileType)} | Client Bureau`
+  const title = titleForProfileType(profileType)
   const description = descriptionForProfileType(profileType)
 
   return {

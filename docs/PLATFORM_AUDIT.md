@@ -1,8 +1,8 @@
 # Client Bureau Platform Audit
 
-Date: June 10, 2026
+Date: June 14, 2026
 
-Status note updated June 12, 2026: production is live on Supabase with `DATA_MODE=supabase`. `PLATFORM_FEATURE_DATA_MODE=mock` is the safe setting until migration `0019_contractor_subcontractor_rating_transparency.sql` is applied and `/api/health` reports `platformCanUseSupabase: true`. Core auth, reports, admin approval, public profiles, and SEO routes remain live.
+Status note updated June 14, 2026: production is live on Supabase with `DATA_MODE=supabase`. Migration `0019_contractor_subcontractor_rating_transparency.sql` and the job participant graph migration have been applied in production, and `/api/health` is expected to report `platformCanUseSupabase: true` when the VPS is on the current release. `PLATFORM_FEATURE_DATA_MODE=supabase` is the target production setting; use `mock` only as a temporary rollback if an advanced dashboard/admin workflow needs review.
 
 ## Core Positioning
 
@@ -39,6 +39,9 @@ Public and SEO-visible pages:
 
 Authenticated contractor/client-facing pages:
 - `/dashboard`
+- `/dashboard/jobs`
+- `/dashboard/jobs/[jobId]`
+- `/dashboard/[tool]`
 - `/submit-report`
 - `/client-response`
 - `/contract/[token]`
@@ -71,13 +74,13 @@ API and system routes:
 
 ## Existing Features
 
-- Supabase-ready auth, users, contractor profiles, client profiles, reports, evidence, responses, subscriptions, admin reviews, discussions, audit logs, and RLS migrations.
-- Mock-first repository plus Supabase adapter boundary.
+- Supabase-backed auth, users, contractor profiles, client profiles, unified entity profiles, reports, evidence, responses, subscriptions, admin reviews, discussions, audit logs, Jobs, job participants, contracts, recovery/lien workflows, and RLS migrations.
+- Mock fallback plus Supabase adapter boundary for launch-safe rollback.
 - Admin report approval and publication flow that recalculates score/risk and creates or updates public profiles.
 - Public SEO profiles with moderated summaries, score explanations, positive reports, dispute context, evidence summaries, and right-of-response.
 - Search by name, business, city/state, private identifier intent, risk level, and category.
 - Positive and concern report submission workflows with zod validation and server actions.
-- Contractor dashboard with pipeline, watchlist, monitoring, drafts, intake assessments, evidence, recovery, lien readiness, contracts, signing links, account status, activity, and reports.
+- Contractor dashboard with Jobs, participant roles, pipeline, watchlist, monitoring, drafts, intake assessments, evidence, recovery, Florida lien service, contracts, signing links, account status, activity, and reports.
 - Contract signing token route and client signature form.
 - Admin command center, moderation CRM, report review panel, client/contractor editors, discussion moderation, bulk upload panel, audit log, and settings.
 - Stripe-ready pricing and checkout/webhook endpoints.
@@ -86,23 +89,21 @@ API and system routes:
 
 ## Missing Features
 
-- Deeper live QA coverage for authenticated contractor and admin workflows. Public release verification is automated, but logged-in workflows still require the live QA runbook.
+- Deeper live QA coverage for authenticated contractor and admin workflows. Public release verification is automated, but logged-in workflows still require the live QA runbook with disposable contractor/admin accounts.
 - Real file upload flow for evidence vault and contract attachments in the new workflows.
 - Production e-signature audit details such as IP, timestamp, signer verification, and immutable PDF copy generation.
 - Payment middleman/escrow/payment collection logic. Current payment tooling is documentation and tracking only.
-- State-specific lien rules engine. Current lien readiness is a private checklist workflow.
+- State-specific lien rules engine beyond the current Florida-first service workflow.
 - Full billing plan enforcement and usage limits.
 - Rich notification system for watchlists, contract views/signatures, admin decisions, and payment follow-ups.
-- Dedicated public product pages for contracts, payment protection, evidence vault, and monitoring.
+- More dedicated public product pages for evidence vault, monitoring, project/job files, and subcontractor profile acquisition.
 
 ## Weak Pages
 
-- `/dashboard`: strongest product surface but too dense. It relies on tabs and accordions inside one large page, making it powerful but hard for new users to understand quickly.
+- `/dashboard`: strongest private product surface. It now has focused tool routes, but every release should continue checking that the first screen stays action-oriented instead of becoming a long feature index.
 - `/admin`: broad command center with useful modules, but some sections repeat CRM widgets and cross-link to public/contractor areas.
-- `/how-it-works`: accurate but narrower than the new platform direction; it should describe check, terms, document, payment, and resolution.
-- `/pricing`: improved but should keep moving from feature lists toward use cases and business outcomes.
-- `/submit-report`: strong form, but it is still report-first. Long term it should connect more naturally to Client Work Files and Evidence Vault.
-- `/contract/[token]`: functional but needs a more polished client review experience, stronger agreement summary, and clearer status timeline.
+- `/submit-report`: strong form, but it should keep guiding users into Jobs, Evidence Vault, and profile graph context when a project file already exists.
+- `/contract/[token]`: functional and polished enough for launch, but signed-summary PDF generation and deeper signer verification remain future upgrades.
 
 ## Duplicate Components And Patterns
 
@@ -119,15 +120,14 @@ API and system routes:
 - Main inconsistency is density: public pages are polished and spacious; dashboard/admin pages are dense and operational.
 - Form heights vary because shadcn primitives use compact defaults while page-level forms sometimes force larger heights.
 - Some labels still say "Risk Ops" or "contractor command center" while the new positioning is broader business-owner protection.
-- Public and footer navigation still expose old "Search Clients" and "Submit Report" language more strongly than contracts, evidence, and payment protection.
+- Some older docs and support copy can still over-emphasize reports; public/product copy should keep balancing search, jobs, contracts, evidence, recovery, lien service, and profile protection.
 
 ## Navigation Issues
 
-- Logged-in primary navigation is too shallow: Dashboard, Search, Submit report. It does not expose Contracts, Evidence, Payment, Watchlists, or Client Work Files.
-- Dashboard tabs are not URL-addressable, so users cannot land directly on Contracts, Evidence, Payment, or Reports from the header.
-- Public navigation does not clearly introduce the full platform. It reads more like a report/search site.
-- Admin navigation is isolated, which is good, but it lacks explicit recovery/contracts sections even though the admin dashboard references those workflows.
-- Footer links are flat instead of grouped by product, company, and policies.
+- Logged-in header navigation now promotes Dashboard, Check a Client, Jobs, Report Experience, and Contracts. Deeper tools remain available through dashboard routes and footer groups.
+- Dashboard tools are URL-addressable through `/dashboard/[tool]` plus dedicated Jobs routes.
+- Admin navigation is isolated, grouped, and includes report moderation, profiles, contracts, recovery, uploads, audit, and settings.
+- Footer links are grouped, but future passes should keep tightening labels around the broader business-owner protection platform.
 
 ## Mobile And Responsive Problems
 
@@ -158,8 +158,8 @@ API and system routes:
 
 - One-page dashboard is powerful but scroll-heavy.
 - Key tools need URL-addressable entry points or separate subroutes.
-- Users need clearer labels: Contracts, Evidence Vault, Payment Tracking, Client Work Files, Watchlist, Reports.
-- Advanced platform tools are live-backed, so the next product risk is workflow clarity, empty states, and admin confidence rather than database readiness.
+- Users need clearer labels: Contracts, Evidence Vault, Payment Tracking, Job Files, Watchlist, Reports.
+- Advanced platform tools are live-backed when `/api/health` confirms `platformCanUseSupabase: true`, so the next product risk is workflow clarity, empty states, and admin confidence rather than database readiness.
 - Contract sharing is promising and should become a main workflow, not a lower-page feature.
 - Payment recovery should stay compliance-safe and framed as private documentation/tracking.
 

@@ -158,7 +158,7 @@ export function ClientDashboardShell({
       </div>
 
       <div className="bureau-container grid gap-5 py-4 sm:gap-6 sm:py-6 lg:grid-cols-[260px_1fr]">
-        <aside className="hidden h-fit rounded-md border border-slate-200 bg-white p-3 shadow-lg shadow-slate-950/5 lg:sticky lg:top-4 lg:block">
+        <aside className="hidden h-fit rounded-md border border-slate-200 bg-white p-3 shadow-lg shadow-slate-950/5 lg:sticky lg:top-20 lg:block">
           <div className="mb-3 rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold uppercase text-amber-700">Tools</p>
             <p className="mt-1 text-sm leading-5 text-slate-600">

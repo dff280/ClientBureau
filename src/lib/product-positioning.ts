@@ -11,7 +11,7 @@ import {
 import type { LucideIcon } from "lucide-react"
 
 export const businessProtectionPromise =
-  "Search before the job. Document during the job. Protect payment after the job."
+  "Check before the job. Document during the job. Protect payment after the job."
 
 export const corePositioning = "Check the client before you take the job."
 
@@ -36,8 +36,8 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
   {
     id: "check",
     phase: "Before the estimate",
-    title: "Search before the job",
-    text: "Search public profiles, private-match signals, positive reports, payment context, and watchlist alerts before accepting work from a homeowner, customer, or project client.",
+    title: "Check before the job",
+    text: "Check public profiles, private-match signals, positive reports, payment context, and watchlist alerts before accepting work from a homeowner, customer, or project client.",
     tools: ["Client search", "Private matching", "Watchlists"],
     href: "/search",
     cta: primarySearchCta,

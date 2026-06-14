@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Start", value: "$0", text: "Search and submit a documented report before you upgrade." },
+  { label: "Start", value: "$0", text: "Check clients and report a documented experience before you upgrade." },
   { label: "Best fit", value: "Pro", text: "Unlimited client checks, watchlists, contracts, evidence, and recovery tools." },
   { label: "Teams", value: "Shared", text: "Multiple users, shared records, CSV intake, and manager review controls." },
   { label: "Service work", value: "Add-on", text: "Recovery and Florida lien workflows use service-fee paths." },
@@ -36,7 +36,7 @@ const proof = [
 const planOutcomes = [
   {
     icon: Radar,
-    title: "Search before you schedule",
+    title: "Check before you schedule",
     text: "Run client checks before committing crew time, material orders, deposits, or final invoice risk.",
   },
   {

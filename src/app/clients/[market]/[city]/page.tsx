@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: ClientCityDirectoryPageProps)
     }
   }
 
-  const title = `${city.name} ${state.code} Client Bureau Profiles | Client Directory`
+  const title = `${city.name} ${state.code} Public Client Profiles | Client Directory`
   const description =
     `Browse approved Client Bureau public client profiles in ${city.name}, ${state.name} with moderated contractor-submitted report context.`
   const canonical = `${siteUrl}/clients/${state.slug}/${city.slug}`

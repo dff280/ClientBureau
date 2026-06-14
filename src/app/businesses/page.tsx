@@ -112,7 +112,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
               <p className="text-xs font-semibold uppercase text-amber-700">All profiles</p>
               <h2 className="mt-2 font-semibold text-slate-950">Unified profile directory</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Search clients, contractors, subcontractors, and public project relationship context.
+                Check clients, contractors, subcontractors, and public project relationship context.
               </p>
             </Link>
           </div>

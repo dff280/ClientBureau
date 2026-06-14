@@ -10,7 +10,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card"
 
 export const metadata: Metadata = {
-  title: "Client Bureau Rating Methodology",
+  title: "Rating Methodology for Client Reports",
   description:
     "How Client Bureau Ratings use moderated reports, evidence context, disputes, resolutions, positive reports, and confidence signals.",
   alternates: {

@@ -88,7 +88,7 @@ export default async function DashboardPage({
     return (
       <DashboardSetupState
         title="Your command center is being prepared."
-        message="Your profile is active, but the operations workspace did not load. You can still search clients and submit documented reports while this feature workspace initializes."
+        message="Your profile is active, but the operations workspace did not load. You can still check clients and submit documented reports while this feature workspace initializes."
       />
     )
   }
@@ -114,7 +114,7 @@ export default async function DashboardPage({
       icon: ShieldCheck,
     },
     {
-      label: "Search first client",
+      label: "Check first client",
       complete: dashboard.savedSearches.length > 0,
       href: "/search",
       icon: Search,

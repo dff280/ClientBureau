@@ -42,7 +42,7 @@ const primaryMobileCta = {
 const PrimaryMobileIcon = primaryMobileCta.icon
 
 export const metadata: Metadata = {
-  title: "Client Bureau Android App",
+  title: "Android Contractor App",
   description:
     "Download the Client Bureau Android app for client checks, reports, contracts, recovery workflows, Florida lien service, evidence, and alerts.",
   alternates: {
@@ -91,7 +91,7 @@ const workflow = [
     phase: "01",
     icon: Search,
     title: "Check the client",
-    text: "Search before you commit labor, materials, scheduling, deposits, or crew time.",
+    text: "Check before you commit labor, materials, scheduling, deposits, or crew time.",
   },
   {
     phase: "02",
@@ -134,7 +134,7 @@ export default function MobileAppPage() {
       <PremiumHero
         eyebrow="Client Bureau Android"
         title="Client checks and job-protection tools from the field."
-        description="Download the Client Bureau Android app to search clients, track reports, manage contract packets, open recovery cases, start Florida lien service workflows, review evidence status, and monitor alerts from one secure mobile workspace."
+        description="Download the Client Bureau Android app to check clients, track reports, manage contract packets, open recovery cases, start Florida lien service workflows, review evidence status, and monitor alerts from one secure mobile workspace."
         primary={primaryMobileCta}
         secondary={{ href: "/signup", label: "Create Account", icon: Smartphone }}
         aside={
@@ -181,7 +181,7 @@ export default function MobileAppPage() {
               <BureauMetricCard
                 icon={Bell}
                 label="Daily action"
-                value="Search first"
+                value="Check first"
                 text="The app is designed around the first question a contractor asks: should I take this job?"
               />
             </div>
