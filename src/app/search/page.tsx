@@ -50,7 +50,7 @@ function toProfileType(value?: string): ProfileType | undefined {
   return profileTypes.includes(value as ProfileType) ? (value as ProfileType) : undefined
 }
 
-function reportPrefillHref(query: string, state?: string) {
+function reportPrefillHref(query: string, state?: string, profileType?: ProfileType, tradeCategory?: string) {
   const params = new URLSearchParams()
   const tokens = query
     .trim()
@@ -60,6 +60,8 @@ function reportPrefillHref(query: string, state?: string) {
   if (tokens[0]) params.set("firstName", tokens[0])
   if (tokens[1]) params.set("lastName", tokens[1])
   if (state) params.set("state", state)
+  if (profileType) params.set("profileType", profileType)
+  if (tradeCategory) params.set("tradeCategory", tradeCategory)
 
   return `/submit-report${params.size ? `?${params.toString()}` : ""}`
 }
@@ -127,7 +129,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         title="Check a Client Before You Take the Job."
         description="Check names, businesses, cities, private-match context, categories, and public profiles before you risk labor, materials, scheduling, deposits, or final invoice exposure."
         primary={{ href: "#client-search", label: "Run Client Check", icon: Radar }}
-        secondary={{ href: reportPrefillHref(query, state), label: "Report a Client Experience", icon: FilePlus2 }}
+        secondary={{ href: reportPrefillHref(query, state, profileType, tradeCategory), label: "Report a Client Experience", icon: FilePlus2 }}
         aside={
           <div className="space-y-4">
             <ProductMockupFrame
@@ -190,7 +192,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             </p>
           </div>
           <Button asChild variant="outline">
-            <Link href={reportPrefillHref(query, state)}>
+            <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>
               <FilePlus2 aria-hidden="true" />
               Report a Client Experience
             </Link>
@@ -223,6 +225,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           query={query}
           resultCount={results.length}
           state={state}
+          profileType={profileType}
+          tradeCategory={tradeCategory}
           signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
         />
 
@@ -258,7 +262,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                   </Button>
                 )}
                 <Button asChild variant="outline">
-                  <Link href={reportPrefillHref(query, state)}>Report a Client Experience</Link>
+                  <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>Report a Client Experience</Link>
                 </Button>
               </div>
             </CardContent>
@@ -276,6 +280,8 @@ function SearchActivationGuide({
   query,
   resultCount,
   state,
+  profileType,
+  tradeCategory,
   signupHref,
 }: {
   hasSearch: boolean
@@ -283,6 +289,8 @@ function SearchActivationGuide({
   query: string
   resultCount: number
   state?: string
+  profileType?: ProfileType
+  tradeCategory?: string
   signupHref: string
 }) {
   const searchedLabel = query.trim() ? `"${query.trim()}"` : "this search"
@@ -306,7 +314,7 @@ function SearchActivationGuide({
     },
     {
       detail: "If you have direct experience, submit a factual report with documentation for moderation.",
-      href: reportPrefillHref(query, state),
+      href: reportPrefillHref(query, state, profileType, tradeCategory),
       icon: FilePlus2,
       label: "Report a Client Experience",
       title: "Document what happened",

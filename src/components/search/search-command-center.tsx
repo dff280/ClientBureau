@@ -117,6 +117,22 @@ function savedSearchFilterSummary(search: SavedSearchRecord) {
     .join(" / ")
 }
 
+function reportPrefillHref(query: string, state?: string, profileType?: ProfileType, tradeCategory?: string) {
+  const params = new URLSearchParams()
+  const tokens = query
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+
+  if (tokens[0]) params.set("firstName", tokens[0])
+  if (tokens[1]) params.set("lastName", tokens[1])
+  if (state) params.set("state", state)
+  if (profileType) params.set("profileType", profileType)
+  if (tradeCategory) params.set("tradeCategory", tradeCategory)
+
+  return `/submit-report${params.size ? `?${params.toString()}` : ""}`
+}
+
 function uniqueSavedSearches(searches: SavedSearchRecord[]) {
   const seen = new Set<string>()
 
@@ -340,6 +356,7 @@ export function SearchCommandCenter({
     profileType,
     tradeCategory: tradeValue || undefined,
   })
+  const reportHref = reportPrefillHref(liveQuery, stateFilter || undefined, profileType, tradeValue || undefined)
 
   return (
     <div className="grid gap-5">
@@ -741,7 +758,7 @@ export function SearchCommandCenter({
           </div>
         </div>
         <Button asChild variant="outline" className="w-full justify-center sm:w-auto">
-          <Link href="/submit-report">
+          <Link href={reportHref}>
             <FilePlus2 aria-hidden="true" />
             Report a Client Experience
           </Link>

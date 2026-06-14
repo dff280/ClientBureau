@@ -107,6 +107,44 @@ function claimProfileLinks(html) {
     .filter(Boolean)
 }
 
+function pageLinks(html) {
+  return [...html.matchAll(/href=["']([^"']+)["']/gi)]
+    .map((match) => {
+      try {
+        return new URL(decodeHtmlAttribute(match[1]), expectedSiteUrl)
+      } catch {
+        return null
+      }
+    })
+    .filter(Boolean)
+}
+
+function hasLinkWithParams(html, pathname, expectedParams) {
+  return pageLinks(html).some((url) => {
+    if (url.pathname !== pathname) return false
+
+    return Object.entries(expectedParams).every(([key, value]) => url.searchParams.get(key) === value)
+  })
+}
+
+function hasSignupNextWithParams(html, nextPathname, expectedParams) {
+  return pageLinks(html).some((url) => {
+    if (url.pathname !== "/signup") return false
+
+    const next = url.searchParams.get("next")
+    if (!next) return false
+
+    try {
+      const nextUrl = new URL(next, expectedSiteUrl)
+      if (nextUrl.pathname !== nextPathname) return false
+
+      return Object.entries(expectedParams).every(([key, value]) => nextUrl.searchParams.get(key) === value)
+    } catch {
+      return false
+    }
+  })
+}
+
 function hiddenInputValue(html, name) {
   const inputs = [...html.matchAll(/<input\b[^>]*>/gi)].map((match) => match[0])
   const input = inputs.find((tag) => {
@@ -379,6 +417,36 @@ await verifyNoindexWorkflowPage("/search", {
   requestPath: "/search?q=John&state=FL",
   requiredText: ["Check a Client Before You Take the Job.", "Server-verified results", "Client check guide"],
 })
+
+const subcontractorTradeSearch = await read("/search?q=NoSuchClientBureau987&profileType=subcontractor&tradeCategory=Electrical")
+if (subcontractorTradeSearch.response.ok) {
+  pass("/search preserves subcontractor trade request", "profileType=subcontractor&tradeCategory=Electrical")
+
+  if (hasLinkWithParams(subcontractorTradeSearch.text, "/search", { profileType: "subcontractor", tradeCategory: "Electrical" })) {
+    pass("/search subcontractor trade filter remains active in result navigation")
+  } else {
+    fail("/search subcontractor trade filter remains active in result navigation", "missing profileType/tradeCategory search link")
+  }
+
+  if (hasSignupNextWithParams(subcontractorTradeSearch.text, "/search", { profileType: "subcontractor", tradeCategory: "Electrical" })) {
+    pass("/search signup handoff preserves subcontractor trade filters")
+  } else if (hasLinkWithParams(subcontractorTradeSearch.text, "/dashboard/watchlist", {})) {
+    warn(
+      "/search signup handoff preserves subcontractor trade filters",
+      "Skipped because this environment rendered authenticated watchlist actions instead of logged-out signup CTAs.",
+    )
+  } else {
+    fail("/search signup handoff preserves subcontractor trade filters", "missing signup next profileType/tradeCategory")
+  }
+
+  if (hasLinkWithParams(subcontractorTradeSearch.text, "/submit-report", { profileType: "subcontractor", tradeCategory: "Electrical" })) {
+    pass("/search report handoff preserves subcontractor trade filters")
+  } else {
+    fail("/search report handoff preserves subcontractor trade filters", "missing submit-report profileType/tradeCategory")
+  }
+} else {
+  fail("/search preserves subcontractor trade request", String(subcontractorTradeSearch.response.status))
+}
 await verifyNoindexWorkflowPage("/client-response", {
   requiredText: ["Client response", "Respond, dispute, correct, or update a Client Bureau profile.", "Fairness is part of the product."],
 })
