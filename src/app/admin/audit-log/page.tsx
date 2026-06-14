@@ -63,6 +63,11 @@ export default async function AdminAuditLogPage({ searchParams }: { searchParams
   ).length
   const highAttentionActions = data.auditLog.filter((entry) => getAuditSeverity(entry).level === "high").length
   const systemEvents = data.auditLog.filter((entry) => !entry.actorId).length
+  const actorOptions = uniqueAuditOptions(
+    data.auditLog.flatMap((entry) => [entry.actorName, entry.actorId]),
+  ).slice(0, 40)
+  const actionOptions = uniqueAuditOptions(data.auditLog.map((entry) => entry.action))
+  const entityOptions = uniqueAuditOptions(data.auditLog.map((entry) => entry.entityType))
 
   return (
     <section className="px-4 py-6 sm:px-6 lg:px-8">
@@ -122,9 +127,9 @@ export default async function AdminAuditLogPage({ searchParams }: { searchParams
           description="Narrow the log by actor, action, entity, exact date, or inferred attention level."
         >
           <form className="grid w-full gap-2 lg:grid-cols-[1fr_1fr_1fr_160px_170px_auto_auto]">
-            <Input name="actor" defaultValue={params.actor} placeholder="Actor" aria-label="Filter actor" />
-            <Input name="action" defaultValue={params.action} placeholder="Action" aria-label="Filter action" />
-            <Input name="entity" defaultValue={params.entity} placeholder="Entity" aria-label="Filter entity" />
+            <Input name="actor" defaultValue={params.actor} placeholder="Actor" aria-label="Filter actor" list="audit-actor-options" />
+            <Input name="action" defaultValue={params.action} placeholder="Action" aria-label="Filter action" list="audit-action-options" />
+            <Input name="entity" defaultValue={params.entity} placeholder="Entity" aria-label="Filter entity" list="audit-entity-options" />
             <Input name="date" defaultValue={params.date} type="date" aria-label="Filter date" />
             <select
               name="severity"
@@ -145,7 +150,13 @@ export default async function AdminAuditLogPage({ searchParams }: { searchParams
             <Button asChild variant="outline">
               <Link href="/admin/audit-log">Clear</Link>
             </Button>
+            <AuditFilterOptions id="audit-actor-options" options={actorOptions} />
+            <AuditFilterOptions id="audit-action-options" options={actionOptions} format={formatAction} />
+            <AuditFilterOptions id="audit-entity-options" options={entityOptions} format={formatEntityType} />
           </form>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            Suggestions come from the current audit trail. You can still type partial names, action fragments, IDs, or entity types for broader searches.
+          </p>
           {hasFilters ? (
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
               {actor ? <FilterPill label="Actor" value={params.actor ?? ""} /> : null}
@@ -314,6 +325,28 @@ function FilterPill({ label, value }: { label: string; value: string }) {
   )
 }
 
+function AuditFilterOptions({
+  format,
+  id,
+  options,
+}: {
+  format?: (value: string) => string
+  id: string
+  options: string[]
+}) {
+  if (options.length === 0) return null
+
+  return (
+    <datalist id={id}>
+      {options.map((option) => (
+        <option key={option} value={option}>
+          {format ? format(option) : option}
+        </option>
+      ))}
+    </datalist>
+  )
+}
+
 function EntityLink({ entry }: { entry: AuditLogEntry }) {
   const href = entityHref(entry.entityType)
   const label = formatEntityType(entry.entityType)
@@ -424,7 +457,7 @@ function formatAction(action: string) {
   return action.replaceAll("_", " ")
 }
 
-function formatEntityType(entityType: AdminEntityType) {
+function formatEntityType(entityType: string) {
   return entityType.replaceAll("_", " ")
 }
 
@@ -438,4 +471,10 @@ function formatSeverityFilter(severity: string) {
   if (severity === "success") return "Completed"
   if (severity === "routine") return "Routine"
   return severity
+}
+
+function uniqueAuditOptions(values: Array<string | null | undefined>) {
+  return [...new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value)))].sort((a, b) =>
+    a.localeCompare(b),
+  )
 }
