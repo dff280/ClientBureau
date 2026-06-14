@@ -1,7 +1,7 @@
 # Client Bureau Web Platform Finalization Audit
 
 Date: 2026-06-14  
-Release baseline: `0.4.2` / live verified production commit `a3f80ea68b92f25e8331a45e237cd99814149035`
+Release baseline: `0.4.2`; use `/api/version` for the exact live Git commit.
 
 Current platform expectation: core and advanced web workflows are Supabase-backed when `/api/health` reports `platformCanUseSupabase: true`. `PLATFORM_FEATURE_DATA_MODE=mock` remains a rollback switch, not the normal launch posture.
 
@@ -174,7 +174,8 @@ Desktop and mobile browser spot-check:
 ## Current Pass Notes
 
 - Production is live on `DATA_MODE=supabase` and `PLATFORM_FEATURE_DATA_MODE=supabase`; `/api/health` reports `coreLiveReady: true`, `platformCanUseSupabase: true`, 39/39 platform tables, and 78/78 required platform columns.
-- Live release verification passed at commit `a3f80ea68b92f25e8331a45e237cd99814149035`; live SEO verification passed with the single intentional warning that a real verified subcontractor detail profile still needs to be published before acquisition campaigns.
+- Live release verification and live SEO verification pass with the single intentional warning that a real verified subcontractor detail profile still needs to be published before acquisition campaigns.
+- `/api/health` now separates required platform readiness from optional launch enhancement columns. Migration `0021_saved_search_filter_context.sql` adds durable `profileType` and `tradeCategory` persistence for saved searches and search analytics; missing `0021` columns should warn as an enhancement gap without disabling live ops.
 - Search, directory, signup, and report-intake handoffs now preserve `profileType` and `tradeCategory` context, so a filtered flow like `/search?profileType=subcontractor&tradeCategory=Electrical` stays aligned through suggestions, saved searches, claim/report CTAs, and report submission defaults.
 - `/profiles/subcontractor` remains launch-safe before inventory exists: it can guide users to claim, report a trade relationship, or search all profiles without publishing fake subcontractor records.
 - Authenticated public header navigation was tightened so promoted contractor tools do not duplicate in the Tools menu.

@@ -17,6 +17,7 @@ import { getClientDirectory } from "@/lib/client-directory"
 import { noStoreHeaders } from "@/lib/http"
 import {
   coreLaunchTables,
+  optionalLaunchEnhancementColumns,
   platformLaunchTables,
   requiredContractPacketColumns,
   requiredFlexibleJobColumns,
@@ -687,6 +688,14 @@ describe("launch health gates", () => {
     ]
   }
 
+  function optionalColumnStatuses(missing: string[] = []) {
+    return optionalLaunchEnhancementColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: !missing.includes(`${column.table}.${column.name}`),
+    }))
+  }
+
   it("keeps core and platform launch table groups distinct", () => {
     expect(new Set(requiredLaunchTables).size).toBe(requiredLaunchTables.length)
     expect(coreLaunchTables).toContain("client_reports")
@@ -706,6 +715,7 @@ describe("launch health gates", () => {
       stripeWebhookConfigured: true,
       requiredTables: tableStatuses(),
       requiredColumns: columnStatuses(),
+      optionalEnhancementColumns: optionalColumnStatuses(),
     })
 
     expect(summary.coreLiveReady).toBe(true)
@@ -725,6 +735,31 @@ describe("launch health gates", () => {
         requiredMultiProfileColumns.length +
         requiredRatingTransparencyColumns.length +
         requiredFlexibleJobColumns.length,
+    })
+    expect(summary.enhancementColumnCount).toEqual({
+      ready: optionalLaunchEnhancementColumns.length,
+      total: optionalLaunchEnhancementColumns.length,
+    })
+  })
+
+  it("tracks saved-search filter context as an optional enhancement", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "supabase",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: false,
+      stripeWebhookConfigured: false,
+      requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses(),
+      optionalEnhancementColumns: optionalColumnStatuses(["saved_client_searches.profile_type"]),
+    })
+
+    expect(summary.platformCanUseSupabase).toBe(true)
+    expect(summary.recommendedPlatformFeatureDataMode).toBe("supabase")
+    expect(summary.enhancementColumnCount).toEqual({
+      ready: optionalLaunchEnhancementColumns.length - 1,
+      total: optionalLaunchEnhancementColumns.length,
     })
   })
 

@@ -165,6 +165,13 @@ export const requiredFlexibleJobColumns = [
   { table: "project_job_profiles", name: "updated_at" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
+export const optionalLaunchEnhancementColumns = [
+  { table: "saved_client_searches", name: "profile_type" },
+  { table: "saved_client_searches", name: "trade_category" },
+  { table: "search_analytics_events", name: "profile_type" },
+  { table: "search_analytics_events", name: "trade_category" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
 const requiredPlatformColumnTotal =
   requiredContractPacketColumns.length +
   requiredRevenueWorkflowColumns.length +
@@ -203,6 +210,10 @@ export type LaunchReadinessSummary = {
     ready: number
     total: number
   }
+  enhancementColumnCount: {
+    ready: number
+    total: number
+  }
 }
 
 export type LaunchHealth = {
@@ -215,6 +226,7 @@ export type LaunchHealth = {
   stripeWebhookConfigured: boolean
   requiredTables: LaunchTableStatus[]
   requiredColumns: LaunchColumnStatus[]
+  optionalEnhancementColumns: LaunchColumnStatus[]
   readiness: LaunchReadinessSummary
   timestamp: string
 }
@@ -316,6 +328,32 @@ async function checkRequiredColumns() {
   )
 }
 
+async function checkOptionalEnhancementColumns() {
+  if (!hasSupabaseServiceConfig()) {
+    return optionalLaunchEnhancementColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+  }
+
+  const supabase = createServiceClient()
+
+  return Promise.all(
+    optionalLaunchEnhancementColumns.map(async ({ table, name }) => {
+      const { error } = await supabase.from(table).select(name, { head: true }).limit(1)
+
+      return {
+        table,
+        name,
+        exists: !error,
+        message: error?.message,
+      }
+    }),
+  )
+}
+
 export function summarizeLaunchHealth(input: {
   dataMode: ReturnType<typeof getDataMode>
   platformFeatureDataMode: ReturnType<typeof getPlatformFeatureDataMode>
@@ -325,6 +363,7 @@ export function summarizeLaunchHealth(input: {
   stripeWebhookConfigured: boolean
   requiredTables: LaunchTableStatus[]
   requiredColumns?: LaunchColumnStatus[]
+  optionalEnhancementColumns?: LaunchColumnStatus[]
 }): LaunchReadinessSummary {
   const missingCoreTables = coreLaunchTables.filter((name) =>
     !input.requiredTables.find((table) => table.name === name && table.exists),
@@ -338,6 +377,9 @@ export function summarizeLaunchHealth(input: {
     .filter((column) => !column.exists)
     .map((column) => `${column.table}.${column.name}`)
   const platformSchemaReady = missingPlatformColumns.length === 0
+  const missingEnhancementColumns = (input.optionalEnhancementColumns ?? [])
+    .filter((column) => !column.exists)
+    .map((column) => `${column.table}.${column.name}`)
   const coreLiveReady = input.supabaseConfigured && input.serviceRoleConfigured && coreTablesReady
   const platformCanUseSupabase = coreLiveReady && platformTablesReady && platformSchemaReady
   const recommendedPlatformFeatureDataMode = platformCanUseSupabase ? "supabase" : "mock"
@@ -390,13 +432,18 @@ export function summarizeLaunchHealth(input: {
       ready: requiredPlatformColumnTotal - missingPlatformColumns.length,
       total: requiredPlatformColumnTotal,
     },
+    enhancementColumnCount: {
+      ready: optionalLaunchEnhancementColumns.length - missingEnhancementColumns.length,
+      total: optionalLaunchEnhancementColumns.length,
+    },
   }
 }
 
 export async function getLaunchHealth(): Promise<LaunchHealth> {
-  const [requiredTables, requiredColumns] = await Promise.all([
+  const [requiredTables, requiredColumns, optionalEnhancementColumns] = await Promise.all([
     checkRequiredTables(),
     checkRequiredColumns(),
+    checkOptionalEnhancementColumns(),
   ])
   const supabaseConfigured = hasSupabaseConfig()
   const serviceRoleConfigured = hasSupabaseServiceConfig()
@@ -413,6 +460,7 @@ export async function getLaunchHealth(): Promise<LaunchHealth> {
     stripeWebhookConfigured,
     requiredTables,
     requiredColumns,
+    optionalEnhancementColumns,
   })
   const degraded =
     !supabaseConfigured ||
@@ -430,6 +478,7 @@ export async function getLaunchHealth(): Promise<LaunchHealth> {
     stripeWebhookConfigured,
     requiredTables,
     requiredColumns,
+    optionalEnhancementColumns,
     readiness,
     timestamp: new Date().toISOString(),
   }

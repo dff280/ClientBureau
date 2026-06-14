@@ -44,6 +44,7 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0018_response_graph_links.sql`
    - `supabase/migrations/0019_contractor_subcontractor_rating_transparency.sql`
    - `supabase/migrations/0020_job_participants_flexible_roles.sql`
+   - `supabase/migrations/0021_saved_search_filter_context.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`
@@ -198,9 +199,9 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0020` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Use `mock` as the safe mode while the newest profile-rating or Jobs participant columns are missing, or if an advanced ops workflow needs review.
+Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0020` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Migration `0021_saved_search_filter_context.sql` is an enhancement migration for durable saved-search filter context; `/api/health` reports it under `optionalEnhancementColumns` and `readiness.enhancementColumnCount` without blocking live ops. Use `mock` as the safe mode while the newest profile-rating or Jobs participant columns are missing, or if an advanced ops workflow needs review.
 
-If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, rating transparency, or flexible Jobs participant columns, first confirm all migrations through `0020` have been applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
+If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, rating transparency, or flexible Jobs participant columns, first confirm all migrations through `0020` have been applied. If only saved-search filter-context columns are missing, apply `0021` when convenient; the application falls back safely but saved searches will not durably retain profile/trade filters until it is applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
 
 ```text
 supabase/migrations/0013_live_platform_schema_backfill.sql

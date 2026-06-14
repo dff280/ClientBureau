@@ -57,6 +57,7 @@ Required result:
 - `/api/version` shows the expected package version and Git commit.
 - `/api/health` reports `coreLiveReady: true`.
 - If `PLATFORM_FEATURE_DATA_MODE=supabase`, `/api/health` must also report `platformCanUseSupabase: true` and `recommendedPlatformFeatureDataMode: supabase`.
+- `/api/health` reports optional saved-search enhancement readiness through `optionalEnhancementColumns` and `readiness.enhancementColumnCount`. Missing `0021` saved-search filter columns may warn, but should be applied before marketing pushes that rely on saved subcontractor/trade searches.
 - If `PLATFORM_FEATURE_DATA_MODE=mock`, `/api/health` may warn that a newer advanced-platform column is missing or that an ops workflow is in rollback mode; core auth, reports, admin approval, and public profiles should remain live.
 - `/api/version`, `/api/health`, `/api/session`, and `/api/admin/session` include `Cache-Control: no-store`.
 - Logged-out dashboard, submit-report, and admin routes redirect to safe internal `/login` URLs, preserve the expected `next` return path, and include `Cache-Control: no-store`.

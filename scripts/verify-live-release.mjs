@@ -453,6 +453,19 @@ if (health.json?.readiness?.platformCanUseSupabase) {
   )
 }
 
+const enhancementCount = health.json?.readiness?.enhancementColumnCount
+if (enhancementCount && enhancementCount.ready === enhancementCount.total) {
+  pass("Optional launch enhancement columns", `${enhancementCount.ready}/${enhancementCount.total} ready`)
+} else if (enhancementCount) {
+  const missingEnhancements = (health.json?.optionalEnhancementColumns ?? [])
+    .filter((column) => !column.exists)
+    .map((column) => `${column.table}.${column.name}`)
+  warn(
+    "Optional launch enhancement columns",
+    `${enhancementCount.ready}/${enhancementCount.total} ready${missingEnhancements.length ? `; missing ${missingEnhancements.join(", ")}` : ""}`,
+  )
+}
+
 if (health.json?.stripeConfigured && health.json?.stripeWebhookConfigured) {
   pass("Stripe test/live configuration", "secret and webhook configured")
 } else {
