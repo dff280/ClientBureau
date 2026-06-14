@@ -1,3 +1,39 @@
+import { existsSync, readFileSync } from "node:fs"
+import { resolve } from "node:path"
+
+const qaEnvFile = process.env.QA_ENV_FILE || ".env.qa.local"
+const requireAuthQa = process.env.REQUIRE_AUTH_QA === "1" || process.argv.includes("--strict")
+
+function loadQaEnvFile(filePath) {
+  const resolvedPath = resolve(process.cwd(), filePath)
+
+  if (!existsSync(resolvedPath)) return false
+
+  const text = readFileSync(resolvedPath, "utf8")
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith("#")) continue
+
+    const equalsIndex = line.indexOf("=")
+    if (equalsIndex <= 0) continue
+
+    const key = line.slice(0, equalsIndex).trim()
+    let value = line.slice(equalsIndex + 1).trim()
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1)
+    }
+
+    if (!process.env[key]) process.env[key] = value
+  }
+
+  return true
+}
+
+const loadedQaEnvFile = loadQaEnvFile(qaEnvFile)
 const baseUrl = (process.env.LIVE_BASE_URL || "https://clientbureau.com").replace(/\/$/, "")
 
 const accounts = [
@@ -63,6 +99,10 @@ function fail(name, detail = "") {
 
 function warn(name, detail = "") {
   checks.push({ ok: true, level: "WARN", name, detail })
+}
+
+function qaCredentialNames(kind) {
+  return [`${kind.toUpperCase()}_QA_EMAIL`, `${kind.toUpperCase()}_QA_PASSWORD`]
 }
 
 function maskEmail(email = "") {
@@ -351,12 +391,20 @@ let contractorJar = null
 
 await verifyHealthGate()
 
+if (loadedQaEnvFile) {
+  pass("QA env file loaded", qaEnvFile)
+} else {
+  warn("QA env file not found", `${qaEnvFile}; using process environment only`)
+}
+
 for (const account of accounts) {
   if (!account.email || !account.password) {
-    skip(
-      `${account.kind} authenticated workflow`,
-      `set ${account.kind.toUpperCase()}_QA_EMAIL and ${account.kind.toUpperCase()}_QA_PASSWORD to enable`,
-    )
+    const [emailName, passwordName] = qaCredentialNames(account.kind)
+    const message = `set ${emailName} and ${passwordName}, or add them to ${qaEnvFile}`
+
+    if (requireAuthQa) fail(`${account.kind} authenticated workflow credentials`, message)
+    else skip(`${account.kind} authenticated workflow`, message)
+
     continue
   }
 

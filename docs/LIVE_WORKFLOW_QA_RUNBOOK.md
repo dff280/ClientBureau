@@ -18,7 +18,15 @@ npm run seo:check
 Remove-Item Env:SEO_BASE_URL
 ```
 
-Optional authenticated smoke test, using disposable QA accounts only:
+Optional authenticated smoke test, using disposable QA accounts only. The easiest setup is to copy the example file, fill it locally, and keep the real file uncommitted:
+
+```powershell
+Copy-Item .env.qa.example .env.qa.local
+notepad .env.qa.local
+npm run verify:live:auth:strict
+```
+
+The strict command fails if either QA account is missing. You can also set environment variables directly for a one-off run:
 
 ```powershell
 $env:LIVE_BASE_URL="https://clientbureau.com"
@@ -26,7 +34,7 @@ $env:CONTRACTOR_QA_EMAIL="contractor-qa@example.com"
 $env:CONTRACTOR_QA_PASSWORD="use-a-private-password-manager-value"
 $env:ADMIN_QA_EMAIL="admin-qa@example.com"
 $env:ADMIN_QA_PASSWORD="use-a-private-password-manager-value"
-npm run verify:live:auth
+npm run verify:live:auth:strict
 Remove-Item Env:LIVE_BASE_URL
 Remove-Item Env:CONTRACTOR_QA_EMAIL
 Remove-Item Env:CONTRACTOR_QA_PASSWORD
@@ -34,7 +42,7 @@ Remove-Item Env:ADMIN_QA_EMAIL
 Remove-Item Env:ADMIN_QA_PASSWORD
 ```
 
-Do not commit QA credentials. If no QA credentials are configured, `npm run verify:live:auth` still checks the live health gate and exits with skipped account-specific checks.
+Do not commit QA credentials. If no QA credentials are configured, `npm run verify:live:auth` still checks the live health gate and exits with skipped account-specific checks. Use `npm run verify:live:auth:strict` before a serious release candidate so missing QA accounts fail loudly.
 
 Required result:
 

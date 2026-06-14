@@ -119,18 +119,26 @@ The private workspace verifier should pass before release. It checks contractor 
 When disposable QA credentials are available, also run:
 
 ```powershell
+Copy-Item .env.qa.example .env.qa.local
+notepad .env.qa.local
+npm run verify:live:auth:strict
+```
+
+Or set the values directly for a one-off run:
+
+```powershell
 $env:CONTRACTOR_QA_EMAIL="contractor-qa@example.com"
 $env:CONTRACTOR_QA_PASSWORD="private-password"
 $env:ADMIN_QA_EMAIL="admin-qa@example.com"
 $env:ADMIN_QA_PASSWORD="private-password"
-npm run verify:live:auth
+npm run verify:live:auth:strict
 Remove-Item Env:CONTRACTOR_QA_EMAIL
 Remove-Item Env:CONTRACTOR_QA_PASSWORD
 Remove-Item Env:ADMIN_QA_EMAIL
 Remove-Item Env:ADMIN_QA_PASSWORD
 ```
 
-The authenticated verifier checks the live health gate, logs in through the real `/api/auth/login` route, checks session JSON, opens the full contractor/admin route set with the returned cookies, verifies expected workspace content and no-store private pages, and confirms a contractor account cannot enter `/admin`. It skips account-specific checks cleanly when QA credentials are not configured.
+The authenticated verifier checks the live health gate, loads local credentials from `.env.qa.local` when present, logs in through the real `/api/auth/login` route, checks session JSON, opens the full contractor/admin route set with the returned cookies, verifies expected workspace content and no-store private pages, and confirms a contractor account cannot enter `/admin`. The normal command skips account-specific checks cleanly when QA credentials are not configured; the strict command fails when credentials are missing.
 
 To intentionally inspect production without comparing release identity, run:
 
@@ -198,7 +206,7 @@ Before pushing `main`:
 - `npm run seo:check:local` passes after `npm run build`, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.
 - `npm run mobile:check` passes.
 - `npm run verify:live` passes after the VPS rebuild.
-- `npm run verify:live:auth` passes when disposable QA credentials are configured, or reports skipped checks when they are not.
+- `npm run verify:live:auth:strict` passes when disposable QA credentials are configured, or `npm run verify:live:auth` reports skipped account checks during non-release inspection.
 - Manual logged-in QA follows `docs/LIVE_WORKFLOW_QA_RUNBOOK.md`.
 - Browser QA covers the changed public/dashboard/admin routes.
 - No secrets or private data appear in `git diff`.

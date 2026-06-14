@@ -22,6 +22,7 @@
     "verify:local": "node scripts/verify-local-release.mjs",
     "verify:live": "node scripts/verify-live-release.mjs",
     "verify:live:auth": "node scripts/verify-live-auth-workflows.mjs",
+    "verify:live:auth:strict": "node scripts/verify-live-auth-workflows.mjs --strict",
     "migrations:graph:print": "node scripts/print-graph-migrations.mjs",
     "migrations:graph:file": "node scripts/print-graph-migrations.mjs > supabase/migrations/manual-0014-0018-reputation-graph.sql"
   },
