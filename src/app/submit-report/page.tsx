@@ -80,6 +80,20 @@ export default async function SubmitReportPage({
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
+            {defaults.projectJobId || defaults.projectJobTitle ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                <p className="text-sm font-semibold uppercase text-amber-700">Linked private job</p>
+                <h2 className="mt-2 text-xl font-semibold tracking-normal text-amber-950">
+                  {defaults.projectJobTitle ?? "This report is connected to a job file."}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-amber-900">
+                  The job connection helps moderators understand the project context. Street address,
+                  access notes, private job notes, and participant notes remain private and are not shown
+                  on public profile pages.
+                </p>
+              </div>
+            ) : null}
+
             <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
               <p className="text-sm font-semibold uppercase text-amber-700">Guided report intake</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">

@@ -42,6 +42,24 @@ function labelize(value: string) {
     .join(" ")
 }
 
+function jobContextHref(baseHref: string, job: ProjectJobDetail, reportDefaults = false) {
+  const params = new URLSearchParams()
+
+  if (reportDefaults) {
+    params.set("projectJobId", job.id)
+    params.set("projectJobTitle", job.title)
+  } else {
+    params.set("jobId", job.id)
+    params.set("jobTitle", job.title)
+  }
+
+  if (job.city) params.set("city", job.city)
+  if (job.state) params.set("state", job.state)
+  if (job.tradeCategory || job.projectType) params.set("tradeCategory", job.tradeCategory ?? job.projectType)
+
+  return `${baseHref}?${params.toString()}`
+}
+
 function ActionMessage<T>({ state }: { state: ActionResult<T> }) {
   if (!state.message) return null
 
@@ -414,11 +432,19 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
         <StatCard label="Value" value={`$${job.contractAmount.toLocaleString()}`} helper="Private contract value." tone="emerald" />
       </div>
 
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+        <p className="text-sm font-semibold text-amber-950">Use this job as the starting point.</p>
+        <p className="mt-1 text-sm leading-6 text-amber-900">
+          These actions carry the job title, location, and trade category forward where the tool supports it, so the
+          contract, report, evidence, or recovery record stays tied to the right private project file.
+        </p>
+      </div>
+
       <div className="grid gap-3 lg:grid-cols-4">
-        <JobActionLink href="/dashboard/contracts" icon={FileText} title="Create contract packet" text="Turn the job scope into a private signing packet." />
-        <JobActionLink href="/submit-report" icon={ClipboardList} title="Report an experience" text="Document client, contractor, or subcontractor context." />
-        <JobActionLink href="/dashboard/evidence" icon={ShieldCheck} title="Organize evidence" text="Attach invoices, photos, contracts, and messages privately." />
-        <JobActionLink href="/dashboard/recovery" icon={BriefcaseBusiness} title="Payment recovery" text="Open a managed case if payment becomes an issue." />
+        <JobActionLink href={jobContextHref("/dashboard/contracts", job)} icon={FileText} title="Create contract packet" text="Turn this job scope into a private signing packet." />
+        <JobActionLink href={jobContextHref("/submit-report", job, true)} icon={ClipboardList} title="Report an experience" text="Document client, contractor, or subcontractor context from this job." />
+        <JobActionLink href={jobContextHref("/dashboard/evidence", job)} icon={ShieldCheck} title="Organize evidence" text="Attach invoices, photos, contracts, and messages to this job context." />
+        <JobActionLink href={jobContextHref("/dashboard/recovery", job)} icon={BriefcaseBusiness} title="Payment recovery" text="Open a managed case from this job if payment becomes an issue." />
       </div>
 
       <DashboardSection

@@ -32,6 +32,8 @@ export const dynamic = "force-dynamic"
 
 type DashboardToolTab = DashboardWorkspaceTab | "growth"
 
+type DashboardToolSearchParams = Promise<Record<string, string | string[] | undefined>>
+
 type DashboardToolConfig = {
   activeHref: string
   badge: string
@@ -58,6 +60,61 @@ type DashboardToolConfig = {
   }
   tab: DashboardToolTab
   title: string
+}
+
+function firstSearchValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+function getJobContext(searchParams: Awaited<DashboardToolSearchParams>) {
+  const jobId = firstSearchValue(searchParams.jobId)
+  const jobTitle = firstSearchValue(searchParams.jobTitle)
+
+  if (!jobId && !jobTitle) return null
+
+  return {
+    city: firstSearchValue(searchParams.city),
+    jobId,
+    jobTitle,
+    state: firstSearchValue(searchParams.state),
+    tradeCategory: firstSearchValue(searchParams.tradeCategory),
+  }
+}
+
+function JobContextBanner({
+  context,
+  toolTitle,
+}: {
+  context: NonNullable<ReturnType<typeof getJobContext>>
+  toolTitle: string
+}) {
+  const location = [context.city, context.state].filter(Boolean).join(", ")
+
+  return (
+    <section className="rounded-md border border-amber-200 bg-amber-50 p-4 shadow-sm">
+      <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Private job context</p>
+          <h2 className="mt-1 text-lg font-semibold text-amber-950">
+            {context.jobTitle ?? "This tool"} is linked to this {toolTitle.toLowerCase()} workflow.
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-amber-900">
+            {[
+              location ? `Location: ${location}` : null,
+              context.tradeCategory ? `Trade: ${context.tradeCategory}` : null,
+            ]
+              .filter(Boolean)
+              .join(" / ") || "The job ID is preserved in this private dashboard session."}
+          </p>
+        </div>
+        {context.jobId ? (
+          <Button asChild variant="outline" className="border-amber-300 bg-white text-amber-950 hover:bg-amber-100">
+            <Link href={`/dashboard/jobs/${context.jobId}`}>Back to job file</Link>
+          </Button>
+        ) : null}
+      </div>
+    </section>
+  )
 }
 
 const dashboardToolConfigs: Record<string, DashboardToolConfig> = {
@@ -494,10 +551,13 @@ export async function generateMetadata({
 
 export default async function DashboardToolPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ tool: string }>
+  searchParams: DashboardToolSearchParams
 }) {
   const { tool } = await params
+  const rawSearchParams = await searchParams
   const config = dashboardToolConfigs[tool]
 
   if (!config) notFound()
@@ -505,6 +565,7 @@ export default async function DashboardToolPage({
   const { dashboard, clientProfiles, riskOps } = await getClientDashboardData(`/dashboard/${tool}`)
   const featureDataMode = getPlatformFeatureDataMode()
   const liveBacked = featureDataMode === "supabase"
+  const jobContext = getJobContext(rawSearchParams)
 
   if (!dashboard || !riskOps) {
     return (
@@ -554,6 +615,8 @@ export default async function DashboardToolPage({
         }
         statusTone={liveBacked ? "emerald" : "amber"}
       />
+
+      {jobContext ? <JobContextBanner context={jobContext} toolTitle={config.title} /> : null}
 
       {config.tab === "growth" ? (
         <ContractorGrowthEngine data={getMockGrowthEngineData(dashboard.contractor, getSiteUrl())} />
