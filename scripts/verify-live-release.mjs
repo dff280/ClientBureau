@@ -892,6 +892,7 @@ const protectedRoutes = [
   { path: "/dashboard/lien-readiness", expectedNext: "/dashboard/lien-readiness" },
   { path: "/dashboard/evidence", expectedNext: "/dashboard/evidence" },
   { path: "/dashboard/watchlist", expectedNext: "/dashboard/watchlist" },
+  { path: "/dashboard/alerts", expectedNext: "/dashboard/alerts" },
   { path: "/dashboard/billing", expectedNext: "/dashboard/billing" },
   { path: "/dashboard/activity", expectedNext: "/dashboard/activity" },
   { path: "/dashboard/growth", expectedNext: "/dashboard/growth" },
