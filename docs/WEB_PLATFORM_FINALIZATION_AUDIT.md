@@ -1,7 +1,7 @@
 # Client Bureau Web Platform Finalization Audit
 
 Date: 2026-06-14  
-Release baseline: `0.4.2` / `576cd57` before this audit-polish pass
+Release baseline: `0.4.2` / `2b15c4f` before this settings-polish pass
 
 Current platform expectation: core and advanced web workflows are Supabase-backed when `/api/health` reports `platformCanUseSupabase: true`. `PLATFORM_FEATURE_DATA_MODE=mock` remains a rollback switch, not the normal launch posture.
 
@@ -182,6 +182,7 @@ Desktop and mobile browser spot-check:
 - The subcontractor launch runbook now includes a readiness-scored SQL query and guarded publication SQL for real verified records only.
 - Admin candidate cards now route staff to the source client/business editor when available, with a separate readiness review link for the unified profile queue.
 - Current public SEO infrastructure is sound; the remaining subcontractor warning should clear only after a legitimate real subcontractor profile is published, not through fake inventory.
+- Admin Settings now surfaces subcontractor/trade-profile activation as a release gate, with direct routing to `/admin/profiles?type=subcontractor` when the first real public profile is still missing.
 
 ## Remaining Launch Work
 

@@ -30,7 +30,9 @@ import {
 } from "@/components/dashboard/dashboard-ui"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { profileSupportsType } from "@/lib/entity-profiles"
 import { getLaunchHealth } from "@/lib/launch-health"
+import { getPublicEntityProfilesService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -40,10 +42,17 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminSettingsPage() {
-  const health = await getLaunchHealth()
+  const [health, publicEntityProfiles] = await Promise.all([
+    getLaunchHealth(),
+    getPublicEntityProfilesService(),
+  ])
   const readiness = health.readiness
   const missingTables = health.requiredTables.filter((table) => !table.exists)
   const liveOpsActive = readiness.platformCanUseSupabase && health.platformFeatureDataMode === "supabase"
+  const publicSubcontractorProfiles = publicEntityProfiles.filter((profile) =>
+    profile.isPublic && profileSupportsType(profile, "subcontractor"),
+  )
+  const subcontractorProfileReady = publicSubcontractorProfiles.length > 0
   const coreRecordsLabel = health.dataMode === "supabase" ? "Live" : "Needs review"
   const advancedRecordsLabel = liveOpsActive ? "Live" : "Guided"
   const recommendedRecordsLabel = readiness.platformCanUseSupabase ? "Live" : "Guided"
@@ -143,6 +152,17 @@ export default async function AdminSettingsPage() {
       tone: "slate" as const,
     },
     {
+      title: "Subcontractor profile launch",
+      status: subcontractorProfileReady ? "Ready" : "Needs profile",
+      detail: subcontractorProfileReady
+        ? "At least one real public subcontractor or trade-professional profile is published and available for acquisition checks."
+        : "Publish one real verified subcontractor or trade-professional profile before running acquisition campaigns against the trade directory.",
+      href: "/admin/profiles?type=subcontractor",
+      cta: "Open readiness",
+      icon: UserCheck,
+      tone: subcontractorProfileReady ? ("emerald" as const) : ("amber" as const),
+    },
+    {
       title: "Release safety",
       status: releaseGateStatus ? "Ready" : "Needs review",
       detail:
@@ -182,6 +202,15 @@ export default async function AdminSettingsPage() {
       icon: Receipt,
       tone: stripeStatus ? ("emerald" as const) : ("slate" as const),
     },
+    {
+      title: "Subcontractor SEO",
+      value: subcontractorProfileReady ? "Ready" : "Needs profile",
+      detail: subcontractorProfileReady
+        ? `${publicSubcontractorProfiles.length} public trade profile${publicSubcontractorProfiles.length === 1 ? "" : "s"} available.`
+        : "Directory is safe, but acquisition should wait for a real verified trade profile.",
+      icon: UserCheck,
+      tone: subcontractorProfileReady ? ("emerald" as const) : ("amber" as const),
+    },
   ]
   const operatorChecklist = [
     {
@@ -211,6 +240,13 @@ export default async function AdminSettingsPage() {
         "Use guided fallback for advanced tools, keep core records live, review audit events, and avoid public exposure.",
       icon: Bell,
       tone: "rose" as const,
+    },
+    {
+      title: "Before subcontractor acquisition",
+      detail:
+        "Confirm a real verified trade profile is public, has a neutral summary, uses Trade Partner Reliability, and exposes no private identifiers.",
+      icon: UserCheck,
+      tone: subcontractorProfileReady ? ("emerald" as const) : ("amber" as const),
     },
   ]
   const settingsGroups: Array<{ title: string; items: Array<[string, string]> }> = [
