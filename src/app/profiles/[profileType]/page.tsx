@@ -15,6 +15,7 @@ type ProfileTypeDirectoryProps = {
   searchParams: Promise<{
     q?: string
     state?: string
+    tradeCategory?: string
   }>
 }
 
@@ -71,9 +72,10 @@ export default async function ProfileTypeDirectoryPage({
   const queryParams = await searchParams
   const query = queryParams.q?.trim() ?? ""
   const state = queryParams.state?.trim().toUpperCase() || undefined
+  const tradeCategory = queryParams.tradeCategory?.trim() || undefined
   const [allProfiles, results] = await Promise.all([
     getPublicEntityProfilesService(),
-    searchProfilesService(query, { state, profileType }),
+    searchProfilesService(query, { state, profileType, tradeCategory }),
   ])
   const typedProfiles = allProfiles.filter((profile) =>
     profile.profileType === profileType || profile.accountCapabilities?.includes(profileType),
@@ -101,6 +103,7 @@ export default async function ProfileTypeDirectoryPage({
         searchPath={`/profiles/${profileType}`}
         state={state}
         states={states}
+        tradeCategory={tradeCategory}
       />
     </>
   )

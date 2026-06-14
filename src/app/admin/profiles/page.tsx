@@ -31,7 +31,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { claimedStatusLabel, deriveEntityProfiles, entityProfileHref, profileSupportsType, profileTypeLabel } from "@/lib/entity-profiles"
 import { getAdminWorkspaceDataService, getProfileClaimsService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
-import { profileTypes, type EntityProfile, type ProfileClaim, type ProfileType } from "@/lib/types"
+import { tradeCategories, tradeCategoryGroups, tradeCategoryMatches } from "@/lib/trade-taxonomy"
+import { profileTypes, verificationLevels, type EntityProfile, type ProfileClaim, type ProfileType } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Admin Unified Profiles",
@@ -44,6 +45,9 @@ type AdminProfilesSearchParams = Promise<{
   q?: string
   type?: string
   status?: string
+  tradeCategory?: string
+  visibility?: string
+  verification?: string
 }>
 
 function toProfileType(value?: string): ProfileType | undefined {
@@ -66,6 +70,10 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
   const query = params.q?.trim().toLowerCase() ?? ""
   const type = toProfileType(params.type)
   const status = params.status ?? "all"
+  const claimStatus = status === "public" || status === "private" ? "all" : status
+  const visibility = params.visibility ?? (status === "public" || status === "private" ? status : "all")
+  const verification = params.verification ?? "all"
+  const tradeCategory = params.tradeCategory?.trim() || undefined
   const filteredProfiles = profiles.filter((profile) => {
     const haystack = [
       profile.displayName,
@@ -75,6 +83,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
       profile.slug,
       profile.profileType,
       profile.profileSubtype,
+      profile.tradeCategory,
       profile.claimedStatus,
       profile.verificationLevel,
       profile.duplicateGroupKey,
@@ -82,11 +91,34 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
       .filter(Boolean)
       .join(" ")
       .toLowerCase()
+    const tradeText = [
+      profile.displayName,
+      profile.businessName,
+      profile.profileSubtype,
+      profile.tradeCategory,
+      profile.publicSummary,
+    ]
+      .filter(Boolean)
+      .join(" ")
+    const matchesVisibility =
+      visibility === "all" ||
+      (visibility === "public" ? profile.isPublic : visibility === "private" ? !profile.isPublic : true)
+    const matchesVerification =
+      verification === "all" ||
+      profile.verificationLevel === verification ||
+      (verification === "verified" &&
+        (["claimed", "verified"].includes(profile.claimedStatus) || Boolean(profile.verificationBadges?.length))) ||
+      (verification === "needs_review" &&
+        !["claimed", "verified"].includes(profile.claimedStatus) &&
+        !profile.verificationBadges?.length)
 
     return (
       (!query || haystack.includes(query)) &&
       (!type || profileSupportsType(profile, type)) &&
-      (status === "all" || profile.claimedStatus === status || (status === "public" ? profile.isPublic : status === "private" ? !profile.isPublic : false))
+      (!tradeCategory || tradeCategoryMatches(tradeText, tradeCategory)) &&
+      (claimStatus === "all" || profile.claimedStatus === claimStatus) &&
+      matchesVisibility &&
+      matchesVerification
     )
   })
   const publicCount = profiles.filter((profile) => profile.isPublic).length
@@ -97,14 +129,15 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
     ["claimed", "verified"].includes(profile.claimedStatus) || profile.verificationBadges?.length,
   ).length
   const subcontractorLaunchReadyCount = subcontractorProfiles.filter((profile) =>
-    profile.isPublic &&
-    ["claimed", "verified"].includes(profile.claimedStatus) &&
-    profile.city &&
-    profile.state &&
-    profile.profileSubtype &&
-    profile.publicSummary &&
-    profile.ratingScore > 0,
+    subcontractorLaunchReadiness(profile).ready,
   ).length
+  const subcontractorLaunchCandidates = subcontractorProfiles
+    .map((profile) => ({
+      profile,
+      readiness: subcontractorLaunchReadiness(profile),
+    }))
+    .sort((a, b) => b.readiness.score - a.readiness.score || Number(b.profile.isPublic) - Number(a.profile.isPublic))
+    .slice(0, 4)
   const duplicateGroups = profiles.reduce<Record<string, EntityProfile[]>>((groups, profile) => {
     if (!profile.duplicateGroupKey) return groups
     groups[profile.duplicateGroupKey] = [...(groups[profile.duplicateGroupKey] ?? []), profile]
@@ -208,6 +241,41 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                 title="Public output is safe"
                 detail="Preview the public profile and confirm no raw email, phone, address, evidence path, private contract data, or admin note appears."
               />
+            </div>
+          </div>
+          <div className="mt-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">First verified profile queue</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">Subcontractor records closest to launch-ready</h3>
+                <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
+                  Publish only after the record represents a real trade business, has a safe public summary, and includes a moderator note for the decision.
+                </p>
+              </div>
+              <Button asChild variant="outline">
+                <Link href="/admin/profiles?type=subcontractor&visibility=public">
+                  <Search aria-hidden="true" />
+                  View trade candidates
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {subcontractorLaunchCandidates.map(({ profile, readiness }) => (
+                <SubcontractorLaunchCandidateCard
+                  key={profile.id}
+                  profile={profile}
+                  readiness={readiness}
+                />
+              ))}
+              {subcontractorLaunchCandidates.length === 0 ? (
+                <div className="lg:col-span-2">
+                  <EmptyState
+                    icon={Wrench}
+                    title="No subcontractor-capable profiles yet"
+                    description="Real trade-professional records will appear here after claim, report, business, or profile data creates a subcontractor-capable profile."
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
         </DashboardSection>
@@ -357,9 +425,9 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
 
         <AdminFilterBar
           title="Find public records and claim targets"
-          description="Search by name, business, city, state, slug, type, visibility, or claim status."
+          description="Search by name, business, city, state, slug, type, trade category, visibility, claim status, or verification status."
         >
-          <form className="grid w-full gap-2 sm:w-auto sm:grid-cols-[220px_160px_150px_auto]">
+          <form className="grid w-full gap-2 sm:w-auto xl:grid-cols-[210px_150px_190px_135px_150px_175px_auto]">
             <Input name="q" defaultValue={params.q} placeholder="Search profiles" aria-label="Search unified profiles" />
             <select name="type" defaultValue={type ?? "all"} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
               <option value="all">All types</option>
@@ -367,15 +435,41 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                 <option key={item} value={item}>{profileTypeLabel(item)}</option>
               ))}
             </select>
-            <select name="status" defaultValue={status} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
-              <option value="all">All status</option>
+            <select name="tradeCategory" defaultValue={tradeCategory ?? ""} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+              <option value="">All trades</option>
+              {tradeCategoryGroups.map((group) => {
+                const groupOptions = tradeCategories.filter((category) => category.group === group)
+                if (groupOptions.length === 0) return null
+
+                return (
+                  <optgroup key={group} label={group}>
+                    {groupOptions.map((category) => (
+                      <option key={category.slug} value={category.label}>{category.label}</option>
+                    ))}
+                  </optgroup>
+                )
+              })}
+            </select>
+            <select name="visibility" defaultValue={visibility} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+              <option value="all">All visibility</option>
               <option value="public">Public</option>
               <option value="private">Private</option>
+            </select>
+            <select name="status" defaultValue={claimStatus} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+              <option value="all">All claims</option>
               <option value="claimed">Claimed</option>
               <option value="claim_pending">Claim pending</option>
               <option value="unclaimed">Unclaimed</option>
               <option value="disputed">Disputed</option>
               <option value="verified">Verified</option>
+            </select>
+            <select name="verification" defaultValue={verification} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
+              <option value="all">All verification</option>
+              <option value="verified">Any verified signal</option>
+              <option value="needs_review">Needs review</option>
+              {verificationLevels.map((level) => (
+                <option key={level} value={level}>{level.replaceAll("_", " ")}</option>
+              ))}
             </select>
             <Button className="bg-slate-950 text-white hover:bg-slate-800">
               <Search aria-hidden="true" />
@@ -403,6 +497,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                 facts={[
                   { label: "Claim status", value: claimedStatusLabel(profile.claimedStatus) },
                   { label: "Subtype", value: String(profile.profileSubtype ?? "General profile") },
+                  { label: "Trade category", value: profile.tradeCategory ?? String(profile.profileSubtype ?? "Not set") },
                   { label: "Verification", value: profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : profile.verificationLevel ?? "Moderation only" },
                   { label: "Capabilities", value: profile.accountCapabilities?.length ? profile.accountCapabilities.map(profileTypeLabel).join(", ") : profileTypeLabel(profile.profileType) },
                   { label: "Rating / band", value: `${profile.ratingScore} / ${profile.ratingBand}` },
@@ -601,6 +696,68 @@ function ProfilePriorityCard({
   )
 }
 
+function SubcontractorLaunchCandidateCard({
+  profile,
+  readiness,
+}: {
+  profile: EntityProfile
+  readiness: ReturnType<typeof subcontractorLaunchReadiness>
+}) {
+  const previewHref = entityProfileHref(profile, "subcontractor")
+
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div className="min-w-0">
+          <div className="flex flex-wrap gap-2">
+            <StatusBadge tone={readiness.ready ? "emerald" : "amber"}>
+              {readiness.ready ? "Launch-ready" : `${readiness.score}% ready`}
+            </StatusBadge>
+            <StatusBadge tone={profile.isPublic ? "emerald" : "slate"}>{profile.isPublic ? "Public" : "Private"}</StatusBadge>
+            <StatusBadge tone="blue">{profile.tradeCategory ?? String(profile.profileSubtype ?? "Trade category needed")}</StatusBadge>
+          </div>
+          <h3 className="mt-3 font-semibold text-slate-950">{profile.displayName}</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {profile.city}, {profile.state} / {claimedStatusLabel(profile.claimedStatus)}
+          </p>
+        </div>
+        <div className="rounded-md border border-white bg-white px-3 py-2 text-right shadow-sm">
+          <p className="text-xs font-semibold uppercase text-slate-500">Rating</p>
+          <p className="mt-1 text-lg font-semibold text-slate-950">{profile.ratingScore}/100</p>
+        </div>
+      </div>
+      {readiness.missing.length > 0 ? (
+        <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
+          <p className="text-xs font-semibold uppercase text-amber-800">Missing before publishing</p>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-6 text-amber-950">
+            {readiness.missing.slice(0, 5).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <div className="mt-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-950">
+          Ready for final moderator note and public profile privacy preview.
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button asChild size="sm" variant="outline">
+          <Link href={`/admin/profiles?q=${encodeURIComponent(profile.displayName)}&type=subcontractor`}>
+            Review record
+          </Link>
+        </Button>
+        {profile.isPublic ? (
+          <Button asChild size="sm" variant="outline">
+            <Link href={previewHref} target="_blank">
+              Preview public profile
+            </Link>
+          </Button>
+        ) : null}
+      </div>
+    </article>
+  )
+}
+
 function ProfileFact({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-md border border-white bg-white p-3">
@@ -608,6 +765,31 @@ function ProfileFact({ label, value }: { label: string; value: string | number }
       <dd className="mt-1 text-sm font-semibold text-slate-950">{value}</dd>
     </div>
   )
+}
+
+function subcontractorLaunchReadiness(profile: EntityProfile) {
+  const missing: string[] = []
+  const hasVerification =
+    ["claimed", "verified"].includes(profile.claimedStatus) ||
+    Boolean(profile.verificationBadges?.length) ||
+    ["business_verified", "license_verified", "insurance_verified", "admin_verified"].includes(String(profile.verificationLevel))
+
+  if (!profileSupportsType(profile, "subcontractor")) missing.push("Profile type or account capabilities must include subcontractor")
+  if (!profile.displayName && !profile.businessName) missing.push("Real business or trade display name")
+  if (!profile.city || !profile.state) missing.push("City and state")
+  if (!profile.profileSubtype) missing.push("Subcontractor subtype")
+  if (!profile.tradeCategory && !profile.profileSubtype) missing.push("Canonical trade category or clear trade subtype")
+  if (!profile.publicSummary) missing.push("Public-safe summary")
+  if (!hasVerification) missing.push("Claim, verification, or documented moderator context")
+  if (!profile.isPublic) missing.push("Public visibility enabled after review")
+  if (profile.ratingScore <= 0) missing.push("Trade Partner Reliability Rating")
+  if (profile.claimedStatus === "disputed") missing.push("Dispute resolved or clearly moderated before launch")
+
+  return {
+    missing,
+    ready: missing.length === 0,
+    score: Math.max(0, Math.min(100, 100 - missing.length * 12)),
+  }
 }
 
 function profilePriority(profile: EntityProfile, duplicateGroups: Record<string, EntityProfile[]>) {

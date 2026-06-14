@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
 import { pageAssets } from "@/lib/page-assets"
+import { tradeCategories, tradeCategoryGroups } from "@/lib/trade-taxonomy"
 import { profileTypes, type EntityProfile, type EntityProfileSearchResult, type ProfileType } from "@/lib/types"
 
 type ProfileDirectoryCopy = {
@@ -322,6 +323,7 @@ export function EntityProfileDirectory({
   searchPath,
   state,
   states,
+  tradeCategory,
   query,
 }: {
   activeType?: ProfileType
@@ -330,6 +332,7 @@ export function EntityProfileDirectory({
   searchPath: string
   state?: string
   states: string[]
+  tradeCategory?: string
   query: string
 }) {
   const copy = directoryCopy[activeType ?? "all"]
@@ -351,6 +354,8 @@ export function EntityProfileDirectory({
   const evidenceCount = visibleProfiles.filter((profile) => profile.evidenceOnFileCount > 0).length
   const reportCount = visibleProfiles.reduce((total, profile) => total + profile.reportCount, 0)
   const faqs = getProfileDirectoryFaqs(activeType)
+  const showTradeFilter = activeType === "contractor" || activeType === "subcontractor"
+  const hasDirectoryFilters = Boolean(query || state || tradeCategory)
   const directoryAsset =
     activeType === "contractor"
       ? pageAssets.platformHero
@@ -450,7 +455,7 @@ export function EntityProfileDirectory({
                 </Button>
               </div>
 
-              <form action={searchPath} className="grid gap-3 lg:grid-cols-[1fr_150px_180px_auto]">
+              <form action={searchPath} className={showTradeFilter ? "grid gap-3 lg:grid-cols-[1fr_150px_220px_auto]" : "grid gap-3 lg:grid-cols-[1fr_150px_180px_auto]"}>
                 <input
                   aria-label="Search public profiles"
                   className="h-11 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 shadow-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-200"
@@ -469,6 +474,33 @@ export function EntityProfileDirectory({
                     <option key={item} value={item}>{item}</option>
                   ))}
                 </select>
+                {showTradeFilter ? (
+                  <select
+                    aria-label="Filter trade category"
+                    className="h-11 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-950 shadow-sm"
+                    defaultValue={tradeCategory ?? ""}
+                    name="tradeCategory"
+                  >
+                    <option value="">All trades</option>
+                    {tradeCategoryGroups.map((group) => {
+                      const groupOptions = tradeCategories.filter((category) =>
+                        category.group === group &&
+                        (!activeType || category.profileTypes.some((type) => type === activeType)),
+                      )
+                      if (groupOptions.length === 0) return null
+
+                      return (
+                        <optgroup key={group} label={group}>
+                          {groupOptions.map((category) => (
+                            <option key={category.slug} value={category.label}>
+                              {category.label}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )
+                    })}
+                  </select>
+                ) : null}
                 {!activeType ? (
                   <select
                     aria-label="Filter profile type"
@@ -549,14 +581,18 @@ export function EntityProfileDirectory({
                   <UsersRound className="size-6" aria-hidden="true" />
                 </div>
                 <h3 className="mt-4 text-xl font-semibold text-slate-950">
-                  {activeType === "subcontractor"
-                    ? "No public subcontractor profiles matched those filters."
-                    : "No public profiles matched those filters."}
+                  {activeType === "subcontractor" && !hasDirectoryFilters
+                    ? "No verified public trade profiles in this market yet."
+                    : activeType === "subcontractor"
+                      ? "No verified public trade profiles matched those filters."
+                      : "No public profiles matched those filters."}
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-                  {activeType === "subcontractor"
-                    ? "Verified trade profiles appear after claim, moderation, and public visibility review. You can claim a trade profile, report a documented GC/sub experience, or use private search for saved-search and watchlist actions."
-                    : "Clear the search, choose another state, or use the private search workflow for account-level saved searches and watchlist actions."}
+                  {activeType === "subcontractor" && !hasDirectoryFilters
+                    ? "The directory is ready for real subcontractor and trade-professional records once staff verify identity, trade scope, public-safe summary, claim status, and visibility. No placeholder records are published for SEO."
+                    : activeType === "subcontractor"
+                      ? "Verified trade profiles appear after claim, moderation, and public visibility review. You can claim a trade profile, report a documented GC/sub experience, or use private search for saved-search and watchlist actions."
+                      : "Clear the search, choose another state, or use the private search workflow for account-level saved searches and watchlist actions."}
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">

@@ -11,6 +11,7 @@ A public subcontractor profile is ready when staff can confirm:
 - The record represents a real subcontractor, installer, crew, labor provider, specialty trade, or trade business.
 - `profile_type` is `subcontractor`, or `account_capabilities` includes `subcontractor` when the same business legitimately works as both a contractor and subcontractor.
 - The public display name, city, state, and subtype are accurate.
+- The canonical trade category is selected from the shared trade/service taxonomy when available.
 - The subtype clearly describes the trade role, such as licensed subcontractor, installer, crew, labor provider, or specialty trade.
 - Claim status, verification status, or moderator notes support why the record can be public.
 - The public summary is neutral, factual, and free of private identifiers.
@@ -22,17 +23,21 @@ A public subcontractor profile is ready when staff can confirm:
 
 1. Open `/admin/profiles`.
 2. Filter profile type to `Subcontractor / trade pro`.
-3. Review the "Subcontractor launch readiness" section.
-4. Confirm the record has:
+3. Use the trade category, visibility, claim status, and verification filters to narrow candidate records.
+4. Review the "Subcontractor launch readiness" section and the "First verified profile queue".
+5. Confirm the record has:
+   - real trade/business name
    - trade subtype
+   - canonical trade category when available
    - city/state
    - public-safe profile summary
    - claim or verification context
    - profile type or account capability set for subcontractor/trade work
    - rating model set to Trade Partner Reliability when the public view is a subcontractor/trade profile
    - moderator note for the publication decision
-5. Preview the public profile.
-6. Publish only after the profile passes privacy and moderation review.
+6. Open the public profile preview from the readiness card.
+7. Confirm the public page reads as a trade-partner dossier, not a generic contractor page.
+8. Publish only after the profile passes privacy and moderation review.
 
 ## Supabase Review Query
 

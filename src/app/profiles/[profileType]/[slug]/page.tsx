@@ -454,6 +454,9 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 <div className="grid gap-3 text-sm text-slate-700">
                   <ProfileFact label="City / state" value={`${profile.city}, ${profile.state}`} />
                   <ProfileFact label="Subtype" value={String(profile.profileSubtype ?? "General profile")} />
+                  {profile.profileType === "subcontractor" ? (
+                    <ProfileFact label="Trade category" value={profile.tradeCategory ?? String(profile.profileSubtype ?? "Trade professional")} />
+                  ) : null}
                   <ProfileFact
                     label="Capabilities"
                     value={profile.accountCapabilities?.length
@@ -494,6 +497,7 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                 relationshipCount={profile.relationships.length}
                 reportCount={profile.reportCount}
                 resolvedCount={profile.resolvedReportCount}
+                tradeCategory={profile.tradeCategory}
                 subtype={String(profile.profileSubtype ?? "Trade professional")}
               />
             ) : null}
@@ -756,19 +760,21 @@ function SubcontractorDossierPanel({
   relationshipCount,
   reportCount,
   resolvedCount,
+  tradeCategory,
   subtype,
 }: {
   evidenceLabel: string
   relationshipCount: number
   reportCount: number
   resolvedCount: number
+  tradeCategory?: string
   subtype: string
 }) {
   const items = [
     {
       icon: Wrench,
       label: "Trade scope",
-      value: subtype,
+      value: tradeCategory ?? subtype,
       text: "Subcontractor profiles start with the trade role: specialty scope, crew type, installer category, labor-provider context, or licensed-subcontractor category.",
     },
     {
