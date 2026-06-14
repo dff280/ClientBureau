@@ -1557,7 +1557,13 @@ function ReportDraftForm({ clients }: { clients: ClientProfile[] }) {
         ))}
       </select>
       <Input name="clientName" placeholder="Client name" />
-      <Input name="projectType" placeholder="Project type" />
+      <TradeCategorySelect
+        id="report-draft-project-type"
+        name="projectType"
+        otherName="otherProjectTypeDetail"
+        label="Project type"
+        required
+      />
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="estimatedValue" type="number" placeholder="Estimated value" />
         <Input name="amountAtRisk" type="number" placeholder="Amount at risk" />
@@ -2486,7 +2492,14 @@ function ContractPacketForm() {
           <Input name="clientName" placeholder="Client display name" />
           <Input name="clientLegalName" placeholder="Client legal name, if different" />
           <Input name="contractorLegalName" placeholder="Your legal business name" />
-          <Input name="projectType" placeholder="Project type" defaultValue={templateValues?.projectType} />
+          <TradeCategorySelect
+            id="contract-packet-project-type"
+            name="projectType"
+            otherName="otherProjectTypeDetail"
+            defaultValue={templateValues?.projectType}
+            label="Project type"
+            required
+          />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-[1fr_150px_150px]">

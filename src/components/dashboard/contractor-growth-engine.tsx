@@ -24,6 +24,7 @@ import {
   StatCard,
   StatusBadge,
 } from "@/components/dashboard/dashboard-ui"
+import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -38,6 +39,7 @@ import {
   type ReferralInvite,
   type ReviewRequest,
 } from "@/lib/growth-engine"
+import { normalizeTradeCategory } from "@/lib/trade-taxonomy"
 
 export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
   const [invites, setInvites] = useState(data.invites)
@@ -70,7 +72,10 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
   function addInvite(formData: FormData) {
     const recipientEmail = String(formData.get("recipientEmail") ?? "").trim()
     const businessName = String(formData.get("businessName") ?? "").trim()
-    const trade = String(formData.get("trade") ?? "").trim()
+    const trade = normalizeTradeCategory(
+      String(formData.get("trade") ?? ""),
+      String(formData.get("otherTradeDetail") ?? ""),
+    )
 
     if (!recipientEmail || !businessName) return
 
@@ -93,7 +98,10 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
 
   function addReviewRequest(formData: FormData) {
     const clientName = String(formData.get("clientName") ?? "").trim()
-    const projectType = String(formData.get("projectType") ?? "").trim()
+    const projectType = normalizeTradeCategory(
+      String(formData.get("projectType") ?? ""),
+      String(formData.get("otherProjectTypeDetail") ?? ""),
+    )
 
     if (!clientName || !projectType) return
 
@@ -204,7 +212,13 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
                 </div>
                 <Input name="businessName" placeholder="Business name" required />
                 <Input name="recipientEmail" type="email" placeholder="Email address" required />
-                <Input name="trade" placeholder="Trade or service type" />
+                <TradeCategorySelect
+                  id="invite-trade"
+                  name="trade"
+                  otherName="otherTradeDetail"
+                  label="Trade or service type"
+                  required
+                />
                 <Button type="submit" className="bg-slate-950 text-white hover:bg-slate-800">
                   <MailPlus aria-hidden="true" />
                   Queue invite
@@ -341,7 +355,13 @@ export function ContractorGrowthEngine({ data }: { data: GrowthEngineData }) {
                   </p>
                 </div>
                 <Input name="clientName" placeholder="Client name" required />
-                <Input name="projectType" placeholder="Project type" required />
+                <TradeCategorySelect
+                  id="reference-project-type"
+                  name="projectType"
+                  otherName="otherProjectTypeDetail"
+                  label="Project or service type"
+                  required
+                />
                 <Button type="submit" className="bg-slate-950 text-white hover:bg-slate-800">
                   <Plus aria-hidden="true" />
                   Draft request
