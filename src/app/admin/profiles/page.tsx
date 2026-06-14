@@ -36,6 +36,8 @@ import { profileTypes, verificationLevels, type EntityProfile, type ProfileClaim
 
 export const metadata: Metadata = {
   title: "Admin Unified Profiles",
+  description:
+    "Internal Client Bureau profile graph CRM for clients, contractors, subcontractors, claims, visibility, duplicate signals, and report assignment context.",
   robots: { index: false, follow: false },
 }
 

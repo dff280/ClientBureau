@@ -36,7 +36,7 @@ Recommended branch names:
    npm run verify:local
    ```
 
-   `verify:local` runs the same release gates in the correct order: route inventory/navigation, lint, tests, production build, local SEO crawl, and mobile readiness. If it fails, rerun the individual failing command after fixing the issue.
+   `verify:local` runs the same release gates in the correct order: route inventory/navigation, dashboard/admin workspace quality, lint, tests, production build, local SEO crawl, and mobile readiness. If it fails, rerun the individual failing command after fixing the issue.
 
 4. Commit the feature branch.
 
@@ -114,6 +114,8 @@ The verifier automatically compares production against the local `package.json` 
 
 The route inventory verifier should pass before release. It fails when an App Router page lacks metadata, when a private dashboard/admin/auth/workflow page lacks noindex/nofollow robots metadata, when a new page route is added without being intentionally classified as public/indexable or private/noindex, when important public/dashboard/admin routes are missing from the navigation registry, or when a navigation link does not resolve to an existing App Router page pattern.
 
+The private workspace verifier should pass before release. It checks contractor dashboard and admin CRM pages for page-specific metadata descriptions, noindex/nofollow robots metadata, professional page shells, clear operator action paths, empty/setup states, private navigation resolution, and focused dashboard tool coverage.
+
 When disposable QA credentials are available, also run:
 
 ```powershell
@@ -190,6 +192,7 @@ Before pushing `main`:
 - `npm run verify:local` passes.
 - `npm run lint` passes.
 - `npm run route:check` passes.
+- `npm run workspace:check` passes.
 - `npm test` passes.
 - `npm run build` passes.
 - `npm run seo:check:local` passes after `npm run build`, or `SEO_BASE_URL=https://clientbureau.com npm run seo:check` passes for a live-release validation.

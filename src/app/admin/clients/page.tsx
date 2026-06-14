@@ -17,6 +17,8 @@ import type { ClientProfile } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Admin Client Profiles",
+  description:
+    "Internal Client Bureau workspace for editing client profile identity, city/state, rating context, public visibility, and response or dispute status.",
   robots: { index: false, follow: false },
 }
 

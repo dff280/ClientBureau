@@ -8,6 +8,8 @@ import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-s
 
 export const metadata: Metadata = {
   title: "Admin Discussions",
+  description:
+    "Internal moderation queue for public discussion entries, client responses, correction requests, dispute context, and approval decisions.",
   robots: { index: false, follow: false },
 }
 

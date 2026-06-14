@@ -36,6 +36,8 @@ import { getPublicEntityProfilesService } from "@/lib/repositories/client-bureau
 
 export const metadata: Metadata = {
   title: "Settings",
+  description:
+    "Internal Client Bureau settings and release-readiness workspace for moderation rules, privacy defaults, service safeguards, SEO gates, and platform health.",
   robots: { index: false, follow: false },
 }
 

@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "route:check": "node scripts/verify-route-inventory.mjs",
+    "workspace:check": "node scripts/verify-private-workspace-quality.mjs",
     "mobile:check": "node scripts/verify-mobile-readiness.mjs",
     "mobile:dev": "npm --prefix apps/mobile run start",
     "mobile:typecheck": "npm --prefix apps/mobile run typecheck",

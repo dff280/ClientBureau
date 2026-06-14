@@ -16,6 +16,8 @@ import { getAdminModerationCrmDataService } from "@/lib/repositories/client-bure
 
 export const metadata: Metadata = {
   title: "Admin Uploads / CSV Intake",
+  description:
+    "Internal CSV intake desk for validating bulk report rows, duplicate warnings, staged imports, and pending moderation records.",
   robots: { index: false, follow: false },
 }
 

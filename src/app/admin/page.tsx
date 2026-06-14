@@ -39,6 +39,8 @@ import { countOpenRecoveryCases } from "@/lib/platform-features"
 
 export const metadata: Metadata = {
   title: "Admin Command Center",
+  description:
+    "Internal Client Bureau operations dashboard for report moderation, profile management, service oversight, audit review, and release readiness.",
   robots: {
     index: false,
     follow: false,

@@ -2,6 +2,7 @@ import { spawn } from "node:child_process"
 
 const checks = [
   ["npm", ["run", "route:check"], "Route inventory, metadata, robots, and navigation"],
+  ["npm", ["run", "workspace:check"], "Contractor dashboard and admin CRM quality"],
   ["npm", ["run", "lint"], "ESLint"],
   ["npm", ["test"], "Unit tests"],
   ["npm", ["run", "build"], "Production build"],

@@ -18,6 +18,8 @@ import type { AdminEntityType, AuditLogEntry } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Admin Audit Log",
+  description:
+    "Internal audit trail for Client Bureau admin approvals, edits, imports, deletes, profile graph changes, service cases, and publication decisions.",
   robots: { index: false, follow: false },
 }
 

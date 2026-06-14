@@ -30,6 +30,8 @@ import { getAdminWorkspaceDataService } from "@/lib/repositories/client-bureau-s
 
 export const metadata: Metadata = {
   title: "Admin Businesses / Users",
+  description:
+    "Internal Client Bureau workspace for reviewing business-owner accounts, user roles, verification status, profile completeness, and account health.",
   robots: { index: false, follow: false },
 }
 
