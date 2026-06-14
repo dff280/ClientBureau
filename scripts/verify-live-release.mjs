@@ -1175,7 +1175,7 @@ const publicIndexablePages = [
     path: "/profiles",
     requiredTexts: [
       "Unified profile directory",
-      "Search public profiles for clients, contractors, and subcontractors.",
+      "Check public profiles for clients, contractors, and subcontractors.",
       "All public profiles",
     ],
   },
