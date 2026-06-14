@@ -99,7 +99,7 @@ PLATFORM_FEATURE_DATA_MODE=supabase
 Then rebuild:
 
 ```bash
-cd /opt/ClientBureau
+cd /opt/client-bureau
 bash scripts/vps-deploy.sh
 ```
 

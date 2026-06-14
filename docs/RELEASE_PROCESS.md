@@ -81,14 +81,14 @@ git push origin v0.2.1
 The VPS deploys from `main`.
 
 ```bash
-cd /opt/ClientBureau
+cd /opt/client-bureau
 git fetch origin
 git checkout main
 git pull --ff-only origin main
 bash scripts/vps-deploy.sh
 ```
 
-If `/opt/ClientBureau` does not exist yet, run the latest deploy script directly from GitHub:
+If `/opt/client-bureau` does not exist yet, run the latest deploy script directly from GitHub:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
@@ -155,7 +155,7 @@ If a release causes a production issue:
 3. Rebuild the VPS.
 
    ```bash
-   cd /opt/ClientBureau
+   cd /opt/client-bureau
    git pull --ff-only origin main
    docker compose up -d --build
    ```

@@ -151,8 +151,8 @@ Clone the repo:
 ```bash
 mkdir -p /opt
 cd /opt
-git clone https://github.com/dff280/ClientBureau.git
-cd /opt/ClientBureau
+git clone https://github.com/dff280/ClientBureau.git client-bureau
+cd /opt/client-bureau
 ```
 
 Create the production environment file:
@@ -253,20 +253,26 @@ After pushing code changes to GitHub:
 
 ```bash
 ssh root@5.78.231.192
-cd /opt/ClientBureau
+cd /opt/client-bureau
 git fetch origin
 git checkout main
 git pull --ff-only origin main
 bash scripts/vps-deploy.sh
 ```
 
-If this is a fresh VPS or `/opt/ClientBureau` is missing, run the latest deploy helper directly:
+If this is a fresh VPS or `/opt/client-bureau` is missing, run the latest deploy helper directly:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/dff280/ClientBureau/main/scripts/vps-deploy.sh | bash
 ```
 
 The helper pulls `main`, writes `GIT_COMMIT_SHA`, `GIT_BRANCH`, and `RELEASE_DATE` into `.env.production`, rebuilds Docker, prunes old images, and prints `/api/version` plus `/api/health`.
+
+Production should use the lowercase path `/opt/client-bureau` and Compose project name `client-bureau`. If an older checkout exists at `/opt/ClientBureau`, do not deploy from both paths. After confirming the lowercase deployment is healthy, remove any old duplicate Compose project with:
+
+```bash
+CLEANUP_LEGACY_COMPOSE=1 bash scripts/vps-deploy.sh
+```
 
 Confirm the deployed app is serving the expected release:
 

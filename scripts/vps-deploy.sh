@@ -3,13 +3,19 @@ set -euo pipefail
 
 REPO_URL="https://github.com/dff280/ClientBureau.git"
 BRANCH="${BRANCH:-main}"
-COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-clientbureau}"
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-client-bureau}"
+CANONICAL_APP_DIR="/opt/client-bureau"
+LEGACY_APP_DIR="/opt/ClientBureau"
+LEGACY_COMPOSE_PROJECT_NAME="${LEGACY_COMPOSE_PROJECT_NAME:-clientbureau}"
 
 if [ -z "${APP_DIR:-}" ]; then
-  if [ -d "/opt/ClientBureau/.git" ]; then
-    APP_DIR="/opt/ClientBureau"
+  if [ -d "$CANONICAL_APP_DIR/.git" ]; then
+    APP_DIR="$CANONICAL_APP_DIR"
+  elif [ -d "$LEGACY_APP_DIR/.git" ]; then
+    APP_DIR="$LEGACY_APP_DIR"
+    echo "Warning: using legacy app directory $LEGACY_APP_DIR. Prefer $CANONICAL_APP_DIR for production deploys."
   else
-    APP_DIR="/opt/client-bureau"
+    APP_DIR="$CANONICAL_APP_DIR"
   fi
 fi
 
@@ -53,6 +59,18 @@ upsert_env "RELEASE_DATE" "$RELEASE_DATE"
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --build
 docker compose -p "$COMPOSE_PROJECT_NAME" up -d --force-recreate --no-deps caddy
 docker compose -p "$COMPOSE_PROJECT_NAME" ps
+
+if [ "${CLEANUP_LEGACY_COMPOSE:-0}" = "1" ] && [ "$COMPOSE_PROJECT_NAME" != "$LEGACY_COMPOSE_PROJECT_NAME" ] && [ -d "$LEGACY_APP_DIR" ]; then
+  echo ""
+  echo "Cleaning up legacy Compose project ${LEGACY_COMPOSE_PROJECT_NAME} from ${LEGACY_APP_DIR}."
+  docker compose -p "$LEGACY_COMPOSE_PROJECT_NAME" -f "$LEGACY_APP_DIR/docker-compose.yml" down --remove-orphans || true
+elif [ -d "$LEGACY_APP_DIR/.git" ] && [ "$APP_DIR" != "$LEGACY_APP_DIR" ]; then
+  echo ""
+  echo "Legacy checkout detected at ${LEGACY_APP_DIR}."
+  echo "If an old duplicate Compose project is running, clean it up with:"
+  echo "  CLEANUP_LEGACY_COMPOSE=1 bash scripts/vps-deploy.sh"
+fi
+
 docker image prune -f
 
 echo ""
