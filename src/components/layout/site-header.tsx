@@ -45,6 +45,7 @@ const contractorHeaderNav = [
 const publicHeaderNav = [
   { href: "/platform", label: "Platform" },
   { href: "/search", label: "Check a Client" },
+  { href: "/industries", label: "Industries" },
   { href: "/pricing", label: "Pricing" },
 ]
 
@@ -57,6 +58,7 @@ const publicHeaderMenus = [
       { href: "/profiles", label: "Profile Directory", description: "Clients, contractors, and subcontractors." },
       { href: "/profiles/contractor", label: "Contractor Profiles", description: "Business and service-company trust profiles." },
       { href: "/profiles/subcontractor", label: "Subcontractor Profiles", description: "Trade partner and payment-chain profiles." },
+      { href: "/industries", label: "Industries and Trades", description: "Browse pages by trade, business type, and subcontractor workflow." },
       { href: "/reports/recent", label: "Recent Reports", description: "Newly approved public report summaries." },
     ],
   },
