@@ -18,6 +18,7 @@
     "mobile:build:aab": "npm --prefix apps/mobile run build:aab",
     "seo:check": "node scripts/verify-seo.mjs",
     "seo:check:local": "node scripts/run-local-seo-check.mjs",
+    "verify:local": "node scripts/verify-local-release.mjs",
     "verify:live": "node scripts/verify-live-release.mjs",
     "verify:live:auth": "node scripts/verify-live-auth-workflows.mjs",
     "migrations:graph:print": "node scripts/print-graph-migrations.mjs",

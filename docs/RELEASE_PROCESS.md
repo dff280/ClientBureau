@@ -33,13 +33,10 @@ Recommended branch names:
 3. Run the local verification suite.
 
    ```bash
-   npm run route:check
-   npm run lint
-   npm test
-   npm run build
-   npm run seo:check:local
-   npm run mobile:check
+   npm run verify:local
    ```
+
+   `verify:local` runs the same release gates in the correct order: route inventory/navigation, lint, tests, production build, local SEO crawl, and mobile readiness. If it fails, rerun the individual failing command after fixing the issue.
 
 4. Commit the feature branch.
 
@@ -190,6 +187,7 @@ After the fix passes checks, merge it into `main`, deploy, and add a patch chang
 Before pushing `main`:
 
 - `CHANGELOG.md` has a clear entry.
+- `npm run verify:local` passes.
 - `npm run lint` passes.
 - `npm run route:check` passes.
 - `npm test` passes.
