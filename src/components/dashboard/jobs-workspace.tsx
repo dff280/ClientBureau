@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useActionState } from "react"
-import { ArrowRight, BriefcaseBusiness, ClipboardList, FileText, MapPin, Plus, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react"
+import { ArrowRight, BriefcaseBusiness, ClipboardList, FileText, MapPin, Plus, Search, ShieldCheck, Trash2, Users, type LucideIcon } from "lucide-react"
 
 import {
   addProjectJobParticipantAction,
@@ -235,6 +235,29 @@ export function JobsWorkspace({ accounts, jobs }: { accounts: EntityProfile[]; j
         <StatCard label="Accounts available" value={accounts.length} helper="Existing profiles you can attach." icon={Users} tone="amber" />
       </div>
 
+      <div className="grid gap-3 md:grid-cols-4">
+        <JobWorkflowStep
+          step="1"
+          title="Create job"
+          text="Name the project and add site, schedule, trade, and scope context."
+        />
+        <JobWorkflowStep
+          step="2"
+          title="Attach people"
+          text="Add existing profiles and choose the role they played on this job."
+        />
+        <JobWorkflowStep
+          step="3"
+          title="Use tools"
+          text="Turn the job into a contract packet, evidence file, report, or recovery case."
+        />
+        <JobWorkflowStep
+          step="4"
+          title="Keep private"
+          text="Addresses, access codes, private notes, and participant notes never publish."
+        />
+      </div>
+
       <DashboardSection
         eyebrow="Start here"
         title="Create a private job record"
@@ -256,7 +279,11 @@ export function JobsWorkspace({ accounts, jobs }: { accounts: EntityProfile[]; j
           <form action={formAction} className="mt-5 space-y-5 rounded-md border border-slate-200 bg-white p-4">
             <JobFormFields />
             <FieldError name="title" errors={state.ok ? undefined : state.fieldErrors} />
+            <FieldError name="projectType" errors={state.ok ? undefined : state.fieldErrors} />
+            <FieldError name="shortDescription" errors={state.ok ? undefined : state.fieldErrors} />
             <FieldError name="addressLine1" errors={state.ok ? undefined : state.fieldErrors} />
+            <FieldError name="city" errors={state.ok ? undefined : state.fieldErrors} />
+            <FieldError name="state" errors={state.ok ? undefined : state.fieldErrors} />
             <ActionMessage state={state} />
             <PendingSubmitButton className="bg-slate-950 text-white hover:bg-slate-800" pendingText="Creating job...">
               <Plus aria-hidden="true" />
@@ -300,6 +327,9 @@ export function JobsWorkspace({ accounts, jobs }: { accounts: EntityProfile[]; j
               <h3 className="font-semibold text-slate-950">No jobs yet.</h3>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 Create the first job above, then attach existing client, contractor, subcontractor, vendor, or crew profiles as participants.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Start with a real project, estimate, active job, payment follow-up, or completed job. You can add private site details now and link reports or contracts later.
               </p>
             </div>
           ) : null}
@@ -418,13 +448,32 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
           </p>
         </div>
 
+        {accounts.length === 0 ? (
+          <div className="mb-5 rounded-md border border-sky-200 bg-sky-50 p-4 text-sm leading-6 text-sky-950">
+            <p className="font-semibold">No attachable profiles are available yet.</p>
+            <p className="mt-1">
+              Search for the client, contractor, subcontractor, vendor, or business first. Once a real profile exists, return here and attach it to the role it played on this private job.
+            </p>
+            <Button asChild variant="outline" className="mt-3 bg-white">
+              <Link href="/search">
+                <Search aria-hidden="true" />
+                Check a Client or Business
+              </Link>
+            </Button>
+          </div>
+        ) : null}
+
         <form action={addAction} className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4">
           <input type="hidden" name="jobId" value={job.id} />
           <ParticipantFormFields accounts={accounts} />
           <FieldError name="accountId" errors={addState.ok ? undefined : addState.fieldErrors} />
           <FieldError name="roleOnJob" errors={addState.ok ? undefined : addState.fieldErrors} />
           <ActionMessage state={addState} />
-          <PendingSubmitButton className="bg-amber-500 text-slate-950 hover:bg-amber-400" pendingText="Adding participant...">
+          <PendingSubmitButton
+            className="bg-amber-500 text-slate-950 hover:bg-amber-400"
+            disabled={accounts.length === 0}
+            pendingText="Adding participant..."
+          >
             <Plus aria-hidden="true" />
             Add participant
           </PendingSubmitButton>
@@ -503,6 +552,30 @@ function JobValueCard({
       <Icon className="size-5 text-amber-300" aria-hidden="true" />
       <h3 className="mt-3 font-semibold text-white">{title}</h3>
       <p className="mt-1 text-sm leading-6 text-slate-300">{text}</p>
+    </div>
+  )
+}
+
+function JobWorkflowStep({
+  step,
+  text,
+  title,
+}: {
+  step: string
+  text: string
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-slate-950 text-sm font-semibold text-amber-300">
+          {step}
+        </span>
+        <div>
+          <h3 className="font-semibold text-slate-950">{title}</h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+        </div>
+      </div>
     </div>
   )
 }
