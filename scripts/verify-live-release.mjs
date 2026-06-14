@@ -885,12 +885,29 @@ if (siteUrlForRedirects.protocol === "https:" && siteUrlForRedirects.hostname ==
 
 const protectedRoutes = [
   { path: "/dashboard", expectedNext: "/dashboard" },
+  { path: "/dashboard/jobs", expectedNext: "/dashboard/jobs" },
   { path: "/dashboard/reports", expectedNext: "/dashboard/reports" },
   { path: "/dashboard/contracts", expectedNext: "/dashboard/contracts" },
   { path: "/dashboard/recovery", expectedNext: "/dashboard/recovery" },
+  { path: "/dashboard/lien-readiness", expectedNext: "/dashboard/lien-readiness" },
+  { path: "/dashboard/evidence", expectedNext: "/dashboard/evidence" },
+  { path: "/dashboard/watchlist", expectedNext: "/dashboard/watchlist" },
+  { path: "/dashboard/billing", expectedNext: "/dashboard/billing" },
+  { path: "/dashboard/activity", expectedNext: "/dashboard/activity" },
+  { path: "/dashboard/growth", expectedNext: "/dashboard/growth" },
   { path: "/submit-report", expectedNext: "/submit-report" },
   { path: "/admin", expectedNext: "/admin" },
   { path: "/admin/reports", expectedNext: "/admin" },
+  { path: "/admin/profiles", expectedNext: "/admin" },
+  { path: "/admin/clients", expectedNext: "/admin" },
+  { path: "/admin/contractors", expectedNext: "/admin" },
+  { path: "/admin/discussions", expectedNext: "/admin" },
+  { path: "/admin/uploads", expectedNext: "/admin" },
+  { path: "/admin/contracts", expectedNext: "/admin" },
+  { path: "/admin/recovery", expectedNext: "/admin" },
+  { path: "/admin/audit-log", expectedNext: "/admin" },
+  { path: "/admin/reviews", expectedNext: "/admin" },
+  { path: "/admin/settings", expectedNext: "/admin" },
 ]
 
 for (const { path, expectedNext } of protectedRoutes) {

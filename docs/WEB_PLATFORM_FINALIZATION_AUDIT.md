@@ -183,6 +183,7 @@ Desktop and mobile browser spot-check:
 - Admin candidate cards now route staff to the source client/business editor when available, with a separate readiness review link for the unified profile queue.
 - Current public SEO infrastructure is sound; the remaining subcontractor warning should clear only after a legitimate real subcontractor profile is published, not through fake inventory.
 - Admin Settings now surfaces subcontractor/trade-profile activation as a release gate, with direct routing to `/admin/profiles?type=subcontractor` when the first real public profile is still missing.
+- Live release verification now covers the full protected contractor/admin route set, including Jobs, Billing, Activity, Growth, Evidence, Watchlist, every admin queue, admin settings, and admin audit pages.
 
 ## Remaining Launch Work
 
