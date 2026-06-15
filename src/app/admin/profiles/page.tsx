@@ -515,7 +515,7 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
                     <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
                       <Link href={editHref}>
                         <ShieldCheck aria-hidden="true" />
-                        Manage record
+                        {profile.legacyContractorId ? "Edit classification" : "Manage record"}
                       </Link>
                     </Button>
                     {profile.isPublic ? (

@@ -68,6 +68,8 @@ const cityText = (label: string) =>
 const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
   z.enum(values).optional().or(z.literal("")).transform((value) => value || undefined)
 
+const checkbox = z.preprocess((value) => value === "on" || value === "true" || value === true, z.boolean())
+
 const money = (label: string) =>
   z.coerce
     .number({ error: `${label} must be a number.` })
@@ -493,6 +495,40 @@ export const adminContractorUpdateSchema = z.object({
   verificationStatus: z.enum(["unverified", "pending", "verified"]),
   moderatorNote: z.string().trim().max(700).optional(),
 })
+
+export const adminAccountClassificationSchema = z
+  .object({
+    contractorId: requiredText("Contractor ID"),
+    primaryAccountType: z.enum(accountTypes),
+    capabilityContractor: checkbox,
+    capabilitySubcontractor: checkbox,
+    capabilityClient: checkbox,
+    profileSubtype: requiredText("Profile subtype").max(120, "Keep profile subtype under 120 characters."),
+    tradeCategory: requiredText("Trade category").max(120, "Keep trade category under 120 characters."),
+    isPublic: checkbox,
+    verificationStatus: z.enum(["unverified", "pending", "verified"]),
+    moderatorNote: requiredText("Moderator note", 8).max(700, "Keep moderator note under 700 characters."),
+  })
+  .transform((value) => {
+    const accountCapabilities = [
+      value.capabilityContractor ? "contractor" : undefined,
+      value.capabilitySubcontractor ? "subcontractor" : undefined,
+      value.capabilityClient ? "client" : undefined,
+    ].filter(Boolean) as Array<(typeof profileTypes)[number]>
+
+    return {
+      ...value,
+      accountCapabilities,
+    }
+  })
+  .refine((value) => value.accountCapabilities.length > 0, {
+    path: ["accountCapabilities"],
+    message: "Select at least one public capability.",
+  })
+  .refine((value) => value.accountCapabilities.includes(value.primaryAccountType), {
+    path: ["primaryAccountType"],
+    message: "The public capabilities must include the primary account type.",
+  })
 
 export const adminDeleteRecordSchema = z.object({
   entityType: z.enum(["client", "contractor", "report", "discussion"]),
@@ -1151,6 +1187,7 @@ export type ClientReportInput = z.infer<typeof clientReportSchema>
 export type ClientResponseInput = z.infer<typeof clientResponseSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type LoginInput = z.infer<typeof loginSchema>
+export type AdminAccountClassificationInput = z.infer<typeof adminAccountClassificationSchema>
 export type ProfileClaimInput = z.infer<typeof profileClaimSchema>
 export type AdminProfileClaimReviewInput = z.infer<typeof adminProfileClaimReviewSchema>
 export type AdminProfileMergeInput = z.infer<typeof adminProfileMergeSchema>

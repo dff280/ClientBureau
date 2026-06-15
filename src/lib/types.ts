@@ -381,6 +381,8 @@ export interface User {
 export interface ContractorProfile {
   id: string
   userId: string
+  accountType?: AccountType
+  accountCapabilities?: ProfileType[]
   businessName: string
   trade: string
   businessType?: string
@@ -395,6 +397,11 @@ export interface ContractorProfile {
   licenseNumber?: string
   verificationStatus: VerificationStatus
   verificationBadges?: VerificationBadge[]
+  profileSubtype?: ProfileSubtype | string
+  tradeCategory?: string
+  publicSummary?: string
+  isPublic?: boolean
+  publicSlug?: string
   createdAt: string
 }
 

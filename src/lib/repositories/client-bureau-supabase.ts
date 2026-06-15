@@ -57,6 +57,7 @@ import type {
   LinkEvidenceToServiceCaseInput,
   MarkServiceFeePaidInput,
   AdminLienCaseActionInput,
+  AdminAccountClassificationInput,
   AdminRecordLienFiledInput,
   AdminRecordLienReleaseInput,
   AdminUploadRecordingProofInput,
@@ -551,10 +552,16 @@ function mapProfileClaim(row: ProfileClaimRow): ProfileClaim {
   }
 }
 
-function mapContractorProfile(row: ContractorProfileRow): ContractorProfile {
+function mapContractorProfile(
+  row: ContractorProfileRow,
+  userRow?: Pick<UserRow, "account_type">,
+  entityRow?: EntityProfileRow,
+): ContractorProfile {
   return {
     id: row.id,
     userId: row.user_id,
+    accountType: userRow?.account_type ?? undefined,
+    accountCapabilities: entityRow?.account_capabilities?.length ? entityRow.account_capabilities : undefined,
     businessName: row.business_name,
     trade: row.trade,
     businessType: row.business_type ?? undefined,
@@ -569,11 +576,18 @@ function mapContractorProfile(row: ContractorProfileRow): ContractorProfile {
     licenseNumber: row.license_number ?? undefined,
     verificationStatus: row.verification_status,
     verificationBadges:
-      row.verification_status === "verified"
-        ? ["Verified business", "Verified email"]
-        : row.verification_status === "pending"
-          ? ["Verified email"]
-          : [],
+      entityRow?.verification_badges?.length
+        ? (entityRow.verification_badges as ContractorProfile["verificationBadges"])
+        : row.verification_status === "verified"
+          ? ["Verified business", "Verified email"]
+          : row.verification_status === "pending"
+            ? ["Verified email"]
+            : [],
+    profileSubtype: entityRow?.profile_subtype ?? undefined,
+    tradeCategory: row.trade,
+    publicSummary: entityRow?.public_summary ?? undefined,
+    isPublic: entityRow?.is_public,
+    publicSlug: entityRow?.slug,
     createdAt: row.created_at,
   }
 }
@@ -1781,10 +1795,24 @@ async function ensureEntityProfileForClient(client: ClientProfileRow, subtype?: 
 async function ensureEntityProfileForContractor(contractor: ContractorProfileRow, userId: string) {
   const supabase = createServiceClient()
   const { data: userRow } = await supabase.from("users").select("account_type").eq("id", userId).maybeSingle()
-  const profileType: ProfileType = userRow?.account_type === "subcontractor" ? "subcontractor" : "contractor"
+  const { data: existingRows } = await supabase
+    .from("entity_profiles")
+    .select("*")
+    .eq("legacy_contractor_id", contractor.id)
+    .order("updated_at", { ascending: false })
+  const existingProfile = existingRows?.[0]
+  const profileType: ProfileType =
+    profileTypes.includes(userRow?.account_type as ProfileType)
+      ? (userRow?.account_type as ProfileType)
+      : existingProfile?.profile_type ?? "contractor"
+  const accountCapabilities = Array.from(
+    new Set<ProfileType>([profileType, ...((existingProfile?.account_capabilities ?? []) as ProfileType[])]),
+  )
   const rating = calculateBusinessRating({ contractor: mapContractorProfile(contractor), reports: [], evidence: [] })
   const ratingModel =
-    rating.profileKind === "subcontractor"
+    profileType === "client"
+      ? "client_risk"
+      : profileType === "subcontractor" || rating.profileKind === "subcontractor"
       ? "subcontractor_trade_partner_reliability"
       : "contractor_business_reliability"
   const slug = buildBusinessSlug({
@@ -1803,6 +1831,7 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
     legacy_contractor_id: contractor.id,
     claimed_status: "claimed",
     owner_user_id: userId,
+    account_capabilities: accountCapabilities,
     verification_level: contractor.verification_status === "verified" ? "business_verified" : "email_verified",
     verification_badges: contractor.verification_status === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
     duplicate_group_key: duplicateGroupKey({
@@ -1815,7 +1844,9 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
     rating_band: rating.grade,
     is_public: true,
     public_summary:
-      profileType === "subcontractor"
+      profileType === "client"
+        ? "Client or customer profile with moderated relationship context, response rights, and public-safe business history."
+        : profileType === "subcontractor"
         ? "Trade partner profile with verification context, documented scope signals, and moderated payment-chain activity."
         : "Business profile with verification context and moderated project activity.",
     updated_at: new Date().toISOString(),
@@ -1829,18 +1860,32 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
     rating_public_note: rating.summary,
     rating_last_calculated_at: new Date().toISOString(),
   }
-  let result = await supabase
-    .from("entity_profiles")
-    .upsert(ratingPayload, { onConflict: "profile_type,slug" })
-    .select("*")
-    .single()
-
-  if (result.error && isMissingReportIntakeColumnError(result.error)) {
-    result = await supabase
+  let result = existingProfile
+    ? await supabase
       .from("entity_profiles")
-      .upsert(basePayload, { onConflict: "profile_type,slug" })
+      .update(ratingPayload)
+      .eq("id", existingProfile.id)
       .select("*")
       .single()
+    : await supabase
+      .from("entity_profiles")
+      .upsert(ratingPayload, { onConflict: "profile_type,slug" })
+      .select("*")
+      .single()
+
+  if (result.error && isMissingReportIntakeColumnError(result.error)) {
+    result = existingProfile
+      ? await supabase
+        .from("entity_profiles")
+        .update(basePayload)
+        .eq("id", existingProfile.id)
+        .select("*")
+        .single()
+      : await supabase
+        .from("entity_profiles")
+        .upsert(basePayload, { onConflict: "profile_type,slug" })
+        .select("*")
+        .single()
   }
 
   const { data, error } = result
@@ -2001,7 +2046,7 @@ export async function getPublicBusinessProfilesSupabase(): Promise<PublicBusines
     if (result.error) throw new Error(result.error.message)
   }
 
-  const contractors = (contractorsResult.data ?? []).map(mapContractorProfile)
+  const contractors = (contractorsResult.data ?? []).map((contractor) => mapContractorProfile(contractor))
   const reports = (reportsResult.data ?? []).map(mapClientReport)
   const evidence = (evidenceResult.data ?? []).map(mapEvidence)
   const clients = (clientsResult.data ?? []).map(mapClientProfile)
@@ -3008,6 +3053,7 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     responsesResult,
     discussionsResult,
     auditResult,
+    entityProfilesResult,
     reviews,
   ] = await Promise.all([
     supabase.from("users").select("*").order("created_at", { ascending: false }),
@@ -3018,6 +3064,7 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     supabase.from("client_responses").select("*").order("created_at", { ascending: false }),
     supabase.from("community_discussions").select("*").order("created_at", { ascending: false }),
     supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200),
+    supabase.from("entity_profiles").select("*").order("updated_at", { ascending: false }),
     getPendingAdminReviewsSupabase(),
   ])
 
@@ -3040,9 +3087,22 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     throw new Error(auditResult.error.message)
   }
 
+  if (entityProfilesResult.error && !isMissingRelationError(entityProfilesResult.error)) {
+    throw new Error(entityProfilesResult.error.message)
+  }
+
+  const userRows = usersResult.data ?? []
+  const entityRows = entityProfilesResult.error ? [] : entityProfilesResult.data ?? []
+
   return {
-    users: (usersResult.data ?? []).map(mapUser),
-    contractors: (contractorsResult.data ?? []).map(mapContractorProfile),
+    users: userRows.map(mapUser),
+    contractors: (contractorsResult.data ?? []).map((contractor) =>
+      mapContractorProfile(
+        contractor,
+        userRows.find((user) => user.id === contractor.user_id),
+        entityRows.find((profile) => profile.legacy_contractor_id === contractor.id),
+      ),
+    ),
     clients: (clientsResult.data ?? []).map(mapClientProfile),
     reports: (reportsResult.data ?? []).map(mapClientReport),
     evidence: (evidenceResult.data ?? []).map(mapEvidence),
@@ -3765,6 +3825,92 @@ export async function updateAdminContractorRecordSupabase(input: {
   })
 
   return mapContractorProfile(data)
+}
+
+export async function updateAdminAccountClassificationSupabase(
+  input: AdminAccountClassificationInput & {
+    reviewer?: { id: string; fullName: string }
+  },
+) {
+  const supabase = createServiceClient()
+  const { data: contractor, error: contractorError } = await supabase
+    .from("contractor_profiles")
+    .select("*")
+    .eq("id", input.contractorId)
+    .single()
+
+  if (contractorError) throw new Error(contractorError.message)
+
+  const { error: userError } = await supabase
+    .from("users")
+    .update({
+      account_type: input.primaryAccountType,
+    })
+    .eq("id", contractor.user_id)
+
+  if (userError) throw new Error(userError.message)
+
+  const { data: updatedContractor, error: updateContractorError } = await supabase
+    .from("contractor_profiles")
+    .update({
+      trade: input.tradeCategory,
+      business_type: input.profileSubtype,
+      verification_status: input.verificationStatus,
+    })
+    .eq("id", input.contractorId)
+    .select("*")
+    .single()
+
+  if (updateContractorError) throw new Error(updateContractorError.message)
+
+  const ensuredProfile = await ensureEntityProfileForContractor(updatedContractor, updatedContractor.user_id)
+  if (!ensuredProfile) throw new Error("Unified profile could not be prepared for this account.")
+
+  const profileSummary =
+    input.primaryAccountType === "client"
+      ? "Client or customer profile with moderated relationship context, response rights, and public-safe business history."
+      : input.accountCapabilities.includes("subcontractor")
+        ? "Trade partner and business profile with verification context, documented scope signals, and moderated payment-chain activity."
+        : "Contractor and service business profile with verification context and moderated project activity."
+
+  const { data: updatedProfile, error: profileError } = await supabase
+    .from("entity_profiles")
+    .update({
+      profile_type: input.primaryAccountType,
+      account_capabilities: input.accountCapabilities,
+      profile_subtype: input.profileSubtype,
+      is_public: input.isPublic,
+      verification_level: input.verificationStatus === "verified" ? "business_verified" : "email_verified",
+      verification_badges: input.verificationStatus === "verified" ? ["Verified business", "Verified email"] : ["Verified email"],
+      public_summary: profileSummary,
+      rating_model:
+        input.primaryAccountType === "client"
+          ? "client_risk"
+          : input.accountCapabilities.includes("subcontractor")
+            ? "subcontractor_trade_partner_reliability"
+            : "contractor_business_reliability",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", ensuredProfile.id)
+    .select("*")
+    .single()
+
+  if (profileError) throw new Error(profileError.message)
+
+  await logAdminAction({
+    actorId: input.reviewer?.id,
+    actorName: input.reviewer?.fullName,
+    action: "classified_account",
+    entityType: "contractor",
+    entityId: input.contractorId,
+    summary: input.moderatorNote || `Updated account classification to ${input.primaryAccountType}.`,
+  })
+
+  return mapContractorProfile(
+    updatedContractor,
+    { account_type: input.primaryAccountType },
+    updatedProfile,
+  )
 }
 
 export async function deleteAdminRecordSupabase(

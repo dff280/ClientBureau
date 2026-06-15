@@ -51,6 +51,8 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
   const data = await getAdminWorkspaceDataService()
   const query = params.q?.trim().toLowerCase() ?? ""
   const account = params.account ?? "all"
+  const accountCapability =
+    account === "client" || account === "contractor" || account === "subcontractor" ? account : undefined
   const role = params.role ?? "all"
   const tradeCategory = params.tradeCategory?.trim() || undefined
   const verification = params.verification ?? "all"
@@ -77,10 +79,20 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
+      const matchesAccount =
+        account === "all" ||
+        (account === "business"
+          ? (contractor.accountType ?? "contractor") !== "client" ||
+            Boolean(contractor.accountCapabilities?.some((item) => item !== "client"))
+          : Boolean(
+            accountCapability &&
+              (contractor.accountType === accountCapability || contractor.accountCapabilities?.includes(accountCapability)),
+          ))
 
       return (
         (!query || text.includes(query)) &&
         (!tradeCategory || tradeCategoryMatches(text, tradeCategory)) &&
+        matchesAccount &&
         (verification === "all" || contractor.verificationStatus === verification)
       )
     })
@@ -92,7 +104,9 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
       (!query || text.includes(query)) &&
       (role === "all" || user.role === role) &&
       (account === "all" ||
-        (account === "client" ? user.accountType === "client" : user.accountType !== "client"))
+        (account === "business"
+          ? user.accountType !== "client"
+          : Boolean(accountCapability && user.accountType === accountCapability)))
     )
   })
 
@@ -203,7 +217,9 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
             </select>
             <select name="account" defaultValue={account} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
               <option value="all">All accounts</option>
-              <option value="business">Business owners</option>
+              <option value="business">Any business capability</option>
+              <option value="contractor">Contractor capability</option>
+              <option value="subcontractor">Subcontractor capability</option>
               <option value="client">Client accounts</option>
             </select>
             <select name="tradeCategory" defaultValue={tradeCategory ?? ""} className="h-10 rounded-md border border-input bg-white px-3 text-sm">
@@ -264,7 +280,7 @@ export default async function AdminContractorsPage({ searchParams }: { searchPar
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
                 <StatusBadge tone={user.role === "admin" ? "amber" : "slate"}>{user.role}</StatusBadge>
                 <StatusBadge tone={user.accountType === "client" ? "blue" : "slate"}>
-                  {user.accountType === "client" ? "Client account" : "Business owner"}
+                  {user.accountType === "subcontractor" ? "Subcontractor account" : user.accountType === "client" ? "Client account" : "Contractor account"}
                 </StatusBadge>
                 <StatusBadge tone="emerald">Account active</StatusBadge>
               </div>

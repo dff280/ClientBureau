@@ -10,7 +10,6 @@ import {
   PremiumSectionHeader,
   ProductMockupFrame,
   PublicJourneyNav,
-  TrustGuardrailStrip,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -87,15 +86,6 @@ export default function AboutPage() {
       />
 
       <PremiumProofStrip items={proof} dark />
-      <TrustGuardrailStrip
-        items={[
-          "Contractor-first client checks",
-          "Moderated public records",
-          "Private evidence sealed",
-          "Client response rights",
-        ]}
-        dark
-      />
       <PublicJourneyNav
         active="help"
         eyebrow="What to do next"

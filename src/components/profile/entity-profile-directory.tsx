@@ -434,7 +434,7 @@ export function EntityProfileDirectory({
         dark
       />
 
-      <section className="bureau-section bg-white">
+      <section className="bg-white py-8 sm:py-10">
         <div className="bureau-container grid gap-6 lg:grid-cols-[0.72fr_1fr] lg:items-start">
           <div>
             <p className={`text-sm font-semibold uppercase tracking-[0.16em] ${presentation.accent.text}`}>

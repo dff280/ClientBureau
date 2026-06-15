@@ -8,7 +8,6 @@ import {
   PremiumProofStrip,
   ProductMockupFrame,
   PublicPageChecklist,
-  TrustGuardrailStrip,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -123,15 +122,6 @@ export function AcquisitionPageView({ page }: { page: AcquisitionPage }) {
           { label: "During work", value: "Document", text: "Use contracts, change orders, evidence, and project records." },
           { label: "After work", value: "Resolve", text: "Track reports, response context, recovery workflows, and updates." },
           { label: "Privacy", value: "Protected", text: "Private identifiers and raw evidence stay out of public pages." },
-        ]}
-        dark
-      />
-      <TrustGuardrailStrip
-        items={[
-          "Private workflow records",
-          "No legal outcome guarantees",
-          "Public summaries require moderation",
-          "Response and correction paths remain available",
         ]}
         dark
       />

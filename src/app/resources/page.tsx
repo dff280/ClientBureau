@@ -10,7 +10,6 @@ import {
   PremiumSectionHeader,
   ProductMockupFrame,
   PublicJourneyNav,
-  TrustGuardrailStrip,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -101,15 +100,6 @@ export default function ResourcesPage() {
       />
 
       <PremiumProofStrip items={proof} dark />
-      <TrustGuardrailStrip
-        items={[
-          "People-first guides",
-          "Rating methodology explained",
-          "Policy and response paths",
-          "Private records stay private",
-        ]}
-        dark
-      />
 
       <PublicJourneyNav
         active="help"

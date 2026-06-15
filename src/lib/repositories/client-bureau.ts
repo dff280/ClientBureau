@@ -61,6 +61,7 @@ import type {
   LienFilingAuthorizationInput,
   LienNoticeDraftInput,
   AdminLienCaseActionInput,
+  AdminAccountClassificationInput,
   AdminRecordLienFiledInput,
   AdminRecordLienReleaseInput,
   AdminUploadRecordingProofInput,
@@ -2351,6 +2352,24 @@ export function updateAdminContractorRecord(
     ...existing,
     ...input,
   }
+}
+
+export function updateAdminAccountClassification(input: AdminAccountClassificationInput) {
+  const existing = contractorProfiles.find((candidate) => candidate.id === input.contractorId)
+  if (!existing) throw new Error("Contractor profile was not found.")
+
+  return {
+    ...existing,
+    accountType: input.primaryAccountType,
+    accountCapabilities: input.accountCapabilities,
+    trade: input.tradeCategory,
+    businessType: input.profileSubtype,
+    tradeCategory: input.tradeCategory,
+    profileSubtype: input.profileSubtype,
+    verificationStatus: input.verificationStatus,
+    isPublic: input.isPublic,
+    publicSlug: buildBusinessSlug(existing),
+  } satisfies ContractorProfile
 }
 
 export function deleteAdminRecord(entityType: string, entityId: string): AuditLogEntry {

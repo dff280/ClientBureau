@@ -44,16 +44,16 @@ export function PremiumHero({
     <section className="premium-hero-surface relative isolate overflow-hidden border-b border-slate-900 bg-slate-950 text-white">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(120deg,rgba(251,191,36,0.14),transparent_30%,rgba(15,23,42,0.65)_66%,rgba(2,6,23,1))]" />
       <div className="absolute inset-x-0 bottom-0 -z-10 h-28 bg-[linear-gradient(180deg,transparent,#020617)]" />
-      <div className="bureau-container grid gap-6 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end lg:py-20">
-        <div className="space-y-5 sm:space-y-6">
+      <div className="bureau-container grid gap-6 py-8 sm:py-12 lg:grid-cols-[minmax(0,1fr)_400px] lg:items-end lg:py-16">
+        <div className="space-y-4 sm:space-y-5">
           <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/35 bg-white/[0.07] px-3 py-2 text-sm font-semibold text-amber-200 shadow-lg shadow-slate-950/20 backdrop-blur">
             <ShieldCheck className="size-4" aria-hidden="true" />
             {eyebrow}
           </div>
-          <h1 className="max-w-5xl text-3xl font-semibold leading-[1.05] tracking-normal text-balance sm:text-5xl lg:text-6xl">
+          <h1 className="max-w-5xl text-3xl font-semibold leading-[1.05] tracking-normal text-balance sm:text-4xl lg:text-5xl">
             {title}
           </h1>
-          <p className="max-w-3xl text-base leading-7 text-slate-300 sm:text-lg">{description}</p>
+          <p className="max-w-3xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7">{description}</p>
           {(primary || secondary) ? (
             <div className="grid gap-3 sm:flex sm:flex-wrap">
               {primary ? <PremiumButton cta={primary} /> : null}
@@ -62,7 +62,7 @@ export function PremiumHero({
           ) : null}
         </div>
         {aside ? (
-          <div className="premium-card-glow rounded-md border border-white/10 bg-white/[0.065] p-4 shadow-2xl shadow-slate-950/35 backdrop-blur sm:p-5">
+          <div className="premium-card-glow rounded-md border border-white/10 bg-white/[0.065] p-3 shadow-2xl shadow-slate-950/35 backdrop-blur sm:p-4">
             {aside}
           </div>
         ) : null}
@@ -166,22 +166,26 @@ export function PremiumProofStrip({
 }) {
   return (
     <div className={dark ? "border-y border-white/10 bg-slate-950 text-white" : "border-y border-slate-200 bg-white"}>
-      <div className="bureau-container grid gap-3 py-4 sm:grid-cols-2 sm:gap-4 sm:py-6 lg:grid-cols-4">
+      <div className="bureau-container py-3 sm:py-4">
+        <div className={dark ? "grid gap-2 rounded-md border border-white/10 bg-white/[0.04] p-2 sm:grid-cols-2 lg:grid-cols-4" : "grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2 sm:grid-cols-2 lg:grid-cols-4"}>
         {items.map((item) => (
-          <div key={item.label} className={dark ? "rounded-md border-l border-amber-300/70 bg-white/[0.035] p-3 sm:p-4" : "rounded-md border-l border-amber-300 bg-slate-50 p-3 sm:p-4"}>
-            <p className={dark ? "text-xs font-semibold uppercase tracking-[0.14em] text-slate-400" : "text-xs font-semibold uppercase tracking-[0.14em] text-slate-500"}>
-              {item.label}
-            </p>
-            <p className={dark ? "mt-2 text-xl font-semibold text-white sm:text-2xl" : "mt-2 text-xl font-semibold text-slate-950 sm:text-2xl"}>
-              {item.value}
-            </p>
+          <div key={item.label} className={dark ? "rounded-md border border-white/10 bg-slate-950/35 p-3" : "rounded-md border border-slate-200 bg-white p-3"}>
+            <div className="flex items-baseline justify-between gap-3">
+              <p className={dark ? "text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-400" : "text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-slate-500"}>
+                {item.label}
+              </p>
+              <p className={dark ? "text-lg font-semibold text-white" : "text-lg font-semibold text-slate-950"}>
+                {item.value}
+              </p>
+            </div>
             {item.text ? (
-              <p className={dark ? "mt-2 text-sm leading-6 text-slate-300" : "mt-2 text-sm leading-6 text-slate-600"}>
+              <p className={dark ? "mt-1 text-xs leading-5 text-slate-300" : "mt-1 text-xs leading-5 text-slate-600"}>
                 {item.text}
               </p>
             ) : null}
           </div>
         ))}
+        </div>
       </div>
     </div>
   )
@@ -220,12 +224,12 @@ export function PremiumCtaBand({
   secondary?: PremiumCta
 }) {
   return (
-    <section className="premium-hero-surface bureau-section relative isolate overflow-hidden bg-slate-950 text-white">
+    <section className="premium-hero-surface relative isolate overflow-hidden bg-slate-950 py-10 text-white sm:py-14 lg:py-16">
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(135deg,rgba(251,191,36,0.13),transparent_32%,rgba(15,23,42,0.9))]" />
-      <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_0.72fr] lg:items-center">
+      <div className="bureau-container grid gap-6 lg:grid-cols-[1fr_0.58fr] lg:items-center">
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-300">{eyebrow}</p>
-          <h2 className="text-3xl font-semibold tracking-normal text-balance sm:text-5xl">{title}</h2>
+          <h2 className="text-3xl font-semibold tracking-normal text-balance sm:text-4xl">{title}</h2>
           <p className="max-w-2xl text-sm leading-6 text-slate-300">{description}</p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
@@ -555,10 +559,21 @@ export function PublicJourneyNav({
   const activeHref = active ? activeMap[active] : undefined
 
   return (
-    <section className={dark ? "bureau-section bg-slate-950 text-white" : "bureau-section bg-white"}>
-      <div className="bureau-container grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
-        <PremiumSectionHeader eyebrow={eyebrow} title={title} description={description} dark={dark} />
-        <div className="grid gap-3 sm:grid-cols-2">
+    <section className={dark ? "bg-slate-950 py-8 text-white sm:py-10" : "bg-white py-8 sm:py-10"}>
+      <div className="bureau-container">
+        <div className={dark ? "grid gap-5 rounded-md border border-white/10 bg-white/[0.04] p-4 sm:p-5 lg:grid-cols-[0.62fr_1.38fr] lg:items-start" : "grid gap-5 rounded-md border border-slate-200 bg-slate-50 p-4 shadow-sm sm:p-5 lg:grid-cols-[0.62fr_1.38fr] lg:items-start"}>
+          <div className="max-w-xl">
+            <p className={dark ? "text-xs font-semibold uppercase tracking-[0.16em] text-amber-300" : "text-xs font-semibold uppercase tracking-[0.16em] text-amber-700"}>
+              {eyebrow}
+            </p>
+            <h2 className={dark ? "mt-2 text-2xl font-semibold tracking-normal text-balance text-white sm:text-3xl" : "mt-2 text-2xl font-semibold tracking-normal text-balance text-slate-950 sm:text-3xl"}>
+              {title}
+            </h2>
+            <p className={dark ? "mt-2 text-sm leading-6 text-slate-300" : "mt-2 text-sm leading-6 text-slate-600"}>
+              {description}
+            </p>
+          </div>
+        <div className="grid gap-2 sm:grid-cols-2">
           {publicJourneyItems.map((item) => {
             const Icon = item.icon
             const isActive = item.href === activeHref
@@ -568,7 +583,7 @@ export function PublicJourneyNav({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "group rounded-md border p-4 shadow-sm transition hover:-translate-y-0.5 sm:p-5",
+                  "group rounded-md border p-3 transition hover:-translate-y-0.5 sm:p-4",
                   dark
                     ? "border-white/10 bg-white/[0.06] text-white hover:border-amber-300/50 hover:bg-white/[0.09]"
                     : "border-slate-200 bg-slate-50 text-slate-950 hover:border-amber-300 hover:bg-white",
@@ -579,24 +594,27 @@ export function PublicJourneyNav({
                     : "",
                 )}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <span className={dark ? "flex size-11 items-center justify-center rounded-md bg-amber-300 text-slate-950" : "flex size-11 items-center justify-center rounded-md bg-slate-950 text-amber-300"}>
-                    <Icon className="size-5" aria-hidden="true" />
+                <div className="flex items-start gap-3">
+                  <span className={dark ? "flex size-10 shrink-0 items-center justify-center rounded-md bg-amber-300 text-slate-950" : "flex size-10 shrink-0 items-center justify-center rounded-md bg-slate-950 text-amber-300"}>
+                    <Icon className="size-4" aria-hidden="true" />
                   </span>
-                  <ArrowRight className={dark ? "size-5 text-slate-500 transition group-hover:text-amber-300" : "size-5 text-slate-400 transition group-hover:text-amber-700"} aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className={dark ? "text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-amber-300" : "text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-amber-700"}>
+                      {item.label}
+                    </p>
+                    <h3 className={dark ? "mt-1 text-base font-semibold text-white sm:text-lg" : "mt-1 text-base font-semibold text-slate-950 sm:text-lg"}>
+                      {item.title}
+                    </h3>
+                    <p className={dark ? "mt-1 text-xs leading-5 text-slate-300 sm:text-sm sm:leading-6" : "mt-1 text-xs leading-5 text-slate-600 sm:text-sm sm:leading-6"}>
+                      {item.text}
+                    </p>
+                  </div>
+                  <ArrowRight className={dark ? "ml-auto size-4 shrink-0 text-slate-500 transition group-hover:text-amber-300" : "ml-auto size-4 shrink-0 text-slate-400 transition group-hover:text-amber-700"} aria-hidden="true" />
                 </div>
-                <p className={dark ? "mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-amber-300" : "mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-amber-700"}>
-                  {item.label}
-                </p>
-                <h3 className={dark ? "mt-2 text-xl font-semibold text-white" : "mt-2 text-xl font-semibold text-slate-950"}>
-                  {item.title}
-                </h3>
-                <p className={dark ? "mt-2 text-sm leading-6 text-slate-300" : "mt-2 text-sm leading-6 text-slate-600"}>
-                  {item.text}
-                </p>
               </Link>
             )
           })}
+        </div>
         </div>
       </div>
     </section>
@@ -659,13 +677,15 @@ export function TrustGuardrailStrip({
 }) {
   return (
     <div className={dark ? "border-y border-white/10 bg-slate-950 text-white" : "border-y border-slate-200 bg-white"}>
-      <div className="bureau-container grid gap-2 py-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="bureau-container py-3">
+        <div className={dark ? "flex flex-wrap gap-2 rounded-md border border-white/10 bg-white/[0.035] p-2" : "flex flex-wrap gap-2 rounded-md border border-slate-200 bg-slate-50 p-2"}>
         {items.map((item) => (
-          <div key={item} className={dark ? "flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.05] p-3 text-sm font-semibold text-slate-200" : "flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm font-semibold text-slate-700"}>
+          <div key={item} className={dark ? "flex flex-1 basis-full items-center gap-2 rounded-md border border-white/10 bg-slate-950/35 px-3 py-2 text-xs font-semibold text-slate-200 sm:basis-[calc(50%_-_0.25rem)] lg:basis-0" : "flex flex-1 basis-full items-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 sm:basis-[calc(50%_-_0.25rem)] lg:basis-0"}>
             <ShieldCheck className="size-4 shrink-0 text-amber-500" aria-hidden="true" />
             <span>{item}</span>
           </div>
         ))}
+        </div>
       </div>
     </div>
   )

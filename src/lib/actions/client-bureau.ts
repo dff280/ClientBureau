@@ -6,6 +6,7 @@ import { headers } from "next/headers"
 import { verifyAdminActionTokenFromForm } from "@/lib/admin-action-token"
 import {
   adminClientUpdateSchema,
+  adminAccountClassificationSchema,
   adminContractorUpdateSchema,
   adminDeleteRecordSchema,
   adminDiscussionReviewSchema,
@@ -178,6 +179,7 @@ import {
   adminRequestLienMoreInfoService,
   adminUploadRecordingProofService,
   updateAdminClientRecordService,
+  updateAdminAccountClassificationService,
   updateAdminContractorRecordService,
   updateClientPipelineStageService,
   updateContractPacketStatusService,
@@ -1167,8 +1169,56 @@ export async function adminUpdateContractorAction(
 
   revalidatePath("/admin/contractors")
   revalidatePath("/admin/audit-log")
+  revalidatePath("/admin/profiles")
 
   return ok(contractor, "Contractor profile updated.")
+}
+
+export async function adminUpdateAccountClassificationAction(
+  _previousState: ActionResult<ContractorProfile>,
+  formData: FormData,
+): Promise<ActionResult<ContractorProfile>> {
+  const parsed = adminAccountClassificationSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the highlighted account classification fields.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("account classification", formData)
+
+  if (!adminResult.ok) {
+    return fail(adminResult.message)
+  }
+
+  const { admin } = adminResult
+  let contractor: ContractorProfile
+
+  try {
+    contractor = await updateAdminAccountClassificationService({ ...parsed.data, reviewer: admin })
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Account classification could not be updated."))
+  }
+
+  revalidatePath("/admin")
+  revalidatePath("/admin/contractors")
+  revalidatePath("/admin/profiles")
+  revalidatePath("/admin/audit-log")
+  revalidatePath("/profiles")
+  revalidatePath("/profiles/contractor")
+  revalidatePath("/profiles/subcontractor")
+  revalidatePath("/profiles/client")
+  revalidatePath("/search")
+  revalidatePath("/sitemap.xml")
+  revalidatePath("/llms.txt")
+  revalidatePath("/ai-index.json")
+
+  if (contractor.publicSlug) {
+    for (const profileType of contractor.accountCapabilities ?? []) {
+      revalidatePath(`/profiles/${profileType}/${contractor.publicSlug}`)
+    }
+  }
+
+  return ok(contractor, "Account classification updated.")
 }
 
 export async function adminDeleteRecordAction(

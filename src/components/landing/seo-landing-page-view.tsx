@@ -2,7 +2,7 @@ import Link from "next/link"
 import { ArrowRight, FilePlus2, LockKeyhole, Search, ShieldCheck } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getClientDirectory } from "@/lib/client-directory"
@@ -57,15 +57,6 @@ export function SeoLandingPageView({
           { label: "Client-check intent", value: "High signal", text: "Built for contractors checking specific client, city, and report context." },
           { label: "Fairness", value: "Response-aware", text: "Client responses and disputes are included only after review." },
           { label: "Privacy", value: "Protected", text: "Raw contact details, evidence files, and internal notes stay private." },
-        ]}
-        dark
-      />
-      <TrustGuardrailStrip
-        items={[
-          "People-first public research",
-          "Approved summaries only",
-          "No raw evidence or contact data",
-          "Useful even before a profile exists",
         ]}
         dark
       />

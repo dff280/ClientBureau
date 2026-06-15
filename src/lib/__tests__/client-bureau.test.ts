@@ -31,6 +31,7 @@ import type { Database } from "@/lib/database.types"
 import {
   clientReportSchema,
   clientResponseSchema,
+  adminAccountClassificationSchema,
   adminProfileClaimReviewSchema,
   adminProfileMergeSchema,
   adminProfileRedactionSchema,
@@ -278,6 +279,55 @@ describe("Client Bureau unified profiles", () => {
     expect(profileSupportsType(superiorProfile!, "subcontractor")).toBe(true)
     expect(entityProfileHref(superiorProfile!, "subcontractor")).toBe(`/profiles/subcontractor/${superiorProfile!.slug}`)
     expect(entityProfileHrefs(superiorProfile!)).toContain(`/profiles/subcontractor/${superiorProfile!.slug}`)
+  })
+
+  it("keeps single-capability profile hrefs scoped to that capability", () => {
+    const contractorOnly = {
+      profileType: "contractor" as const,
+      accountCapabilities: ["contractor" as const],
+      slug: "contractor-only-orlando-fl",
+    }
+    const subcontractorOnly = {
+      profileType: "subcontractor" as const,
+      accountCapabilities: ["subcontractor" as const],
+      slug: "subcontractor-only-orlando-fl",
+    }
+
+    expect(profileSupportsType(contractorOnly, "contractor")).toBe(true)
+    expect(profileSupportsType(contractorOnly, "subcontractor")).toBe(false)
+    expect(entityProfileHrefs(contractorOnly)).toEqual(["/profiles/contractor/contractor-only-orlando-fl"])
+    expect(entityProfileHrefs(subcontractorOnly)).toEqual(["/profiles/subcontractor/subcontractor-only-orlando-fl"])
+  })
+
+  it("validates account classification capabilities against the primary account type", () => {
+    const valid = adminAccountClassificationSchema.safeParse({
+      contractorId: "contractor_01",
+      primaryAccountType: "subcontractor",
+      capabilityContractor: true,
+      capabilitySubcontractor: true,
+      capabilityClient: false,
+      profileSubtype: "Licensed subcontractor",
+      tradeCategory: "Electrical",
+      isPublic: true,
+      verificationStatus: "verified",
+      moderatorNote: "Verified the subcontractor capability from business records.",
+    })
+    const invalid = adminAccountClassificationSchema.safeParse({
+      contractorId: "contractor_01",
+      primaryAccountType: "subcontractor",
+      capabilityContractor: true,
+      capabilitySubcontractor: false,
+      capabilityClient: false,
+      profileSubtype: "Licensed subcontractor",
+      tradeCategory: "Electrical",
+      isPublic: true,
+      verificationStatus: "verified",
+      moderatorNote: "Verified the contractor capability only.",
+    })
+
+    expect(valid.success).toBe(true)
+    expect(valid.success && valid.data.accountCapabilities).toEqual(["contractor", "subcontractor"])
+    expect(invalid.success).toBe(false)
   })
 
   it("filters unified search by profile type and state", () => {

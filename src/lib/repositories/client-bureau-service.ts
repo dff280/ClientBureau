@@ -71,6 +71,7 @@ import {
   adminRequestLienMoreInfo,
   adminUploadRecordingProof,
   updateAdminClientRecord,
+  updateAdminAccountClassification,
   updateAdminContractorRecord,
   updateClientPipelineStage,
   updateContractPacketStatus,
@@ -153,6 +154,7 @@ import {
   adminRequestLienMoreInfoSupabase,
   adminUploadRecordingProofSupabase,
   updateAdminClientRecordSupabase,
+  updateAdminAccountClassificationSupabase,
   updateAdminContractorRecordSupabase,
   updateClientPipelineStageSupabase,
   updateContractPacketStatusSupabase,
@@ -179,6 +181,7 @@ import type {
   LienFilingAuthorizationInput,
   LienNoticeDraftInput,
   AdminLienCaseActionInput,
+  AdminAccountClassificationInput,
   AdminRecordLienFiledInput,
   AdminRecordLienReleaseInput,
   AdminUploadRecordingProofInput,
@@ -599,6 +602,14 @@ export async function updateAdminContractorRecordService(
     licenseNumber: input.licenseNumber,
     verificationStatus: input.verificationStatus,
   } satisfies Partial<ContractorProfile> & { id: string })
+}
+
+export async function updateAdminAccountClassificationService(
+  input: AdminAccountClassificationInput & { reviewer?: User },
+) {
+  if (shouldUseSupabase()) return updateAdminAccountClassificationSupabase(input)
+
+  return updateAdminAccountClassification(input)
 }
 
 export async function deleteAdminRecordService(

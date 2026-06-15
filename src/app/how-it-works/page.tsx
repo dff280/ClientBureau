@@ -10,7 +10,6 @@ import {
   PremiumSectionHeader,
   ProductMockupFrame,
   PublicJourneyNav,
-  TrustGuardrailStrip,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent } from "@/components/ui/card"
@@ -123,15 +122,6 @@ export default function HowItWorksPage() {
         }
       />
       <PremiumProofStrip items={proof} dark />
-      <TrustGuardrailStrip
-        items={[
-          "Search before committing work",
-          "Contracts and evidence stay private",
-          "Reports are moderated before public display",
-          "Clients can respond or request corrections",
-        ]}
-        dark
-      />
 
       <section className="bureau-section bg-white">
         <div className="bureau-container space-y-8">

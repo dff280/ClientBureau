@@ -263,15 +263,15 @@ function DirectoryHero({
 }) {
   return (
     <div className="premium-hero-surface relative isolate overflow-hidden border-b border-slate-800 bg-slate-950 text-white">
-      <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_380px] lg:items-end">
-        <div className="space-y-5">
+      <div className="bureau-container grid gap-6 py-8 sm:py-12 lg:grid-cols-[1fr_340px] lg:items-end">
+        <div className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/30 bg-white/5 px-3 py-2 text-sm font-semibold text-amber-200">
             <MapPinned className="size-4" aria-hidden="true" />
             {eyebrow}
           </div>
           <div>
-            <h1 className="max-w-4xl text-4xl font-semibold tracking-normal sm:text-5xl">{title}</h1>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-slate-300">{description}</p>
+            <h1 className="max-w-4xl text-3xl font-semibold tracking-normal text-balance sm:text-4xl lg:text-5xl">{title}</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7">{description}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
@@ -286,11 +286,11 @@ function DirectoryHero({
           </div>
         </div>
         <Card className="premium-card-glow rounded-md border-white/10 bg-white/5 text-white shadow-sm">
-          <CardContent className="grid gap-3 p-5">
+          <CardContent className="grid gap-2 p-3 sm:p-4">
             {stats.map(([label, value]) => (
-              <div key={label} className="rounded-md border border-white/10 bg-white/5 p-4">
+              <div key={label} className="flex items-center justify-between gap-4 rounded-md border border-white/10 bg-white/5 px-3 py-2">
                 <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
-                <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+                <p className="text-xl font-semibold text-white">{value}</p>
               </div>
             ))}
           </CardContent>

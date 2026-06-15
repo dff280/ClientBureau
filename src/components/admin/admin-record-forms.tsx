@@ -37,18 +37,20 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import {
   adminDeleteRecordAction,
+  adminUpdateAccountClassificationAction,
   adminUpdateClientAction,
   adminUpdateContractorAction,
 } from "@/lib/actions/client-bureau"
 import { buildBusinessSlug } from "@/lib/business-rating"
 import { clientRatingBand } from "@/lib/client-rating"
 import { businessTypes, companySizes, onboardingGoals, yearsInBusinessOptions } from "@/lib/locations"
-import type { ActionResult, AuditLogEntry, ClientProfile, ContractorProfile } from "@/lib/types"
-import { riskLevels } from "@/lib/types"
+import type { AccountType, ActionResult, AuditLogEntry, ClientProfile, ContractorProfile, ProfileType } from "@/lib/types"
+import { accountTypes, profileTypes, riskLevels } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 const clientState: ActionResult<ClientProfile> = { ok: false, message: "" }
 const contractorState: ActionResult<ContractorProfile> = { ok: false, message: "" }
+const classificationState: ActionResult<ContractorProfile> = { ok: false, message: "" }
 const deleteState: ActionResult<AuditLogEntry | boolean> = { ok: false, message: "" }
 
 export type ClientProfileReportMetrics = {
@@ -264,8 +266,16 @@ export function AdminClientEditor({
 
 export function AdminContractorEditor({ contractor }: { contractor: ContractorProfile }) {
   const [state, action] = useActionState(adminUpdateContractorAction, contractorState)
+  const [classificationResult, classificationAction] = useActionState(
+    adminUpdateAccountClassificationAction,
+    classificationState,
+  )
   const [deleteResult, deleteAction] = useActionState(adminDeleteRecordAction, deleteState)
   const verificationTone = contractor.verificationStatus === "verified" ? "emerald" : contractor.verificationStatus === "pending" ? "amber" : "slate"
+  const primaryAccountType = contractor.accountType ?? (contractor.accountCapabilities?.includes("subcontractor") ? "subcontractor" : "contractor")
+  const accountCapabilities = normalizedCapabilities(contractor.accountCapabilities, primaryAccountType)
+  const profileSlug = contractor.publicSlug ?? buildBusinessSlug(contractor)
+  const enabledProfileUrls = accountCapabilities.map((profileType) => `/profiles/${profileType}/${profileSlug}`)
   const profileGaps = [
     !contractor.licenseNumber ? "license" : null,
     !contractor.serviceArea ? "service area" : null,
@@ -273,10 +283,22 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
     !contractor.companySize ? "company size" : null,
     !contractor.yearsInBusiness ? "years in business" : null,
   ].filter(Boolean)
+  const classificationGaps = [
+    !contractor.tradeCategory && !contractor.trade ? "trade category" : null,
+    !contractor.city ? "city" : null,
+    !contractor.state ? "state" : null,
+    !contractor.publicSummary ? "public summary" : null,
+    contractor.verificationStatus !== "verified" ? "verified status" : null,
+    !contractor.isPublic ? "public visibility" : null,
+  ].filter(Boolean)
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
   }, [state])
+
+  useEffect(() => {
+    if (classificationResult.message) toast[classificationResult.ok ? "success" : "error"](classificationResult.message)
+  }, [classificationResult])
 
   useEffect(() => {
     if (deleteResult.message) toast[deleteResult.ok ? "success" : "error"](deleteResult.message)
@@ -291,6 +313,9 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
         tone={verificationTone}
         facts={[
           { label: "Business owner workspace", value: "Active" },
+          { label: "Primary account type", value: accountTypeLabel(primaryAccountType) },
+          { label: "Public capabilities", value: accountCapabilities.map(profileTypeLabel).join(", ") },
+          { label: "Public visibility", value: contractor.isPublic === false ? "Private" : "Public-ready" },
           { label: "Trade or service", value: contractor.trade },
           { label: "Business type", value: contractor.businessType ?? "Not provided" },
           { label: "Location", value: `${contractor.city}, ${contractor.state}` },
@@ -334,15 +359,15 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
           />
           <ReadinessItem
             icon={LockKeyhole}
-            label="Private account"
-            text="Billing and account emails stay private"
+            label="Classification"
+            text={`${accountTypeLabel(primaryAccountType)} dashboard, ${accountCapabilities.length} public view${accountCapabilities.length === 1 ? "" : "s"}`}
             tone="emerald"
           />
           <ReadinessItem
             icon={FileCheck2}
             label="Public profile"
-            text="Preview before promoting"
-            tone="blue"
+            text={classificationGaps.length ? `Missing ${classificationGaps.join(", ")}` : "Ready for public discovery"}
+            tone={classificationGaps.length ? "amber" : "blue"}
           />
         </div>
       </AdminProfileHealthCard>
@@ -350,22 +375,144 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
         <SheetHeader className="border-b border-slate-200 p-5">
           <SheetTitle>Edit business / user workspace</SheetTitle>
           <SheetDescription>
-            Update business profile fields, verification status, location, and audit notes. Account role and billing remain controlled by existing auth and billing records.
+            Update business profile fields, account classification, public capabilities, verification status, location, and audit notes. Admin access and billing stay separate.
           </SheetDescription>
         </SheetHeader>
         <div className="space-y-5 p-5">
           <div className="grid gap-3 sm:grid-cols-3">
             <EditorSummaryTile label="Verification" value={contractor.verificationStatus} tone={verificationTone} />
-            <EditorSummaryTile label="Profile gaps" value={profileGaps.length ? String(profileGaps.length) : "Complete"} tone={profileGaps.length ? "amber" : "emerald"} />
+            <EditorSummaryTile label="Classification" value={accountTypeLabel(primaryAccountType)} tone="blue" />
             <EditorSummaryTile label="Workspace age" value={ageLabel(contractor.createdAt)} tone="slate" />
           </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Account context</p>
             <p className="mt-2 text-sm font-semibold text-slate-950">{contractor.businessName}</p>
             <p className="mt-1 text-xs leading-5 text-slate-600">
-              Business-owner workspace. Verification changes should be documented for the audit trail.
+              Classification controls dashboard defaults and public profile views. Admin authorization remains separate from this business classification.
             </p>
           </div>
+          <form action={classificationAction} className="grid gap-4 rounded-md border border-blue-200 bg-blue-50/60 p-4">
+            <AdminActionTokenInput />
+            <input type="hidden" name="contractorId" value={contractor.id} />
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Account classification</p>
+                <h3 className="mt-2 text-lg font-semibold text-slate-950">Set how this account appears across Client Bureau</h3>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
+                  Choose the primary workspace and every public profile capability this business can support. This does not grant admin access or expose private contact data.
+                </p>
+              </div>
+              <span className="rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-semibold uppercase text-blue-800">
+                {contractor.isPublic === false ? "Private profile" : "Public eligible"}
+              </span>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="grid gap-4">
+                <LabeledSelect
+                  label="Primary account type"
+                  name="primaryAccountType"
+                  defaultValue={primaryAccountType}
+                  options={accountTypes}
+                  optionLabel={accountTypeLabel}
+                  errors={classificationResult.ok ? undefined : classificationResult.fieldErrors}
+                />
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">Public capabilities</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">
+                    Select every public view this account should support. The primary account type must be included.
+                  </p>
+                  <div className="mt-3 grid gap-2">
+                    <CapabilityCheckbox
+                      name="capabilityContractor"
+                      defaultChecked={accountCapabilities.includes("contractor")}
+                      title="Contractor / service business"
+                      detail="Shows contractor profile views, service-business search results, and business readiness context."
+                    />
+                    <CapabilityCheckbox
+                      name="capabilitySubcontractor"
+                      defaultChecked={accountCapabilities.includes("subcontractor")}
+                      title="Subcontractor / trade pro"
+                      detail="Shows trade-partner profile views, payment-chain context, and subcontractor directory results."
+                    />
+                    <CapabilityCheckbox
+                      name="capabilityClient"
+                      defaultChecked={accountCapabilities.includes("client")}
+                      title="Client / customer"
+                      detail="Allows the account to be treated as a client/customer profile when staff intentionally enables that view."
+                    />
+                  </div>
+                  <FieldError name="accountCapabilities" errors={classificationResult.ok ? undefined : classificationResult.fieldErrors} />
+                </div>
+              </div>
+              <div className="grid gap-4">
+                <div>
+                  <TradeCategorySelect
+                    id={`${contractor.id}-classification-trade`}
+                    name="tradeCategory"
+                    otherName="classificationOtherTradeDetail"
+                    defaultValue={contractor.tradeCategory ?? contractor.trade}
+                    label="Canonical trade category"
+                    profileType={accountCapabilities.includes("subcontractor") ? "subcontractor" : "contractor"}
+                    required
+                  />
+                  <FieldError name="tradeCategory" errors={classificationResult.ok ? undefined : classificationResult.fieldErrors} />
+                </div>
+                <LabeledInput
+                  label="Profile subtype"
+                  name="profileSubtype"
+                  defaultValue={String(contractor.profileSubtype ?? contractor.businessType ?? defaultSubtypeForAccount(primaryAccountType))}
+                  errors={classificationResult.ok ? undefined : classificationResult.fieldErrors}
+                />
+                <LabeledSelect
+                  label="Verification"
+                  name="verificationStatus"
+                  defaultValue={contractor.verificationStatus}
+                  options={["unverified", "pending", "verified"]}
+                  errors={classificationResult.ok ? undefined : classificationResult.fieldErrors}
+                />
+                <label className="flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3 text-sm">
+                  <Checkbox name="isPublic" defaultChecked={contractor.isPublic !== false} />
+                  <span>
+                    <span className="block font-semibold text-slate-950">Public visibility enabled</span>
+                    <span className="mt-1 block text-xs leading-5 text-slate-600">
+                      Public profile pages may show approved, moderated profile context only. Private contact details and notes stay hidden.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 md:grid-cols-2">
+              <div>
+                <p className="text-xs font-semibold uppercase text-slate-500">Enabled public URLs</p>
+                <div className="mt-2 grid gap-1 text-sm font-medium text-slate-700">
+                  {enabledProfileUrls.map((href) => (
+                    <Link key={href} href={href} target="_blank" className="truncate text-blue-700 hover:text-blue-900">
+                      {href}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase text-slate-500">Readiness warnings</p>
+                <p className="mt-2 text-sm leading-6 text-slate-600">
+                  {classificationGaps.length
+                    ? `Resolve before promotion: ${classificationGaps.join(", ")}.`
+                    : "Classification, trade, verification, location, and visibility are ready for public discovery."}
+                </p>
+              </div>
+            </div>
+            <EditorFormSection
+              title="Classification audit note"
+              description="Explain why this account is being changed, including source of verification and any public profile impact."
+            >
+              <Textarea name="moderatorNote" required placeholder="Required moderator note for classification change" className="min-h-20 bg-white" />
+              <FieldError name="moderatorNote" errors={classificationResult.ok ? undefined : classificationResult.fieldErrors} />
+            </EditorFormSection>
+            <PendingSubmitButton pendingText="Updating classification..." className="bg-blue-950 text-white hover:bg-blue-900">
+              <ShieldCheck aria-hidden="true" />
+              Save account classification
+            </PendingSubmitButton>
+          </form>
           <form action={action} className="grid gap-4">
             <AdminActionTokenInput />
             <input type="hidden" name="contractorId" value={contractor.id} />
@@ -588,6 +735,56 @@ function isOlderThanDays(value: string, days: number) {
   return Date.now() - date.getTime() > days * 86_400_000
 }
 
+function accountTypeLabel(value: string) {
+  if (value === "client") return "Client / customer"
+  if (value === "subcontractor") return "Subcontractor / trade pro"
+  return "Contractor / service business"
+}
+
+function profileTypeLabel(value: ProfileType) {
+  if (value === "client") return "Client / customer"
+  if (value === "subcontractor") return "Subcontractor / trade pro"
+  return "Contractor / service business"
+}
+
+function defaultSubtypeForAccount(value: AccountType) {
+  if (value === "client") return "Business client"
+  if (value === "subcontractor") return "Individual trade professional"
+  return "Service business"
+}
+
+function normalizedCapabilities(capabilities: ProfileType[] | undefined, primary: AccountType): ProfileType[] {
+  const next = new Set<ProfileType>([primary, ...(capabilities ?? [])])
+  return profileTypes.filter((type) => next.has(type))
+}
+
+function CapabilityCheckbox({
+  defaultChecked,
+  detail,
+  name,
+  title,
+}: {
+  defaultChecked: boolean
+  detail: string
+  name: string
+  title: string
+}) {
+  return (
+    <label className="flex items-start gap-3 rounded-md border border-slate-200 bg-white p-3">
+      <input
+        type="checkbox"
+        name={name}
+        defaultChecked={defaultChecked}
+        className="mt-1 size-4 rounded border-slate-300 text-blue-950"
+      />
+      <span>
+        <span className="block text-sm font-semibold text-slate-950">{title}</span>
+        <span className="mt-1 block text-xs leading-5 text-slate-600">{detail}</span>
+      </span>
+    </label>
+  )
+}
+
 function LabeledInput({
   label,
   name,
@@ -618,12 +815,14 @@ function LabeledSelect({
   defaultValue,
   errors,
   options,
+  optionLabel,
 }: {
   label: string
   name: string
   defaultValue?: string
   errors?: Record<string, string[]>
   options: readonly string[]
+  optionLabel?: (value: string) => string
 }) {
   return (
     <div className="space-y-2">
@@ -639,7 +838,7 @@ function LabeledSelect({
         <option value="">Select {label.toLowerCase()}</option>
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {optionLabel ? optionLabel(option) : option}
           </option>
         ))}
       </select>
