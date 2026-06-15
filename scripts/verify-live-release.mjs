@@ -724,7 +724,10 @@ if (aiIndex.response.ok && aiIndex.json) {
   const aiRequiredFields = [
     ["name", "Client Bureau"],
     ["url", expectedSiteUrl],
-    ["positioning", "Check the client before you take the job."],
+    [
+      "positioning",
+      "Check the client before you take the job. Client Bureau is organized around Client, Contractor, and Subcontractor databases.",
+    ],
   ]
 
   for (const [field, expectedValue] of aiRequiredFields) {
@@ -1172,16 +1175,16 @@ const publicIndexablePages = [
   {
     path: "/clients",
     requiredTexts: [
-      "Public client directory",
-      "Browse approved Client Bureau profiles by state and city.",
+      "Client Database",
+      "Browse approved Client Database profiles by state and city.",
       "Pending, rejected, private evidence, raw email, phone",
     ],
   },
   {
     path: "/clients/florida/orlando",
     requiredTexts: [
-      "City client directory",
-      "Orlando, FL Client Bureau profiles",
+      "City Client Database",
+      "Orlando, FL Client Database profiles",
       "Public pages show moderated contractor-submitted reports",
     ],
   },
@@ -1212,24 +1215,24 @@ const publicIndexablePages = [
   {
     path: "/profiles",
     requiredTexts: [
-      "Unified profile directory",
-      "Check public profiles for clients, contractors, and subcontractors.",
+      "Three public databases",
+      "Browse the Client, Contractor, and Subcontractor databases.",
       "All public profiles",
     ],
   },
   {
     path: "/profiles/contractor",
     requiredTexts: [
-      "Contractor profiles",
-      "Find contractor and service business profiles.",
+      "Contractor Database",
+      "Browse the Contractor Business Database.",
       "Contractors and service businesses",
     ],
   },
   {
     path: "/profiles/subcontractor",
     requiredTexts: [
-      "Subcontractor profiles",
-      "Find subcontractor and trade professional profiles.",
+      "Subcontractor Database",
+      "Browse the Subcontractor and Trade Partner Database.",
       "Subcontractors and trade pros",
     ],
   },
