@@ -34,32 +34,32 @@ type ProfileDirectoryCopy = {
 
 const directoryCopy: Record<ProfileType | "all", ProfileDirectoryCopy> = {
   all: {
-    eyebrow: "Unified profile directory",
-    title: "Check public profiles for clients, contractors, and subcontractors.",
+    eyebrow: "Three public databases",
+    title: "Browse the Client, Contractor, and Subcontractor databases.",
     description:
-      "Browse approved Client Bureau profile records across clients, homeowners, contractors, service businesses, subcontractors, and trade professionals. Public pages show moderated summaries and safe profile context only.",
-    primaryLabel: "Check all profiles",
+      "Client Bureau organizes approved public records into three clear databases: clients, contractors, and subcontractors. Public pages show moderated summaries and safe profile context only.",
+    primaryLabel: "Browse all databases",
   },
   client: {
-    eyebrow: "Client and customer profiles",
-    title: "Find client, homeowner, property owner, and customer profiles.",
+    eyebrow: "Client Database",
+    title: "Browse the Client Database.",
     description:
-      "Review public client profiles with approved contractor-submitted summaries, response context, evidence-on-file labels, and city/state profile records before taking work.",
-    primaryLabel: "Check client profiles",
+      "Review public client, homeowner, property owner, customer, and business profiles with approved contractor-submitted summaries, response context, evidence-on-file labels, and city/state records.",
+    primaryLabel: "Check Client Database",
   },
   contractor: {
-    eyebrow: "Contractor profiles",
-    title: "Find contractor and service business profiles.",
+    eyebrow: "Contractor Database",
+    title: "Browse the Contractor Business Database.",
     description:
-      "Review public contractor and service-business profiles with verification signals, service-area context, documented project history, and profile claiming paths.",
-    primaryLabel: "Check contractor profiles",
+      "Review public contractor and service-business profiles with verification signals, service-area context, documented project history, public profile status, and claim paths.",
+    primaryLabel: "Open Contractor Database",
   },
   subcontractor: {
-    eyebrow: "Subcontractor profiles",
-    title: "Find subcontractor and trade professional profiles.",
+    eyebrow: "Subcontractor Database",
+    title: "Browse the Subcontractor and Trade Partner Database.",
     description:
-      "Review public subcontractor and trade professional profiles for trade scope, GC/sub relationship context, documentation readiness, and payment-chain signals.",
-    primaryLabel: "Check subcontractor profiles",
+      "Review public subcontractor, installer, crew, specialty trade, and vendor profiles for trade scope, GC/sub relationship context, documentation readiness, and payment-chain signals.",
+    primaryLabel: "Open Subcontractor Database",
   },
 }
 
@@ -107,7 +107,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       proofContext: "Business trust and public project signals.",
       resultDescription:
         "Contractor pages focus on business verification, service-area context, public project records, claim status, and approved profile context. Private identifiers and internal notes stay sealed.",
-      quickStartEyebrow: "Contractor trust directory",
+      quickStartEyebrow: "Contractor Database",
       quickStartTitle: "Built for customer-facing businesses and prime contractors.",
       quickStartDescription:
         "Contractor profiles should feel like official business dossiers: what the company does, where it works, how it documents projects, and how it can claim or correct its record.",
@@ -158,7 +158,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       proofContext: "Trade scope, relationship, and documentation signals.",
       resultDescription:
         "Subcontractor pages focus on trade specialization, GC/sub relationship context, scope documentation, payment-chain indicators, and private evidence signals. Raw files and private contact data stay sealed.",
-      quickStartEyebrow: "Trade partner directory",
+      quickStartEyebrow: "Subcontractor Database",
       quickStartTitle: "Built for specialty trades, crews, and project partners.",
       quickStartDescription:
         "Subcontractor profiles answer a different question than contractor profiles: what trade relationship existed, what scope was documented, and what payment-chain context is available.",
@@ -209,7 +209,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       proofContext: "Approved client-experience report signals.",
       resultDescription:
         "Client pages show approved context only and never display private phone numbers, emails, street addresses, raw evidence files, pending content, or internal notes.",
-      quickStartEyebrow: "Client screening",
+      quickStartEyebrow: "Client Database",
       quickStartTitle: "Check the customer before the job starts.",
       quickStartDescription:
         "Client and customer profiles are built for pre-job screening, documented payment context, response rights, and private matching from the dashboard.",
@@ -255,12 +255,12 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       "Approved public summaries only",
       "Private identifiers and raw evidence stay sealed",
     ],
-    proofNoun: "Public-safe profiles available for this view.",
+    proofNoun: "Public-safe records available across all databases.",
     proofContext: "Approved or connected report signals.",
     resultDescription:
       "Public pages show approved context only and never display private phone numbers, emails, street addresses, raw evidence files, pending content, or internal notes.",
-    quickStartEyebrow: "Profile graph",
-    quickStartTitle: "One directory, three relationship roles.",
+    quickStartEyebrow: "Database graph",
+    quickStartTitle: "Three databases, one relationship graph.",
     quickStartDescription:
       "Use Client Bureau public profiles to understand the role someone played in the business relationship before moving into private checks, watchlists, contracts, or reports.",
     quickStartCards: [
@@ -324,7 +324,7 @@ export function getProfileDirectoryFaqs(profileType?: ProfileType) {
     {
       question: "Can I check contractors, subcontractors, and clients?",
       answer:
-        "Yes. The public directory supports client, contractor, service business, subcontractor, and trade professional profiles when those records are approved for public display.",
+        "Yes. Client Bureau has separate public database views for clients, contractors, service businesses, subcontractors, and trade professionals when those records are approved for public display.",
     },
     {
       question: "When should I use a private client check instead?",
@@ -477,12 +477,12 @@ export function EntityProfileDirectory({
             <CardContent className="space-y-5 p-5">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-amber-700">Profile check</p>
+                  <p className="text-xs font-semibold uppercase text-amber-700">Database check</p>
                   <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">
                     Check by name, business, trade, city, or state.
                   </h2>
                   <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                    Use this public directory for broad profile discovery. Use the private dashboard search when private matching, saved searches, and watchlists matter.
+                    Use this public database view for broad profile discovery. Use the private dashboard search when private matching, saved searches, and watchlists matter.
                   </p>
                 </div>
                 <Button asChild variant="outline">
@@ -590,7 +590,7 @@ export function EntityProfileDirectory({
 
           <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-end">
             <div>
-              <p className="text-sm font-semibold uppercase text-amber-700">Directory results</p>
+              <p className="text-sm font-semibold uppercase text-amber-700">Database results</p>
               <h2 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950">
                 {activeType ? profileTypePluralLabel(activeType) : "All public profiles"}
               </h2>

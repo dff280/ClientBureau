@@ -7,9 +7,9 @@ import { getPublicEntityProfilesService, searchProfilesService } from "@/lib/rep
 import { profileTypes, type ProfileType } from "@/lib/types"
 
 export const metadata: Metadata = {
-  title: "Public Profile Directory",
+  title: "Public Databases",
   description:
-    "Check public Client Bureau profiles for clients, contractors, service businesses, subcontractors, and trade professionals.",
+    "Browse Client Bureau public databases for clients, contractors, service businesses, subcontractors, and trade professionals.",
   alternates: {
     canonical: `${getSiteUrl()}/profiles`,
   },
@@ -45,10 +45,10 @@ export default async function ProfilesPage({ searchParams }: { searchParams: Pro
         data={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: "Client Bureau Public Profile Directory",
+          name: "Client Bureau Public Databases",
           url: `${siteUrl}/profiles`,
           description:
-            "Public directory of Client Bureau client, contractor, service business, subcontractor, and trade professional profiles.",
+            "Public database hub for Client Bureau client, contractor, service business, subcontractor, and trade professional profiles.",
         }}
       />
       <JsonLd data={getFaqSchema(getProfileDirectoryFaqs(profileType))} />

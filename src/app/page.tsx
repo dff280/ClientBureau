@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { pageAssets } from "@/lib/page-assets"
+import { publicDatabasePillars, type PublicDatabasePillar, type PublicDatabaseTone } from "@/lib/public-site"
 import {
   getPublicClientProfileService,
   getPublicClientProfilesService,
@@ -61,33 +62,6 @@ type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProf
 const heroHeadline = "Check a Client Before You Take the Job."
 const platformHeroAsset = pageAssets.platformHero
 
-const audiencePaths = [
-  {
-    icon: BriefcaseBusiness,
-    eyebrow: "For contractors",
-    title: "Screen clients before labor, materials, and scheduling are committed.",
-    text: "Search client context, save checks, document jobs, publish moderated experiences, and keep private evidence organized.",
-    href: "/search",
-    cta: "Start Checking Clients",
-  },
-  {
-    icon: UsersRound,
-    eyebrow: "For subcontractors",
-    title: "Document contractor relationships and payment-chain experiences.",
-    text: "Build trade credibility, report contractor experiences, track scope, and preserve payment-chain context without exposing private records.",
-    href: "/profiles/subcontractor",
-    cta: "View Trade Tools",
-  },
-  {
-    icon: MessageSquareText,
-    eyebrow: "For clients",
-    title: "Respond, dispute, correct, or resolve a public record fairly.",
-    text: "Clients, homeowners, and property owners can submit response context, correction requests, documentation, and resolution updates.",
-    href: "/client-response",
-    cta: "Respond or Correct a Record",
-  },
-]
-
 const workflowSteps = [
   {
     icon: Search,
@@ -116,10 +90,10 @@ const workflowSteps = [
 ]
 
 const productPreview = [
-  ["Client check", "Match names, businesses, cities, states, and private identifiers before accepting work."],
-  ["Public profile", "Review moderated summaries, rating context, response status, and evidence-on-file labels."],
-  ["Job file", "Keep scope, participants, contracts, invoices, photos, and private notes together."],
-  ["Recovery path", "Use private recovery and Florida lien-service workflows when payment needs structure."],
+  ["Client Database", "Check clients, homeowners, property owners, customers, and businesses before accepting work."],
+  ["Contractor Database", "Review service-business and contractor profiles with public verification and project context."],
+  ["Subcontractor Database", "Inspect trade partner profiles, scope context, and payment-chain signals."],
+  ["Private tools", "Turn a public check into jobs, contracts, evidence, recovery, lien service, and watchlists."],
 ]
 
 const trustGuardrails = [
@@ -190,7 +164,7 @@ export default async function Home() {
             <div className="max-w-4xl space-y-7">
               <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/35 bg-slate-950/70 px-3 py-2 text-sm font-semibold text-amber-200 shadow-lg shadow-slate-950/30 backdrop-blur">
                 <ShieldCheck className="size-4" aria-hidden="true" />
-                Contractors. Subcontractors. Clients.
+                Three public databases. One protection platform.
               </div>
 
               <div className="space-y-5">
@@ -198,8 +172,8 @@ export default async function Home() {
                   {heroHeadline}
                 </h1>
                 <p className="max-w-3xl text-lg leading-8 text-slate-100 sm:text-xl">
-                  Search reported payment issues, disputes, chargebacks, and documented client experiences before
-                  you commit labor, materials, scheduling, deposits, or profit.
+                  Search clients before taking work, inspect contractor and subcontractor records, and move into
+                  private tools for jobs, contracts, evidence, recovery, and Florida lien service when needed.
                 </p>
               </div>
 
@@ -212,7 +186,7 @@ export default async function Home() {
                   <Input
                     id="homepage-client-search"
                     name="q"
-                    placeholder="Search by client name, business, city, state, phone, or email"
+                    placeholder="Search by client, business, contractor, subcontractor, city, state, phone, or email"
                     className="h-14 border-0 pl-12 text-base text-slate-950 shadow-none focus-visible:ring-0"
                   />
                 </div>
@@ -226,7 +200,7 @@ export default async function Home() {
                   {primaryHook}
                 </span>
                 <span className="text-sm font-semibold text-slate-300">
-                  Private matching. Moderated summaries. Response rights.
+                  Client Database. Contractor Database. Subcontractor Database.
                 </span>
               </div>
 
@@ -235,12 +209,6 @@ export default async function Home() {
                   <Link href="/submit-report">
                     <FilePlus2 aria-hidden="true" />
                     {reportExperienceCta}
-                  </Link>
-                </Button>
-                <Button asChild variant="ghost" className="h-11 text-slate-100 hover:bg-white/10 hover:text-white">
-                  <Link href="/how-it-works">
-                    How Client Bureau Works
-                    <ArrowRight aria-hidden="true" />
                   </Link>
                 </Button>
               </div>
@@ -254,18 +222,18 @@ export default async function Home() {
       <section className="border-b border-slate-200 bg-white">
         <div className="bureau-container py-8 sm:py-10">
           <div className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-700">Choose your path</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-amber-700">The three databases</p>
             <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
-              Three sides of the job. One fair record system.
+              The product backbone is simple: clients, contractors, and subcontractors.
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-              Contractors and subcontractors need better protection. Clients need a clear right to respond.
-              Client Bureau gives each side a professional path without turning the platform into a complaint wall.
+              Every public page points back to one of these databases. Search first, review the correct record type,
+              then use private tools only when you need to act.
             </p>
           </div>
           <div className="mt-8 grid gap-4 lg:grid-cols-3">
-            {audiencePaths.map((path) => (
-              <AudiencePathCard key={path.eyebrow} path={path} />
+            {publicDatabasePillars.map((pillar) => (
+              <DatabasePillarCard key={pillar.id} pillar={pillar} />
             ))}
           </div>
         </div>
@@ -404,35 +372,75 @@ function SectionIntro({
   )
 }
 
-function AudiencePathCard({
-  path,
-}: {
-  path: {
-    icon: LucideIcon
+const pillarIcons: Record<PublicDatabasePillar["id"], LucideIcon> = {
+  clients: Search,
+  contractors: BriefcaseBusiness,
+  subcontractors: UsersRound,
+}
+
+const pillarToneClasses: Record<
+  PublicDatabaseTone,
+  {
+    border: string
+    icon: string
     eyebrow: string
-    title: string
-    text: string
-    href: string
-    cta: string
+    hover: string
+    button: string
   }
-}) {
-  const Icon = path.icon
+> = {
+  client: {
+    border: "border-amber-200 bg-amber-50/40",
+    icon: "bg-slate-950 text-amber-300",
+    eyebrow: "bg-amber-100 text-amber-900",
+    hover: "hover:border-amber-300",
+    button: "border-amber-300 text-slate-950 hover:bg-amber-50",
+  },
+  contractor: {
+    border: "border-emerald-200 bg-emerald-50/40",
+    icon: "bg-emerald-900 text-emerald-100",
+    eyebrow: "bg-emerald-100 text-emerald-900",
+    hover: "hover:border-emerald-300",
+    button: "border-emerald-300 text-slate-950 hover:bg-emerald-50",
+  },
+  subcontractor: {
+    border: "border-blue-200 bg-blue-50/40",
+    icon: "bg-blue-950 text-blue-100",
+    eyebrow: "bg-blue-100 text-blue-900",
+    hover: "hover:border-blue-300",
+    button: "border-blue-300 text-slate-950 hover:bg-blue-50",
+  },
+}
+
+function DatabasePillarCard({ pillar }: { pillar: PublicDatabasePillar }) {
+  const Icon = pillarIcons[pillar.id]
+  const tone = pillarToneClasses[pillar.tone]
 
   return (
-    <div className="group flex h-full flex-col rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300 hover:shadow-xl">
+    <div className={`group flex h-full flex-col rounded-md border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl ${tone.border} ${tone.hover}`}>
       <div className="flex items-start justify-between gap-4">
-        <span className="flex size-11 items-center justify-center rounded-md bg-slate-950 text-white">
+        <span className={`flex size-11 items-center justify-center rounded-md ${tone.icon}`}>
           <Icon className="size-5" aria-hidden="true" />
         </span>
-        <span className="rounded-md bg-amber-100 px-2.5 py-1 text-xs font-semibold uppercase text-amber-800">
-          {path.eyebrow}
+        <span className={`rounded-md px-2.5 py-1 text-xs font-semibold uppercase ${tone.eyebrow}`}>
+          {pillar.shortLabel}
         </span>
       </div>
-      <h3 className="mt-5 text-xl font-semibold leading-tight text-slate-950">{path.title}</h3>
-      <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{path.text}</p>
-      <Button asChild variant="outline" className="mt-5 justify-between">
-        <Link href={path.href}>
-          {path.cta}
+      <h3 className="mt-5 text-2xl font-semibold leading-tight text-slate-950">{pillar.label}</h3>
+      <p className="mt-3 flex-1 text-sm leading-6 text-slate-600">{pillar.description}</p>
+      <div className="mt-4 grid gap-2">
+        {pillar.proofPoints.map((point) => (
+          <span key={point} className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <ShieldCheck className="size-4 text-emerald-700" aria-hidden="true" />
+            {point}
+          </span>
+        ))}
+      </div>
+      <p className="mt-4 rounded-md border border-white/70 bg-white/65 p-3 text-xs leading-5 text-slate-600">
+        {pillar.privacyNote}
+      </p>
+      <Button asChild variant="outline" className={`mt-5 justify-between bg-white/80 ${tone.button}`}>
+        <Link href={pillar.href}>
+          {pillar.cta}
           <ArrowRight aria-hidden="true" />
         </Link>
       </Button>

@@ -44,9 +44,10 @@ const contractorHeaderNav = [
 
 const publicHeaderNav = [
   { href: "/search", label: "Check a Client" },
-  { href: "/how-it-works", label: "How It Works" },
+  { href: "/clients", label: "Client Database" },
+  { href: "/profiles/contractor", label: "Contractor Database" },
+  { href: "/profiles/subcontractor", label: "Subcontractor Database" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/resources", label: "Resources" },
 ]
 
 const publicHeaderMenus = [
@@ -55,11 +56,10 @@ const publicHeaderMenus = [
     icon: BookOpen,
     items: [
       { href: "/submit-report", label: "Report a Client Experience", description: "Document a real client experience for moderation." },
+      { href: "/how-it-works", label: "How It Works", description: "See the before, during, and after workflow." },
+      { href: "/resources", label: "Resources", description: "Policies, methodology, and contractor guides." },
       { href: "/platform", label: "Platform Overview", description: "Client checks, jobs, contracts, evidence, and services in one workflow." },
-      { href: "/clients", label: "Client Directory", description: "Approved public client profiles by market." },
-      { href: "/profiles", label: "Profile Directory", description: "Clients, contractors, and subcontractors." },
-      { href: "/profiles/contractor", label: "Contractor Profiles", description: "Business and service-company trust profiles." },
-      { href: "/profiles/subcontractor", label: "Subcontractor Profiles", description: "Trade partner and payment-chain profiles." },
+      { href: "/profiles", label: "All Public Databases", description: "Clients, contractors, and subcontractors in one profile graph." },
       { href: "/reports/recent", label: "Recent Reports", description: "Newly approved public report summaries." },
       { href: "/contractor-contract-template", label: "Contracts", description: "Agreement packets and e-signature workflow." },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter", description: "Florida-aware starter packet for scope, payment terms, and review prompts." },

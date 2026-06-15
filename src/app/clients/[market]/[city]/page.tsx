@@ -21,13 +21,13 @@ export async function generateMetadata({ params }: ClientCityDirectoryPageProps)
 
   if (!state || !city) {
     return {
-      title: "Client Directory",
+      title: "Client Database",
     }
   }
 
-  const title = `${city.name} ${state.code} Public Client Profiles | Client Directory`
+  const title = `${city.name} ${state.code} Public Client Profiles | Client Database`
   const description =
-    `Browse approved Client Bureau public client profiles in ${city.name}, ${state.name} with moderated contractor-submitted report context.`
+    `Browse the Client Bureau Client Database in ${city.name}, ${state.name} with approved profiles and moderated contractor-submitted report context.`
   const canonical = `${siteUrl}/clients/${state.slug}/${city.slug}`
 
   return {
@@ -68,9 +68,9 @@ export default async function ClientCityDirectoryPage({ params }: ClientCityDire
         "@type": "WebPage",
         "@id": `${canonical}#webpage`,
         url: canonical,
-        name: `${city.name}, ${state.code} Client Bureau profiles`,
+        name: `${city.name}, ${state.code} Client Database profiles`,
         description:
-          `Approved public client profile directory for ${city.name}, ${state.name}.`,
+          `Approved public client profile database for ${city.name}, ${state.name}.`,
         isPartOf: {
           "@id": `${siteUrl}/#website`,
         },
@@ -88,7 +88,7 @@ export default async function ClientCityDirectoryPage({ params }: ClientCityDire
           {
             "@type": "ListItem",
             position: 2,
-            name: "Client Directory",
+            name: "Client Database",
             item: `${siteUrl}/clients`,
           },
           {

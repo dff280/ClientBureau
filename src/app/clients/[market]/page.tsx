@@ -33,14 +33,14 @@ export async function generateMetadata({ params }: ClientsLandingPageProps): Pro
     if (!state) return { title: "Client Reports" }
 
     return {
-      title: `${state.name} Public Client Profiles | Client Directory`,
-      description: `Browse approved Client Bureau public client profiles in ${state.name} by city with moderated contractor-submitted report context.`,
+      title: `${state.name} Public Client Profiles | Client Database`,
+      description: `Browse the Client Bureau Client Database in ${state.name} by city with approved profiles and moderated contractor-submitted report context.`,
       alternates: {
         canonical: `${siteUrl}/clients/${state.slug}`,
       },
       openGraph: {
-        title: `${state.name} Client Bureau Profiles`,
-        description: `Approved public Client Bureau profiles and city directories in ${state.name}.`,
+        title: `${state.name} Client Database Profiles`,
+        description: `Approved public Client Bureau client profiles and city markets in ${state.name}.`,
         url: `${siteUrl}/clients/${state.slug}`,
         type: "website",
         images: [{ url: `${siteUrl}/opengraph-image`, width: 1200, height: 630, alt: `${state.name} Client Bureau profiles` }],
@@ -93,8 +93,8 @@ export default async function ClientsLandingPage({ params }: ClientsLandingPageP
           "@type": "WebPage",
           "@id": `${siteUrl}/clients/${state.slug}#webpage`,
           url: `${siteUrl}/clients/${state.slug}`,
-          name: `${state.name} Client Bureau profiles`,
-          description: `Approved public client profile directory for ${state.name}.`,
+          name: `${state.name} Client Database profiles`,
+          description: `Approved public client profile database for ${state.name}.`,
           isPartOf: {
             "@id": `${siteUrl}/#website`,
           },
@@ -112,7 +112,7 @@ export default async function ClientsLandingPage({ params }: ClientsLandingPageP
             {
               "@type": "ListItem",
               position: 2,
-              name: "Client Directory",
+              name: "Client Database",
               item: `${siteUrl}/clients`,
             },
             {
@@ -126,7 +126,7 @@ export default async function ClientsLandingPage({ params }: ClientsLandingPageP
         {
           "@type": "ItemList",
           "@id": `${siteUrl}/clients/${state.slug}#city-directories`,
-          name: `${state.name} client profile city directories`,
+          name: `${state.name} Client Database city pages`,
           numberOfItems: state.cities.length,
           itemListElement: state.cities.map((city, index) => ({
             "@type": "ListItem",

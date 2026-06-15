@@ -164,7 +164,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
         <div className="bureau-container grid gap-8 py-12 lg:grid-cols-[1fr_360px] lg:items-end">
           <div className="space-y-5">
             <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase text-slate-400">
-              <Link href="/clients" className="hover:text-white">Client Directory</Link>
+              <Link href="/clients" className="hover:text-white">Client Database</Link>
               <span aria-hidden="true">/</span>
               <Link href={stateHref} className="hover:text-white">{profile.state}</Link>
               <span aria-hidden="true">/</span>

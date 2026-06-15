@@ -35,24 +35,24 @@ export async function GET() {
       intent: "Core product overview for Client Bureau's client checks, public profiles, contracts, evidence, recovery, lien service, and mobile workflows.",
     },
     {
-      title: "Client Directory",
+      title: "Client Database",
       url: `${siteUrl}/clients`,
-      intent: "Indexable state and city directory for approved public client profiles.",
+      intent: "Indexable state and city database for approved public client, homeowner, customer, property owner, and business profiles.",
     },
     {
-      title: "Unified Profile Directory",
+      title: "All Public Databases",
       url: `${siteUrl}/profiles`,
-      intent: "Indexable public directory for client, contractor, service business, subcontractor, and trade professional profiles.",
+      intent: "Indexable public profile graph across Client Database, Contractor Database, and Subcontractor Database records.",
     },
     {
-      title: "Contractor Profiles",
+      title: "Contractor Database",
       url: `${siteUrl}/profiles/contractor`,
-      intent: "Indexable public directory for contractor and service business profiles.",
+      intent: "Indexable public database for contractor and service business profiles.",
     },
     {
-      title: "Subcontractor Profiles",
+      title: "Subcontractor Database",
       url: `${siteUrl}/profiles/subcontractor`,
-      intent: "Indexable public directory for subcontractor, installer, crew, and specialty trade professional profiles.",
+      intent: "Indexable public database for subcontractor, installer, crew, vendor, and specialty trade professional profiles.",
     },
     {
       title: "Industries and Trades",
@@ -145,7 +145,7 @@ export async function GET() {
         "trade businesses",
         "professional service businesses",
       ],
-      positioning: "Check the client before you take the job.",
+      positioning: "Check the client before you take the job. Client Bureau is organized around Client, Contractor, and Subcontractor databases.",
       safeLanguage: [
         "documented contractor experiences",
         "moderated summaries",

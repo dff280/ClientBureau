@@ -12,17 +12,17 @@ import type { ClientProfile } from "@/lib/types"
 
 const directoryFaqs = [
   {
-    question: "What appears in the Client Bureau directory?",
+    question: "What appears in the Client Database?",
     answer:
-      "The directory lists approved public client profiles by state and city. Profiles are published only after moderation and should show cautious contractor-submitted report context, client response information, and public-safe rating factors.",
+      "The Client Database lists approved public client, homeowner, property owner, customer, and business profiles by state and city. Profiles are published only after moderation and show cautious contractor-submitted report context, client response information, and public-safe rating factors.",
   },
   {
-    question: "Does the directory show private client contact information?",
+    question: "Does the Client Database show private client contact information?",
     answer:
       "No. Public directory and profile pages should not display raw phone numbers, email addresses, street addresses, raw evidence files, internal notes, pending reports, or rejected reports.",
   },
   {
-    question: "How should contractors use directory pages?",
+    question: "How should contractors use Client Database pages?",
     answer:
       "Contractors should use directory pages as one intake signal before accepting work, then combine profile context with contracts, deposits, change-order controls, project documentation, and their own business judgment.",
   },
@@ -40,9 +40,9 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
     <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
-        eyebrow="Public client directory"
-        title="Browse approved Client Bureau profiles by state and city."
-        description="Client Bureau directory pages help contractors and business owners discover public, admin-approved client profiles without relying on a search form alone."
+        eyebrow="Client Database"
+        title="Browse approved Client Database profiles by state and city."
+        description="The Client Database helps contractors and service business owners find public, admin-approved client profiles without relying on a search form alone."
         stats={[
           ["Public profiles", profileCount.toLocaleString()],
           ["Approved reports", reportCount.toLocaleString()],
@@ -62,9 +62,9 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="grid gap-4 p-6 lg:grid-cols-[1fr_280px] lg:items-center">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-950">State directories</h2>
+              <h2 className="text-2xl font-semibold text-slate-950">Client Database by state</h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                Each state page links to city directories and approved client profiles. Pending,
+                Each state page links to city markets and approved client profiles. Pending,
                 rejected, private evidence, raw email, phone, and internal notes are not shown.
               </p>
             </div>
@@ -90,8 +90,8 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
           <ProfileGrid title="Recently updated approved profiles" profiles={recentProfiles} />
         ) : null}
         <DirectoryEducation
-          title="How to use the Client Bureau directory"
-          description="The directory is built for careful pre-job research. It gives contractors and service businesses a direct path to approved public profiles while keeping sensitive matching data and private workflow records out of search results."
+          title="How to use the Client Database"
+          description="The Client Database is built for careful pre-job research. It gives contractors and service businesses a direct path to approved public profiles while keeping sensitive matching data and private workflow records out of search results."
         />
       </div>
     </section>
@@ -103,8 +103,8 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
     <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
-        eyebrow="State client directory"
-        title={`${state.name} Client Bureau profiles`}
+        eyebrow="State Client Database"
+        title={`${state.name} Client Database profiles`}
         description={`Browse approved public client profiles and city directories in ${state.name}. These pages show moderated contractor-submitted report context and client response information only after review.`}
         stats={[
           ["Public profiles", state.profileCount.toLocaleString()],
@@ -124,17 +124,17 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs
           items={[
-            { href: "/clients", label: "Client Directory" },
+            { href: "/clients", label: "Client Database" },
             { href: `/clients/${state.slug}`, label: state.name },
           ]}
         />
         <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
-              <p className="text-sm font-semibold uppercase text-amber-700">City directories</p>
+              <p className="text-sm font-semibold uppercase text-amber-700">City markets</p>
               <h2 className="text-2xl font-semibold text-slate-950">Find profiles by local market.</h2>
               <p className="text-sm leading-6 text-slate-600">
-                City pages give crawlers and contractors a direct path to approved public profiles
+                City pages give contractors and search crawlers a direct path to approved public profiles
                 in each market.
               </p>
               <div className="grid gap-2">
@@ -198,8 +198,8 @@ export function ClientDirectoryCityView({
     <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
-        eyebrow="City client directory"
-        title={`${city.name}, ${state.code} Client Bureau profiles`}
+        eyebrow="City Client Database"
+        title={`${city.name}, ${state.code} Client Database profiles`}
         description={`Browse approved public client profiles in ${city.name}, ${state.name}. Public pages show moderated contractor-submitted reports, response context, and evidence-on-file summaries.`}
         stats={[
           ["Public profiles", city.profileCount.toLocaleString()],
@@ -219,7 +219,7 @@ export function ClientDirectoryCityView({
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs
           items={[
-            { href: "/clients", label: "Client Directory" },
+            { href: "/clients", label: "Client Database" },
             { href: `/clients/${state.slug}`, label: state.name },
             { href: `/clients/${state.slug}/${city.slug}`, label: city.name },
           ]}
@@ -243,7 +243,7 @@ export function ClientDirectoryCityView({
         <ProfileGrid title={`Approved profiles in ${city.name}`} profiles={city.profiles} />
         <DirectoryEducation
           title={`What ${city.name} contractors can learn here`}
-          description={`This city directory helps business owners review approved public profile context before scheduling crews, ordering materials, accepting custom work, extending payment terms, or sending a contract packet.`}
+          description={`This city Client Database page helps business owners review approved public profile context before scheduling crews, ordering materials, accepting custom work, extending payment terms, or sending a contract packet.`}
         />
       </div>
     </section>
@@ -377,7 +377,7 @@ function ProfileGrid({ title, profiles }: { title: string; profiles: ClientProfi
                     </Link>
                   </Button>
                   <Link href={getClientCityDirectoryHref(profile)} className="inline-flex items-center text-sm font-semibold text-amber-700 hover:text-amber-800">
-                    {profile.city} directory
+                    {profile.city} market
                   </Link>
                 </div>
               </CardContent>
@@ -405,7 +405,7 @@ function DirectoryEducation({ title, description }: { title: string; description
     <Card className="rounded-md border-slate-200 bg-white shadow-sm">
       <CardContent className="space-y-6 p-6">
         <div>
-          <p className="text-sm font-semibold uppercase text-amber-700">Responsible directory use</p>
+          <p className="text-sm font-semibold uppercase text-amber-700">Responsible database use</p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-950">{title}</h2>
           <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">{description}</p>
         </div>
@@ -413,7 +413,7 @@ function DirectoryEducation({ title, description }: { title: string; description
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <h3 className="font-semibold text-slate-950">Moderated public summaries</h3>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              Client Bureau directory pages link to public profiles created from approved
+              Client Bureau database pages link to public profiles created from approved
               contractor-submitted summaries. The wording should stay neutral, factual, and tied
               to documented reported experiences instead of broad accusations.
             </p>

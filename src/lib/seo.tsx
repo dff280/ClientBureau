@@ -190,7 +190,7 @@ export function getClientProfileStructuredData(profile: PublicClientProfile) {
           {
             "@type": "ListItem",
             position: 2,
-            name: "Client Directory",
+            name: "Client Database",
             item: `${siteUrl}/clients`,
           },
           {

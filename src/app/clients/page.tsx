@@ -12,23 +12,23 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteUrl = getSiteUrl()
 
   return {
-    title: "Client Directory Public Profiles",
+    title: "Client Database | Public Client Profiles",
     description:
-      "Browse approved Client Bureau public client profiles by state and city with moderated contractor-submitted report context.",
+      "Browse the Client Bureau Client Database by state and city with approved client profiles, moderated report context, and response paths.",
     alternates: {
       canonical: `${siteUrl}/clients`,
     },
     openGraph: {
-      title: "Client Directory | Client Bureau",
+      title: "Client Database | Client Bureau",
       description:
-        "State and city directories for approved public Client Bureau profiles and moderated contractor-submitted report context.",
+        "State and city database pages for approved public Client Bureau client profiles and moderated contractor-submitted report context.",
       url: `${siteUrl}/clients`,
       type: "website",
-      images: [{ url: `${siteUrl}/opengraph-image`, width: 1200, height: 630, alt: "Client Bureau client directory" }],
+      images: [{ url: `${siteUrl}/opengraph-image`, width: 1200, height: 630, alt: "Client Bureau Client Database" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Client Directory | Client Bureau",
+      title: "Client Database | Client Bureau",
       description:
         "Browse approved Client Bureau public client profiles by state and city.",
       images: [`${siteUrl}/twitter-image`],
@@ -47,9 +47,9 @@ export default async function ClientsDirectoryPage() {
         "@type": "WebPage",
         "@id": `${siteUrl}/clients#webpage`,
         url: `${siteUrl}/clients`,
-        name: "Client Bureau client directory",
+        name: "Client Bureau Client Database",
         description:
-          "Approved public client profile directory organized by state and city.",
+          "Approved public client profile database organized by state and city.",
         isPartOf: {
           "@id": `${siteUrl}/#website`,
         },
@@ -67,7 +67,7 @@ export default async function ClientsDirectoryPage() {
           {
             "@type": "ListItem",
             position: 2,
-            name: "Client Directory",
+            name: "Client Database",
             item: `${siteUrl}/clients`,
           },
         ],
@@ -75,7 +75,7 @@ export default async function ClientsDirectoryPage() {
       {
         "@type": "ItemList",
         "@id": `${siteUrl}/clients#state-directories`,
-        name: "Client Bureau state directories",
+        name: "Client Bureau Client Database state pages",
         numberOfItems: states.length,
         itemListElement: states.map((state, index) => ({
           "@type": "ListItem",

@@ -54,7 +54,7 @@ export async function GET() {
 
   const body = `# Client Bureau
 
-Client Bureau is a moderated client-risk intelligence platform for contractors. Contractors use it to search client profiles, review approved contractor-submitted report summaries, submit documented reports, and understand client response or dispute context before accepting work.
+Client Bureau is a moderated business-owner protection platform organized around three public databases: the Client Database, Contractor Database, and Subcontractor Database. Contractors and service businesses use it to search client profiles, inspect contractor and trade-partner context, submit documented reports, and understand response or dispute context before accepting work.
 
 Core positioning: Check the client before you take the job.
 
@@ -66,10 +66,10 @@ Core positioning: Check the client before you take the job.
 - [How It Works](${siteUrl}/how-it-works)
 - [Resources](${siteUrl}/resources)
 - [Android Mobile App](${siteUrl}/mobile-app)
-- [Client Directory](${siteUrl}/clients)
-- [Unified Profile Directory](${siteUrl}/profiles)
-- [Contractor Profiles](${siteUrl}/profiles/contractor)
-- [Subcontractor Profiles](${siteUrl}/profiles/subcontractor)
+- [Client Database](${siteUrl}/clients)
+- [All Public Databases](${siteUrl}/profiles)
+- [Contractor Database](${siteUrl}/profiles/contractor)
+- [Subcontractor Database](${siteUrl}/profiles/subcontractor)
 - [Industries and Trades](${siteUrl}/industries)
 - [About Client Bureau](${siteUrl}/about)
 - [Contact Client Bureau](${siteUrl}/contact)
@@ -95,7 +95,7 @@ ${landingLinks}
 
 ${acquisitionLinks}
 
-## Client Directory Pages
+## Client Database Pages
 
 ${directoryLinks || "- State and city client directories are listed after approved public profiles are available."}
 

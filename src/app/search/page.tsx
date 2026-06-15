@@ -217,7 +217,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           <PremiumProofStrip
             items={[
               { label: "Check by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
-              { label: "Profile types", value: "All roles", text: "Clients, contractors, subcontractors, and trade businesses can appear when approved." },
+              { label: "Databases", value: "3 public paths", text: "Client, contractor, and subcontractor records can appear when approved." },
               { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
               { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
             ]}
@@ -255,7 +255,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           <div>
             <p className="text-sm font-semibold uppercase text-slate-500">Server-verified results</p>
             <p className="mt-1 text-sm font-medium text-slate-600">
-          {results.length} {results.length === 1 ? "profile" : "profiles"} found across clients, contractors, and subcontractors
+          {results.length} {results.length === 1 ? "profile" : "profiles"} found across the Client, Contractor, and Subcontractor databases
             </p>
           </div>
           <Button asChild variant="outline">

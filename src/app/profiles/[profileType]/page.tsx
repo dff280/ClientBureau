@@ -4,7 +4,6 @@ import { notFound } from "next/navigation"
 import { EntityProfileDirectory, getProfileDirectoryFaqs } from "@/components/profile/entity-profile-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
-import { profileTypePluralLabel } from "@/lib/entity-profiles"
 import { getPublicEntityProfilesService, searchProfilesService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
@@ -24,22 +23,22 @@ function toProfileType(value: string): ProfileType | undefined {
 }
 
 function titleForProfileType(profileType: ProfileType) {
-  if (profileType === "client") return "Client and Customer Profiles"
-  if (profileType === "subcontractor") return "Subcontractor and Trade Professional Profiles"
+  if (profileType === "client") return "Client Database"
+  if (profileType === "subcontractor") return "Subcontractor Database"
 
-  return "Contractor and Service Business Profiles"
+  return "Contractor Database"
 }
 
 function descriptionForProfileType(profileType: ProfileType) {
   if (profileType === "client") {
-    return "Check public Client Bureau profiles for clients, homeowners, customers, property owners, and businesses contractors worked for."
+    return "Browse the Client Bureau Client Database for clients, homeowners, customers, property owners, and businesses contractors worked for."
   }
 
   if (profileType === "subcontractor") {
-    return "Check public subcontractor and trade-professional profiles by trade scope, GC/sub relationship context, and payment-chain signals."
+    return "Browse the Subcontractor Database by trade scope, GC/sub relationship context, documentation readiness, and payment-chain signals."
   }
 
-  return "Check public Client Bureau contractor and service-business profiles with verification, service-area context, and moderated project records."
+  return "Browse the Contractor Database with service-business verification, service-area context, and moderated public project records."
 }
 
 export async function generateMetadata({ params }: ProfileTypeDirectoryProps): Promise<Metadata> {
@@ -89,7 +88,7 @@ export default async function ProfileTypeDirectoryPage({
         data={{
           "@context": "https://schema.org",
           "@type": "CollectionPage",
-          name: `${profileTypePluralLabel(profileType)} | Client Bureau`,
+          name: `${titleForProfileType(profileType)} | Client Bureau`,
           url: `${siteUrl}/profiles/${profileType}`,
           description: descriptionForProfileType(profileType),
         }}
