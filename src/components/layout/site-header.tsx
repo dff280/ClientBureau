@@ -78,6 +78,12 @@ const publicHeaderMenus = [
   },
 ]
 
+function isActiveHref(pathname: string | null, href: string) {
+  if (!pathname) return false
+  if (href === "/") return pathname === "/"
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
+
 export function SiteHeader() {
   const pathname = usePathname()
   const [session, setSession] = useState<SessionState>({
@@ -122,19 +128,39 @@ export function SiteHeader() {
           </span>
         </div>
         <nav className="hidden items-center gap-4 text-sm font-medium text-slate-600 lg:flex">
-          {desktopNav.map((item) => (
-            <Link key={item.href} href={item.href} className="rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950">
+          {desktopNav.map((item) => {
+            const active = isActiveHref(pathname, item.href)
+
+            return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={
+                active
+                  ? "rounded-md bg-slate-950 px-2 py-1 text-white shadow-sm transition hover:bg-slate-800"
+                  : "rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950"
+              }
+            >
               {item.label}
             </Link>
-          ))}
+            )
+          })}
           {!session.authenticated ? (
             <>
               {publicHeaderMenus.map((menu) => {
                 const Icon = menu.icon
+                const menuActive = menu.items.some((item) => isActiveHref(pathname, item.href))
 
                 return (
                   <DropdownMenu key={menu.label}>
-                    <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950">
+                    <DropdownMenuTrigger
+                      className={
+                        menuActive
+                          ? "inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-amber-900 ring-1 ring-amber-200 transition hover:bg-amber-100"
+                          : "inline-flex items-center gap-1 rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950"
+                      }
+                    >
                       {menu.label}
                       <ChevronDown className="size-4" aria-hidden="true" />
                     </DropdownMenuTrigger>
@@ -162,7 +188,13 @@ export function SiteHeader() {
           ) : null}
           {moreNav.length > 0 ? (
             <DropdownMenu>
-              <DropdownMenuTrigger className="inline-flex items-center gap-1 transition hover:text-slate-950">
+              <DropdownMenuTrigger
+                className={
+                  moreNav.some((item) => isActiveHref(pathname, item.href))
+                    ? "inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-amber-900 ring-1 ring-amber-200 transition hover:bg-amber-100"
+                    : "inline-flex items-center gap-1 transition hover:text-slate-950"
+                }
+              >
                 Tools
                 <ChevronDown className="size-4" aria-hidden="true" />
               </DropdownMenuTrigger>
@@ -223,7 +255,7 @@ export function SiteHeader() {
                       <div key={group.title} className="grid gap-2">
                         <p className="px-1 text-xs font-semibold uppercase text-amber-700">{group.title}</p>
                         {group.links.map((item) => (
-                          <MobileNavLink key={`${group.title}-${item.href}-${item.label}`} item={item} />
+                          <MobileNavLink key={`${group.title}-${item.href}-${item.label}`} item={item} active={isActiveHref(pathname, item.href)} />
                         ))}
                       </div>
                     ))}
@@ -236,6 +268,7 @@ export function SiteHeader() {
                             label: "Admin Command Center",
                             description: "Review reports, profiles, discussions, recovery, contracts, and audit activity.",
                           }}
+                          active={isActiveHref(pathname, "/admin")}
                         />
                       </div>
                     ) : null}
@@ -245,14 +278,14 @@ export function SiteHeader() {
                     <div className="grid gap-2">
                       <p className="px-1 text-xs font-semibold uppercase text-amber-700">Start</p>
                       {publicPrimaryNav.map((item) => (
-                        <MobileNavLink key={item.href} item={item} />
+                        <MobileNavLink key={item.href} item={item} active={isActiveHref(pathname, item.href)} />
                       ))}
                     </div>
                     {publicHeaderMenus.map((group) => (
                       <div key={group.label} className="grid gap-2">
                         <p className="px-1 text-xs font-semibold uppercase text-amber-700">{group.label}</p>
                         {group.items.map((item) => (
-                          <MobileNavLink key={`${group.label}-${item.href}`} item={item} />
+                          <MobileNavLink key={`${group.label}-${item.href}`} item={item} active={isActiveHref(pathname, item.href)} />
                         ))}
                       </div>
                     ))}
@@ -381,8 +414,10 @@ export function SiteHeader() {
 }
 
 function MobileNavLink({
+  active = false,
   item,
 }: {
+  active?: boolean
   item: {
     description?: string
     href: string
@@ -392,7 +427,12 @@ function MobileNavLink({
   return (
     <Link
       href={item.href}
-      className="touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
+      aria-current={active ? "page" : undefined}
+      className={
+        active
+          ? "touch-target rounded-md border border-amber-300 bg-amber-50 px-3 py-3 text-amber-950 shadow-sm ring-1 ring-amber-200 transition hover:bg-amber-100"
+          : "touch-target rounded-md border border-slate-200 bg-white px-3 py-3 text-slate-700 shadow-sm transition hover:border-amber-300 hover:bg-slate-50 hover:text-slate-950"
+      }
     >
       <span className="font-semibold">{item.label}</span>
       {item.description ? (

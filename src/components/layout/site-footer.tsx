@@ -12,8 +12,8 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-slate-200 bg-slate-950 text-white">
-      <div className="bureau-container grid gap-8 py-10 sm:py-12 lg:grid-cols-[1.1fr_1.8fr_0.8fr]">
-        <div className="space-y-4">
+      <div className="bureau-container grid min-w-0 gap-8 py-10 sm:py-12 lg:grid-cols-[1.1fr_1.8fr_0.8fr]">
+        <div className="min-w-0 space-y-4">
           <div className="inline-flex rounded-md bg-white p-2 text-slate-950">
             <BrandMark />
           </div>
@@ -37,13 +37,17 @@ export function SiteFooter() {
             </div>
           ) : null}
         </div>
-        <div className="grid gap-6 text-sm sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid min-w-0 gap-6 text-sm sm:grid-cols-2 xl:grid-cols-5">
           {footerNavigationGroups.map((group) => (
-            <div key={group.title} className="space-y-3">
+            <div key={group.title} className="min-w-0 space-y-3">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">{group.title}</p>
               <div className="grid gap-2">
                 {group.links.map((link) => (
-                  <Link key={link.href} href={link.href} className="inline-flex min-h-8 items-center text-slate-300 hover:text-white">
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="inline-flex min-h-8 max-w-full items-center break-words text-slate-300 hover:text-white"
+                  >
                     {link.label}
                   </Link>
                 ))}
@@ -51,7 +55,7 @@ export function SiteFooter() {
             </div>
           ))}
         </div>
-        <div className="space-y-3 rounded-md border border-white/10 bg-white/[0.05] p-4 text-sm leading-6 text-slate-300">
+        <div className="min-w-0 space-y-3 rounded-md border border-white/10 bg-white/[0.05] p-4 text-sm leading-6 text-slate-300">
           <p className="font-semibold text-white">Client Bureau</p>
           {contact.phone ? <p>{contact.phone}</p> : null}
           {hasAddress ? (

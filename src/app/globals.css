@@ -134,7 +134,15 @@
   }
   html {
     @apply font-sans;
+    scroll-padding-top: 5rem;
     scroll-behavior: smooth;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--accent) 42%, transparent);
+    color: var(--foreground);
+  }
+  :target {
+    scroll-margin-top: 5rem;
   }
   a,
   button,
@@ -227,6 +235,10 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   .bureau-hover-lift,
   .bureau-hover-lift:hover {
     transform: none;
