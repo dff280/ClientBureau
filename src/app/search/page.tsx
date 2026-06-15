@@ -123,63 +123,119 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   ])
   const previewProfiles = previewResults.slice(0, previewLimit).map(toSearchPreviewProfile)
   const isAuthenticated = Boolean(user)
+  const activeFilters = [
+    query.trim() ? `Search: ${query.trim()}` : undefined,
+    state ? `State: ${state}` : undefined,
+    profileType ? `Type: ${profileType === "client" ? "Clients" : profileType === "contractor" ? "Contractors" : "Subcontractors"}` : undefined,
+    tradeCategory ? `Trade: ${tradeCategory}` : undefined,
+    riskLevel ? `Risk: ${riskLevel}` : undefined,
+    category ? `Report: ${category}` : undefined,
+  ].filter(Boolean) as string[]
 
   return (
     <>
-      <PremiumHero
-        eyebrow={isAuthenticated ? "Contractor account active" : "Limited public preview"}
-        title="Check a Client Before You Take the Job."
-        description="Check names, businesses, cities, private-match context, categories, and public profiles before you risk labor, materials, scheduling, deposits, or final invoice exposure."
-        primary={{ href: "#client-search", label: "Run Client Check", icon: Radar }}
-        secondary={{ href: reportPrefillHref(query, state, profileType, tradeCategory), label: "Report a Client Experience", icon: FilePlus2 }}
-        aside={
-          <div className="space-y-4">
-            <ProductMockupFrame
-              dark
-              eyebrow={isAuthenticated ? "Private matching enabled" : "Public preview"}
-              title="Client-check intelligence, not guesswork."
-              description={
-                isAuthenticated
-                  ? "Use names, businesses, cities, phone, or email to support private matching while public results stay carefully moderated."
-                  : query
-                    ? `Create a free account to save "${query}" and continue into watchlists, private matching, and report workflows.`
-                    : "Client checks are private. Raw phone numbers, emails, addresses, and evidence files are not displayed on public profiles."
-              }
-              imageSrc={searchDossierAsset.src}
-              imageAlt={searchDossierAsset.alt}
-              points={searchDossierAsset.points}
-            />
-            {!isAuthenticated ? (
-              <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>
-                  <LockKeyhole aria-hidden="true" />
-                  Create free account
-                </Link>
-              </Button>
-            ) : null}
+      {hasSearch ? (
+        <section className="relative overflow-hidden bg-slate-950 text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(245,158,11,0.22),transparent_34%),linear-gradient(135deg,#020617_0%,#0f172a_52%,#111827_100%)]" />
+          <div className="bureau-container relative py-8 sm:py-10">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-md border border-amber-300/35 bg-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-amber-200">
+                  <SearchCheck className="size-4" aria-hidden="true" />
+                  Database search active
+                </div>
+                <p className="mt-4 text-sm font-semibold text-amber-200">
+                  Check a Client Before You Take the Job.
+                </p>
+                <h1 className="mt-4 max-w-4xl text-3xl font-semibold tracking-normal text-white sm:text-4xl lg:text-5xl">
+                  Client Bureau search results
+                </h1>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200 sm:text-base">
+                  You are viewing approved public matches and safe previews. Private identifiers, raw evidence,
+                  pending records, rejected records, and internal notes stay hidden.
+                </p>
+                {activeFilters.length > 0 ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {activeFilters.map((filter) => (
+                      <span key={filter} className="rounded-md border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-slate-100">
+                        {filter}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              <div className="rounded-md border border-white/10 bg-white/10 p-4 shadow-xl shadow-slate-950/20">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-200">Result count</p>
+                <p className="mt-2 text-4xl font-semibold text-white">{results.length}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-200">
+                  {results.length === 1 ? "approved profile matched" : "approved profiles matched"} this search.
+                </p>
+                <div className="mt-4 flex gap-2">
+                  <Button asChild className="flex-1 bg-amber-500 text-slate-950 hover:bg-amber-400">
+                    <Link href={results.length > 0 ? "#profile-results" : "#client-search"}>
+                      {results.length > 0 ? "View matches" : "Review search"}
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
+                    <Link href="/search">Reset</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        }
-      />
-      <PremiumProofStrip
-        items={[
-          { label: "Check by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
-          { label: "Profile types", value: "All roles", text: "Clients, contractors, subcontractors, and trade businesses can appear when approved." },
-          { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
-          { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
-        ]}
-        dark
-      />
-      <TrustGuardrailStrip
-        items={[
-          "Searches are private",
-          "Raw emails and phones stay hidden",
-          "Only approved public content appears",
-          "Save or watch after sign-up",
-        ]}
-        dark
-      />
+        </section>
+      ) : (
+        <>
+          <PremiumHero
+            eyebrow={isAuthenticated ? "Contractor account active" : "Limited public preview"}
+            title="Check a Client Before You Take the Job."
+            description="Check names, businesses, cities, private-match context, categories, and public profiles before you risk labor, materials, scheduling, deposits, or final invoice exposure."
+            primary={{ href: "#client-search", label: "Run Client Check", icon: Radar }}
+            secondary={{ href: reportPrefillHref(query, state, profileType, tradeCategory), label: "Report a Client Experience", icon: FilePlus2 }}
+            aside={
+              <div className="space-y-4">
+                <ProductMockupFrame
+                  dark
+                  eyebrow={isAuthenticated ? "Private matching enabled" : "Public preview"}
+                  title="Client-check intelligence, not guesswork."
+                  description="Client checks are private. Raw phone numbers, emails, addresses, and evidence files are not displayed on public profiles."
+                  imageSrc={searchDossierAsset.src}
+                  imageAlt={searchDossierAsset.alt}
+                  points={searchDossierAsset.points}
+                />
+                {!isAuthenticated ? (
+                  <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
+                    <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>
+                      <LockKeyhole aria-hidden="true" />
+                      Create free account
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
+            }
+          />
+          <PremiumProofStrip
+            items={[
+              { label: "Check by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
+              { label: "Profile types", value: "All roles", text: "Clients, contractors, subcontractors, and trade businesses can appear when approved." },
+              { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
+              { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
+            ]}
+            dark
+          />
+          <TrustGuardrailStrip
+            items={[
+              "Searches are private",
+              "Raw emails and phones stay hidden",
+              "Only approved public content appears",
+              "Save or watch after sign-up",
+            ]}
+            dark
+          />
+        </>
+      )}
 
-      <section id="client-search" className="bureau-section bg-slate-100">
+      <section id="client-search" className={hasSearch ? "bg-slate-100 py-8 sm:py-10" : "bureau-section bg-slate-100"}>
         <div className="bureau-container space-y-8">
 
         <SearchCommandCenter
