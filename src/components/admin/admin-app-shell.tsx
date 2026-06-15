@@ -65,7 +65,7 @@ export function AdminAppShell({
     adminNavigationGroups[0]?.links[0]
 
   return (
-    <AdminActionTokenProvider token={adminActionToken}>
+    <AdminActionTokenProvider key={adminActionToken} token={adminActionToken}>
       <div className="min-h-screen bg-slate-950 text-white">
         <aside className="premium-hero-surface fixed inset-y-0 left-0 hidden w-72 border-r border-white/10 bg-slate-950 lg:block">
           <div className="flex h-full flex-col">

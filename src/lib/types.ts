@@ -1628,6 +1628,7 @@ export interface SearchFilters {
   category?: ReportCategory
   profileType?: ProfileType
   tradeCategory?: string
+  limit?: number
 }
 
 export interface ClientSearchResult extends ClientProfile {

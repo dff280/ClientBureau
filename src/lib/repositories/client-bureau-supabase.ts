@@ -2583,6 +2583,12 @@ export async function searchClientsSupabase(
   const normalizedQuery = query.trim().toLowerCase()
   const normalizedDigits = query.replace(/\D/g, "")
   const privateIntent = normalizedQuery.includes("@") || normalizedDigits.length >= 7
+  const resultLimit =
+    typeof filters.limit === "number" && Number.isFinite(filters.limit)
+      ? Math.max(1, Math.min(Math.floor(filters.limit), 200))
+      : normalizedQuery || filters.state || filters.riskLevel || filters.category
+        ? 150
+        : 40
   const privateSearchHashes = new Set(
     [
       normalizedQuery.includes("@") ? hashIdentifier(query, "email") : undefined,
@@ -2594,7 +2600,7 @@ export async function searchClientsSupabase(
   if (filters.state) builder = builder.eq("state", filters.state)
   if (filters.riskLevel) builder = builder.eq("risk_level", filters.riskLevel)
 
-  const { data, error } = await builder.order("updated_at", { ascending: false })
+  const { data, error } = await builder.order("updated_at", { ascending: false }).limit(resultLimit)
 
   if (error) throw new Error(error.message)
 
@@ -2665,7 +2671,7 @@ export async function searchClientsSupabase(
     }),
   )
 
-  return results
+  const rankedResults = results
     .filter((client) => {
       const matchesQuery =
         normalizedQuery.length === 0 ||
@@ -2687,6 +2693,8 @@ export async function searchClientsSupabase(
 
       return result
     })
+
+  return rankedResults.slice(0, resultLimit)
 }
 
 export async function saveClientSearchSupabase(

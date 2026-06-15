@@ -620,8 +620,12 @@ export function getAdminWorkspaceData(): AdminWorkspaceData {
 
 export function searchClients(query = "", filters: SearchFilters = {}): ClientSearchResult[] {
   const normalizedQuery = query.trim().toLowerCase()
+  const resultLimit =
+    typeof filters.limit === "number" && Number.isFinite(filters.limit)
+      ? Math.max(1, Math.min(Math.floor(filters.limit), 200))
+      : undefined
 
-  return getPublicClientProfiles()
+  const results = getPublicClientProfiles()
     .map((client) => {
       const reports = reviewableReportsForClient(client.id)
       const latestReport = reports.at(-1)
@@ -695,6 +699,8 @@ export function searchClients(query = "", filters: SearchFilters = {}): ClientSe
 
       return result
     })
+
+  return resultLimit ? results.slice(0, resultLimit) : results
 }
 
 export function saveClientSearch(userId: string | undefined, input: SavedClientSearchInput): SavedClientSearch {

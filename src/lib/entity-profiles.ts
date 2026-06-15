@@ -415,8 +415,12 @@ export function searchEntityProfiles(
   filters: SearchFilters = {},
 ): EntityProfileSearchResult[] {
   const normalizedQuery = query.trim().toLowerCase()
+  const resultLimit =
+    typeof filters.limit === "number" && Number.isFinite(filters.limit)
+      ? Math.max(1, Math.min(Math.floor(filters.limit), 200))
+      : undefined
 
-  return profiles
+  const results = profiles
     .map((profile) => {
       const searchable = [
         profile.displayName,
@@ -508,4 +512,6 @@ export function searchEntityProfiles(
       return profile.isPublic && matchesQuery && matchesState && matchesType && matchesRisk && matchesTrade
     })
     .sort((a, b) => b.matchScore - a.matchScore || b.reportCount - a.reportCount)
+
+  return resultLimit ? results.slice(0, resultLimit) : results
 }

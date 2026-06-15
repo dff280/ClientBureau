@@ -388,7 +388,6 @@ export function SearchCommandCenter({
               <form
                 action="/search"
                 className="grid gap-3"
-                onSubmit={() => trackSearchEvent(privateIdentifierIntent ? "private_identifier_check" : filteredProfiles.length > 0 ? "search_submitted" : "no_result")}
               >
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />

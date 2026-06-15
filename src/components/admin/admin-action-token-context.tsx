@@ -44,6 +44,14 @@ export function AdminActionTokenProvider({
   }, [refreshToken, routeKey])
 
   useEffect(() => {
+    const interval = window.setInterval(() => {
+      void refreshToken()
+    }, 5 * 60 * 1000)
+
+    return () => window.clearInterval(interval)
+  }, [refreshToken])
+
+  useEffect(() => {
     const onFocus = () => {
       void refreshToken()
     }

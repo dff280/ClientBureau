@@ -112,14 +112,16 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
   const category = toReportCategory(params.category)
   const profileType = toProfileType(params.profileType)
   const tradeCategory = params.tradeCategory?.trim() || undefined
+  const hasSearch = Boolean(query || state || riskLevel || category || tradeCategory || profileType)
+  const resultLimit = hasSearch ? 80 : 24
+  const previewLimit = hasSearch ? 60 : 24
   const user = await getCurrentUser()
   const [results, previewResults, dashboard] = await Promise.all([
-    searchProfilesService(query, { state, riskLevel, category, profileType, tradeCategory }),
-    searchClientsService("", {}),
+    searchProfilesService(query, { state, riskLevel, category, profileType, tradeCategory, limit: resultLimit }),
+    searchClientsService("", { limit: previewLimit }),
     user ? getContractorDashboardService(user.id).catch(() => undefined) : Promise.resolve(undefined),
   ])
-  const previewProfiles = previewResults.slice(0, 100).map(toSearchPreviewProfile)
-  const hasSearch = Boolean(query || state || riskLevel || category || tradeCategory)
+  const previewProfiles = previewResults.slice(0, previewLimit).map(toSearchPreviewProfile)
   const isAuthenticated = Boolean(user)
 
   return (
