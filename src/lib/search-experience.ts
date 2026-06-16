@@ -187,10 +187,13 @@ export function buildSearchSuggestions(
   query: string,
   state?: string,
   filters: { profileType?: ProfileType; tradeCategory?: string } = {},
+  rankedProfiles?: SearchPreviewProfile[],
 ): SearchSuggestion[] {
   const value = query.trim().toLowerCase()
   const suggestions: SearchSuggestion[] = []
   const seen = new Set<string>()
+  const seenMarkets = new Set<string>()
+  const ranked = rankedProfiles ?? rankSearchPreviewProfiles(profiles, query)
 
   function add(suggestion: SearchSuggestion) {
     if (seen.has(suggestion.id)) return
@@ -211,11 +214,12 @@ export function buildSearchSuggestions(
     })
   }
 
-  for (const profile of rankSearchPreviewProfiles(profiles, query).slice(0, 5)) {
+  for (const profile of ranked.slice(0, 5)) {
     const name = formatClientName(profile)
+    const previewText = getPreviewSearchText(profile)
     const matchesProfile =
       !value ||
-      getPreviewSearchText(profile).includes(value) ||
+      previewText.includes(value) ||
       name.toLowerCase().includes(value) ||
       profile.businessName?.toLowerCase().includes(value)
 
@@ -236,7 +240,9 @@ export function buildSearchSuggestions(
   for (const profile of profiles) {
     const label = `${profile.city}, ${profile.state}`
     const id = `market-${label.toLowerCase()}`
-    if (value && !label.toLowerCase().includes(value)) continue
+    const normalizedLabel = label.toLowerCase()
+    if (seenMarkets.has(normalizedLabel)) continue
+    if (value && !normalizedLabel.includes(value)) continue
 
     add({
       id,
@@ -253,6 +259,8 @@ export function buildSearchSuggestions(
       state: profile.state,
       score: 40,
     })
+
+    seenMarkets.add(normalizedLabel)
 
     if (suggestions.filter((item) => item.kind === "market").length >= 4) break
   }

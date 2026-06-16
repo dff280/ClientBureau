@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import { useEffect, useMemo, useState, useTransition } from "react"
+import { useDeferredValue, useEffect, useMemo, useState, useTransition } from "react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
 import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
@@ -187,6 +187,7 @@ export function SearchCommandCenter({
   const [savedMessage, setSavedMessage] = useState("")
   const [isSavingSearch, startSaveSearchTransition] = useTransition()
   const [, startEventTransition] = useTransition()
+  const deferredQuery = useDeferredValue(liveQuery)
 
   useEffect(() => {
     queueMicrotask(() => {
@@ -202,40 +203,58 @@ export function SearchCommandCenter({
   }, [initialSavedRecords])
 
   const stats = useMemo(() => buildSearchExperienceStats(profiles), [profiles])
-  const privateIdentifierIntent = isPrivateIdentifierSearch(liveQuery)
+  const privateIdentifierIntent = isPrivateIdentifierSearch(deferredQuery)
   const stateFilter = stateValue.trim().toUpperCase()
   const riskFilter = riskValue || undefined
   const categoryFilter = categoryValue || undefined
+  const normalizedQuery = deferredQuery.trim().toLowerCase()
+
+  const rankedProfiles = useMemo(
+    () => rankSearchPreviewProfiles(profiles, deferredQuery),
+    [deferredQuery, profiles],
+  )
 
   const filteredProfiles = useMemo(() => {
-    return rankSearchPreviewProfiles(profiles, liveQuery)
-      .filter((profile) => {
-        const matchesState = !stateFilter || profile.state === stateFilter
-        const matchesRisk = !riskFilter || profile.riskLevel === riskFilter
-        const matchesCategory = !categoryFilter || profile.latestCategory === categoryFilter
+    if (!stateFilter && !riskFilter && !categoryFilter) return rankedProfiles
 
-        return matchesState && matchesRisk && matchesCategory
-      })
-  }, [categoryFilter, liveQuery, profiles, riskFilter, stateFilter])
+    return rankedProfiles.filter((profile) => {
+      const matchesState = !stateFilter || profile.state === stateFilter
+      const matchesRisk = !riskFilter || profile.riskLevel === riskFilter
+      const matchesCategory = !categoryFilter || profile.latestCategory === categoryFilter
+
+      return matchesState && matchesRisk && matchesCategory
+    })
+  }, [categoryFilter, rankedProfiles, riskFilter, stateFilter])
+
+  const previewTextCache = useMemo(() => {
+    const cache = new Map<string, string>()
+
+    for (const profile of filteredProfiles) {
+      cache.set(profile.id, getPreviewSearchText(profile))
+    }
+
+    return cache
+  }, [filteredProfiles])
 
   const instantProfiles = useMemo(() => {
     if (privateIdentifierIntent) return filteredProfiles.slice(0, 3)
 
-    const value = liveQuery.trim().toLowerCase()
-    const matches = value
-      ? filteredProfiles.filter((profile) => getPreviewSearchText(profile).includes(value))
+    const matches = normalizedQuery
+      ? filteredProfiles.filter((profile) => previewTextCache.get(profile.id)?.includes(normalizedQuery))
       : filteredProfiles
 
     return matches.slice(0, 4)
-  }, [filteredProfiles, liveQuery, privateIdentifierIntent])
+  }, [filteredProfiles, normalizedQuery, privateIdentifierIntent, previewTextCache])
 
   const suggestions = useMemo(
     () =>
-      buildSearchSuggestions(profiles, liveQuery, stateFilter || undefined, {
+      buildSearchSuggestions(profiles, deferredQuery, stateFilter || undefined, {
         profileType,
         tradeCategory: tradeValue || undefined,
-      }),
-    [liveQuery, profileType, profiles, stateFilter, tradeValue],
+      },
+      rankedProfiles,
+      ),
+    [deferredQuery, rankedProfiles, profileType, profiles, stateFilter, tradeValue],
   )
 
   function buildSearchEventFormData(
