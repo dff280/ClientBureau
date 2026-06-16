@@ -5,6 +5,7 @@ import { AlertTriangle, CheckCircle2, FileText, ShieldCheck, ThumbsUp, UploadClo
 import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
@@ -106,6 +107,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
     <form action={action} className="grid gap-6">
       <input type="hidden" name="reportIntent" value={isPositiveReport ? "positive" : "concern"} />
       {defaults.profileId ? <input type="hidden" name="subjectProfileId" value={defaults.profileId} /> : null}
+      <FloridaPlaceDatalist id="report-florida-place-options" />
       {state.ok ? (
         <Alert className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-950">
           <CheckCircle2 className="size-4" aria-hidden="true" />
@@ -293,7 +295,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           <div className="grid gap-3 md:col-span-2 md:grid-cols-[1fr_180px_120px]">
             <div className="space-y-2">
               <Label htmlFor="city">City</Label>
-              <Input id="city" name="city" defaultValue={defaults.city} placeholder="Orlando" />
+              <Input id="city" name="city" defaultValue={defaults.city} placeholder="Orlando" list="report-florida-place-options" />
               <FieldError name="city" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
             <div className="space-y-2">
@@ -368,7 +370,7 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
             <div className="space-y-2">
               <Label htmlFor="projectCity">Project city</Label>
-              <Input id="projectCity" name="projectCity" defaultValue={defaults.city} placeholder="Orlando" />
+              <Input id="projectCity" name="projectCity" defaultValue={defaults.city} placeholder="Orlando" list="report-florida-place-options" />
               <FieldError name="projectCity" errors={state.ok ? undefined : state.fieldErrors} />
             </div>
             <div className="space-y-2">

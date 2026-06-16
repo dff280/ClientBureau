@@ -3,7 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation"
 
 import { ClientDirectoryStateView } from "@/components/landing/client-directory-view"
 import { SeoLandingPageView } from "@/components/landing/seo-landing-page-view"
-import { getClientDirectory, getClientDirectoryState } from "@/lib/client-directory"
+import { getClientDirectory, getClientDirectoryStateOrFlorida } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
 import { getProfilesForLanding } from "@/lib/public-profile-loaders"
 import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
@@ -26,11 +26,9 @@ export async function generateMetadata({ params }: ClientsLandingPageProps): Pro
   const { market } = await params
   const page = getSeoLandingPage("clients", market)
   const siteUrl = getSiteUrl()
+  const state = getClientDirectoryStateOrFlorida(await getPublicClientProfilesService(), market)
 
-  if (!page) {
-    const state = getClientDirectoryState(await getPublicClientProfilesService(), market)
-
-    if (!state) return { title: "Client Reports" }
+  if (state) {
 
     return {
       title: `${state.name} Public Client Profiles | Client Database`,
@@ -53,6 +51,8 @@ export async function generateMetadata({ params }: ClientsLandingPageProps): Pro
       },
     }
   }
+
+  if (!page) return { title: "Client Reports" }
 
   const canonicalDirectoryHref = await clientLandingDirectoryHref(page)
 
@@ -82,11 +82,9 @@ export default async function ClientsLandingPage({ params }: ClientsLandingPageP
   const { market } = await params
   const page = getSeoLandingPage("clients", market)
   const siteUrl = getSiteUrl()
+  const state = getClientDirectoryStateOrFlorida(await getPublicClientProfilesService(), market)
 
-  if (!page) {
-    const state = getClientDirectoryState(await getPublicClientProfilesService(), market)
-
-    if (!state) notFound()
+  if (state) {
 
     const structuredData = {
       "@context": "https://schema.org",
@@ -147,6 +145,8 @@ export default async function ClientsLandingPage({ params }: ClientsLandingPageP
       </>
     )
   }
+
+  if (!page) notFound()
 
   const canonicalDirectoryHref = await clientLandingDirectoryHref(page)
   if (canonicalDirectoryHref) permanentRedirect(canonicalDirectoryHref)

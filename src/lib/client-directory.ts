@@ -1,4 +1,12 @@
 import type { ClientProfile } from "@/lib/types"
+import {
+  floridaCountyRecords,
+  floridaPlacesByCountySlug,
+  getFloridaCounty,
+  getFloridaPlace,
+  type FloridaCountyRecord,
+  type FloridaPlaceRecord,
+} from "@/lib/florida-geography"
 
 export interface ClientDirectoryCity {
   name: string
@@ -7,6 +15,8 @@ export interface ClientDirectoryCity {
   reportCount: number
   lastUpdated: string
   profiles: ClientProfile[]
+  floridaPlace?: FloridaPlaceRecord
+  isEmptyOfficialLocation?: boolean
 }
 
 export interface ClientDirectoryState {
@@ -18,6 +28,18 @@ export interface ClientDirectoryState {
   lastUpdated: string
   cities: ClientDirectoryCity[]
   profiles: ClientProfile[]
+}
+
+export interface ClientDirectoryCounty {
+  name: string
+  slug: string
+  profileCount: number
+  reportCount: number
+  lastUpdated: string
+  profiles: ClientProfile[]
+  places: FloridaPlaceRecord[]
+  profileCities: ClientDirectoryCity[]
+  county: FloridaCountyRecord
 }
 
 const stateNames: Record<string, string> = {
@@ -150,8 +172,107 @@ export function getClientDirectoryState(profiles: ClientProfile[], stateSlug: st
   return getClientDirectory(profiles).find((state) => state.slug === stateSlug)
 }
 
+export function getClientDirectoryStateOrFlorida(profiles: ClientProfile[], stateSlug: string) {
+  return getClientDirectoryState(profiles, stateSlug) ?? (stateSlug === "florida" ? emptyFloridaDirectoryState() : undefined)
+}
+
 export function getClientDirectoryCity(profiles: ClientProfile[], stateSlug: string, citySlug: string) {
   return getClientDirectoryState(profiles, stateSlug)?.cities.find((city) => city.slug === citySlug)
+}
+
+export function getClientDirectoryCityOrFloridaPlace(
+  profiles: ClientProfile[],
+  stateSlug: string,
+  citySlug: string,
+) {
+  const directoryCity = getClientDirectoryCity(profiles, stateSlug, citySlug)
+  if (directoryCity) {
+    return {
+      state: getClientDirectoryState(profiles, stateSlug),
+      city: attachFloridaPlace(directoryCity),
+      shouldIndex: true,
+    }
+  }
+
+  if (stateSlug !== "florida") return undefined
+
+  const place = getFloridaPlace(citySlug)
+  if (!place) return undefined
+
+  const state = getClientDirectoryStateOrFlorida(profiles, stateSlug) ?? emptyFloridaDirectoryState()
+  const city: ClientDirectoryCity = {
+    name: place.name,
+    slug: place.slug,
+    profileCount: 0,
+    reportCount: 0,
+    lastUpdated: new Date().toISOString(),
+    profiles: [],
+    floridaPlace: place,
+    isEmptyOfficialLocation: true,
+  }
+
+  return {
+    state,
+    city,
+    shouldIndex: false,
+  }
+}
+
+export function getFloridaCountyDirectory(profiles: ClientProfile[]) {
+  const floridaState = getClientDirectoryState(profiles, "florida") ?? emptyFloridaDirectoryState()
+  const citiesBySlug = new Map(floridaState.cities.map((city) => [city.slug, attachFloridaPlace(city)]))
+
+  return floridaCountyRecords.map((county) => {
+    const places = floridaPlacesByCountySlug(county.slug)
+    const profileCities = places
+      .map((place) => citiesBySlug.get(place.slug))
+      .filter((city): city is ClientDirectoryCity => Boolean(city))
+    const countyProfiles = profileCities.flatMap((city) => city.profiles)
+
+    return {
+      name: county.name,
+      slug: county.slug,
+      profileCount: countyProfiles.length,
+      reportCount: sumReports(countyProfiles),
+      lastUpdated: countyProfiles.length > 0 ? latestUpdatedAt(countyProfiles) : new Date().toISOString(),
+      profiles: sortProfiles(countyProfiles),
+      places,
+      profileCities,
+      county,
+    } satisfies ClientDirectoryCounty
+  })
+}
+
+export function getFloridaCountyDirectoryEntry(profiles: ClientProfile[], countySlug: string) {
+  const county = getFloridaCounty(countySlug)
+  if (!county) return undefined
+
+  return getFloridaCountyDirectory(profiles).find((entry) => entry.slug === county.slug)
+}
+
+export function isFloridaLocationPageIndexable(input: { profileCount: number }) {
+  return input.profileCount > 0
+}
+
+function emptyFloridaDirectoryState(): ClientDirectoryState {
+  return {
+    code: "FL",
+    name: "Florida",
+    slug: "florida",
+    profileCount: 0,
+    reportCount: 0,
+    lastUpdated: new Date().toISOString(),
+    cities: [],
+    profiles: [],
+  }
+}
+
+function attachFloridaPlace(city: ClientDirectoryCity): ClientDirectoryCity {
+  if (city.floridaPlace || city.slug === "") return city
+
+  const place = getFloridaPlace(city.slug)
+
+  return place ? { ...city, floridaPlace: place } : city
 }
 
 function sumReports(profiles: ClientProfile[]) {

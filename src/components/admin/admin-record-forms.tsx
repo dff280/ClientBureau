@@ -20,6 +20,7 @@ import { toast } from "sonner"
 import { AdminProfileHealthCard } from "@/components/admin/admin-crm-ui"
 import { AdminActionTokenInput } from "@/components/admin/admin-action-token-context"
 import { FieldError } from "@/components/forms/field-error"
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
@@ -203,6 +204,7 @@ export function AdminClientEditor({
           <form action={action} className="grid gap-5">
             <AdminActionTokenInput />
             <input type="hidden" name="clientId" value={client.id} />
+            <FloridaPlaceDatalist id={`${client.id}-florida-place-options`} />
             <EditorFormSection
               title="Identity and directory fields"
               description="These fields power admin matching, public profile headings, profile URLs, and city/state directory pages."
@@ -211,7 +213,7 @@ export function AdminClientEditor({
                 <LabeledInput label="First name" name="firstName" defaultValue={client.firstName} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledInput label="Last name" name="lastName" defaultValue={client.lastName} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledInput label="Business optional" name="businessName" defaultValue={client.businessName ?? ""} />
-                <LabeledInput label="City" name="city" defaultValue={client.city} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="City" name="city" defaultValue={client.city} list={`${client.id}-florida-place-options`} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledState label="State" id={`${client.id}-state`} name="state" defaultValue={client.state} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledInput label="ZIP optional" name="zip" defaultValue={client.zip ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
               </div>
@@ -574,8 +576,9 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
               title="Verification and operating details"
               description="Use dropdowns for structured fields so search, ratings, and admin queues stay consistent."
             >
+              <FloridaPlaceDatalist id={`${contractor.id}-florida-place-options`} />
               <div className="grid gap-4 sm:grid-cols-2">
-                <LabeledInput label="City" name="city" defaultValue={contractor.city} errors={state.ok ? undefined : state.fieldErrors} />
+                <LabeledInput label="City" name="city" defaultValue={contractor.city} list={`${contractor.id}-florida-place-options`} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledState label="State" id={`${contractor.id}-state`} name="state" defaultValue={contractor.state} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledInput label="License number optional" name="licenseNumber" defaultValue={contractor.licenseNumber ?? ""} errors={state.ok ? undefined : state.fieldErrors} />
                 <LabeledSelect
@@ -883,12 +886,14 @@ function LabeledInput({
   name,
   defaultValue,
   errors,
+  list,
   type = "text",
 }: {
   label: string
   name: string
   defaultValue: string
   errors?: Record<string, string[]>
+  list?: string
   type?: string
 }) {
   return (
@@ -896,7 +901,7 @@ function LabeledInput({
       <label className="text-xs font-semibold uppercase text-slate-500" htmlFor={`${name}-${defaultValue}`}>
         {label}
       </label>
-      <Input id={`${name}-${defaultValue}`} name={name} defaultValue={defaultValue} type={type} />
+      <Input id={`${name}-${defaultValue}`} name={name} defaultValue={defaultValue} list={list} type={type} />
       <FieldError name={name} errors={errors} />
     </div>
   )

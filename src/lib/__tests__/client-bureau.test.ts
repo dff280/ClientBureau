@@ -16,7 +16,13 @@ import {
   businessStarterFloor,
   calculateBusinessRating,
 } from "@/lib/business-rating"
-import { getClientDirectory } from "@/lib/client-directory"
+import {
+  getClientDirectory,
+  getClientDirectoryCityOrFloridaPlace,
+  getFloridaCountyDirectoryEntry,
+  isFloridaLocationPageIndexable,
+} from "@/lib/client-directory"
+import { floridaCountyRecords, floridaMunicipalities, floridaPlaceRecords, getFloridaPlace } from "@/lib/florida-geography"
 import { noStoreHeaders } from "@/lib/http"
 import {
   coreLaunchTables,
@@ -1578,6 +1584,36 @@ describe("public SEO landing pages", () => {
     )
   })
 
+  it("loads official Florida counties and places for location coverage", () => {
+    const orlando = getFloridaPlace("orlando")
+    const winterPark = getFloridaPlace("winter-park")
+
+    expect(floridaCountyRecords).toHaveLength(67)
+    expect(floridaPlaceRecords.length).toBeGreaterThan(900)
+    expect(floridaMunicipalities.length).toBeGreaterThan(400)
+    expect(orlando?.counties.map((county) => county.slug)).toContain("orange-county")
+    expect(winterPark?.isMunicipality).toBe(true)
+  })
+
+  it("renders official Florida places without profiles as noindex directory pages", () => {
+    const emptyEntry = getClientDirectoryCityOrFloridaPlace([], "florida", "winter-park")
+    const invalidEntry = getClientDirectoryCityOrFloridaPlace([], "florida", "not-a-real-market")
+
+    expect(emptyEntry?.city.name).toBe("Winter Park")
+    expect(emptyEntry?.city.profileCount).toBe(0)
+    expect(emptyEntry?.shouldIndex).toBe(false)
+    expect(invalidEntry).toBeUndefined()
+  })
+
+  it("maps Florida counties to profile-backed city markets", () => {
+    const orangeCounty = getFloridaCountyDirectoryEntry(clientProfiles, "orange-county")
+    const emptyCounty = getFloridaCountyDirectoryEntry([], "orange-county")
+
+    expect(orangeCounty?.profileCities.map((city) => city.slug)).toContain("orlando")
+    expect(isFloridaLocationPageIndexable(orangeCounty!)).toBe(true)
+    expect(isFloridaLocationPageIndexable(emptyCounty!)).toBe(false)
+  })
+
   it("includes SEO landing pages in the sitemap", async () => {
     const urls = (await sitemap()).map((entry) => entry.url)
 
@@ -1596,6 +1632,9 @@ describe("public SEO landing pages", () => {
     expect(urls).not.toContain("https://clientbureau.com/clients/orlando-fl")
     expect(urls).toContain("https://clientbureau.com/clients/florida")
     expect(urls).toContain("https://clientbureau.com/clients/florida/orlando")
+    expect(urls).toContain("https://clientbureau.com/clients/florida/counties")
+    expect(urls).toContain("https://clientbureau.com/clients/florida/counties/orange-county")
+    expect(urls).not.toContain("https://clientbureau.com/clients/florida/winter-park")
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
     expect(urls).toContain("https://clientbureau.com/industries/contractors")
     expect(urls).toContain("https://clientbureau.com/contractor-contract-template")

@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { ClientDirectoryCityView } from "@/components/landing/client-directory-view"
-import { getClientDirectoryState } from "@/lib/client-directory"
+import { getClientDirectoryCityOrFloridaPlace } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
 import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
 import { JsonLd } from "@/lib/seo"
@@ -16,8 +16,9 @@ export const dynamic = "force-dynamic"
 export async function generateMetadata({ params }: ClientCityDirectoryPageProps): Promise<Metadata> {
   const { market, city: citySlug } = await params
   const siteUrl = getSiteUrl()
-  const state = getClientDirectoryState(await getPublicClientProfilesService(), market)
-  const city = state?.cities.find((item) => item.slug === citySlug)
+  const entry = getClientDirectoryCityOrFloridaPlace(await getPublicClientProfilesService(), market, citySlug)
+  const state = entry?.state
+  const city = entry?.city
 
   if (!state || !city) {
     return {
@@ -26,13 +27,18 @@ export async function generateMetadata({ params }: ClientCityDirectoryPageProps)
   }
 
   const title = `${city.name} ${state.code} Public Client Profiles | Client Database`
-  const description =
-    `Browse the Client Bureau Client Database in ${city.name}, ${state.name} with approved profiles and moderated contractor-submitted report context.`
+  const description = city.profileCount > 0
+    ? `Browse the Client Bureau Client Database in ${city.name}, ${state.name} with approved profiles and moderated contractor-submitted report context.`
+    : `Search Client Bureau for ${city.name}, ${state.name}. Approved public profiles appear after moderation; empty official markets stay noindex.`
   const canonical = `${siteUrl}/clients/${state.slug}/${city.slug}`
 
   return {
     title,
     description,
+    robots: entry.shouldIndex ? undefined : {
+      index: false,
+      follow: true,
+    },
     alternates: {
       canonical,
     },
@@ -55,8 +61,9 @@ export async function generateMetadata({ params }: ClientCityDirectoryPageProps)
 export default async function ClientCityDirectoryPage({ params }: ClientCityDirectoryPageProps) {
   const { market, city: citySlug } = await params
   const siteUrl = getSiteUrl()
-  const state = getClientDirectoryState(await getPublicClientProfilesService(), market)
-  const city = state?.cities.find((item) => item.slug === citySlug)
+  const entry = getClientDirectoryCityOrFloridaPlace(await getPublicClientProfilesService(), market, citySlug)
+  const state = entry?.state
+  const city = entry?.city
 
   if (!state || !city) notFound()
 

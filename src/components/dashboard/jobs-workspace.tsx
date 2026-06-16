@@ -12,6 +12,7 @@ import {
   updateProjectJobParticipantAction,
 } from "@/lib/actions/client-bureau"
 import { FieldError } from "@/components/forms/field-error"
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
@@ -102,6 +103,7 @@ function SelectField({
 function JobFormFields({ job }: { job?: ProjectJob }) {
   return (
     <div className="grid gap-5">
+      <FloridaPlaceDatalist id="jobs-florida-place-options" />
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="grid gap-2">
           <Label htmlFor="title">Job name</Label>
@@ -159,7 +161,7 @@ function JobFormFields({ job }: { job?: ProjectJob }) {
         </div>
         <div className="grid gap-2">
           <Label htmlFor="city">City</Label>
-          <Input id="city" name="city" defaultValue={job?.city} required />
+          <Input id="city" name="city" defaultValue={job?.city} list="jobs-florida-place-options" required />
         </div>
         <div className="grid gap-2">
           <Label htmlFor="state">State</Label>

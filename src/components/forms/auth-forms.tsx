@@ -7,6 +7,7 @@ import { useActionState, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
@@ -120,6 +121,7 @@ export function SignupForm({ redirectTo }: { redirectTo?: string }) {
 
   return (
     <form action={action} className="grid gap-5">
+      <FloridaPlaceDatalist id="signup-florida-place-options" />
       {redirectTo ? <input type="hidden" name="next" value={redirectTo} /> : null}
       {state.message ? (
         <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
@@ -238,7 +240,7 @@ export function SignupForm({ redirectTo }: { redirectTo?: string }) {
         <div className="grid gap-4 md:grid-cols-[1fr_180px]">
           <div className="space-y-2">
             <Label htmlFor="city">Primary city</Label>
-            <Input id="city" name="city" placeholder="Orlando" autoComplete="address-level2" />
+            <Input id="city" name="city" placeholder="Orlando" autoComplete="address-level2" list="signup-florida-place-options" />
             <FieldError name="city" errors={state.ok ? undefined : state.fieldErrors} />
           </div>
           <div className="space-y-2">

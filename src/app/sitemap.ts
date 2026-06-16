@@ -7,7 +7,7 @@ import {
   getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { entityProfileHrefs } from "@/lib/entity-profiles"
-import { getClientDirectory } from "@/lib/client-directory"
+import { getClientDirectory, getFloridaCountyDirectory, isFloridaLocationPageIndexable } from "@/lib/client-directory"
 import { acquisitionPages } from "@/lib/acquisition-pages"
 import { allSeoLandingPages, seoLandingDirectoryCanonicalPath } from "@/lib/seo-landing-pages"
 import { getReleaseLastModified } from "@/lib/release"
@@ -236,11 +236,29 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.76,
     })),
   ])
+  const floridaCountyDirectory = getFloridaCountyDirectory(profiles)
+  const floridaCountyRoutes = [
+    {
+      url: `${siteUrl}/clients/florida/counties`,
+      lastModified: releaseLastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.68,
+    },
+    ...floridaCountyDirectory
+      .filter(isFloridaLocationPageIndexable)
+      .map((county) => ({
+        url: `${siteUrl}/clients/florida/counties/${county.slug}`,
+        lastModified: new Date(county.lastUpdated),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+      })),
+  ]
 
   return dedupeSitemapEntries([
     ...publicRoutes,
     ...landingRoutes,
     ...directoryRoutes,
+    ...floridaCountyRoutes,
     ...clientRoutes,
     ...businessRoutes,
     ...entityRoutes,

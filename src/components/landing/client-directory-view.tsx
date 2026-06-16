@@ -3,13 +3,15 @@ import type { LucideIcon } from "lucide-react"
 import { ArrowRight, MapPinned, Search, ShieldCheck } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { StateSelect } from "@/components/forms/state-select"
 import { TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { clientDatabaseSearchHref, clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
-import type { ClientDirectoryCity, ClientDirectoryState } from "@/lib/client-directory"
+import type { ClientDirectoryCity, ClientDirectoryCounty, ClientDirectoryState } from "@/lib/client-directory"
 import { getClientCityDirectoryHref } from "@/lib/client-directory"
+import { floridaLocationLabel, floridaMunicipalities, floridaPlaceRecords } from "@/lib/florida-geography"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { getPublicDatabasePillar } from "@/lib/public-site"
 import type { ClientProfile } from "@/lib/types"
@@ -29,6 +31,24 @@ const directoryFaqs = [
     question: "How should contractors use Client Database pages?",
     answer:
       "Contractors should use directory pages as one intake signal before accepting work, then combine profile context with contracts, deposits, change-order controls, project documentation, and their own business judgment.",
+  },
+]
+
+const floridaCountyFaqs = [
+  {
+    question: "Does Client Bureau list every Florida county?",
+    answer:
+      "Yes. Client Bureau keeps a complete Florida county layer for browsing and intake, while profile-backed county pages are prioritized for sitemap indexing.",
+  },
+  {
+    question: "Why are some Florida city or county pages noindex?",
+    answer:
+      "Empty official locations may be available for search and reporting, but they stay out of the sitemap until useful approved public profile context exists.",
+  },
+  {
+    question: "Can contractors report an experience in a Florida town or Census place?",
+    answer:
+      "Yes. Florida cities, towns, villages, and Census places are available as clean location suggestions during search and report intake.",
   },
 ]
 
@@ -97,6 +117,8 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
 }
 
 export function ClientDirectoryStateView({ state }: { state: ClientDirectoryState }) {
+  const isFlorida = state.slug === "florida"
+
   return (
     <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
@@ -126,6 +148,12 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
             { href: `/clients/${state.slug}`, label: state.name },
           ]}
         />
+        {isFlorida ? (
+          <FloridaCoveragePanel
+            title="Florida counties, cities, towns, villages, and Census places are available for clean searching."
+            description="Client Bureau uses official Florida geography data so contractors can search and submit records with consistent city, town, county, and local-market names. Empty markets stay out of the sitemap until they have useful public profile context."
+          />
+        ) : null}
         {clientDatabasePillar ? (
           <ClientDatabaseAuthority
             compact
@@ -144,6 +172,14 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
                 City pages give contractors and search crawlers a direct path to approved public profiles
                 in each market.
               </p>
+              {isFlorida ? (
+                <Button asChild variant="outline" className="w-full justify-center">
+                  <Link href="/clients/florida/counties">
+                    Browse Florida counties
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+              ) : null}
               <div className="grid gap-2">
                 {state.cities.map((city) => (
                   <Link
@@ -201,6 +237,13 @@ export function ClientDirectoryCityView({
   state: ClientDirectoryState
   city: ClientDirectoryCity
 }) {
+  const place = city.floridaPlace
+  const placeTypeLabel = place
+    ? place.kind === "cdp"
+      ? "Census-designated place"
+      : `${place.kind.charAt(0).toUpperCase()}${place.kind.slice(1)}`
+    : "City"
+
   return (
     <section className="bureau-paper">
       <JsonLd data={getFaqSchema(directoryFaqs)} />
@@ -231,6 +274,21 @@ export function ClientDirectoryCityView({
             { href: `/clients/${state.slug}/${city.slug}`, label: city.name },
           ]}
         />
+        {place ? (
+          <FloridaLocationContextCard
+            title={`${city.name} is tracked as a Florida ${placeTypeLabel.toLowerCase()} in the Client Database.`}
+            description={
+              city.profileCount > 0
+                ? "This market has approved public profile context. The page can be used as a direct local-market path for contractors and search engines."
+                : "No approved public profiles are listed here yet. The page remains useful for private searches and intake, but it stays out of the sitemap until real public record context exists."
+            }
+            facts={[
+              ["Location type", placeTypeLabel],
+              ["County", place.counties.map((county) => `${county.name} County`).join(" / ") || "Florida"],
+              ["Public profiles", city.profileCount.toLocaleString()],
+            ]}
+          />
+        ) : null}
         {clientDatabasePillar ? (
           <ClientDatabaseAuthority
             compact
@@ -261,6 +319,159 @@ export function ClientDirectoryCityView({
           title={`What ${city.name} contractors can learn here`}
           description={`This city Client Database page helps business owners review approved public profile context before scheduling crews, ordering materials, accepting custom work, extending payment terms, or sending a contract packet.`}
         />
+      </div>
+    </section>
+  )
+}
+
+export function ClientDirectoryCountyIndexView({ counties }: { counties: ClientDirectoryCounty[] }) {
+  const reportCount = counties.reduce((total, county) => total + county.reportCount, 0)
+  const activeCounties = counties.filter((county) => county.profileCount > 0)
+
+  return (
+    <section className="bureau-paper">
+      <JsonLd data={getFaqSchema(floridaCountyFaqs)} />
+      <DirectoryHero
+        eyebrow="Florida County Client Database"
+        title="Browse Florida Client Database coverage by county."
+        description="Use county pages to find official Florida markets, approved public client profiles, and clean local-market paths without publishing empty thin SEO pages."
+        stats={[
+          ["Florida counties", counties.length.toLocaleString()],
+          ["Counties with profiles", activeCounties.length.toLocaleString()],
+          ["Approved reports", reportCount.toLocaleString()],
+        ]}
+      />
+      <TrustGuardrailStrip
+        items={[
+          "Official county structure",
+          "Profile-backed pages only in sitemap",
+          "Empty locations stay noindex",
+          "Private data stays sealed",
+        ]}
+        dark
+      />
+      <div className="bureau-container space-y-8 py-10">
+        <DirectoryBreadcrumbs
+          items={[
+            { href: "/clients", label: "Client Database" },
+            { href: "/clients/florida", label: "Florida" },
+            { href: "/clients/florida/counties", label: "Counties" },
+          ]}
+        />
+        <FloridaCoveragePanel
+          title="Florida coverage is complete for selection, conservative for indexing."
+          description="Every Florida county is listed for browsing and intake. County detail pages with approved public profile context can enter the sitemap; empty county pages remain crawlable noindex."
+        />
+        <div className="grid gap-4 lg:grid-cols-2">
+          {counties.map((county) => (
+            <CountyDirectoryCard key={county.slug} county={county} />
+          ))}
+        </div>
+        <DirectoryEducation
+          title="Why county pages stay profile-backed"
+          description="County pages help contractors browse official local markets, but Client Bureau avoids filling Google with empty pages. Pages become stronger as real approved profiles, reports, responses, and evidence summaries are published."
+        />
+      </div>
+    </section>
+  )
+}
+
+export function ClientDirectoryCountyView({ county }: { county: ClientDirectoryCounty }) {
+  const municipalityCount = county.places.filter((place) => place.isMunicipality).length
+  const cdpCount = county.places.filter((place) => place.isCensusDesignatedPlace).length
+
+  return (
+    <section className="bureau-paper">
+      <DirectoryHero
+        eyebrow="County Client Database"
+        title={`${county.name} County, FL Client Database`}
+        description={`Browse approved public Client Bureau profile context and official Florida local-market links for ${county.name} County.`}
+        stats={[
+          ["Public profiles", county.profileCount.toLocaleString()],
+          ["Approved reports", county.reportCount.toLocaleString()],
+          ["Local places", county.places.length.toLocaleString()],
+        ]}
+      />
+      <TrustGuardrailStrip
+        items={[
+          "County-level browsing",
+          "Approved profiles only",
+          "No street addresses shown",
+          "No raw evidence files",
+        ]}
+        dark
+      />
+      <div className="bureau-container space-y-8 py-10">
+        <DirectoryBreadcrumbs
+          items={[
+            { href: "/clients", label: "Client Database" },
+            { href: "/clients/florida", label: "Florida" },
+            { href: "/clients/florida/counties", label: "Counties" },
+            { href: `/clients/florida/counties/${county.slug}`, label: `${county.name} County` },
+          ]}
+        />
+        <FloridaLocationContextCard
+          title={`${county.name} County coverage is organized by official Florida place names.`}
+          description={
+            county.profileCount > 0
+              ? "This county has approved public profile context and direct links into local Client Database markets."
+              : "No approved public profiles are listed in this county yet. Contractors can still search privately or submit a documented experience for moderation."
+          }
+          facts={[
+            ["Municipalities", municipalityCount.toLocaleString()],
+            ["CDPs / local places", cdpCount.toLocaleString()],
+            ["Public profiles", county.profileCount.toLocaleString()],
+          ]}
+        />
+        {county.profileCities.length > 0 ? (
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="space-y-4 p-6">
+              <p className="text-sm font-semibold uppercase text-amber-700">Profile-backed local markets</p>
+              <h2 className="text-2xl font-semibold text-slate-950">Approved Client Database pages in {county.name} County.</h2>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {county.profileCities.map((city) => (
+                  <Link
+                    key={city.slug}
+                    href={`/clients/florida/${city.slug}`}
+                    className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-amber-300 hover:bg-white hover:text-slate-950"
+                  >
+                    {city.name}
+                    <span className="ml-2 text-xs text-slate-500">{city.profileCount} profiles</span>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <EmptyDirectoryState />
+        )}
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="space-y-4 p-6">
+            <p className="text-sm font-semibold uppercase text-amber-700">Official local places</p>
+            <h2 className="text-2xl font-semibold text-slate-950">Florida places available for clean intake.</h2>
+            <p className="text-sm leading-6 text-slate-600">
+              These places are available for search and form selection. Pages without approved public profile context stay out of the sitemap.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {county.places.slice(0, 24).map((place) => (
+                <Link
+                  key={place.slug}
+                  href={`/clients/florida/${place.slug}`}
+                  className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-amber-300 hover:bg-white hover:text-slate-950"
+                >
+                  {place.name}
+                  <span className="ml-2 text-xs text-slate-500">{place.kind === "cdp" ? "CDP" : place.kind}</span>
+                </Link>
+              ))}
+            </div>
+            {county.places.length > 24 ? (
+              <p className="text-xs font-medium text-slate-500">
+                Showing 24 of {county.places.length.toLocaleString()} official places in this county.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+        <ProfileGrid title={`Approved ${county.name} County profiles`} profiles={county.profiles} />
       </div>
     </section>
   )
@@ -418,12 +629,14 @@ function DatabaseQuickStart({
           </div>
           <form action="/search" method="get" className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_210px_auto] sm:p-4">
             <input type="hidden" name="profileType" value="client" />
+            <FloridaPlaceDatalist id="client-database-location-options" />
             <label className="grid gap-2">
               <span className="text-xs font-semibold uppercase text-slate-500">Name or business</span>
               <input
                 name="q"
                 type="search"
                 placeholder="John Smith, ABC Holdings, property owner..."
+                list="client-database-location-options"
                 className="h-10 rounded-md border border-input bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </label>
@@ -453,6 +666,84 @@ function DatabaseQuickStart({
             Public profiles never show raw phone numbers, emails, street addresses, raw evidence files,
             pending reports, rejected reports, or internal notes.
           </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function FloridaCoveragePanel({ description, title }: { description: string; title: string }) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="grid gap-4 p-5 sm:p-6 lg:grid-cols-[1fr_360px] lg:items-center">
+        <div>
+          <p className="text-sm font-semibold uppercase text-amber-700">Florida geography coverage</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-950">{title}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+          <DirectoryFact label="Counties" value="67" />
+          <DirectoryFact label="Municipalities" value={floridaMunicipalities.length.toLocaleString()} />
+          <DirectoryFact label="Florida places" value={floridaPlaceRecords.length.toLocaleString()} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function FloridaLocationContextCard({
+  description,
+  facts,
+  title,
+}: {
+  description: string
+  facts: [string, string][]
+  title: string
+}) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="grid gap-4 p-5 sm:p-6 lg:grid-cols-[1fr_360px] lg:items-center">
+        <div>
+          <p className="text-sm font-semibold uppercase text-amber-700">Official Florida market</p>
+          <h2 className="mt-2 text-2xl font-semibold text-slate-950">{title}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+        </div>
+        <div className="grid gap-2">
+          {facts.map(([label, value]) => (
+            <DirectoryFact key={label} label={label} value={value} />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function CountyDirectoryCard({ county }: { county: ClientDirectoryCounty }) {
+  const samplePlaces = county.places.slice(0, 4).map(floridaLocationLabel)
+
+  return (
+    <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="space-y-5 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-slate-950">{county.name} County</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              {county.profileCount} public profiles / {county.places.length} official places
+            </p>
+          </div>
+          <Button asChild variant="outline">
+            <Link href={`/clients/florida/counties/${county.slug}`}>
+              Open county
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
+        </div>
+        <div className="grid gap-2">
+          {samplePlaces.map((place) => (
+            <p key={place} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-600">
+              {place}
+            </p>
+          ))}
         </div>
       </CardContent>
     </Card>

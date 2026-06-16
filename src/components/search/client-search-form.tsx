@@ -1,5 +1,6 @@
 import { Search } from "lucide-react"
 
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { usStates } from "@/lib/locations"
@@ -15,12 +16,14 @@ interface ClientSearchFormProps {
 export function ClientSearchForm({ query, state, riskLevel, category }: ClientSearchFormProps) {
   return (
     <form action="/search" className="grid gap-3 rounded-md border border-slate-200 bg-white p-3 shadow-sm lg:grid-cols-[1fr_120px_160px_190px_auto]">
+      <FloridaPlaceDatalist id="client-search-florida-place-options" />
       <div className="relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
         <Input
           name="q"
           defaultValue={query}
           placeholder="Name, city, phone, email"
+          list="client-search-florida-place-options"
           className="h-11 pl-9"
         />
       </div>

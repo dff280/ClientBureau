@@ -176,6 +176,8 @@ const publicIndexableRoutes = new Set([
   "/clients",
   "/clients/[market]",
   "/clients/[market]/[city]",
+  "/clients/[market]/counties",
+  "/clients/[market]/counties/[county]",
   "/contact",
   "/contractor-contract-template",
   "/dispute-policy",
@@ -201,6 +203,11 @@ const publicIndexableRoutes = new Set([
   "/resources",
   "/score-methodology",
   "/terms",
+])
+
+const conditionalPublicNoindexRoutes = new Set([
+  "/clients/[market]/[city]",
+  "/clients/[market]/counties/[county]",
 ])
 
 if (!existsSync(appDir)) {
@@ -255,7 +262,9 @@ for (const { route, source } of routes.filter((item) => crawlableNoindexRoutes.h
 }
 
 for (const { route, source } of routes.filter((item) => publicIndexableRoutes.has(item.route))) {
-  if (!hasNoindexRobots(source) && !hasNoindexFollowRobots(source)) pass(`${route} is not statically noindexed`)
+  if (conditionalPublicNoindexRoutes.has(route)) {
+    pass(`${route} may conditionally noindex empty public pages`)
+  } else if (!hasNoindexRobots(source) && !hasNoindexFollowRobots(source)) pass(`${route} is not statically noindexed`)
   else fail(`${route} is not statically noindexed`, "public routes should remain indexable unless intentionally reclassified")
 }
 

@@ -1,6 +1,7 @@
 import type { ClientDirectoryState } from "@/lib/client-directory"
 import type { ClientReport, PublicClientProfile, RiskLevel } from "@/lib/types"
 import type { ProfileType } from "@/lib/types"
+import { getFloridaPlace } from "@/lib/florida-geography"
 import { tradeCategoryMatches } from "@/lib/trade-taxonomy"
 
 export type SeoLandingKind = "clients" | "reports" | "industries"
@@ -257,7 +258,14 @@ export function seoLandingDirectoryCanonicalPath(
   const state = directory.find((item) => item.code === page.state || item.name.toLowerCase() === page.state?.toLowerCase())
   const city = state?.cities.find((item) => item.name.toLowerCase() === page.city?.toLowerCase())
 
-  return state && city ? `/clients/${state.slug}/${city.slug}` : undefined
+  if (state && city) return `/clients/${state.slug}/${city.slug}`
+
+  if (page.state === "FL") {
+    const floridaPlace = getFloridaPlace(page.city)
+    if (floridaPlace) return `/clients/florida/${floridaPlace.slug}`
+  }
+
+  return undefined
 }
 
 export function seoLandingCanonicalPath(

@@ -260,6 +260,7 @@ const publicContentPages = [
   "/dispute-policy",
   "/moderation-policy",
   "/clients",
+  "/clients/florida/counties",
   "/profiles",
   "/profiles/client",
   "/profiles/contractor",
@@ -475,6 +476,9 @@ await verifyNoindexWorkflowPage("/signup", {
 await verifyNoindexWorkflowPage("/search", {
   requestPath: "/search?q=John&state=FL",
   requiredText: ["Check a Client Before You Take the Job.", "Server-verified results", "Client check guide"],
+})
+await verifyNoindexWorkflowPage("/clients/florida/winter-park", {
+  requiredText: ["Official Florida market", "No approved public profiles are listed here yet", "Client Database"],
 })
 
 const subcontractorTradeSearch = await read("/search?q=NoSuchClientBureau987&profileType=subcontractor&tradeCategory=Electrical")

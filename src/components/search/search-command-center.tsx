@@ -23,6 +23,7 @@ import type { LucideIcon } from "lucide-react"
 import { useEffect, useMemo, useState, useTransition } from "react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
+import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -389,6 +390,7 @@ export function SearchCommandCenter({
                 action="/search"
                 className="grid gap-3"
               >
+                <FloridaPlaceDatalist id="search-florida-place-options" />
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
                   <Input
@@ -399,6 +401,7 @@ export function SearchCommandCenter({
                       setSavedMessage("")
                     }}
                     placeholder="Check a client by name, business, city, phone, or email"
+                    list="search-florida-place-options"
                     className="h-14 rounded-md border-slate-300 bg-white pl-12 text-base shadow-sm"
                     aria-label="Check clients"
                   />
