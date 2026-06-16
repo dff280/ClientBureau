@@ -1,7 +1,9 @@
 import { fail, ok, zodFieldErrors } from "@/lib/actions/result"
+import type { Database, Json } from "@/lib/database.types"
 import { getDataMode } from "@/lib/env"
 import { mobileJson } from "@/lib/mobile-api"
 import { signupSchema } from "@/lib/schemas/client-bureau"
+import { buildSignupEntityProfileSeed } from "@/lib/signup-profile-rating"
 import { createServiceClient } from "@/lib/supabase/service"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeTradeCategory } from "@/lib/trade-taxonomy"
@@ -128,6 +130,43 @@ export async function POST(request: Request) {
       if (optionalProfileError && !isMissingOnboardingColumn(optionalProfileError)) {
         return mobileJson(fail(optionalProfileError.message), 400)
       }
+    }
+
+    const { data: contractorProfileRow } = await service
+      .from("contractor_profiles")
+      .select("id")
+      .eq("user_id", data.user.id)
+      .maybeSingle()
+    const profileSeed = buildSignupEntityProfileSeed({
+      userId: data.user.id,
+      contractorProfileId: contractorProfileRow?.id,
+      accountType: input.accountType,
+      fullName: input.fullName,
+      businessName: input.businessName,
+      trade: input.trade,
+      businessType: input.businessType,
+      businessPhone: input.businessPhone,
+      websiteUrl: input.websiteUrl,
+      serviceArea: input.serviceArea,
+      companySize: input.companySize,
+      yearsInBusiness: input.yearsInBusiness,
+      primaryGoal: input.primaryGoal,
+      city: input.city,
+      state: input.state,
+      licenseNumber: input.licenseNumber,
+    })
+    const { error: entityProfileError } = await service
+      .from("entity_profiles")
+      .upsert(
+        {
+          ...profileSeed.payload,
+          rating_factors: profileSeed.payload.rating_factors as Json,
+        } as Database["public"]["Tables"]["entity_profiles"]["Insert"],
+        { onConflict: "profile_type,slug" },
+      )
+
+    if (entityProfileError && !isMissingOnboardingColumn(entityProfileError)) {
+      return mobileJson(fail(entityProfileError.message), 400)
     }
   }
 

@@ -114,6 +114,7 @@ import type {
 import { isPositiveReportCategory, reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
 import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
+import type { Database, Json } from "@/lib/database.types"
 import {
   getAuthCookieDiagnostics,
   getCurrentUser,
@@ -190,7 +191,7 @@ import {
   updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
 import type { ClientReportInput } from "@/lib/schemas/client-bureau"
-import { buildEntityProfileSlug } from "@/lib/entity-profiles"
+import { buildSignupEntityProfileSeed } from "@/lib/signup-profile-rating"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
 import { normalizeTradeCategory } from "@/lib/trade-taxonomy"
@@ -859,36 +860,31 @@ export async function signupAction(
         .select("id")
         .eq("user_id", data.user.id)
         .maybeSingle()
-      const profileType = input.accountType === "client" ? "client" : input.accountType
-      const profileSlug = buildEntityProfileSlug({
-        profileType,
-        displayName: input.businessName,
-        businessName: profileType === "client" ? undefined : input.businessName,
+      const profileSeed = buildSignupEntityProfileSeed({
+        userId: data.user.id,
+        contractorProfileId: contractorProfileRow?.id,
+        accountType: input.accountType,
+        fullName: input.fullName,
+        businessName: input.businessName,
+        trade: input.trade,
+        businessType: input.businessType,
+        businessPhone: input.businessPhone,
+        websiteUrl: input.websiteUrl,
+        serviceArea: input.serviceArea,
+        companySize: input.companySize,
+        yearsInBusiness: input.yearsInBusiness,
+        primaryGoal: input.primaryGoal,
         city: input.city,
         state: input.state,
+        licenseNumber: input.licenseNumber,
       })
       const { error: entityProfileError } = await service
         .from("entity_profiles")
         .upsert(
           {
-            profile_type: profileType,
-            display_name: input.businessName,
-            legal_name_private: input.fullName,
-            business_name: profileType === "client" ? null : input.businessName,
-            city: input.city,
-            state: input.state.toUpperCase(),
-            slug: profileSlug,
-            legacy_contractor_id: profileType === "client" ? null : (contractorProfileRow?.id ?? null),
-            claimed_status: "claimed",
-            owner_user_id: data.user.id,
-            rating_score: profileType === "client" ? 70 : 76,
-            rating_band: profileType === "client" ? "Moderate" : "Review Pending",
-            public_summary:
-              profileType === "client"
-                ? "Claimed client/customer profile. Public content appears only after moderation approval."
-                : "Business profile with verification context and moderated project activity.",
-            is_public: profileType !== "client",
-          },
+            ...profileSeed.payload,
+            rating_factors: profileSeed.payload.rating_factors as Json,
+          } as Database["public"]["Tables"]["entity_profiles"]["Insert"],
           { onConflict: "profile_type,slug" },
         )
 

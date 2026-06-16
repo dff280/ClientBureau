@@ -24,7 +24,9 @@ import {
   searchEntityProfiles,
 } from "@/lib/entity-profiles"
 import {
+  BUSINESS_RATING_VERSION,
   buildBusinessSlug,
+  businessRatingModelForProfileType,
   calculateBusinessRating,
 } from "@/lib/business-rating"
 import {
@@ -1812,9 +1814,7 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
   const ratingModel =
     profileType === "client"
       ? "client_risk"
-      : profileType === "subcontractor" || rating.profileKind === "subcontractor"
-      ? "subcontractor_trade_partner_reliability"
-      : "contractor_business_reliability"
+      : businessRatingModelForProfileType(profileType, rating.profileKind)
   const slug = buildBusinessSlug({
     businessName: contractor.business_name,
     city: contractor.city,
@@ -1854,7 +1854,7 @@ async function ensureEntityProfileForContractor(contractor: ContractorProfileRow
   const ratingPayload: Tables["entity_profiles"]["Insert"] = {
     ...basePayload,
     rating_model: ratingModel,
-    rating_version: "business-rating-v2",
+    rating_version: BUSINESS_RATING_VERSION,
     rating_confidence: rating.confidence,
     rating_factors: rating.factors as unknown as Json,
     rating_public_note: rating.summary,
@@ -2096,8 +2096,8 @@ export async function getPublicEntityProfilesSupabase(): Promise<EntityProfile[]
       ...profile,
       ratingScore: business.ratingScore,
       ratingBand: business.ratingGrade,
-      ratingModel: profile.profileType === "subcontractor" ? "subcontractor_trade_partner_reliability" as const : "contractor_business_reliability" as const,
-      ratingVersion: "business-rating-v2",
+      ratingModel: businessRatingModelForProfileType(profile.profileType, profile.profileType === "subcontractor" ? "subcontractor" : "contractor"),
+      ratingVersion: BUSINESS_RATING_VERSION,
       ratingConfidence: business.ratingConfidence,
       ratingFactors: business.ratingFactors,
       ratingPublicNote: business.ratingSummary,
@@ -2172,8 +2172,8 @@ export async function getPublicEntityProfileSupabase(
         ...profile,
         ratingScore: relatedContractor.ratingScore,
         ratingBand: relatedContractor.ratingGrade,
-        ratingModel: profileType === "subcontractor" ? "subcontractor_trade_partner_reliability" as const : "contractor_business_reliability" as const,
-        ratingVersion: "business-rating-v2",
+        ratingModel: businessRatingModelForProfileType(profileType, profileType === "subcontractor" ? "subcontractor" : "contractor"),
+        ratingVersion: BUSINESS_RATING_VERSION,
         ratingConfidence: relatedContractor.ratingConfidence,
         ratingFactors: relatedContractor.ratingFactors,
         ratingPublicNote: relatedContractor.ratingSummary,
@@ -3894,9 +3894,11 @@ export async function updateAdminAccountClassificationSupabase(
       rating_model:
         input.primaryAccountType === "client"
           ? "client_risk"
-          : input.accountCapabilities.includes("subcontractor")
-            ? "subcontractor_trade_partner_reliability"
-            : "contractor_business_reliability",
+          : businessRatingModelForProfileType(
+              input.primaryAccountType,
+              input.accountCapabilities.includes("subcontractor") ? "subcontractor" : "contractor",
+            ),
+      rating_version: BUSINESS_RATING_VERSION,
       updated_at: new Date().toISOString(),
     })
     .eq("id", ensuredProfile.id)

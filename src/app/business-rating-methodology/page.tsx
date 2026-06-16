@@ -67,7 +67,7 @@ const factors = [
   {
     title: "Profile readiness",
     weight: "Support",
-    text: "Complete platform setup, profile claiming, response readiness, business details, and documentation habits help increase confidence that the profile reflects a real operating business or trade partner.",
+    text: "Complete platform setup, profile claiming, response readiness, business details, and documentation habits establish a good-standing baseline before approved relationship history exists.",
   },
 ]
 
@@ -135,8 +135,8 @@ export default function BusinessRatingMethodologyPage() {
               {[
                 ["A+", "92-100", "Strong verification and documentation confidence."],
                 ["A", "82-91", "High readiness with meaningful approved activity."],
-                ["B", "68-81", "Good profile with room for stronger documentation."],
-                ["C", "50-67", "Basic or developing business profile."],
+                ["B", "68-81", "Good-standing or developing profile with room for stronger documentation."],
+                ["C", "50-67", "Adverse context or limited readiness needs review."],
                 ["Review Pending", "0-49", "Insufficient public-safe context."],
               ].map(([grade, range, text]) => (
                 <div key={grade} className="rounded-md border border-slate-200 bg-slate-50 p-3">
@@ -239,6 +239,12 @@ export default function BusinessRatingMethodologyPage() {
                   verification, documentation, approved relationship history, resolution posture,
                   and profile completeness. As more verified and approved context becomes available,
                   rating confidence can move from Basic to Moderate or Strong.
+                </p>
+                <p>
+                  New contractor and subcontractor profiles are not automatically treated as risky
+                  just because they have limited public history. When there is no approved adverse
+                  subject-history, Client Bureau uses a good-standing baseline based on the quality
+                  and completeness of the business information provided.
                 </p>
                 <p>
                   Public pages should remain neutral and factual. A high rating does not mean every

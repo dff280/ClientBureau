@@ -188,6 +188,8 @@ export type ProfileRatingModel =
   | "client_risk"
   | "contractor_business_reliability"
   | "subcontractor_trade_partner_reliability"
+  | "contractor_business_reliability_v3"
+  | "subcontractor_trade_partner_reliability_v3"
 export type WatchlistStatus = "active" | "cleared"
 export type WatchlistAlertEventType =
   | "new_report"

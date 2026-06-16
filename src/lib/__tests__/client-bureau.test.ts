@@ -10,7 +10,10 @@ import { generateMetadata as generateBusinessProfileMetadata } from "@/app/busin
 import { getPostSignupRedirectPath, getSafeInternalPath, getSafePostSignupReturnPath } from "@/lib/auth"
 import {
   buildBusinessSlug,
+  businessHasApprovedNegativeSubjectHistory,
+  businessInformationCompletenessScore,
   businessRatingGrade,
+  businessStarterFloor,
   calculateBusinessRating,
 } from "@/lib/business-rating"
 import { getClientDirectory } from "@/lib/client-directory"
@@ -1199,6 +1202,7 @@ describe("business ratings and public business profiles", () => {
     expect(businessRatingGrade(rating.score)).toBe(rating.grade)
     expect(rating.factors.map((factor) => factor.label)).toEqual([
       "Business identity and verification",
+      "Service readiness and profile completeness",
       "Client-facing project history",
       "Contracts and evidence discipline",
       "Payment and resolution posture",
@@ -1232,6 +1236,149 @@ describe("business ratings and public business profiles", () => {
     ])
     expect(rating.summary).toContain("payment-chain context")
     expect(rating.factors.find((factor) => factor.label === "Payment-chain reliability context")?.description).toContain("pay application")
+  })
+
+  it("starts clean new contractor profiles from a good-standing information baseline", () => {
+    const contractor = {
+      ...contractorProfiles[0],
+      id: "new_clean_contractor",
+      businessName: "New Clean Contractor",
+      trade: "Painting",
+      businessType: undefined,
+      businessPhone: undefined,
+      websiteUrl: undefined,
+      serviceArea: undefined,
+      companySize: undefined,
+      yearsInBusiness: undefined,
+      primaryGoal: undefined,
+      licenseNumber: undefined,
+      verificationStatus: "pending" as const,
+    }
+    const rating = calculateBusinessRating({ contractor, reports: [], evidence: [] })
+
+    expect(businessInformationCompletenessScore(contractor)).toBeGreaterThanOrEqual(35)
+    expect(businessStarterFloor(contractor, "contractor")).toBe(78)
+    expect(rating.score).toBeGreaterThanOrEqual(78)
+    expect(rating.grade).toBe("B")
+    expect(rating.ratingName).toBe("Business Reliability Rating")
+  })
+
+  it("rewards richer signup information and verification without requiring reports", () => {
+    const minimal = {
+      ...contractorProfiles[0],
+      id: "minimal_signup_contractor",
+      businessName: "Minimal Signup Contractor",
+      trade: "Roofing",
+      businessType: undefined,
+      businessPhone: undefined,
+      websiteUrl: undefined,
+      serviceArea: undefined,
+      companySize: undefined,
+      yearsInBusiness: undefined,
+      primaryGoal: undefined,
+      licenseNumber: undefined,
+      verificationStatus: "pending" as const,
+    }
+    const rich = {
+      ...minimal,
+      id: "rich_signup_contractor",
+      businessType: "Service business",
+      businessPhone: "Private phone on file",
+      websiteUrl: "https://example.com",
+      serviceArea: "Orlando and Seminole County",
+      companySize: "2-5",
+      yearsInBusiness: "5-10",
+      primaryGoal: "Check clients before new jobs",
+      licenseNumber: "Information on file",
+    }
+    const verified = {
+      ...rich,
+      id: "verified_signup_contractor",
+      verificationStatus: "verified" as const,
+    }
+
+    const minimalRating = calculateBusinessRating({ contractor: minimal, reports: [], evidence: [] })
+    const richRating = calculateBusinessRating({ contractor: rich, reports: [], evidence: [] })
+    const verifiedRating = calculateBusinessRating({ contractor: verified, reports: [], evidence: [] })
+
+    expect(richRating.score).toBeGreaterThan(minimalRating.score)
+    expect(richRating.score).toBeGreaterThanOrEqual(82)
+    expect(verifiedRating.score).toBeGreaterThan(richRating.score)
+    expect(verifiedRating.score).toBeGreaterThanOrEqual(88)
+  })
+
+  it("does not lower a business rating because the business submitted reports", () => {
+    const contractor = {
+      ...contractorProfiles[0],
+      id: "reporting_business",
+      businessName: "Reporting Business",
+      trade: "Flooring",
+      verificationStatus: "pending" as const,
+    }
+    const reporterAuthoredConcern: ClientReport = {
+      ...baseReport,
+      id: "reporter_authored_concern",
+      contractorId: contractor.id,
+      subjectProfileId: undefined,
+      subjectProfileType: "client",
+      reportCategory: "Non-payment",
+      status: "approved",
+      amountUnpaid: 15000,
+      contractAmount: 20000,
+      resolutionStatus: "Unresolved",
+    }
+
+    expect(businessHasApprovedNegativeSubjectHistory(contractor, [reporterAuthoredConcern])).toBe(false)
+
+    const rating = calculateBusinessRating({
+      contractor,
+      reports: [reporterAuthoredConcern],
+      evidence: [],
+    })
+
+    expect(rating.score).toBeGreaterThanOrEqual(businessStarterFloor(contractor, "contractor"))
+  })
+
+  it("allows approved negative subject history to reduce the subject business below the starter floor", () => {
+    const contractor = {
+      ...contractorProfiles[0],
+      id: "subject_business",
+      businessName: "Subject Business",
+      trade: "Electrical",
+      businessType: undefined,
+      businessPhone: undefined,
+      websiteUrl: undefined,
+      serviceArea: undefined,
+      companySize: undefined,
+      yearsInBusiness: undefined,
+      primaryGoal: undefined,
+      licenseNumber: undefined,
+      verificationStatus: "pending" as const,
+    }
+    const adverseSubjectReport: ClientReport = {
+      ...baseReport,
+      id: "adverse_subject_report",
+      contractorId: "reporting_contractor",
+      subjectProfileId: "subject_business_profile",
+      subjectProfileType: "contractor",
+      relationshipType: "business_to_business",
+      reportCategory: "Non-payment",
+      status: "approved",
+      amountUnpaid: 9000,
+      contractAmount: 10000,
+      resolutionStatus: "Unresolved",
+      evidenceAttached: true,
+    }
+
+    expect(businessHasApprovedNegativeSubjectHistory(contractor, [adverseSubjectReport])).toBe(true)
+
+    const rating = calculateBusinessRating({
+      contractor,
+      reports: [adverseSubjectReport],
+      evidence: [],
+    })
+
+    expect(rating.score).toBeLessThan(businessStarterFloor(contractor, "contractor"))
   })
 
   it("returns public business profiles without private account identifiers", () => {

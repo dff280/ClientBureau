@@ -1,4 +1,7 @@
-import { buildBusinessSlug } from "@/lib/business-rating"
+import {
+  buildBusinessSlug,
+  businessRatingModelForProfileType,
+} from "@/lib/business-rating"
 import { normalizeStateCode } from "@/lib/locations"
 import { buildClientProfileSlug } from "@/lib/slug"
 import { normalizeTradeCategory, tradeCategoryMatches, tradeSearchAliases } from "@/lib/trade-taxonomy"
@@ -132,9 +135,9 @@ export function entityProfileForView<T extends EntityProfile>(profile: T, reques
     profileSubtype: profile.profileSubtype ?? defaultProfileSubtype(profileType),
     ratingModel:
       profileType === "subcontractor"
-        ? "subcontractor_trade_partner_reliability"
+        ? businessRatingModelForProfileType("subcontractor")
         : profileType === "contractor"
-          ? "contractor_business_reliability"
+          ? businessRatingModelForProfileType("contractor")
           : profile.ratingModel,
   }
 }

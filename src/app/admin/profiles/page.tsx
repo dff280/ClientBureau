@@ -796,7 +796,7 @@ function subcontractorLaunchReadiness(profile: EntityProfile) {
   if (publicSummary.length < 40) missing.push("Neutral public-safe summary")
   if (!hasVerification) missing.push("Claim, verification, or documented moderator context")
   if (!profile.isPublic) missing.push("Public visibility enabled after review")
-  if (profile.ratingModel !== "subcontractor_trade_partner_reliability") {
+  if (!["subcontractor_trade_partner_reliability", "subcontractor_trade_partner_reliability_v3"].includes(profile.ratingModel ?? "")) {
     missing.push("Rating model set to Trade Partner Reliability")
   }
   if (profile.ratingScore <= 0) missing.push("Trade Partner Reliability Rating")
