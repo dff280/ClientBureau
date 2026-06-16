@@ -371,7 +371,6 @@ export function EntityProfileDirectory({
   ).length
   const evidenceCount = visibleProfiles.filter((profile) => profile.evidenceOnFileCount > 0).length
   const reportCount = visibleProfiles.reduce((total, profile) => total + profile.reportCount, 0)
-  const faqs = getProfileDirectoryFaqs(activeType)
   const showTradeFilter = activeType === "contractor" || activeType === "subcontractor"
   const hasDirectoryFilters = Boolean(query || state || tradeCategory)
   const directoryAsset =
@@ -656,32 +655,6 @@ export function EntityProfileDirectory({
               </CardContent>
             </Card>
           )}
-        </div>
-      </section>
-
-      <section className="bureau-section bg-white">
-        <div className="bureau-container">
-          <div className="grid gap-6 lg:grid-cols-[0.7fr_1fr] lg:items-start">
-            <div>
-              <p className="text-sm font-semibold uppercase text-amber-700">Directory FAQ</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950">
-                {presentation.faqTitle}
-              </h2>
-              <p className="mt-3 text-sm leading-6 text-slate-600">
-                {presentation.faqDescription}
-              </p>
-            </div>
-            <div className="grid gap-3">
-              {faqs.map((item) => (
-                <Card key={item.question} className="rounded-md border-slate-200 bg-slate-50 shadow-sm">
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold text-slate-950">{item.question}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.answer}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
         </div>
       </section>
 

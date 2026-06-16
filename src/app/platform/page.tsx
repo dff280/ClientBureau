@@ -3,10 +3,8 @@ import Link from "next/link"
 import {
   BellRing,
   BriefcaseBusiness,
-  Building2,
   CircleDollarSign,
   FileCheck2,
-  Landmark,
   LockKeyhole,
   MessageSquareText,
   Search,
@@ -17,14 +15,13 @@ import {
 
 import {
   BureauPanel,
-  ComparisonProofBlock,
   GuidedActionPanel,
   PageProofStrip,
   PremiumCtaBand,
-  PremiumFeatureCard,
   PremiumHero,
   PremiumSectionHeader,
   ProductMockupFrame,
+  PublicDatabaseShowcase,
   PublicJourneyNav,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
@@ -45,39 +42,6 @@ const proof = [
   { label: "Public records", value: "Moderated", text: "Profiles show approved summaries and response context, not private files." },
   { label: "Private tools", value: "End to end", text: "Contracts, evidence, recovery, lien service, and alerts stay in the business workspace." },
   { label: "Audience", value: "Contractors", text: "Built for trade businesses, service companies, subs, and professional operators." },
-]
-
-const modules = [
-  {
-    icon: Search,
-    title: "Client risk intelligence",
-    text: "Check clients, homeowners, businesses, project leads, city/state context, private-match signals, payment indicators, and approved report summaries.",
-  },
-  {
-    icon: Building2,
-    title: "Public profile network",
-    text: "Approved client, contractor, service-business, subcontractor, and trade profiles create a safer record layer without exposing private identifiers.",
-  },
-  {
-    icon: Signature,
-    title: "Contracts and e-signatures",
-    text: "Create private agreement packets with scope, exclusions, deposits, milestones, change orders, cancellation terms, and signing links.",
-  },
-  {
-    icon: FileCheck2,
-    title: "Evidence vault",
-    text: "Keep invoices, photos, screenshots, contracts, approvals, and completion records organized privately for reports or service cases.",
-  },
-  {
-    icon: CircleDollarSign,
-    title: "Payment Recovery",
-    text: "Open Resolution Desk cases, document invoice age, organize contact attempts, track offers, and keep contractor-direct payment resolution clear.",
-  },
-  {
-    icon: Landmark,
-    title: "Florida Lien Service",
-    text: "Start Florida notice or filing workflows with document review, contractor authorization, deadline cues, vendor routing, and recording proof.",
-  },
 ]
 
 const workflow = [
@@ -148,24 +112,6 @@ const audiences = [
   },
 ]
 
-const comparisonRows = [
-  {
-    label: "Before accepting work",
-    before: "Rely on instinct, a quick web search, or whatever the lead says during intake.",
-    after: "Run a client check, save the search, review response context, and decide terms before scheduling.",
-  },
-  {
-    label: "During the project",
-    before: "Keep contracts, change orders, photos, texts, and invoices scattered across devices.",
-    after: "Keep job records, agreement packets, evidence, and updates organized in one private workspace.",
-  },
-  {
-    label: "When payment stalls",
-    before: "Start from scratch under pressure, with missing proof and unclear next steps.",
-    after: "Open recovery or Florida lien-service workflows with timeline, documentation, and private status records.",
-  },
-]
-
 const faqs = [
   {
     question: "Is Client Bureau a complaint site?",
@@ -210,6 +156,12 @@ export default function PlatformPage() {
       />
 
       <PageProofStrip items={proof} />
+      <PublicDatabaseShowcase
+        compact
+        eyebrow="The public layer"
+        title="Three databases make the platform easy to understand."
+        description="Clients, contractors, and subcontractors are the records people browse. Private tools support what happens after the search."
+      />
 
       <PublicJourneyNav
         active="protect"
@@ -217,21 +169,6 @@ export default function PlatformPage() {
         title="The platform is organized around the job lifecycle."
         description="Contractors should not have to decode software modules. Start with a client check, then move into contracts, evidence, recovery, or public record review as the job changes."
       />
-
-      <section className="bureau-section bg-white">
-        <div className="bureau-container grid gap-8 lg:grid-cols-[0.9fr_1.3fr] lg:items-start">
-          <PremiumSectionHeader
-            eyebrow="What the platform does"
-            title="A full protection system, not a complaint wall."
-            description="Client Bureau is designed for the real way business owners get hurt: a lead looks fine, work begins, money is spent, and documentation only becomes urgent after payment breaks down."
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
-            {modules.map((module) => (
-              <PremiumFeatureCard key={module.title} icon={module.icon} title={module.title} text={module.text} />
-            ))}
-          </div>
-        </div>
-      </section>
 
       <section className="bureau-section bg-slate-50">
         <div className="bureau-container space-y-8">
@@ -241,11 +178,6 @@ export default function PlatformPage() {
             description="The platform is organized by the same order contractors live through: before the job, during the job, and after an issue."
           />
           <WorkflowTimeline items={workflow} />
-          <ComparisonProofBlock
-            title="The difference is structure before pressure."
-            description="The platform is built to reduce the moment where a contractor realizes the paperwork, client context, and evidence are all scattered after money is already at risk."
-            rows={comparisonRows}
-          />
         </div>
       </section>
 

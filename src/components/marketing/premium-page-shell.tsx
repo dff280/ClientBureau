@@ -14,9 +14,11 @@ import {
   Inbox,
   Search,
   ShieldCheck,
+  UsersRound,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { publicDatabasePillars, type PublicDatabasePillar, type PublicDatabaseTone } from "@/lib/public-site"
 import { cn } from "@/lib/utils"
 
 export type PremiumCta = {
@@ -688,6 +690,128 @@ export function TrustGuardrailStrip({
         </div>
       </div>
     </div>
+  )
+}
+
+const databaseIcons: Record<PublicDatabasePillar["id"], LucideIcon> = {
+  clients: Search,
+  contractors: BriefcaseBusiness,
+  subcontractors: UsersRound,
+}
+
+const databaseToneClasses: Record<
+  PublicDatabaseTone,
+  {
+    card: string
+    icon: string
+    eyebrow: string
+    link: string
+  }
+> = {
+  client: {
+    card: "border-amber-200 bg-amber-50/55 hover:border-amber-300",
+    icon: "bg-slate-950 text-amber-300",
+    eyebrow: "bg-amber-100 text-amber-900",
+    link: "text-amber-800",
+  },
+  contractor: {
+    card: "border-emerald-200 bg-emerald-50/55 hover:border-emerald-300",
+    icon: "bg-emerald-900 text-emerald-100",
+    eyebrow: "bg-emerald-100 text-emerald-900",
+    link: "text-emerald-800",
+  },
+  subcontractor: {
+    card: "border-blue-200 bg-blue-50/55 hover:border-blue-300",
+    icon: "bg-blue-950 text-blue-100",
+    eyebrow: "bg-blue-100 text-blue-900",
+    link: "text-blue-800",
+  },
+}
+
+export function PublicDatabaseShowcase({
+  eyebrow = "The three databases",
+  title = "Clients, contractors, and subcontractors are the product backbone.",
+  description = "Start with the database that matches the business decision in front of you. Each path keeps public records useful while sensitive details stay private.",
+  compact = false,
+  dark = false,
+}: {
+  eyebrow?: string
+  title?: string
+  description?: string
+  compact?: boolean
+  dark?: boolean
+}) {
+  return (
+    <section className={dark ? "bg-slate-950 py-8 text-white sm:py-10" : "bg-white py-8 sm:py-10"}>
+      <div className="bureau-container">
+        <div className={dark ? "grid gap-6 rounded-md border border-white/10 bg-white/[0.04] p-5 sm:p-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start" : "grid gap-6 rounded-md border border-slate-200 bg-slate-50 p-5 shadow-sm sm:p-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-start"}>
+          <div>
+            <p className={dark ? "text-xs font-semibold uppercase tracking-[0.16em] text-amber-300" : "text-xs font-semibold uppercase tracking-[0.16em] text-amber-700"}>
+              {eyebrow}
+            </p>
+            <h2 className={dark ? "mt-2 text-2xl font-semibold tracking-normal text-balance text-white sm:text-3xl" : "mt-2 text-2xl font-semibold tracking-normal text-balance text-slate-950 sm:text-3xl"}>
+              {title}
+            </h2>
+            <p className={dark ? "mt-3 text-sm leading-6 text-slate-300" : "mt-3 text-sm leading-6 text-slate-600"}>
+              {description}
+            </p>
+          </div>
+          <div className="grid gap-3 lg:grid-cols-3">
+            {publicDatabasePillars.map((pillar) => (
+              <PublicDatabasePillarCard key={pillar.id} pillar={pillar} compact={compact} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function PublicDatabasePillarCard({
+  compact,
+  pillar,
+}: {
+  compact?: boolean
+  pillar: PublicDatabasePillar
+}) {
+  const Icon = databaseIcons[pillar.id]
+  const tone = databaseToneClasses[pillar.tone]
+
+  return (
+    <Link
+      href={pillar.href}
+      className={cn(
+        "group flex h-full flex-col rounded-md border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg",
+        tone.card,
+      )}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <span className={cn("flex size-10 shrink-0 items-center justify-center rounded-md", tone.icon)}>
+          <Icon className="size-5" aria-hidden="true" />
+        </span>
+        <span className={cn("rounded-md px-2 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.12em]", tone.eyebrow)}>
+          {pillar.shortLabel}
+        </span>
+      </div>
+      <h3 className="mt-4 text-lg font-semibold leading-tight text-slate-950">{pillar.label}</h3>
+      <p className={compact ? "mt-2 text-xs leading-5 text-slate-600" : "mt-2 text-sm leading-6 text-slate-600"}>
+        {pillar.description}
+      </p>
+      {!compact ? (
+        <div className="mt-4 grid gap-2">
+          {pillar.proofPoints.slice(0, 2).map((point) => (
+            <span key={point} className="inline-flex items-center gap-2 text-xs font-semibold text-slate-700">
+              <ShieldCheck className="size-3.5 text-emerald-700" aria-hidden="true" />
+              {point}
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <span className={cn("mt-4 inline-flex items-center gap-2 text-sm font-semibold", tone.link)}>
+        {pillar.cta}
+        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </Link>
   )
 }
 

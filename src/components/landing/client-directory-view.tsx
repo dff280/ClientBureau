@@ -401,45 +401,42 @@ function DirectoryFact({ label, value }: { label: string; value: string }) {
 }
 
 function DirectoryEducation({ title, description }: { title: string; description: string }) {
+  const guardrails = [
+    {
+      title: "Moderated summaries only",
+      text: "Profiles are based on approved reported experiences and should be read as business-context records, not broad accusations or guarantees.",
+    },
+    {
+      title: "Private matching stays private",
+      text: "Searches may use private identifiers, but public pages do not show raw emails, phones, street addresses, evidence files, or internal notes.",
+    },
+    {
+      title: "Response and resolution context",
+      text: "Approved responses, disputes, corrections, positive reports, and resolution updates help keep the record balanced and useful.",
+    },
+  ]
+
   return (
     <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-      <CardContent className="space-y-6 p-6">
-        <div>
+      <CardContent className="grid gap-5 p-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase text-amber-700">Responsible database use</p>
           <h2 className="mt-2 text-2xl font-semibold text-slate-950">{title}</h2>
           <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">{description}</p>
+          <p className="mt-3 max-w-4xl text-sm leading-6 text-slate-600">
+            Use this page as one intake signal before scheduling crews, ordering materials, accepting custom work,
+            extending payment terms, or sending an agreement packet. A public profile should support a careful
+            business decision; it should not replace contracts, deposits, documentation, or direct professional judgment.
+          </p>
         </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-            <h3 className="font-semibold text-slate-950">Moderated public summaries</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Client Bureau database pages link to public profiles created from approved
-              contractor-submitted summaries. The wording should stay neutral, factual, and tied
-              to documented reported experiences instead of broad accusations.
-            </p>
-          </div>
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-            <h3 className="font-semibold text-slate-950">Private matching stays private</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Contractors may search with private identifiers, but public pages do not show raw
-              emails, phone numbers, street addresses, uploaded evidence, internal notes, or
-              unapproved submissions. Evidence is summarized only as public-safe context.
-            </p>
-          </div>
-          <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-            <h3 className="font-semibold text-slate-950">Response and resolution context</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Clients can submit a response, correction, dispute, or resolution update. Approved
-              response context helps contractors understand whether an issue is open, resolved,
-              disputed, or supported by additional documentation.
-            </p>
-          </div>
-        </div>
-        <div className="grid gap-4 lg:grid-cols-3">
-          {directoryFaqs.map((faq) => (
-            <div key={faq.question} className="rounded-md border border-slate-200 bg-white p-4">
-              <h3 className="font-semibold text-slate-950">{faq.question}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{faq.answer}</p>
+        <div className="grid gap-3">
+          {guardrails.map((item) => (
+            <div key={item.title} className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+              <span>
+                <strong className="block text-slate-950">{item.title}</strong>
+                {item.text}
+              </span>
             </div>
           ))}
         </div>

@@ -1,18 +1,16 @@
 import type { Metadata } from "next"
-import { CalendarClock, FileCheck2, FilePlus2, Landmark, Radar, ReceiptText, Search, ShieldCheck, Signature } from "lucide-react"
+import { FilePlus2, ReceiptText, Search, ShieldCheck, Signature } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import {
   PremiumCtaBand,
-  PremiumFeatureCard,
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
-  PublicJourneyNav,
+  PublicDatabaseShowcase,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
-import { Card, CardContent } from "@/components/ui/card"
 import { pageAssets } from "@/lib/page-assets"
 
 export const metadata: Metadata = {
@@ -43,61 +41,25 @@ const system = [
   {
     icon: Signature,
     phase: "02",
-    title: "Set clear terms before scheduling",
-    text: "Use agreement packets and signing links to document scope, exclusions, deposits, milestones, cancellation terms, and change-order rules.",
+    title: "Set terms and document the work",
+    text: "Use agreement packets, signing links, evidence records, invoices, photos, approvals, and change orders while the job is active.",
     href: "/dashboard/contracts",
-    cta: "Open contracts",
-  },
-  {
-    icon: FileCheck2,
-    phase: "03",
-    title: "Document the work while it is happening",
-    text: "Store evidence privately: invoices, contracts, screenshots, photos, approvals, PDFs, completion records, and payment communications.",
-    href: "/dashboard/evidence",
-    cta: "Open evidence vault",
-  },
-  {
-    icon: FilePlus2,
-    phase: "04",
-    title: "Submit a client experience if the record matters",
-    text: "Submit positive experiences, payment issues, disputes, chargebacks, or resolution context for moderation. Public summaries must stay factual and careful.",
-    href: "/submit-report",
-    cta: "Report experience",
+    cta: "Protect the job",
   },
   {
     icon: ReceiptText,
-    phase: "05",
-    title: "Open recovery when payment stalls",
-    text: "Create a private Resolution Desk case with invoices, project timeline, communication history, payment-plan options, and staff-reviewed follow-up.",
+    phase: "03",
+    title: "Respond, recover, or publish carefully",
+    text: "Use reports, response paths, payment recovery, and Florida lien-service workflows when the record needs structure.",
     href: "/payment-recovery-service",
-    cta: "Recovery service",
-  },
-  {
-    icon: Landmark,
-    phase: "06",
-    title: "Use Florida lien service when eligible",
-    text: "Prepare notice or filing workflows with document review, service-fee tracking, contractor authorization, attorney/vendor review, and recording proof.",
-    href: "/florida-lien-filing-service",
-    cta: "Lien service",
+    cta: "Get payment help",
   },
 ]
 
 const safeguards = [
-  {
-    icon: ShieldCheck,
-    title: "Private identifiers stay private",
-    text: "Raw phone numbers, emails, street addresses, internal notes, and evidence files are not published on client profiles.",
-  },
-  {
-    icon: Radar,
-    title: "Public records are moderated",
-    text: "Profiles show approved summaries, rating context, evidence-on-file labels, positive reports, and response status.",
-  },
-  {
-    icon: CalendarClock,
-    title: "Resolution context matters",
-    text: "Disputes, corrections, payment plans, resolved reports, and client responses should stay visible when approved.",
-  },
+  "Private identifiers, street addresses, raw evidence, and internal notes stay out of public profiles.",
+  "Public records are moderated and written as documented reported experiences.",
+  "Responses, corrections, disputes, positive reports, and resolution context are part of the fairness model.",
 ]
 
 const evidenceVaultAsset = pageAssets.evidenceVault
@@ -122,6 +84,12 @@ export default function HowItWorksPage() {
         }
       />
       <PremiumProofStrip items={proof} dark />
+      <PublicDatabaseShowcase
+        compact
+        eyebrow="Start with the right record"
+        title="The workflow begins with the Client, Contractor, or Subcontractor Database."
+        description="A visitor should not need training. Pick the record type, review public context, then move into private tools only when action is needed."
+      />
 
       <section className="bureau-section bg-white">
         <div className="bureau-container space-y-8">
@@ -144,13 +112,6 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <PublicJourneyNav
-        active="protect"
-        eyebrow="Use the path that matches the job"
-        title="One platform, four practical next steps."
-        description="The fastest way to understand Client Bureau is to choose the action you need now: check a client, protect a job, browse records, or get help with payment/documentation."
-      />
-
       <section className="bureau-section bg-slate-100">
         <div className="bureau-container grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
           <div className="space-y-6">
@@ -161,36 +122,14 @@ export default function HowItWorksPage() {
             />
             <LegalNotice />
           </div>
-          <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+          <div className="grid gap-3">
             {safeguards.map((item) => (
-              <PremiumFeatureCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
+              <div key={item} className="flex gap-3 rounded-md border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600 shadow-sm">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+                <span>{item}</span>
+              </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="bureau-section bg-white">
-        <div className="bureau-container grid gap-6 lg:grid-cols-[1fr_0.8fr] lg:items-center">
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-sm font-semibold uppercase text-amber-700">When a report is approved</p>
-              <h2 className="text-3xl font-semibold tracking-normal text-slate-950">
-                Approval can create or update a public client profile.
-              </h2>
-              <p className="text-sm leading-6 text-slate-600">
-                Public profiles can show moderated summaries, rating factors, risk level, evidence-on-file summaries, positive reports, response context, and city/state directory links. Pending, rejected, private, and raw evidence content stay hidden.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="rounded-md border-slate-200 bg-slate-950 text-white shadow-sm">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-sm font-semibold uppercase text-amber-300">What contractors get</p>
-              <p className="text-2xl font-semibold">A repeatable process before the job becomes expensive.</p>
-              <p className="text-sm leading-6 text-slate-300">
-                Check first, set terms, document everything, and escalate carefully when payment or dispute risk appears.
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </section>
 

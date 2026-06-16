@@ -1,16 +1,15 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowRight, CheckCircle2, FileCheck2, Radar, ReceiptText, ShieldCheck, Signature, Users } from "lucide-react"
+import { ArrowRight, CheckCircle2, Radar, ShieldCheck, Users } from "lucide-react"
 
 import {
   NextBestStepCard,
   PremiumCtaBand,
-  PremiumFeatureCard,
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
-  WorkflowTimeline,
+  PublicDatabaseShowcase,
 } from "@/components/marketing/premium-page-shell"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -34,53 +33,6 @@ const proof = [
   { label: "Service work", value: "Add-on", text: "Recovery and Florida lien workflows use service-fee paths." },
 ]
 
-const planOutcomes = [
-  {
-    icon: Radar,
-    title: "Check before you schedule",
-    text: "Run client checks before committing crew time, material orders, deposits, or final invoice risk.",
-  },
-  {
-    icon: Signature,
-    title: "Set terms before work starts",
-    text: "Use agreement packets, signing links, deposit terms, milestones, and change-order tracking.",
-  },
-  {
-    icon: FileCheck2,
-    title: "Keep evidence organized",
-    text: "Store invoices, contracts, screenshots, photos, approvals, and completion notes privately.",
-  },
-  {
-    icon: ReceiptText,
-    title: "Escalate professionally",
-    text: "Open private recovery and Florida lien-service workflows when a payment issue becomes serious.",
-  },
-]
-
-const workflowSteps = [
-  {
-    icon: Radar,
-    title: "Check the client",
-    text: "Run the intake search before accepting the job, ordering materials, or blocking the schedule.",
-    href: "/search",
-    cta: "Check a Client",
-  },
-  {
-    icon: Signature,
-    title: "Set terms",
-    text: "Move into agreement packets, deposits, milestones, exclusions, and signature tracking.",
-    href: "/dashboard/contracts",
-    cta: "Contracts",
-  },
-  {
-    icon: ReceiptText,
-    title: "Protect payment",
-    text: "Use evidence, recovery workflows, and Florida lien-service paths when payment risk appears.",
-    href: "/payment-recovery-service",
-    cta: "Recovery",
-  },
-]
-
 const comparisonRows = [
   ["Client profile search", "Limited", "Unlimited", "Shared", "Custom"],
   ["Watchlists and saved searches", "Basic", "Included", "Shared", "Advanced"],
@@ -102,7 +54,6 @@ const faqs = [
 ]
 
 const searchDossierAsset = pageAssets.searchDossier
-const agreementPacketAsset = pageAssets.floridaAgreementPacket
 
 export default function PricingPage() {
   return (
@@ -126,6 +77,12 @@ export default function PricingPage() {
         }
       />
       <PremiumProofStrip items={proof} dark />
+      <PublicDatabaseShowcase
+        compact
+        eyebrow="What every plan supports"
+        title="Pricing starts with access to the three core databases."
+        description="Client checks, contractor profiles, and subcontractor records are the front door. Contracts, evidence, recovery, and lien workflows support what happens after the search."
+      />
 
       <section className="bureau-section bg-slate-100">
         <div className="bureau-container space-y-10">
@@ -146,24 +103,6 @@ export default function PricingPage() {
             {pricingTiers.map((tier) => (
               <PlanCard key={tier.id} tier={tier} />
             ))}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {planOutcomes.map((item) => (
-              <PremiumFeatureCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
-            ))}
-          </div>
-
-          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-start">
-            <ProductMockupFrame
-              eyebrow="Plan value"
-              title="Pricing is tied to the work you already do."
-              description="Client Bureau should sit at the front of intake, not after a job goes bad."
-              imageSrc={agreementPacketAsset.src}
-              imageAlt={agreementPacketAsset.alt}
-              points={["Client checks before scheduling", "Agreement packets before work starts", "Evidence and recovery records after issues appear"]}
-            />
-            <WorkflowTimeline items={workflowSteps} />
           </div>
         </div>
       </section>

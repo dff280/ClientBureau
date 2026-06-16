@@ -5,7 +5,7 @@ import { Bell, ClipboardCheck, FilePlus2, LockKeyhole, Radar, SearchCheck, Shiel
 
 import { SearchCommandCenter } from "@/components/search/search-command-center"
 import { EntityProfileResultCard } from "@/components/search/entity-profile-result-card"
-import { PremiumHero, PremiumProofStrip, ProductMockupFrame, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumHero, PremiumProofStrip, ProductMockupFrame, PublicDatabaseShowcase } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
@@ -189,8 +189,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           <PremiumHero
             eyebrow={isAuthenticated ? "Contractor account active" : "Limited public preview"}
             title="Check a Client Before You Take the Job."
-            description="Check names, businesses, cities, private-match context, categories, and public profiles before you risk labor, materials, scheduling, deposits, or final invoice exposure."
-            primary={{ href: "#client-search", label: "Run Client Check", icon: Radar }}
+            description="One search can scan approved Client, Contractor, and Subcontractor Database records while keeping private identifiers and raw evidence out of public view."
+            primary={{ href: "#client-search", label: "Start search", icon: Radar }}
             secondary={{ href: reportPrefillHref(query, state, profileType, tradeCategory), label: "Report a Client Experience", icon: FilePlus2 }}
             aside={
               <div className="space-y-4">
@@ -216,19 +216,10 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           />
           <PremiumProofStrip
             items={[
-              { label: "Check by", value: "Name + business", text: "City, state, phone, email, and job context can support matching." },
-              { label: "Databases", value: "3 public paths", text: "Client, contractor, and subcontractor records can appear when approved." },
-              { label: "Public result", value: "Approved only", text: "Pending, rejected, private, and raw evidence content stays hidden." },
-              { label: "Privacy", value: "Protected", text: "Raw contact details and evidence files are not displayed publicly." },
-            ]}
-            dark
-          />
-          <TrustGuardrailStrip
-            items={[
-              "Searches are private",
-              "Raw emails and phones stay hidden",
-              "Only approved public content appears",
-              "Save or watch after sign-up",
+              { label: "Search", value: "One box", text: "Name, business, city, state, trade, or private-match context." },
+              { label: "Databases", value: "3", text: "Clients, contractors, and subcontractors when approved." },
+              { label: "Public result", value: "Moderated", text: "Pending, rejected, and private records stay hidden." },
+              { label: "Privacy", value: "Sealed", text: "Raw contact details and evidence files are not shown." },
             ]}
             dark
           />
@@ -286,16 +277,25 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           })}
         </div>
 
-        <SearchActivationGuide
-          hasSearch={hasSearch}
-          isAuthenticated={isAuthenticated}
-          query={query}
-          resultCount={results.length}
-          state={state}
-          profileType={profileType}
-          tradeCategory={tradeCategory}
-          signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
-        />
+        {hasSearch ? (
+          <SearchActivationGuide
+            hasSearch={hasSearch}
+            isAuthenticated={isAuthenticated}
+            query={query}
+            resultCount={results.length}
+            state={state}
+            profileType={profileType}
+            tradeCategory={tradeCategory}
+            signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
+          />
+        ) : (
+          <PublicDatabaseShowcase
+            compact
+            eyebrow="Choose the right database"
+            title="Not every search is a client check."
+            description="Browse clients, contractors, or subcontractors directly when you already know which kind of record you need."
+          />
+        )}
 
         {results.length > 0 ? (
           <div id="profile-results" className="scroll-mt-24 grid gap-4">

@@ -1,14 +1,14 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowRight, BookOpenCheck, FileText, Scale, Search, ShieldCheck } from "lucide-react"
+import { ArrowRight, BookOpenCheck, FileText, Scale, Search } from "lucide-react"
 
 import {
   PremiumCtaBand,
-  PremiumFeatureCard,
   PremiumHero,
   PremiumProofStrip,
   PremiumSectionHeader,
   ProductMockupFrame,
+  PublicDatabaseShowcase,
   PublicJourneyNav,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
@@ -25,24 +25,6 @@ export const metadata: Metadata = {
     canonical: "/resources",
   },
 }
-
-const overview = [
-  {
-    icon: Search,
-    title: "Before the job",
-    text: "Learn how client search, private matching, watchlists, and public profiles help you decide whether to accept work.",
-  },
-  {
-    icon: FileText,
-    title: "During the job",
-    text: "Use contracts, change orders, project documents, and evidence records to keep expectations and payment terms clear.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "After the job",
-    text: "Understand reports, client responses, payment recovery, Florida lien service, moderation, and resolution tracking.",
-  },
-]
 
 const proof = [
   { label: "Start", value: "Search", text: "Check client context before committing labor or materials." },
@@ -100,6 +82,12 @@ export default function ResourcesPage() {
       />
 
       <PremiumProofStrip items={proof} dark />
+      <PublicDatabaseShowcase
+        compact
+        eyebrow="Public records first"
+        title="Resources support the Client, Contractor, and Subcontractor databases."
+        description="The guides explain how records are created, moderated, rated, corrected, and connected to private business tools."
+      />
 
       <PublicJourneyNav
         active="help"
@@ -115,12 +103,6 @@ export default function ResourcesPage() {
             title="Everything a contractor needs to use Client Bureau with confidence."
             description="The resource center is organized around the real business flow: check the client before the job, document during the job, and protect payment after the job."
           />
-
-          <div className="grid gap-4 md:grid-cols-3">
-            {overview.map((item) => (
-              <PremiumFeatureCard key={item.title} icon={item.icon} title={item.title} text={item.text} />
-            ))}
-          </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
             {resourceNavigationGroups.map((group) => (
