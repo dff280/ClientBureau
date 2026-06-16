@@ -2,6 +2,8 @@
 
 Use this checklist before calling a production build launch-ready. It is intentionally stricter than a normal deploy check because Client Bureau now has live Supabase-backed public records, dashboard tools, admin workflows, and SEO surfaces.
 
+For the full product-quality target and remaining launch roadmap, use [LAUNCH_FINISHING_ROADMAP.md](LAUNCH_FINISHING_ROADMAP.md). This checklist is the release gate; the roadmap defines what the finished product should feel like and what still needs polish before launch.
+
 ## 1. Automated Gates
 
 Run the local gate from the project root:
