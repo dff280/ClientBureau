@@ -1,3 +1,4 @@
+import type { ClientDirectoryState } from "@/lib/client-directory"
 import type { ClientReport, PublicClientProfile, RiskLevel } from "@/lib/types"
 import type { ProfileType } from "@/lib/types"
 import { tradeCategoryMatches } from "@/lib/trade-taxonomy"
@@ -245,6 +246,25 @@ export function getSeoLandingPage(kind: SeoLandingKind, slug: string) {
 
 export function getSeoLandingPages(kind: SeoLandingKind) {
   return allSeoLandingPages.filter((page) => page.kind === kind)
+}
+
+export function seoLandingDirectoryCanonicalPath(
+  page: SeoLandingPage,
+  directory: ClientDirectoryState[],
+) {
+  if (page.kind !== "clients" || !page.city || !page.state) return undefined
+
+  const state = directory.find((item) => item.code === page.state || item.name.toLowerCase() === page.state?.toLowerCase())
+  const city = state?.cities.find((item) => item.name.toLowerCase() === page.city?.toLowerCase())
+
+  return state && city ? `/clients/${state.slug}/${city.slug}` : undefined
+}
+
+export function seoLandingCanonicalPath(
+  page: SeoLandingPage,
+  directory: ClientDirectoryState[] = [],
+) {
+  return seoLandingDirectoryCanonicalPath(page, directory) ?? page.canonicalPath
 }
 
 export function filterProfilesForLanding(page: SeoLandingPage, profiles: PublicClientProfile[]) {

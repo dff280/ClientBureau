@@ -34,6 +34,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
 import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
@@ -146,6 +147,8 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const evidenceSummary = summarizeEvidence(profile.evidence)
   const trustSummary = getPublicTrustSummary(profile)
   const ratingBand = clientRatingBand(profile.clientBureauScore, profile.reports.length)
+  const confidence = clientProfileConfidence(profile)
+  const primarySignals = clientProfilePrimarySignals(profile)
   const responseStatus = responseStatusLabel(profile)
   const resolutionStatus = resolutionStatusLabel(profile)
   const ratingIndicators = clientRatingIndicators(profile)
@@ -174,7 +177,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <RiskBadge riskLevel={profile.riskLevel} />
               <Badge className="rounded-md bg-emerald-600 text-white">
                 <ShieldCheck className="size-3" aria-hidden="true" />
-                Verified public profile
+                Public client record
               </Badge>
               <Badge variant="outline" className="rounded-md border-white/20 bg-white/10 text-slate-100">
                 Admin-approved summaries
@@ -182,39 +185,26 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
             </div>
             <div>
               <h1 className="text-4xl font-semibold tracking-normal text-white sm:text-5xl">
-                {name} in {profile.city}, {profile.state}: Client Bureau Public Profile
+                {name} in {profile.city}, {profile.state}
               </h1>
               <p className="mt-3 text-lg text-slate-300">
                 {profile.businessName ? `${profile.businessName} | ` : ""}
-                {profile.city}, {profile.state} / Contractor-submitted reports, Client Bureau Rating context, positive references, public responses, and moderated profile context.
+                Client Bureau public profile with moderated report context, response paths, and private evidence labels.
               </p>
             </div>
             <p className="max-w-3xl leading-7 text-slate-300">
-              This Client Bureau profile is built from contractor-submitted reports, approved
-              public summaries, client response information, and reputation indicators. Private
-              phone numbers, emails, addresses, raw evidence, and internal notes are not displayed.
+              Use this as one client-check signal before quotes, scheduling, materials, contract
+              terms, deposits, or payment milestones. It is not a credit score, legal finding,
+              background check, or guarantee.
             </p>
-            <div className="grid gap-3 rounded-md border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-200 md:grid-cols-3">
-              <div>
-                <p className="text-xs font-semibold uppercase text-amber-300">Search result intent</p>
-                <p className="mt-1">{name} client profile in {location}</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-amber-300">Public record type</p>
-                <p className="mt-1">Moderated contractor-submitted reports</p>
-              </div>
-              <div>
-                <p className="text-xs font-semibold uppercase text-amber-300">Fairness layer</p>
-                <p className="mt-1">Client response and dispute path included</p>
-              </div>
-            </div>
-            <div className="grid gap-3 rounded-md border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-slate-100 sm:grid-cols-2 lg:grid-cols-5">
-              <HeroFact label="Approved reports" value={String(profile.reports.length)} />
-              <HeroFact label="Positive references" value={String(profile.positiveReports.length)} />
-              <HeroFact label="Evidence review" value={evidenceSummary.includes("Evidence on file") ? "Evidence on file" : "Private only"} />
-              <HeroFact label="Response status" value={responseStatus} />
-              <HeroFact label="Resolution status" value={resolutionStatus} />
-            </div>
+            <ClientProfileAtAGlance
+              confidenceLevel={confidence.level}
+              evidenceLabel={primarySignals.evidenceLabel}
+              reportMix={primarySignals.reportMix}
+              responseStatus={responseStatus}
+              resolutionStatus={resolutionStatus}
+              updatedAt={profile.updatedAt}
+            />
             <div className="rounded-md border border-white/10 bg-white/[0.06] p-4">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
                 <div>
@@ -225,7 +215,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                    <Link href="/search">Check another client</Link>
+                    <Link href="/search?profileType=client">Check Another Client</Link>
                   </Button>
                   <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
                     <Link href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(profile.publicSlug)}`}>Watch this client</Link>
@@ -249,7 +239,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
                 <Link href={responseHref}>
                   <MessageSquareText aria-hidden="true" />
-                  Respond or dispute
+                  Respond or Correct
                 </Link>
               </Button>
             </div>
@@ -259,14 +249,18 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <div className="flex items-center justify-between gap-4">
                 <Badge className="rounded-md bg-slate-950 text-white">
                   <Star className="size-3" aria-hidden="true" />
-                  Client Bureau Rating
+                  Client Bureau Context Rating
                 </Badge>
                 <span className="text-xs font-semibold uppercase text-slate-500">Client Bureau</span>
               </div>
-              <ScoreGauge score={profile.clientBureauScore} label="Client Bureau Rating" />
+              <ScoreGauge score={profile.clientBureauScore} label="Context Rating" />
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm font-semibold text-amber-950">{ratingBand}</p>
                 <p className="mt-1 text-xs leading-5 text-amber-900">{clientRatingDisclaimer()}</p>
+              </div>
+              <div className={`rounded-md border p-3 ${confidenceToneClass(confidence.tone)}`}>
+                <p className="text-sm font-semibold">{confidence.level} confidence</p>
+                <p className="mt-1 text-xs leading-5 opacity-80">{confidence.summary}</p>
               </div>
               <TooltipProvider>
                 <Tooltip>
@@ -286,7 +280,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               </Link>
               <div className="grid gap-3 text-sm">
                 <div className="flex justify-between gap-4">
-                  <span className="text-slate-500">Report count</span>
+                  <span className="text-slate-500">Public reports</span>
                   <span className="font-semibold text-slate-950">{profile.reportCount}</span>
                 </div>
                 <div className="flex justify-between gap-4">
@@ -343,8 +337,6 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <TrustMetric label="Resolved reports" value={String(resolvedReports)} />
             </div>
 
-            <TrustVerificationPanel profileName={name} summary={trustSummary} />
-
             <ProfileDecisionGuide
               clientName={name}
               location={location}
@@ -355,6 +347,8 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               openDisputes={openDisputes}
               evidenceSummary={evidenceSummary}
             />
+
+            <TrustVerificationPanel profileName={name} summary={trustSummary} />
 
             <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
               <CardHeader>
@@ -592,6 +586,33 @@ function TrustMetric({ label, value }: { label: string; value: string }) {
   )
 }
 
+function ClientProfileAtAGlance({
+  confidenceLevel,
+  evidenceLabel,
+  reportMix,
+  responseStatus,
+  resolutionStatus,
+  updatedAt,
+}: {
+  confidenceLevel: string
+  evidenceLabel: string
+  reportMix: string
+  responseStatus: string
+  resolutionStatus: string
+  updatedAt: string
+}) {
+  return (
+    <div className="grid gap-3 rounded-md border border-amber-300/20 bg-amber-300/10 p-4 text-sm leading-6 text-slate-100 sm:grid-cols-2 lg:grid-cols-3">
+      <HeroFact label="Report mix" value={reportMix} />
+      <HeroFact label="Evidence" value={evidenceLabel} />
+      <HeroFact label="Response" value={responseStatus} />
+      <HeroFact label="Resolution" value={resolutionStatus} />
+      <HeroFact label="Confidence" value={confidenceLevel} />
+      <HeroFact label="Last updated" value={new Date(updatedAt).toLocaleDateString()} />
+    </div>
+  )
+}
+
 function HeroFact({ label, value }: { label: string; value: string }) {
   return (
     <div>
@@ -651,6 +672,13 @@ function ProfileSearchSummary({
       </CardContent>
     </Card>
   )
+}
+
+function confidenceToneClass(tone: "amber" | "emerald" | "slate") {
+  if (tone === "emerald") return "border-emerald-200 bg-emerald-50 text-emerald-950"
+  if (tone === "amber") return "border-amber-200 bg-amber-50 text-amber-950"
+
+  return "border-slate-200 bg-slate-50 text-slate-700"
 }
 
 function ProfileDecisionGuide({

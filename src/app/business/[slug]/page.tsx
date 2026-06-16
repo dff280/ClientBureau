@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 import {
   ArrowRight,
   CheckCircle2,
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { getSiteUrl } from "@/lib/env"
-import { getPublicBusinessProfileService } from "@/lib/repositories/client-bureau-service"
+import { getPublicBusinessProfileService, getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
 import { JsonLd } from "@/lib/seo"
 
 type BusinessProfilePageProps = {
@@ -36,19 +36,21 @@ export async function generateMetadata({ params }: BusinessProfilePageProps): Pr
     }
   }
 
+  const canonicalProfile = await getPublicEntityProfileService("contractor", profile.publicSlug)
   const title = `${profile.businessName} Business Rating`
   const description = `${profile.businessName} in ${profile.city}, ${profile.state}: Client Bureau business profile with verification, documentation, public contribution, and rating context.`
+  const canonicalUrl = canonicalProfile ? `${siteUrl}${canonicalProfile.profileHref}` : `${siteUrl}/business/${profile.publicSlug}`
 
   return {
     title,
     description,
     alternates: {
-      canonical: `${siteUrl}/business/${profile.publicSlug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
       title,
       description,
-      url: `${siteUrl}/business/${profile.publicSlug}`,
+      url: canonicalUrl,
       type: "profile",
       images: [
         {
@@ -81,6 +83,9 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
   const profile = await getPublicBusinessProfileService(slug)
 
   if (!profile) notFound()
+
+  const canonicalProfile = await getPublicEntityProfileService("contractor", profile.publicSlug)
+  if (canonicalProfile) permanentRedirect(canonicalProfile.profileHref)
 
   const siteUrl = getSiteUrl()
   const structuredData = {

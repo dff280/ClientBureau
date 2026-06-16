@@ -38,6 +38,10 @@ function hasNoindexRobots(source) {
   return /robots\s*:/.test(source) && /index\s*:\s*false/.test(source) && /follow\s*:\s*false/.test(source)
 }
 
+function hasNoindexFollowRobots(source) {
+  return /robots\s*:/.test(source) && /index\s*:\s*false/.test(source) && /follow\s*:\s*true/.test(source)
+}
+
 function navigationHrefs(source) {
   return new Set([...source.matchAll(/\bhref\s*:\s*["']([^"']+)["']/g)].map((match) => match[1]))
 }
@@ -72,12 +76,14 @@ const privateNoindexRoutes = new Set([
   "/admin/reviews",
   "/admin/settings",
   "/admin/uploads",
-  "/client-response",
   "/contract/[token]",
   "/dashboard",
   "/dashboard/[tool]",
   "/dashboard/jobs",
   "/dashboard/jobs/[jobId]",
+])
+
+const crawlableNoindexRoutes = new Set([
   "/login",
   "/search",
   "/signup",
@@ -164,6 +170,7 @@ const publicIndexableRoutes = new Set([
   "/business-rating-methodology",
   "/change-order-template",
   "/claim-profile",
+  "/client-response",
   "/client/[slug]",
   "/client-screening-for-contractors",
   "/clients",
@@ -219,7 +226,7 @@ if (existsSync(navigationFile)) pass("Navigation registry exists", navigationFil
 else fail("Navigation registry exists", "src/lib/navigation.ts missing")
 
 const routeSet = new Set(routes.map((item) => item.route))
-const classifiedRoutes = new Set([...privateNoindexRoutes, ...publicIndexableRoutes])
+const classifiedRoutes = new Set([...privateNoindexRoutes, ...crawlableNoindexRoutes, ...publicIndexableRoutes])
 const routePatterns = [...routeSet].map((route) => ({ route, pattern: routePatternToRegExp(route) }))
 
 for (const route of [...classifiedRoutes].sort()) {
@@ -242,8 +249,13 @@ for (const { route, source } of routes.filter((item) => privateNoindexRoutes.has
   else fail(`${route} declares noindex/nofollow robots`, "private routes must not be indexable")
 }
 
+for (const { route, source } of routes.filter((item) => crawlableNoindexRoutes.has(item.route))) {
+  if (hasNoindexFollowRobots(source)) pass(`${route} declares noindex/follow robots`)
+  else fail(`${route} declares noindex/follow robots`, "crawlable utility routes should not be robots-blocked or nofollowed")
+}
+
 for (const { route, source } of routes.filter((item) => publicIndexableRoutes.has(item.route))) {
-  if (!hasNoindexRobots(source)) pass(`${route} is not statically noindexed`)
+  if (!hasNoindexRobots(source) && !hasNoindexFollowRobots(source)) pass(`${route} is not statically noindexed`)
   else fail(`${route} is not statically noindexed`, "public routes should remain indexable unless intentionally reclassified")
 }
 

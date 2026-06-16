@@ -19,6 +19,7 @@
     "mobile:build:aab": "npm --prefix apps/mobile run build:aab",
     "seo:check": "node scripts/verify-seo.mjs",
     "seo:check:local": "node scripts/run-local-seo-check.mjs",
+    "seo:indexability": "node scripts/audit-search-console-indexing.mjs",
     "verify:local": "node scripts/verify-local-release.mjs",
     "verify:live": "node scripts/verify-live-release.mjs",
     "verify:live:release-candidate": "node scripts/verify-live-release-candidate.mjs",

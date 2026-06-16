@@ -49,6 +49,11 @@ import {
   getScoreCategoryBreakdown,
   scoreToRiskLevel,
 } from "@/lib/scoring"
+import {
+  clientDatabaseSearchHref,
+  clientProfileConfidence,
+  clientProfilePrimarySignals,
+} from "@/lib/client-database"
 import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
 import { getInternalRedirectUrl } from "@/lib/urls"
@@ -197,7 +202,7 @@ import {
 import { acquisitionPages, getAcquisitionPage } from "@/lib/acquisition-pages"
 import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
 import { pageAssets } from "@/lib/page-assets"
-import { allSeoLandingPages, getSeoLandingPage } from "@/lib/seo-landing-pages"
+import { allSeoLandingPages, getSeoLandingPage, seoLandingCanonicalPath } from "@/lib/seo-landing-pages"
 import {
   intakeAssessmentSchema,
   contractWorkspaceItemSchema,
@@ -501,6 +506,56 @@ describe("Client Bureau scoring", () => {
     expect(balance.unresolvedAmount).toBe(3000)
     expect(categories.map((category) => category.label)).toContain("Payment reliability")
     expect(categories).toHaveLength(7)
+  })
+
+  it("builds Client Database search URLs with the client profile filter", () => {
+    expect(clientDatabaseSearchHref({ query: "John Smith", state: "fl" })).toBe(
+      "/search?profileType=client&q=John+Smith&state=FL",
+    )
+  })
+
+  it("derives limited client confidence without changing the stored score", () => {
+    const profile = {
+      ...clientProfiles[0],
+      clientBureauScore: 78,
+      reportCount: 0,
+    }
+
+    const confidence = clientProfileConfidence(profile)
+    const signals = clientProfilePrimarySignals(profile)
+
+    expect(confidence.level).toBe("Limited")
+    expect(confidence.summary).toContain("Limited public history")
+    expect(signals.ratingLabel).toBe("Limited history")
+  })
+
+  it("raises client confidence from approved public signals and evidence context", () => {
+    const profile = {
+      ...clientProfiles[0],
+      clientBureauScore: 88,
+      reportCount: 2,
+      reports: [
+        { ...baseReport, id: "positive_report", reportCategory: "Positive experience" as const },
+        { ...baseReport, id: "evidence_report", evidenceAttached: true },
+      ],
+      positiveReports: [{ ...baseReport, id: "positive_report", reportCategory: "Positive experience" as const }],
+      clientResponses: [],
+      evidence: [{
+        id: "evidence_test",
+        reportId: "evidence_report",
+        fileName: "invoice.pdf",
+        fileType: "pdf",
+        storagePath: "private/evidence/invoice.pdf",
+        uploadedAt: "2026-01-02T00:00:00.000Z",
+      }],
+    }
+
+    const confidence = clientProfileConfidence(profile)
+    const signals = clientProfilePrimarySignals(profile)
+
+    expect(confidence.level).not.toBe("Limited")
+    expect(signals.evidenceLabel).toBe("Evidence on file")
+    expect(signals.reportMix).toBe("2 public / 1 positive")
   })
 })
 
@@ -1495,6 +1550,9 @@ describe("public SEO landing pages", () => {
 
     expect(florida?.profileCount).toBeGreaterThan(0)
     expect(orlando?.profiles.some((profile) => profile.publicSlug === "john-smith-orlando-fl")).toBe(true)
+    expect(seoLandingCanonicalPath(getSeoLandingPage("clients", "orlando-fl")!, directory)).toBe(
+      "/clients/florida/orlando",
+    )
   })
 
   it("includes SEO landing pages in the sitemap", async () => {
@@ -1509,7 +1567,10 @@ describe("public SEO landing pages", () => {
     expect(urls).toContain("https://clientbureau.com/profiles/subcontractor")
     expect(urls).toContain("https://clientbureau.com/industries")
     expect(urls).toContain("https://clientbureau.com/business-rating-methodology")
-    expect(urls).toContain("https://clientbureau.com/business/ridgebuild-contracting-orlando-fl")
+    expect(urls).toContain("https://clientbureau.com/client-response")
+    expect(urls).toContain("https://clientbureau.com/profiles/contractor/ridgebuild-contracting-orlando-fl")
+    expect(urls).not.toContain("https://clientbureau.com/business/ridgebuild-contracting-orlando-fl")
+    expect(urls).not.toContain("https://clientbureau.com/clients/orlando-fl")
     expect(urls).toContain("https://clientbureau.com/clients/florida")
     expect(urls).toContain("https://clientbureau.com/clients/florida/orlando")
     expect(urls).toContain("https://clientbureau.com/reports/high-risk")
@@ -1593,6 +1654,7 @@ describe("public SEO landing pages", () => {
 
     expect(String(metadata.title)).toContain("RidgeBuild Contracting")
     expect(String(metadata.description)).toContain("business profile")
+    expect(metadata.alternates?.canonical).toBe("https://clientbureau.com/profiles/contractor/ridgebuild-contracting-orlando-fl")
   })
 })
 

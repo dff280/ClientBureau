@@ -9,8 +9,9 @@ import {
 import { entityProfileHrefs } from "@/lib/entity-profiles"
 import { getClientDirectory } from "@/lib/client-directory"
 import { acquisitionPages } from "@/lib/acquisition-pages"
-import { allSeoLandingPages } from "@/lib/seo-landing-pages"
+import { allSeoLandingPages, seoLandingDirectoryCanonicalPath } from "@/lib/seo-landing-pages"
 import { getReleaseLastModified } from "@/lib/release"
+import { isSitemapIndexablePath } from "@/lib/seo-indexability"
 import { profileTypes } from "@/lib/types"
 
 const siteUrl = getSiteUrl()
@@ -85,6 +86,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: releaseLastModified,
       changeFrequency: "monthly",
       priority: 0.56,
+    },
+    {
+      url: `${siteUrl}/client-response`,
+      lastModified: releaseLastModified,
+      changeFrequency: "monthly",
+      priority: 0.54,
     },
     {
       url: `${siteUrl}/business-rating-methodology`,
@@ -183,18 +190,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getPublicBusinessProfilesService(),
     getPublicEntityProfilesService(),
   ])
+  const directory = getClientDirectory(profiles)
+  const entityProfileHrefSet = new Set(entityProfiles.flatMap((profile) => entityProfileHrefs(profile)))
   const clientRoutes = profiles.map((profile) => ({
     url: `${siteUrl}/client/${profile.publicSlug}`,
     lastModified: new Date(profile.updatedAt),
     changeFrequency: "weekly" as const,
     priority: 0.9,
   }))
-  const businessRoutes = businesses.map((profile) => ({
-    url: `${siteUrl}/business/${profile.publicSlug}`,
-    lastModified: new Date(profile.lastUpdated),
-    changeFrequency: "weekly" as const,
-    priority: 0.75,
-  }))
+  const businessRoutes = businesses
+    .filter((profile) => !entityProfileHrefSet.has(`/profiles/contractor/${profile.publicSlug}`))
+    .map((profile) => ({
+      url: `${siteUrl}/business/${profile.publicSlug}`,
+      lastModified: new Date(profile.lastUpdated),
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+    }))
   const entityRoutes = entityProfiles.flatMap((profile) =>
     entityProfileHrefs(profile).map((href) => ({
       url: `${siteUrl}${href}`,
@@ -203,13 +214,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: href.startsWith("/profiles/client") ? 0.9 : 0.76,
     })),
   )
-  const landingRoutes = allSeoLandingPages.map((page) => ({
-    url: `${siteUrl}${page.canonicalPath}`,
-    lastModified: releaseLastModified,
-    changeFrequency: "weekly" as const,
-    priority: page.kind === "clients" ? 0.75 : 0.7,
-  }))
-  const directory = getClientDirectory(profiles)
+  const landingRoutes = allSeoLandingPages
+    .filter((page) => !seoLandingDirectoryCanonicalPath(page, directory))
+    .map((page) => ({
+      url: `${siteUrl}${page.canonicalPath}`,
+      lastModified: releaseLastModified,
+      changeFrequency: "weekly" as const,
+      priority: page.kind === "clients" ? 0.75 : 0.7,
+    }))
   const directoryRoutes = directory.flatMap((state) => [
     {
       url: `${siteUrl}/clients/${state.slug}`,
@@ -232,7 +244,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...clientRoutes,
     ...businessRoutes,
     ...entityRoutes,
-  ])
+  ]).filter((entry) => {
+    try {
+      return isSitemapIndexablePath(new URL(entry.url).pathname)
+    } catch {
+      return false
+    }
+  })
 }
 
 function dedupeSitemapEntries(entries: MetadataRoute.Sitemap) {

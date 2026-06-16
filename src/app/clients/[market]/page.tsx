@@ -1,13 +1,13 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
 
 import { ClientDirectoryStateView } from "@/components/landing/client-directory-view"
 import { SeoLandingPageView } from "@/components/landing/seo-landing-page-view"
-import { getClientDirectoryState } from "@/lib/client-directory"
+import { getClientDirectory, getClientDirectoryState } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
 import { getProfilesForLanding } from "@/lib/public-profile-loaders"
 import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
-import { getSeoLandingPage, getSeoLandingPages } from "@/lib/seo-landing-pages"
+import { getSeoLandingPage, getSeoLandingPages, seoLandingDirectoryCanonicalPath } from "@/lib/seo-landing-pages"
 import { JsonLd } from "@/lib/seo"
 
 type ClientsLandingPageProps = {
@@ -54,16 +54,18 @@ export async function generateMetadata({ params }: ClientsLandingPageProps): Pro
     }
   }
 
+  const canonicalDirectoryHref = await clientLandingDirectoryHref(page)
+
   return {
     title: page.title,
     description: page.description,
     alternates: {
-      canonical: page.canonicalPath,
+      canonical: canonicalDirectoryHref ? `${siteUrl}${canonicalDirectoryHref}` : page.canonicalPath,
     },
     openGraph: {
       title: `${page.title} | Client Bureau`,
       description: page.description,
-      url: `${siteUrl}${page.canonicalPath}`,
+      url: canonicalDirectoryHref ? `${siteUrl}${canonicalDirectoryHref}` : `${siteUrl}${page.canonicalPath}`,
       type: "website",
       images: [{ url: `${siteUrl}/opengraph-image`, width: 1200, height: 630, alt: page.title }],
     },
@@ -146,7 +148,16 @@ export default async function ClientsLandingPage({ params }: ClientsLandingPageP
     )
   }
 
+  const canonicalDirectoryHref = await clientLandingDirectoryHref(page)
+  if (canonicalDirectoryHref) permanentRedirect(canonicalDirectoryHref)
+
   const profiles = await getProfilesForLanding(page)
 
   return <SeoLandingPageView page={page} profiles={profiles} />
+}
+
+async function clientLandingDirectoryHref(page: NonNullable<ReturnType<typeof getSeoLandingPage>>) {
+  const directory = getClientDirectory(await getPublicClientProfilesService())
+
+  return seoLandingDirectoryCanonicalPath(page, directory)
 }

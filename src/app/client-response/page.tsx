@@ -13,10 +13,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/client-response",
   },
-  robots: {
-    index: false,
-    follow: false,
-  },
 }
 
 export const dynamic = "force-dynamic"

@@ -1,10 +1,13 @@
 import Link from "next/link"
+import type { LucideIcon } from "lucide-react"
 import { ArrowRight, MapPinned, Search, ShieldCheck } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
+import { StateSelect } from "@/components/forms/state-select"
 import { TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { clientDatabaseSearchHref, clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
 import type { ClientDirectoryCity, ClientDirectoryState } from "@/lib/client-directory"
 import { getClientCityDirectoryHref } from "@/lib/client-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
@@ -41,8 +44,8 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
       <JsonLd data={getFaqSchema(directoryFaqs)} />
       <DirectoryHero
         eyebrow="Client Database"
-        title="Browse approved Client Database profiles by state and city."
-        description="The Client Database helps contractors and service business owners find public, admin-approved client profiles without relying on a search form alone."
+        title="Search the Client Database before you take the job."
+        description="Look up approved public client profiles by name, business, city, or state. Public pages show moderated context only, with private identifiers and raw evidence kept sealed."
         stats={[
           ["Public profiles", profileCount.toLocaleString()],
           ["Approved reports", reportCount.toLocaleString()],
@@ -59,23 +62,7 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
         dark
       />
       <div className="bureau-container space-y-8 py-10">
-        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-          <CardContent className="grid gap-4 p-6 lg:grid-cols-[1fr_280px] lg:items-center">
-            <div>
-              <h2 className="text-2xl font-semibold text-slate-950">Client Database by state</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                Each state page links to city markets and approved client profiles. Pending,
-                rejected, private evidence, raw email, phone, and internal notes are not shown.
-              </p>
-            </div>
-            <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/search">
-                <Search aria-hidden="true" />
-                Check a Client
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        <DatabaseQuickStart profileCount={profileCount} reportCount={reportCount} stateCount={states.length} />
 
         {states.length > 0 ? (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -90,8 +77,8 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
           <ProfileGrid title="Recently updated approved profiles" profiles={recentProfiles} />
         ) : null}
         <DirectoryEducation
-          title="How to use the Client Database"
-          description="The Client Database is built for careful pre-job research. It gives contractors and service businesses a direct path to approved public profiles while keeping sensitive matching data and private workflow records out of search results."
+          title="How to read a public Client Database record"
+          description="Each profile is a moderated intake signal. Use it to understand approved public context before scheduling crews, ordering materials, sending contract terms, or extending payment terms."
         />
       </div>
     </section>
@@ -236,7 +223,7 @@ export function ClientDirectoryCityView({
               </p>
             </div>
             <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-              <Link href="/submit-report">Report a Client Experience</Link>
+              <Link href={clientDatabaseSearchHref({ state: state.code })}>Check this market</Link>
             </Button>
           </CardContent>
         </Card>
@@ -275,13 +262,13 @@ function DirectoryHero({
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-              <Link href="/search">
+              <a href="#client-database-search">
                 <Search aria-hidden="true" />
-                Check a Client
-              </Link>
+                Search Client Database
+              </a>
             </Button>
             <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
-              <Link href="/how-it-works">How Client Bureau Works</Link>
+              <Link href="/submit-report">Report a Client Experience</Link>
             </Button>
           </div>
         </div>
@@ -296,6 +283,99 @@ function DirectoryHero({
           </CardContent>
         </Card>
       </div>
+    </div>
+  )
+}
+
+function DatabaseQuickStart({
+  profileCount,
+  reportCount,
+  stateCount,
+}: {
+  profileCount: number
+  reportCount: number
+  stateCount: number
+}) {
+  return (
+    <Card id="client-database-search" className="scroll-mt-24 overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="grid gap-0 p-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-5 p-5 sm:p-6">
+          <div>
+            <p className="text-sm font-semibold uppercase text-amber-700">Search clients</p>
+            <h2 className="mt-2 text-3xl font-semibold tracking-normal text-slate-950">
+              Run a client check by name, business, or market.
+            </h2>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Use the Client Database before quotes, scheduling, material orders, contract terms,
+              deposits, or payment milestones. Searches use approved public records and private-safe matching.
+            </p>
+          </div>
+          <form action="/search" method="get" className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[1fr_210px_auto] sm:p-4">
+            <input type="hidden" name="profileType" value="client" />
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase text-slate-500">Name or business</span>
+              <input
+                name="q"
+                type="search"
+                placeholder="John Smith, ABC Holdings, property owner..."
+                className="h-10 rounded-md border border-input bg-white px-3 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              />
+            </label>
+            <label className="grid gap-2">
+              <span className="text-xs font-semibold uppercase text-slate-500">State</span>
+              <StateSelect id="client-database-state" name="state" required={false} />
+            </label>
+            <Button className="mt-auto h-10 bg-slate-950 text-white hover:bg-slate-800">
+              <Search aria-hidden="true" />
+              Check a Client
+            </Button>
+          </form>
+          <div className="grid gap-3 md:grid-cols-3">
+            <QuickStartStep icon={Search} title="Search clients" text="Look up approved public records by identity, market, or private-match intent." />
+            <QuickStartStep icon={MapPinned} title="Browse by location" text="Use state and city directories when you are researching a local market." />
+            <QuickStartStep icon={ShieldCheck} title="Understand the record" text="Review rating context, evidence labels, response paths, and positive or concern history." />
+          </div>
+        </div>
+        <div className="border-t border-slate-200 bg-slate-950 p-5 text-white sm:p-6 lg:border-l lg:border-t-0">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">Database proof</p>
+          <div className="mt-4 grid gap-3">
+            <DirectoryProofMetric label="Public profiles" value={profileCount.toLocaleString()} />
+            <DirectoryProofMetric label="Approved reports" value={reportCount.toLocaleString()} />
+            <DirectoryProofMetric label="State directories" value={stateCount.toLocaleString()} />
+          </div>
+          <div className="mt-5 rounded-md border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-300">
+            Public profiles never show raw phone numbers, emails, street addresses, raw evidence files,
+            pending reports, rejected reports, or internal notes.
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function QuickStartStep({
+  icon: Icon,
+  text,
+  title,
+}: {
+  icon: LucideIcon
+  text: string
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4">
+      <Icon className="size-5 text-amber-700" aria-hidden="true" />
+      <p className="mt-3 font-semibold text-slate-950">{title}</p>
+      <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
+function DirectoryProofMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-md border border-white/10 bg-white/5 px-4 py-3">
+      <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
+      <p className="text-2xl font-semibold text-white">{value}</p>
     </div>
   )
 }
@@ -350,44 +430,56 @@ function ProfileGrid({ title, profiles }: { title: string; profiles: ClientProfi
       {profiles.length > 0 ? (
         <div className="grid gap-4 lg:grid-cols-2">
           {profiles.map((profile) => (
-            <Card key={profile.id} className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
-              <CardContent className="space-y-5 p-5">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-xl font-semibold text-slate-950">
-                      {profile.firstName} {profile.lastName}
-                    </h3>
-                    <p className="mt-1 text-sm text-slate-500">
-                      {profile.businessName ? `${profile.businessName} / ` : ""}
-                      {profile.city}, {profile.state}
-                    </p>
-                  </div>
-                  <RiskBadge riskLevel={profile.riskLevel} />
-                </div>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <DirectoryFact label="Rating" value={`${profile.clientBureauScore}/100`} />
-                  <DirectoryFact label="Reports" value={String(profile.reportCount)} />
-                  <DirectoryFact label="Updated" value={formatDate(profile.updatedAt)} />
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  <Button asChild variant="outline">
-                    <Link href={`/client/${profile.publicSlug}`}>
-                      View profile
-                      <ArrowRight aria-hidden="true" />
-                    </Link>
-                  </Button>
-                  <Link href={getClientCityDirectoryHref(profile)} className="inline-flex items-center text-sm font-semibold text-amber-700 hover:text-amber-800">
-                    {profile.city} market
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+            <ProfileDirectoryCard key={profile.id} profile={profile} />
           ))}
         </div>
       ) : (
         <EmptyDirectoryState />
       )}
     </div>
+  )
+}
+
+function ProfileDirectoryCard({ profile }: { profile: ClientProfile }) {
+  const confidence = clientProfileConfidence(profile)
+  const signals = clientProfilePrimarySignals(profile)
+
+  return (
+    <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="space-y-5 p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-xl font-semibold text-slate-950">
+              {profile.firstName} {profile.lastName}
+            </h3>
+            <p className="mt-1 text-sm text-slate-500">
+              {profile.businessName ? `${profile.businessName} / ` : ""}
+              {profile.city}, {profile.state}
+            </p>
+          </div>
+          <RiskBadge riskLevel={profile.riskLevel} />
+        </div>
+        <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950">
+          {confidence.summary}
+        </p>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <DirectoryFact label="Context rating" value={`${profile.clientBureauScore}/100`} />
+          <DirectoryFact label="Reports" value={String(profile.reportCount)} />
+          <DirectoryFact label="Rating label" value={signals.ratingLabel} />
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button asChild variant="outline">
+            <Link href={`/client/${profile.publicSlug}`}>
+              View profile
+              <ArrowRight aria-hidden="true" />
+            </Link>
+          </Button>
+          <Link href={getClientCityDirectoryHref(profile)} className="inline-flex items-center text-sm font-semibold text-amber-700 hover:text-amber-800">
+            {profile.city} market
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

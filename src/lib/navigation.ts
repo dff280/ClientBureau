@@ -149,8 +149,8 @@ export const footerNavigationGroups: NavigationGroup[] = [
   {
     title: "Tools and Services",
     links: [
-      { href: "/dashboard/jobs", label: "Jobs" },
-      { href: "/dashboard/contracts", label: "Contracts" },
+      { href: "/platform", label: "Jobs" },
+      { href: "/contractor-contract-template", label: "Contracts" },
       { href: "/contractor-contract-template", label: "Contract Templates" },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter" },
       { href: "/change-order-template", label: "Change Orders" },
@@ -158,7 +158,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/florida-lien-filing-service", label: "Florida Lien Filing" },
       { href: "/florida-lien-notice-service", label: "Florida Notice to Owner" },
       { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide" },
-      { href: "/dashboard/evidence", label: "Evidence Vault" },
+      { href: "/report-policy", label: "Evidence Vault" },
     ],
   },
   {

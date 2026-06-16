@@ -77,6 +77,7 @@ export function AdminClientEditor({
   const name = `${client.firstName} ${client.lastName}`
   const ratingBand = clientRatingBand(client.clientBureauScore, client.reportCount)
   const publicationState = getPublicationState(client, metrics)
+  const readiness = getClientProfileReadiness(client, metrics)
 
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
@@ -101,6 +102,7 @@ export function AdminClientEditor({
           { label: "Approved / total reports", value: `${metrics.approved} / ${metrics.total}` },
           { label: "Pending / disputed", value: `${metrics.pending} pending / ${metrics.disputed} disputed` },
           { label: "Evidence status", value: metrics.evidence > 0 ? `${metrics.evidence} evidence-backed report${metrics.evidence === 1 ? "" : "s"}` : "No evidence label yet" },
+          { label: "Public readiness", value: `${readiness.score}/100 - ${readiness.label}` },
           { label: "Public slug", value: client.publicSlug },
           { label: "Last report activity", value: metrics.lastReportAt ? ageLabel(metrics.lastReportAt) : "No report activity" },
         ]}
@@ -148,6 +150,12 @@ export function AdminClientEditor({
             text={ageLabel(client.updatedAt)}
             tone={isOlderThanDays(client.updatedAt, 45) ? "amber" : "slate"}
           />
+          <ReadinessItem
+            icon={BadgeCheck}
+            label="Readiness"
+            text={readiness.gaps.length > 0 ? readiness.gaps.slice(0, 2).join(", ") : "Ready for public review"}
+            tone={readiness.tone}
+          />
         </div>
       </AdminProfileHealthCard>
       <SheetContent className="w-full overflow-y-auto p-0 sm:max-w-2xl">
@@ -163,6 +171,27 @@ export function AdminClientEditor({
             <EditorSummaryTile label="Publication state" value={publicationState.text} tone={publicationState.tone} />
             <EditorSummaryTile label="Approved reports" value={String(metrics.approved)} tone={metrics.approved > 0 ? "emerald" : "slate"} />
             <EditorSummaryTile label="Open disputes" value={String(metrics.disputed)} tone={metrics.disputed > 0 ? "amber" : "slate"} />
+          </div>
+          <div className={`rounded-md border p-4 ${readinessPanelClass(readiness.tone)}`}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase opacity-70">Client Database readiness</p>
+                <p className="mt-1 text-lg font-semibold">{readiness.label}</p>
+              </div>
+              <span className="rounded-md bg-white/80 px-3 py-1 text-sm font-semibold text-slate-950 shadow-sm">
+                {readiness.score}/100
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-6 opacity-85">{readiness.summary}</p>
+            {readiness.gaps.length > 0 ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {readiness.gaps.map((gap) => (
+                  <span key={gap} className="rounded-md border border-current/15 bg-white/60 px-2.5 py-1 text-xs font-semibold">
+                    {gap}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
             <p className="text-xs font-semibold uppercase text-slate-500">Publication preview</p>
@@ -660,6 +689,70 @@ function getPublicationState(client: ClientProfile, metrics: ClientProfileReport
     text: "Private record only",
     tone: "slate",
   }
+}
+
+function getClientProfileReadiness(client: ClientProfile, metrics: ClientProfileReportMetrics): {
+  gaps: string[]
+  label: string
+  score: number
+  summary: string
+  tone: ReadinessTone
+} {
+  const gaps = [
+    !client.firstName ? "missing first name" : null,
+    !client.lastName ? "missing last name" : null,
+    !client.city ? "missing city" : null,
+    !client.state ? "missing state" : null,
+    !client.publicSlug ? "missing public slug" : null,
+    client.reportCount !== metrics.approved && metrics.approved > 0 ? "report count mismatch" : null,
+    metrics.approved === 0 && !client.isPublic ? "no approved public report" : null,
+    metrics.disputed > 0 ? "dispute review needed" : null,
+    client.isPublic && isOlderThanDays(client.updatedAt, 45) ? "stale public review" : null,
+  ].filter((gap): gap is string => Boolean(gap))
+
+  let score = 100
+  score -= gaps.includes("no approved public report") ? 20 : 0
+  score -= gaps.includes("dispute review needed") ? 10 : 0
+  score -= gaps.includes("stale public review") ? 8 : 0
+  score -= gaps.filter((gap) => gap.startsWith("missing")).length * 14
+  score -= gaps.includes("report count mismatch") ? 10 : 0
+  score = Math.max(20, Math.min(100, score))
+
+  if (score >= 86) {
+    return {
+      gaps,
+      label: "Ready for public database review",
+      score,
+      summary: "Identity, location, slug, report context, and visibility are aligned for a public-safe Client Database record.",
+      tone: "emerald",
+    }
+  }
+
+  if (score >= 65) {
+    return {
+      gaps,
+      label: "Review before publishing",
+      score,
+      summary: "The profile can be worked, but moderators should resolve the listed items before changing visibility or rating context.",
+      tone: "amber",
+    }
+  }
+
+  return {
+    gaps,
+    label: "Keep private until cleaned up",
+    score,
+    summary: "This profile needs identity, report, or review cleanup before it should be treated as a public Client Database record.",
+    tone: "slate",
+  }
+}
+
+function readinessPanelClass(tone: ReadinessTone) {
+  if (tone === "emerald") return "border-emerald-200 bg-emerald-50 text-emerald-950"
+  if (tone === "amber") return "border-amber-200 bg-amber-50 text-amber-950"
+  if (tone === "blue") return "border-sky-200 bg-sky-50 text-sky-950"
+
+  return "border-slate-200 bg-slate-50 text-slate-700"
 }
 
 function ReadinessItem({

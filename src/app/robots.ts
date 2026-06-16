@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
 
 import { getSiteUrl } from "@/lib/env"
+import { robotsBlockedPathPrefixes } from "@/lib/seo-indexability"
 
 const siteUrl = getSiteUrl()
 
@@ -24,6 +25,12 @@ export default function robots(): MetadataRoute.Robots {
         "/contact",
         "/enterprise",
         "/how-it-works",
+        "/claim-profile",
+        "/client-response",
+        "/search",
+        "/login",
+        "/signup",
+        "/submit-report",
         "/terms",
         "/privacy",
         "/report-policy",
@@ -42,15 +49,7 @@ export default function robots(): MetadataRoute.Robots {
         "/homeowner-wont-pay-contractor",
         "/client-screening-for-contractors",
       ],
-      disallow: [
-        "/dashboard",
-        "/submit-report",
-        "/client-response",
-        "/login",
-        "/signup",
-        "/admin/",
-        "/search",
-      ],
+      disallow: [...robotsBlockedPathPrefixes],
     },
     sitemap: `${siteUrl}/sitemap.xml`,
   }

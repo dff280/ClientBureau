@@ -204,18 +204,18 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
     tone: "border-amber-200 bg-amber-50 text-amber-800",
     cardClassName: "hover:border-amber-300",
     accentText: "text-amber-700",
-    scoreLabel: "Profile rating",
-    contextLabel: "Reported client context",
+    scoreLabel: "Context rating",
+    contextLabel: "Client Database record",
     fallbackSummary:
-      "Approved public client profile context is available. Private identifiers and raw evidence are not shown publicly.",
+      "Approved public client profile context is available. Use it as one intake signal before scheduling, quoting, ordering materials, or extending payment terms.",
     nextStepText:
-      "Open the profile first, then decide whether to watch it, report your own documented experience, or request a correction path.",
-    viewLabel: "View profile",
-    watchLabel: "Watch profile",
-    reportLabel: "Report experience",
-    claimLabel: "Claim or correct profile",
+      "Open the client profile first, then decide whether to watch it, report your own documented experience, or use the response/correction path.",
+    viewLabel: "View Client Profile",
+    watchLabel: "Watch client",
+    reportLabel: "Report Client Experience",
+    claimLabel: "Respond or correct",
     privacyText:
-      "Public search results show approved, moderated context only. Raw emails, phone numbers, addresses, evidence files, pending content, and internal notes stay private.",
+      "Client Database results show approved, moderated context only. Raw emails, phone numbers, street addresses, evidence files, pending content, and internal notes stay private.",
     signals: [
       {
         icon: <FileText className="size-4" aria-hidden="true" />,

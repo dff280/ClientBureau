@@ -217,19 +217,24 @@ function sitemapLocs(xml) {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/gi)].map((match) => match[1])
 }
 
+function normalizePath(pathname) {
+  return pathname.replace(/\/$/, "") || "/"
+}
+
+function canonicalMatches(actual, expected) {
+  return actual.replace(/\/$/, "") === expected.replace(/\/$/, "")
+}
+
 function isPrivateCrawlPath(pathname) {
+  const normalized = normalizePath(pathname)
+
   return [
     "/admin",
     "/api",
     "/auth",
+    "/contract",
     "/dashboard",
-    "/login",
-    "/signup",
-    "/search",
-    "/submit-report",
-    "/client-response",
-    "/contract/",
-  ].some((prefix) => pathname === prefix || pathname.startsWith(prefix))
+  ].some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`))
 }
 
 function hasNoStoreHeader(response) {
@@ -373,14 +378,17 @@ function assertPublicIndexablePage(path, html, requiredTexts) {
   }
 }
 
-function assertNoindexPage(path, html, requiredTexts) {
+function assertNoindexPage(path, html, requiredTexts, options = {}) {
+  const { expectedFollow = true } = options
   assertProductionCopySafety(path, html)
 
   const robots = metaContent(html, "robots").toLowerCase()
-  if (robots.includes("noindex") && robots.includes("nofollow")) {
-    pass(`${path} noindex/nofollow robots metadata`, robots)
+  const hasExpectedFollow = expectedFollow ? robots.includes("follow") && !robots.includes("nofollow") : robots.includes("nofollow")
+
+  if (robots.includes("noindex") && hasExpectedFollow) {
+    pass(`${path} ${expectedFollow ? "noindex/follow" : "noindex/nofollow"} robots metadata`, robots)
   } else {
-    fail(`${path} noindex/nofollow robots metadata`, robots || "missing")
+    fail(`${path} ${expectedFollow ? "noindex/follow" : "noindex/nofollow"} robots metadata`, robots || "missing")
   }
 
   const pageCanonical = canonical(html)
@@ -607,13 +615,17 @@ if (robots.response.ok) {
     "Allow: /business/",
     "Allow: /businesses",
     "Allow: /profiles",
+    "Allow: /search",
+    "Allow: /login",
+    "Allow: /signup",
+    "Allow: /submit-report",
+    "Allow: /claim-profile",
+    "Allow: /client-response",
     "Disallow: /dashboard",
-    "Disallow: /submit-report",
-    "Disallow: /client-response",
-    "Disallow: /login",
-    "Disallow: /signup",
-    "Disallow: /admin/",
-    "Disallow: /search",
+    "Disallow: /admin",
+    "Disallow: /api",
+    "Disallow: /auth",
+    "Disallow: /contract",
     `Sitemap: ${expectedSiteUrl}/sitemap.xml`,
   ]
 
@@ -658,6 +670,39 @@ if (sitemapForCrawlRules.response.ok) {
     pass("/sitemap.xml excludes private routes")
   } else {
     fail("/sitemap.xml excludes private routes", privateLocs.slice(0, 5).join(", "))
+  }
+
+  const noindexLocs = []
+  const nonSelfCanonicalLocs = []
+
+  for (const loc of locs) {
+    try {
+      const url = new URL(loc)
+      const page = await read(`${url.pathname}${url.search}`)
+      if (!page.response.ok) continue
+
+      const robots = metaContent(page.text, "robots").toLowerCase()
+      if (robots.includes("noindex")) noindexLocs.push(loc)
+
+      const pageCanonical = canonical(page.text)
+      if (pageCanonical && !canonicalMatches(pageCanonical, loc)) {
+        nonSelfCanonicalLocs.push(`${loc} -> ${pageCanonical}`)
+      }
+    } catch {
+      noindexLocs.push(loc)
+    }
+  }
+
+  if (noindexLocs.length === 0) {
+    pass("/sitemap.xml excludes noindex URLs")
+  } else {
+    fail("/sitemap.xml excludes noindex URLs", noindexLocs.slice(0, 5).join(", "))
+  }
+
+  if (nonSelfCanonicalLocs.length === 0) {
+    pass("/sitemap.xml URLs are self-canonical")
+  } else {
+    fail("/sitemap.xml URLs are self-canonical", nonSelfCanonicalLocs.slice(0, 5).join(", "))
   }
 } else {
   fail("/sitemap.xml crawl privacy checks", sitemapForCrawlRules.error || String(sitemapForCrawlRules.response.status))
@@ -1044,7 +1089,7 @@ if (signupWithAdminNext.response.ok) {
 const clientResponse = await read("/client-response")
 if (clientResponse.response.ok) {
   pass("/client-response returns 200")
-  assertNoindexPage("/client-response", clientResponse.text, [
+  assertPublicIndexablePage("/client-response", clientResponse.text, [
     "Client response",
     "Respond, dispute, correct, or update a Client Bureau profile.",
     "Fairness is part of the product.",
@@ -1060,10 +1105,10 @@ if (searchPage.response.ok) {
   assertProductionCopySafety("/search", searchPage.text)
 
   const searchRobots = metaContent(searchPage.text, "robots").toLowerCase()
-  if (searchRobots.includes("noindex") && searchRobots.includes("nofollow")) {
-    pass("/search noindex/nofollow robots metadata", searchRobots)
+  if (searchRobots.includes("noindex") && searchRobots.includes("follow") && !searchRobots.includes("nofollow")) {
+    pass("/search noindex/follow robots metadata", searchRobots)
   } else {
-    fail("/search noindex/nofollow robots metadata", searchRobots || "missing")
+    fail("/search noindex/follow robots metadata", searchRobots || "missing")
   }
 
   const searchCanonical = canonical(searchPage.text)
@@ -1292,6 +1337,14 @@ const publicIndexablePages = [
       "Business verification status",
     ],
   },
+  {
+    path: "/client-response",
+    requiredTexts: [
+      "Client response",
+      "Respond, dispute, correct, or update a Client Bureau profile.",
+      "Fairness is part of the product.",
+    ],
+  },
 ]
 
 for (const page of publicIndexablePages) {
@@ -1449,7 +1502,7 @@ const businessesPageForClaim = await read("/businesses")
 if (!businessesPageForClaim.response.ok) {
   fail("/businesses claim-link source returns 200", businessesPageForClaim.error || String(businessesPageForClaim.response.status))
 } else {
-  const businessPaths = [...new Set(businessProfileLinks(businessesPageForClaim.text))]
+  const businessPaths = [...new Set([...entityProfileLinks(businessesPageForClaim.text, "contractor"), ...businessProfileLinks(businessesPageForClaim.text)])]
   const businessPath = businessPaths[0]
 
   if (!businessPath) {

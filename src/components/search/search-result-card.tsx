@@ -16,13 +16,14 @@ import { ScoreGauge } from "@/components/client/score-gauge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { clientProfilePrimarySignals } from "@/lib/client-database"
 import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import type { ClientSearchResult } from "@/lib/types"
 
 export function SearchResultCard({ result }: { result: ClientSearchResult }) {
-  const evidenceLabel = result.evidenceOnFile ? "Evidence on file" : "No public evidence label"
   const paymentLabel = result.paymentContextLabel ?? "Payment context reviewed"
   const ratingBand = clientRatingBand(result.clientBureauScore, result.reportCount)
+  const primarySignals = clientProfilePrimarySignals(result)
   const reportHref = `/submit-report?${new URLSearchParams({
     firstName: result.firstName,
     lastName: result.lastName,
@@ -65,7 +66,7 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
           </div>
           <div className="grid gap-2 text-xs font-medium text-slate-600 sm:grid-cols-2 lg:grid-cols-4">
             <SearchFact icon={ShieldCheck} label={`${result.reportCount} approved signals`} />
-            <SearchFact icon={FileCheck2} label={evidenceLabel} />
+            <SearchFact icon={FileCheck2} label={primarySignals.evidenceLabel} />
             <SearchFact icon={MessageSquareWarning} label={`${result.openDisputeCount ?? 0} open disputes`} />
             <SearchFact icon={Star} label={`${result.positiveSignalCount ?? 0} positive signals`} />
           </div>
@@ -79,7 +80,7 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
           <p className="text-xs font-semibold uppercase text-slate-500">Next step</p>
           <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
             <Link href={`/client/${result.publicSlug}`}>
-              View profile
+              View Client Profile
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
@@ -96,7 +97,7 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
             </Link>
           </Button>
           <p className="text-xs leading-5 text-slate-500">
-            Public pages show approved summaries only. Private identifiers and evidence files stay hidden.
+            Client Database pages show approved summaries only. Private identifiers and evidence files stay hidden.
           </p>
         </div>
       </CardContent>

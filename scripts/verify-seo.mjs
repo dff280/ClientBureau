@@ -166,6 +166,25 @@ function sitemapLocs(xml) {
   return [...xml.matchAll(/<loc>(.*?)<\/loc>/gi)].map((match) => match[1])
 }
 
+function normalizePath(pathname) {
+  return pathname.replace(/\/$/, "") || "/"
+}
+
+function isRobotsBlockedPath(pathname) {
+  const normalized = normalizePath(pathname)
+
+  return ["/admin", "/api", "/auth", "/contract", "/dashboard"].some(
+    (prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`),
+  )
+}
+
+function canonicalMatches(actual, expected) {
+  const normalizedActual = actual.replace(/\/$/, "")
+  const normalizedExpected = expected.replace(/\/$/, "")
+
+  return normalizedActual === normalizedExpected
+}
+
 function sitemapEntry(xml, loc) {
   const escapedLoc = loc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   const match = xml.match(new RegExp(`<url>\\s*<loc>${escapedLoc}<\\/loc>([\\s\\S]*?)<\\/url>`, "i"))
@@ -245,7 +264,6 @@ const publicContentPages = [
   "/profiles/client",
   "/profiles/contractor",
   "/profiles/subcontractor",
-  "/clients/orlando-fl",
   "/clients/florida/orlando",
   "/reports/non-payment",
   "/industries",
@@ -273,6 +291,7 @@ const corePublicPages = [
   "/contact",
   "/enterprise",
   "/resources",
+  "/client-response",
   "/claim-profile",
   "/score-methodology",
   "/business-rating-methodology",
@@ -346,7 +365,7 @@ async function verifyPublicPage(path, options = {}) {
 }
 
 async function verifyNoindexWorkflowPage(path, options = {}) {
-  const { requestPath = path, requiredText = [] } = options
+  const { requestPath = path, requiredText = [], expectedFollow = true } = options
   const page = await read(requestPath)
 
   if (!page.response.ok) {
@@ -373,10 +392,12 @@ async function verifyNoindexWorkflowPage(path, options = {}) {
   if (pageCanonical === `${expectedSiteUrl}${path}`) pass(`${path} canonical`, pageCanonical)
   else fail(`${path} canonical`, pageCanonical || "missing")
 
-  if (pageRobots.includes("noindex") && pageRobots.includes("nofollow")) {
-    pass(`${path} noindex/nofollow`, pageRobots)
+  const hasExpectedFollow = expectedFollow ? pageRobots.includes("follow") && !pageRobots.includes("nofollow") : pageRobots.includes("nofollow")
+
+  if (pageRobots.includes("noindex") && hasExpectedFollow) {
+    pass(`${path} ${expectedFollow ? "noindex/follow" : "noindex/nofollow"}`, pageRobots)
   } else {
-    fail(`${path} noindex/nofollow`, pageRobots || "missing")
+    fail(`${path} ${expectedFollow ? "noindex/follow" : "noindex/nofollow"}`, pageRobots || "missing")
   }
 
   const visibleText = visiblePageText(page.text)
@@ -400,6 +421,33 @@ async function verifyNoindexWorkflowPage(path, options = {}) {
   }
 }
 
+async function verifyCanonicalAlias(path, canonicalPath) {
+  const page = await read(path)
+
+  if (!page.response.ok) {
+    fail(`${path} alias returns 200`, String(page.response.status))
+    return
+  }
+
+  pass(`${path} alias returns 200`)
+
+  const pageCanonical = extract(page.text, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
+  const expectedCanonical = `${expectedSiteUrl}${canonicalPath}`
+
+  if (canonicalMatches(pageCanonical, expectedCanonical)) {
+    pass(`${path} aliases canonical page`, pageCanonical)
+  } else {
+    fail(`${path} aliases canonical page`, `${pageCanonical || "missing"} expected ${expectedCanonical}`)
+  }
+
+  const productionCopyLeaks = findProductionCopyLeaks(page.text)
+  if (productionCopyLeaks.length === 0) {
+    pass(`${path} alias production copy safety`)
+  } else {
+    fail(`${path} alias production copy safety`, productionCopyLeaks.join(", "))
+  }
+}
+
 const publicPageChecks = new Map()
 
 for (const path of corePublicPages) {
@@ -413,6 +461,8 @@ for (const path of publicContentPages) {
 for (const [path, options] of publicPageChecks.entries()) {
   await verifyPublicPage(path, options)
 }
+
+await verifyCanonicalAlias("/clients/orlando-fl", "/clients/florida/orlando")
 
 await verifyNoindexWorkflowPage("/login", {
   requestPath: "/login?next=%2Fdashboard%2Freports",
@@ -456,10 +506,6 @@ if (subcontractorTradeSearch.response.ok) {
 } else {
   fail("/search preserves subcontractor trade request", String(subcontractorTradeSearch.response.status))
 }
-await verifyNoindexWorkflowPage("/client-response", {
-  requiredText: ["Client response", "Respond, dispute, correct, or update a Client Bureau profile.", "Fairness is part of the product."],
-})
-
 const mobileAppPage = await read("/mobile-app")
 if (mobileAppPage.response.ok) {
   const mobileAppVisibleText = visiblePageText(mobileAppPage.text)
@@ -530,7 +576,7 @@ if (brokenProfileLinks.length === 0) {
 
 const businessesPageForClaim = await read("/businesses")
 if (businessesPageForClaim.response.ok) {
-  const businessPath = [...new Set(businessProfileLinks(businessesPageForClaim.text))][0]
+  const businessPath = [...new Set([...entityProfileLinks(businessesPageForClaim.text, "contractor"), ...businessProfileLinks(businessesPageForClaim.text)])][0]
 
   if (businessPath) {
     const businessProfile = await read(businessPath)
@@ -604,6 +650,51 @@ if (sitemap.response.ok && versionJson?.releaseDate) {
 
 if (profilePath) pass("Sitemap includes at least one public client profile", profilePath)
 else fail("Sitemap includes at least one public client profile")
+
+if (sitemap.response.ok) {
+  const sitemapRobotsBlockedLocs = sitemapPublicLocs.filter((loc) => {
+    try {
+      return isRobotsBlockedPath(new URL(loc).pathname)
+    } catch {
+      return true
+    }
+  })
+
+  if (sitemapRobotsBlockedLocs.length === 0) {
+    pass("Sitemap excludes robots-blocked URLs")
+  } else {
+    fail("Sitemap excludes robots-blocked URLs", sitemapRobotsBlockedLocs.slice(0, 5).join(", "))
+  }
+
+  const sitemapNoindexLocs = []
+  const sitemapCanonicalMismatches = []
+
+  for (const loc of sitemapPublicLocs) {
+    const url = new URL(loc)
+    const page = await read(`${url.pathname}${url.search}`)
+    if (!page.response.ok) continue
+
+    const pageRobots = metaContent(page.text, "robots").toLowerCase()
+    if (pageRobots.includes("noindex")) sitemapNoindexLocs.push(loc)
+
+    const pageCanonical = extract(page.text, /<link\s+rel=["']canonical["']\s+href=["']([^"']+)["'][^>]*>/is)
+    if (pageCanonical && !canonicalMatches(pageCanonical, loc)) {
+      sitemapCanonicalMismatches.push(`${loc} -> ${pageCanonical}`)
+    }
+  }
+
+  if (sitemapNoindexLocs.length === 0) {
+    pass("Sitemap excludes noindex URLs")
+  } else {
+    fail("Sitemap excludes noindex URLs", sitemapNoindexLocs.slice(0, 5).join(", "))
+  }
+
+  if (sitemapCanonicalMismatches.length === 0) {
+    pass("Sitemap URLs are self-canonical")
+  } else {
+    fail("Sitemap URLs are self-canonical", sitemapCanonicalMismatches.slice(0, 5).join(", "))
+  }
+}
 
 for (const path of publicPageChecks.keys()) {
   const expectedLoc = `${expectedSiteUrl}${path}`

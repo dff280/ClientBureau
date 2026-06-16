@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import { entityProfileHref, profileSupportsType } from "@/lib/entity-profiles"
 import { getSiteUrl } from "@/lib/env"
-import { getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
+import { getPublicBusinessProfilesService, getPublicEntityProfilesService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
   title: "Verified Business Profiles",
@@ -32,7 +33,15 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
   const query = params.q?.trim().toLowerCase() ?? ""
   const state = params.state ?? "all"
   const rating = params.rating ?? "all"
-  const profiles = await getPublicBusinessProfilesService()
+  const [profiles, entityProfiles] = await Promise.all([
+    getPublicBusinessProfilesService(),
+    getPublicEntityProfilesService(),
+  ])
+  const contractorProfileHrefBySlug = new Map(
+    entityProfiles
+      .filter((profile) => profileSupportsType(profile, "contractor"))
+      .map((profile) => [profile.slug, entityProfileHref(profile, "contractor")]),
+  )
   const filtered = profiles.filter((profile) => {
     const text = [profile.businessName, profile.trade, profile.city, profile.state, profile.publicSlug]
       .join(" ")
@@ -172,7 +181,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
             {filtered.map((profile) => (
               <Link
                 key={profile.id}
-                href={`/business/${profile.publicSlug}`}
+                href={contractorProfileHrefBySlug.get(profile.publicSlug) ?? `/business/${profile.publicSlug}`}
                 className="group rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
               >
                 <div className="flex items-start justify-between gap-4">

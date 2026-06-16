@@ -1,12 +1,13 @@
 import { acquisitionPages } from "@/lib/acquisition-pages"
+import { getClientDirectory } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
 import {
   getPublicBusinessProfilesService,
   getPublicClientProfilesService,
   getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
-import { allSeoLandingPages } from "@/lib/seo-landing-pages"
-import { entityProfileHrefs, profileTypeForView, profileTypeLabel } from "@/lib/entity-profiles"
+import { allSeoLandingPages, seoLandingCanonicalPath } from "@/lib/seo-landing-pages"
+import { entityProfileHref, entityProfileHrefs, profileSupportsType, profileTypeForView, profileTypeLabel } from "@/lib/entity-profiles"
 
 export const dynamic = "force-dynamic"
 
@@ -17,6 +18,12 @@ export async function GET() {
     getPublicBusinessProfilesService(),
     getPublicEntityProfilesService(),
   ])
+  const clientDirectory = getClientDirectory(clientProfiles)
+  const contractorProfileHrefBySlug = new Map(
+    entityProfiles
+      .filter((profile) => profileSupportsType(profile, "contractor"))
+      .map((profile) => [profile.slug, entityProfileHref(profile, "contractor")]),
+  )
   const publicPages = [
     {
       title: "Home",
@@ -79,11 +86,11 @@ export async function GET() {
       url: `${siteUrl}${page.path}`,
       intent: `${page.kind} page for ${page.description}`,
     })),
-    ...allSeoLandingPages.map((page) => ({
+    ...dedupeByUrl(allSeoLandingPages.map((page) => ({
       title: page.title,
-      url: `${siteUrl}${page.canonicalPath}`,
+      url: `${siteUrl}${seoLandingCanonicalPath(page, clientDirectory)}`,
       intent: `${page.kind} landing page for ${page.description}`,
-    })),
+    }))),
   ]
   const publicProfileExamples = {
     clientProfiles: clientProfiles
@@ -101,7 +108,7 @@ export async function GET() {
       })),
     businessProfiles: businessProfiles.slice(0, 12).map((profile) => ({
       title: `${profile.businessName} business profile`,
-      url: `${siteUrl}/business/${profile.publicSlug}`,
+      url: `${siteUrl}${contractorProfileHrefBySlug.get(profile.publicSlug) ?? `/business/${profile.publicSlug}`}`,
       location: `${profile.city}, ${profile.state}`,
       trade: profile.trade,
       lastUpdated: profile.lastUpdated,
@@ -179,4 +186,15 @@ export async function GET() {
       },
     },
   )
+}
+
+function dedupeByUrl<T extends { url: string }>(items: T[]) {
+  const seen = new Set<string>()
+
+  return items.filter((item) => {
+    if (seen.has(item.url)) return false
+    seen.add(item.url)
+
+    return true
+  })
 }

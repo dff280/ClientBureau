@@ -6,8 +6,8 @@ import {
   getPublicEntityProfilesService,
 } from "@/lib/repositories/client-bureau-service"
 import { getClientDirectory } from "@/lib/client-directory"
-import { entityProfileHrefs, profileTypeForView, profileTypeLabel } from "@/lib/entity-profiles"
-import { allSeoLandingPages } from "@/lib/seo-landing-pages"
+import { entityProfileHref, entityProfileHrefs, profileSupportsType, profileTypeForView, profileTypeLabel } from "@/lib/entity-profiles"
+import { allSeoLandingPages, seoLandingCanonicalPath } from "@/lib/seo-landing-pages"
 
 export const dynamic = "force-dynamic"
 
@@ -18,6 +18,12 @@ export async function GET() {
     getPublicBusinessProfilesService(),
     getPublicEntityProfilesService(),
   ])
+  const directory = getClientDirectory(profiles)
+  const contractorProfileHrefBySlug = new Map(
+    entityProfiles
+      .filter((profile) => profileSupportsType(profile, "contractor"))
+      .map((profile) => [profile.slug, entityProfileHref(profile, "contractor")]),
+  )
   const profileLinks = profiles
     .filter((profile) => profile.isPublic)
     .slice(0, 5)
@@ -25,7 +31,7 @@ export async function GET() {
     .join("\n")
   const businessLinks = businesses
     .slice(0, 5)
-    .map((profile) => `- [${profile.businessName} business profile](${siteUrl}/business/${profile.publicSlug})`)
+    .map((profile) => `- [${profile.businessName} business profile](${siteUrl}${contractorProfileHrefBySlug.get(profile.publicSlug) ?? `/business/${profile.publicSlug}`})`)
     .join("\n")
   const entityLinks = entityProfiles
     .flatMap((profile) =>
@@ -36,7 +42,7 @@ export async function GET() {
     )
     .slice(0, 10)
     .join("\n")
-  const directoryLinks = getClientDirectory(profiles)
+  const directoryLinks = directory
     .flatMap((state) => [
       `- [${state.name} client profiles](${siteUrl}/clients/${state.slug})`,
       ...state.cities
@@ -46,7 +52,8 @@ export async function GET() {
     .slice(0, 20)
     .join("\n")
   const landingLinks = allSeoLandingPages
-    .map((page) => `- [${page.title}](${siteUrl}${page.canonicalPath})`)
+    .map((page) => `- [${page.title}](${siteUrl}${seoLandingCanonicalPath(page, directory)})`)
+    .filter((line, index, lines) => lines.indexOf(line) === index)
     .join("\n")
   const acquisitionLinks = acquisitionPages
     .map((page) => `- [${page.title}](${siteUrl}${page.path}) - ${page.description}`)
