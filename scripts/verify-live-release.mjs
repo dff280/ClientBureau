@@ -193,6 +193,18 @@ function businessProfileLinks(html) {
     .filter((path) => path && path !== "/businesses")
 }
 
+function entityProfileLinks(html, profileType) {
+  return [...html.matchAll(new RegExp(`href=["']([^"']*\\/profiles\\/${profileType}\\/[^"']+)["']`, "gi"))]
+    .map((match) => {
+      try {
+        return new URL(match[1], expectedSiteUrl).pathname
+      } catch {
+        return ""
+      }
+    })
+    .filter(Boolean)
+}
+
 function claimProfileLinks(html) {
   return [...html.matchAll(/href=["']([^"']*\/claim-profile\?[^"']+)["']/gi)]
     .map((match) => {
