@@ -1233,8 +1233,9 @@ const publicIndexablePages = [
     path: "/clients",
     requiredTexts: [
       "Client Database",
-      "Browse approved Client Database profiles by state and city.",
-      "Pending, rejected, private evidence, raw email, phone",
+      "Search the Client Database before you take the job.",
+      "How to read a public Client Database record",
+      "public pages do not show raw emails",
     ],
   },
   {

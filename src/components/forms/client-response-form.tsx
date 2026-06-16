@@ -65,7 +65,7 @@ export function ClientResponseForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email for moderator contact</Label>
-          <Input id="email" name="email" type="email" placeholder="you@example.com" />
+          <Input id="email" name="email" type="email" placeholder="Review contact email" />
           <FieldError name="email" errors={state.ok ? undefined : state.fieldErrors} />
         </div>
         <div className="space-y-2">
