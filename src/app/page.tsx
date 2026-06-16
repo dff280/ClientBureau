@@ -161,7 +161,7 @@ export default async function Home() {
                 </p>
               </div>
 
-              <form action="/search" className="grid max-w-4xl gap-3 rounded-md border border-amber-200/30 bg-white p-2 shadow-[0_26px_80px_rgba(0,0,0,0.38)] sm:grid-cols-[1fr_auto]">
+              <form action="/search" method="get" className="grid max-w-4xl gap-3 rounded-md border border-amber-200/30 bg-white p-2 shadow-[0_26px_80px_rgba(0,0,0,0.38)] sm:grid-cols-[1fr_auto]">
                 <label htmlFor="homepage-client-search" className="sr-only">
                   Check a client
                 </label>
@@ -174,7 +174,7 @@ export default async function Home() {
                     className="h-14 border-0 pl-12 text-base text-slate-950 shadow-none focus-visible:ring-0"
                   />
                 </div>
-                <Button className="h-14 bg-amber-500 px-7 text-base font-semibold text-slate-950 hover:bg-amber-400">
+                <Button type="submit" className="h-14 bg-amber-500 px-7 text-base font-semibold text-slate-950 hover:bg-amber-400">
                   {primarySearchCta}
                 </Button>
               </form>

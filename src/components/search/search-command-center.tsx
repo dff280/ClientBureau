@@ -386,10 +386,7 @@ export function SearchCommandCenter({
                 </Badge>
               </div>
 
-              <form
-                action="/search"
-                className="grid gap-3"
-              >
+              <form action="/search" method="get" className="grid gap-3">
                 <FloridaPlaceDatalist id="search-florida-place-options" />
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
