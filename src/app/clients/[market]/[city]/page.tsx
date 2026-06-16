@@ -35,8 +35,8 @@ export async function generateMetadata({ params }: ClientCityDirectoryPageProps)
   return {
     title,
     description,
-    robots: entry.shouldIndex ? undefined : {
-      index: false,
+    robots: {
+      index: entry.shouldIndex,
       follow: true,
     },
     alternates: {

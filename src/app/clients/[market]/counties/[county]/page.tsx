@@ -32,8 +32,8 @@ export async function generateMetadata({ params }: FloridaCountyPageProps): Prom
   return {
     title,
     description,
-    robots: shouldIndex ? undefined : {
-      index: false,
+    robots: {
+      index: shouldIndex,
       follow: true,
     },
     alternates: {
