@@ -416,6 +416,306 @@ export const acquisitionPages: AcquisitionPage[] = [
       },
     ],
   },
+  {
+    slug: "contractor-verification",
+    path: "/contractor-verification",
+    kind: "guide",
+    visualAssetKey: "searchDossier",
+    eyebrow: "Contractor Database",
+    title: "Contractor Verification and Business Trust Profiles",
+    h1: "Contractor Verification and Business Trust Profiles",
+    description:
+      "Understand how contractor and service-business profiles show verification, trade context, public readiness, and correction rights.",
+    heroCopy:
+      "The Contractor Database helps service businesses show they are real, organized, and ready to work. Public profiles should make business identity, trade category, service area, verification status, public report context, and claim or correction paths easy to understand.",
+    primaryCta: {
+      label: "Browse Contractor Database",
+      href: "/profiles/contractor",
+    },
+    secondaryCta: {
+      label: "Claim a profile",
+      href: "/claim-profile",
+    },
+    proofLabel: "Public trust",
+    proofValue: "Verify before you hire or partner",
+    proofDetail:
+      "A useful contractor profile gives visitors enough public-safe context to understand the business while keeping private identifiers and unreviewed records out of public display.",
+    useCases: [
+      "A contractor wants to claim and improve a public business profile.",
+      "A service business wants public trust signals without publishing private contact or job details.",
+      "A customer, contractor, or trade partner wants to understand verification and response context before relying on a profile.",
+    ],
+    workflow: [
+      "Confirm the business name, trade category, city, state, and service area.",
+      "Review public verification status, profile claim state, rating context, and public report history.",
+      "Use claim, correction, or response paths when profile details need review.",
+      "Keep private records, evidence, job addresses, and internal notes out of public display.",
+    ],
+    trustPoints: [
+      "Contractor ratings are business trust indicators, not guarantees, legal findings, credit scores, or star reviews.",
+      "Public profiles should show approved summaries, verification context, and response rights only.",
+      "One business can be visible as a contractor, subcontractor, or both when real work history supports it.",
+    ],
+    relatedLinks: [
+      {
+        label: "Contractor Database",
+        href: "/profiles/contractor",
+        description: "Browse contractor and service-business profiles.",
+      },
+      {
+        label: "Business and trade ratings",
+        href: "/business-rating-methodology",
+        description: "See how contractor and subcontractor ratings are explained.",
+      },
+      {
+        label: "Claim a profile",
+        href: "/claim-profile",
+        description: "Start a verification, claim, correction, or profile update request.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What does contractor verification mean?",
+        answer:
+          "It means Client Bureau has profile information or review context that helps identify the business and its public profile status. It is not a guarantee of licensing, quality, payment, or future performance.",
+      },
+      {
+        question: "Can a contractor correct a profile?",
+        answer:
+          "Yes. Contractors can claim, verify, correct, or dispute public profile details through the profile claim and moderation process.",
+      },
+      {
+        question: "Does the Contractor Database publish private contact information?",
+        answer:
+          "No. Public contractor profiles should not show raw emails, phone numbers, street addresses, private job records, evidence files, or admin notes.",
+      },
+    ],
+  },
+  {
+    slug: "subcontractor-payment-chain-documentation",
+    path: "/subcontractor-payment-chain-documentation",
+    kind: "guide",
+    visualAssetKey: "evidenceVault",
+    eyebrow: "Subcontractor Database",
+    title: "Subcontractor Payment-Chain Documentation",
+    h1: "Subcontractor Payment-Chain Documentation",
+    description:
+      "A subcontractor guide for documenting GC/sub relationships, scope, retainage, pay applications, evidence, and payment-chain context.",
+    heroCopy:
+      "Subcontractors often work through a payment chain, not directly with the end customer. Client Bureau helps trade professionals document who hired them, what scope was assigned, what was completed, what was billed, what was retained, and what evidence supports the record.",
+    primaryCta: {
+      label: "Browse Subcontractor Database",
+      href: "/profiles/subcontractor",
+    },
+    secondaryCta: {
+      label: "Report a trade relationship",
+      href: "/submit-report?subjectProfileType=contractor",
+    },
+    proofLabel: "Trade context",
+    proofValue: "Scope, payment chain, evidence",
+    proofDetail:
+      "Subcontractor records should explain the work relationship while keeping private project details out of public display.",
+    useCases: [
+      "A subcontractor needs to document work performed under a contractor or project manager.",
+      "Retainage, pay applications, draws, or unpaid invoices need a clean private timeline.",
+      "A trade professional wants public profile context that reflects specialty trade reliability and documentation discipline.",
+    ],
+    workflow: [
+      "Identify the hiring contractor, property owner/client context, trade category, and role on the job.",
+      "Document assigned scope, work authorization, invoices, retainage, pay applications, and payment timeline.",
+      "Attach contracts, messages, photos, completion proof, and payment requests in private evidence records.",
+      "Use moderated reports or profile updates only when public context is factual, approved, and privacy-safe.",
+    ],
+    trustPoints: [
+      "Subcontractor profiles focus on trade scope, GC/sub relationship context, payment-chain signals, and evidence readiness.",
+      "Private job addresses, access notes, raw evidence, and participant notes do not belong on public pages.",
+      "Payment-chain context should be factual and careful, not written as a guaranteed legal conclusion.",
+    ],
+    relatedLinks: [
+      {
+        label: "Subcontractor Database",
+        href: "/profiles/subcontractor",
+        description: "Browse trade-partner and subcontractor profiles.",
+      },
+      {
+        label: "Business and trade ratings",
+        href: "/business-rating-methodology",
+        description: "Understand Trade Partner Reliability context.",
+      },
+      {
+        label: "Evidence privacy",
+        href: "/evidence-privacy-for-contractors",
+        description: "Learn what evidence stays private and what public summaries can show.",
+      },
+    ],
+    faqs: [
+      {
+        question: "How is a subcontractor profile different from a contractor profile?",
+        answer:
+          "A subcontractor profile focuses on trade scope, crew role, GC/sub relationships, documentation readiness, retainage or pay-application context, and payment-chain signals.",
+      },
+      {
+        question: "Can subcontractors report contractor experiences?",
+        answer:
+          "Yes. A subcontractor can submit a documented trade relationship or payment-chain experience for moderation when the record is factual and tied to real work.",
+      },
+      {
+        question: "Are retainage and pay-application records public?",
+        answer:
+          "Raw records stay private. Public pages may show cautious approved summaries and evidence-on-file labels only after moderation.",
+      },
+    ],
+  },
+  {
+    slug: "evidence-privacy-for-contractors",
+    path: "/evidence-privacy-for-contractors",
+    kind: "guide",
+    visualAssetKey: "evidenceVault",
+    eyebrow: "Evidence privacy",
+    title: "Evidence Privacy for Contractors",
+    h1: "Evidence Privacy for Contractors",
+    description:
+      "Learn what evidence contractors can organize privately and what public Client Bureau profiles may safely summarize after moderation.",
+    heroCopy:
+      "Evidence is powerful because it can clarify what happened, but it must be handled carefully. Client Bureau keeps raw files private while allowing public pages to show limited evidence-on-file labels when a report or profile has been moderated.",
+    primaryCta: {
+      label: "Open Evidence Vault",
+      href: "/dashboard/evidence",
+    },
+    secondaryCta: {
+      label: "Review report policy",
+      href: "/report-policy",
+    },
+    proofLabel: "Privacy rule",
+    proofValue: "Raw files stay private",
+    proofDetail:
+      "Invoices, contracts, messages, photos, receipts, screenshots, signed packets, and job notes should stay in private workspaces unless reviewed into a public-safe summary.",
+    useCases: [
+      "A contractor wants to attach invoices, contracts, messages, and photos to a private job or report.",
+      "A report needs evidence confidence without showing raw documents publicly.",
+      "An admin needs to review whether a public summary is supported by private documentation.",
+    ],
+    workflow: [
+      "Upload or label evidence inside the private workspace.",
+      "Connect evidence to a report, job, contract, recovery case, or lien service case.",
+      "Use public-safe evidence labels such as invoice reviewed, contract reviewed, photo reviewed, or messages reviewed.",
+      "Never publish raw files, storage paths, private contact details, internal notes, or unmoderated evidence.",
+    ],
+    trustPoints: [
+      "Public pages can say evidence is on file without showing the evidence file.",
+      "Evidence labels should support careful summaries, not inflammatory or unsupported claims.",
+      "Admins should redact private identifiers before any public summary is approved.",
+    ],
+    relatedLinks: [
+      {
+        label: "Report policy",
+        href: "/report-policy",
+        description: "Review standards for public reports and evidence-supported summaries.",
+      },
+      {
+        label: "Moderation policy",
+        href: "/moderation-policy",
+        description: "See how public content is reviewed before display.",
+      },
+      {
+        label: "Submit a report",
+        href: "/submit-report",
+        description: "Submit a documented client, contractor, or subcontractor experience for moderation.",
+      },
+    ],
+    faqs: [
+      {
+        question: "What evidence can a contractor store?",
+        answer:
+          "Contracts, invoices, receipts, messages, photos, completion proof, change orders, signed packets, payment requests, and timeline notes can be organized privately.",
+      },
+      {
+        question: "What evidence appears publicly?",
+        answer:
+          "Public pages should show only limited labels or moderated summaries. Raw files, private addresses, phone numbers, emails, evidence paths, and internal notes stay private.",
+      },
+      {
+        question: "Can evidence be used in recovery or lien workflows?",
+        answer:
+          "Yes. Evidence can support private payment recovery, Florida lien service review, contracts, jobs, and reports, but legal review may still be needed for legal rights or filings.",
+      },
+    ],
+  },
+  {
+    slug: "response-correction-rights",
+    path: "/response-correction-rights",
+    kind: "guide",
+    visualAssetKey: "searchDossier",
+    eyebrow: "Fair records",
+    title: "Response and Correction Rights",
+    h1: "Response and Correction Rights",
+    description:
+      "How clients, contractors, and subcontractors can respond, dispute, correct, claim, or add resolution context to Client Bureau records.",
+    heroCopy:
+      "A serious trust platform needs a fair path for people and businesses connected to a record. Client Bureau gives clients, contractors, and subcontractors ways to respond, request correction, dispute context, claim a profile, or submit resolution updates for moderation.",
+    primaryCta: {
+      label: "Respond or correct a record",
+      href: "/client-response",
+    },
+    secondaryCta: {
+      label: "Claim a profile",
+      href: "/claim-profile",
+    },
+    proofLabel: "Fairness layer",
+    proofValue: "Respond, correct, resolve",
+    proofDetail:
+      "Response rights keep the databases useful, balanced, and careful while still protecting private evidence and moderation notes.",
+    useCases: [
+      "A client wants to respond to a public client profile or report summary.",
+      "A contractor or subcontractor wants to claim, verify, or correct a business/trade profile.",
+      "A record has been resolved, partially resolved, disputed, or updated and needs moderation review.",
+    ],
+    workflow: [
+      "Find the public profile or report connected to the record.",
+      "Submit a response, correction, dispute, claim, or resolution update with verification context.",
+      "Moderators review the request, evidence, identity context, and public-safe wording.",
+      "Approved response or correction context can update the public record while keeping private identifiers hidden.",
+    ],
+    trustPoints: [
+      "Responses, disputes, corrections, and resolution updates are moderated before public display.",
+      "Private evidence, contact details, and admin notes remain private during review.",
+      "Public pages should show balanced context without claiming legal conclusions or guaranteed outcomes.",
+    ],
+    relatedLinks: [
+      {
+        label: "Client response",
+        href: "/client-response",
+        description: "Submit a response, dispute, correction, or resolution update.",
+      },
+      {
+        label: "Claim profile",
+        href: "/claim-profile",
+        description: "Start a profile claim or correction workflow.",
+      },
+      {
+        label: "Dispute policy",
+        href: "/dispute-policy",
+        description: "Review how dispute and response requests are handled.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Who can request a correction?",
+        answer:
+          "Clients, contractors, subcontractors, service businesses, and trade professionals can submit correction or claim requests when they are connected to a public record.",
+      },
+      {
+        question: "Are responses published automatically?",
+        answer:
+          "No. Responses, disputes, corrections, and resolution updates are reviewed before any public display.",
+      },
+      {
+        question: "Can a resolved issue be updated?",
+        answer:
+          "Yes. Resolution context can be submitted for moderation so public profiles reflect resolved or partially resolved status where appropriate.",
+      },
+    ],
+  },
 ]
 
 export function getAcquisitionPage(slug: string) {

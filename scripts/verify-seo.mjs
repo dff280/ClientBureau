@@ -277,10 +277,14 @@ const publicContentPages = [
   "/florida-lien-notice-service",
   "/florida-lien-filing-service",
   "/contractor-contract-template",
+  "/contractor-verification",
   "/florida-contractor-agreement-template",
   "/change-order-template",
   "/homeowner-wont-pay-contractor",
   "/client-screening-for-contractors",
+  "/subcontractor-payment-chain-documentation",
+  "/evidence-privacy-for-contractors",
+  "/response-correction-rights",
   "/mobile-app",
 ]
 

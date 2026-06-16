@@ -180,8 +180,10 @@ const publicIndexableRoutes = new Set([
   "/clients/[market]/counties/[county]",
   "/contact",
   "/contractor-contract-template",
+  "/contractor-verification",
   "/dispute-policy",
   "/enterprise",
+  "/evidence-privacy-for-contractors",
   "/florida-contractor-agreement-template",
   "/florida-lien-filing-service",
   "/florida-lien-notice-service",
@@ -200,9 +202,11 @@ const publicIndexableRoutes = new Set([
   "/profiles/[profileType]/[slug]",
   "/report-policy",
   "/reports/[type]",
+  "/response-correction-rights",
   "/resources",
   "/score-methodology",
   "/terms",
+  "/subcontractor-payment-chain-documentation",
 ])
 
 const conditionalPublicNoindexRoutes = new Set([

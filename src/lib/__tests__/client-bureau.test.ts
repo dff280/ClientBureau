@@ -1642,6 +1642,10 @@ describe("public SEO landing pages", () => {
     expect(urls).toContain("https://clientbureau.com/change-order-template")
     expect(urls).toContain("https://clientbureau.com/homeowner-wont-pay-contractor")
     expect(urls).toContain("https://clientbureau.com/client-screening-for-contractors")
+    expect(urls).toContain("https://clientbureau.com/contractor-verification")
+    expect(urls).toContain("https://clientbureau.com/subcontractor-payment-chain-documentation")
+    expect(urls).toContain("https://clientbureau.com/evidence-privacy-for-contractors")
+    expect(urls).toContain("https://clientbureau.com/response-correction-rights")
   })
 
   it("defines high-intent acquisition pages with careful conversion copy", () => {
@@ -1651,6 +1655,10 @@ describe("public SEO landing pages", () => {
       "change-order-template",
       "homeowner-wont-pay-contractor",
       "client-screening-for-contractors",
+      "contractor-verification",
+      "subcontractor-payment-chain-documentation",
+      "evidence-privacy-for-contractors",
+      "response-correction-rights",
     ])
     expect(getAcquisitionPage("homeowner-wont-pay-contractor")?.trustPoints.join(" ")).toContain(
       "does not guarantee collection",
