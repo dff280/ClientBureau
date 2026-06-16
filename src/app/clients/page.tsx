@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { ClientDirectoryIndexView } from "@/components/landing/client-directory-view"
 import { getClientDirectory } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
+import { getPublicDatabasePillar } from "@/lib/public-site"
 import { getPublicClientProfilesService } from "@/lib/repositories/client-bureau-service"
 import { JsonLd } from "@/lib/seo"
 
@@ -40,6 +41,7 @@ export default async function ClientsDirectoryPage() {
   const siteUrl = getSiteUrl()
   const profiles = await getPublicClientProfilesService()
   const states = getClientDirectory(profiles)
+  const clientDatabasePillar = getPublicDatabasePillar("clients")
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
@@ -84,6 +86,22 @@ export default async function ClientsDirectoryPage() {
           url: `${siteUrl}/clients/${state.slug}`,
         })),
       },
+      ...(clientDatabasePillar
+        ? [
+            {
+              "@type": "ItemList",
+              "@id": `${siteUrl}/clients#related-database-links`,
+              name: "Client Database related pages",
+              itemListElement: clientDatabasePillar.internalLinks.map((item, index) => ({
+                "@type": "ListItem",
+                position: index + 1,
+                name: item.label,
+                url: `${siteUrl}${item.href}`,
+                description: item.description,
+              })),
+            },
+          ]
+        : []),
     ],
   }
 

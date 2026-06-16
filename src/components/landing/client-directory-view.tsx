@@ -11,6 +11,7 @@ import { clientDatabaseSearchHref, clientProfileConfidence, clientProfilePrimary
 import type { ClientDirectoryCity, ClientDirectoryState } from "@/lib/client-directory"
 import { getClientCityDirectoryHref } from "@/lib/client-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
+import { getPublicDatabasePillar } from "@/lib/public-site"
 import type { ClientProfile } from "@/lib/types"
 
 const directoryFaqs = [
@@ -30,6 +31,8 @@ const directoryFaqs = [
       "Contractors should use directory pages as one intake signal before accepting work, then combine profile context with contracts, deposits, change-order controls, project documentation, and their own business judgment.",
   },
 ]
+
+const clientDatabasePillar = getPublicDatabasePillar("clients")
 
 export function ClientDirectoryIndexView({ states }: { states: ClientDirectoryState[] }) {
   const profileCount = states.reduce((total, state) => total + state.profileCount, 0)
@@ -63,6 +66,14 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
       />
       <div className="bureau-container space-y-8 py-10">
         <DatabaseQuickStart profileCount={profileCount} reportCount={reportCount} stateCount={states.length} />
+        {clientDatabasePillar ? (
+          <ClientDatabaseAuthority
+            evidenceLabel="Private evidence indicators"
+            profileCount={profileCount}
+            reportCount={reportCount}
+            stateCount={states.length}
+          />
+        ) : null}
 
         {states.length > 0 ? (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -115,6 +126,15 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
             { href: `/clients/${state.slug}`, label: state.name },
           ]}
         />
+        {clientDatabasePillar ? (
+          <ClientDatabaseAuthority
+            compact
+            evidenceLabel="Evidence-on-file labels"
+            profileCount={state.profileCount}
+            reportCount={state.reportCount}
+            stateCount={state.cities.length}
+          />
+        ) : null}
         <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-4 p-6">
@@ -211,6 +231,15 @@ export function ClientDirectoryCityView({
             { href: `/clients/${state.slug}/${city.slug}`, label: city.name },
           ]}
         />
+        {clientDatabasePillar ? (
+          <ClientDatabaseAuthority
+            compact
+            evidenceLabel="City-level public context"
+            profileCount={city.profileCount}
+            reportCount={city.reportCount}
+            stateCount={1}
+          />
+        ) : null}
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="grid gap-4 p-6 lg:grid-cols-[1fr_280px] lg:items-center">
             <div>
@@ -234,6 +263,83 @@ export function ClientDirectoryCityView({
         />
       </div>
     </section>
+  )
+}
+
+function ClientDatabaseAuthority({
+  compact = false,
+  evidenceLabel,
+  profileCount,
+  reportCount,
+  stateCount,
+}: {
+  compact?: boolean
+  evidenceLabel: string
+  profileCount: number
+  reportCount: number
+  stateCount: number
+}) {
+  if (!clientDatabasePillar) return null
+
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+            Client Database authority
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
+            {clientDatabasePillar.authorityTitle}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            {compact ? clientDatabasePillar.primaryIntent : clientDatabasePillar.authorityDescription}
+          </p>
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <DirectoryFact label="Profiles" value={profileCount.toLocaleString()} />
+            <DirectoryFact label="Reports" value={reportCount.toLocaleString()} />
+            <DirectoryFact label="Coverage" value={stateCount.toLocaleString()} />
+          </div>
+        </div>
+        <div className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <AuthorityList title="Public signals" items={[...clientDatabasePillar.publicSignals.slice(0, 3), evidenceLabel]} />
+            <AuthorityList title="How records should be read" items={clientDatabasePillar.recordsExplained} />
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+              {clientDatabasePillar.internalLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-white"
+                >
+                  <p className="font-semibold text-slate-950">{item.label}</p>
+                  <p className="mt-1 text-sm leading-6 text-slate-600">{item.description}</p>
+                  <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
+                    Open page
+                    <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+                  </span>
+                </Link>
+              ))}
+            </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function AuthorityList({ items, title }: { items: string[]; title: string }) {
+  return (
+    <div>
+      <h3 className="font-semibold text-slate-950">{title}</h3>
+      <ul className="mt-3 grid gap-2">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2 text-sm leading-6 text-slate-600">
+            <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

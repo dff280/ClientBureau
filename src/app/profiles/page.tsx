@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { EntityProfileDirectory, getProfileDirectoryFaqs } from "@/components/profile/entity-profile-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
+import { publicDatabasePillars } from "@/lib/public-site"
 import { getPublicEntityProfilesService, searchProfilesService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
@@ -49,6 +50,21 @@ export default async function ProfilesPage({ searchParams }: { searchParams: Pro
           url: `${siteUrl}/profiles`,
           description:
             "Public database hub for Client Bureau client, contractor, service business, subcontractor, and trade professional profiles.",
+        }}
+      />
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "@id": `${siteUrl}/profiles#database-hubs`,
+          name: "Client Bureau public database hubs",
+          itemListElement: publicDatabasePillars.map((pillar, index) => ({
+            "@type": "ListItem",
+            position: index + 1,
+            name: pillar.label,
+            url: `${siteUrl}${pillar.href}`,
+            description: pillar.primaryIntent,
+          })),
         }}
       />
       <JsonLd data={getFaqSchema(getProfileDirectoryFaqs(profileType))} />

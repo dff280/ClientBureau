@@ -1,5 +1,6 @@
 import Link from "next/link"
 import {
+  ArrowRight,
   BadgeCheck,
   Building2,
   ClipboardCheck,
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
 import { pageAssets } from "@/lib/page-assets"
+import { publicDatabasePillars, type PublicDatabasePillar } from "@/lib/public-site"
 import { buildSearchHref } from "@/lib/search-experience"
 import { tradeCategories, tradeCategoryGroups } from "@/lib/trade-taxonomy"
 import { profileTypes, type EntityProfile, type EntityProfileSearchResult, type ProfileType } from "@/lib/types"
@@ -312,7 +314,28 @@ function buildReportExperienceHref({
   return `/submit-report${params.size ? `?${params.toString()}` : ""}`
 }
 
+function pillarForProfileType(profileType?: ProfileType) {
+  if (profileType === "client") return publicDatabasePillars.find((pillar) => pillar.id === "clients")
+  if (profileType === "contractor") return publicDatabasePillars.find((pillar) => pillar.id === "contractors")
+  if (profileType === "subcontractor") return publicDatabasePillars.find((pillar) => pillar.id === "subcontractors")
+
+  return undefined
+}
+
 export function getProfileDirectoryFaqs(profileType?: ProfileType) {
+  const pillar = pillarForProfileType(profileType)
+
+  if (pillar) {
+    return [
+      ...pillar.faqs,
+      {
+        question: `What public signals appear in the ${pillar.label}?`,
+        answer:
+          `${pillar.label} pages can show ${pillar.publicSignals.slice(0, 3).join(", ").toLowerCase()}, and public-safe next steps. ${pillar.privacyNote}`,
+      },
+    ]
+  }
+
   const profileLabel = profileType ? profileTypePluralLabel(profileType).toLowerCase() : "public profiles"
 
   return [
@@ -392,6 +415,7 @@ export function EntityProfileDirectory({
     state,
     tradeCategory: showTradeFilter ? tradeCategory : undefined,
   })
+  const activePillar = pillarForProfileType(activeType)
 
   return (
     <main className="bg-slate-100">
@@ -465,6 +489,22 @@ export function EntityProfileDirectory({
           </div>
         </div>
       </section>
+
+      {activePillar ? (
+        <DatabaseAuthorityPanel
+          pillar={activePillar}
+          profileCount={visibleProfiles.length}
+          verifiedCount={verifiedCount}
+          reportCount={reportCount}
+          evidenceCount={evidenceCount}
+        />
+      ) : (
+        <AllDatabasesAuthorityPanel
+          clientCount={profileCounts.find((item) => item.type === "client")?.value ?? 0}
+          contractorCount={profileCounts.find((item) => item.type === "contractor")?.value ?? 0}
+          subcontractorCount={profileCounts.find((item) => item.type === "subcontractor")?.value ?? 0}
+        />
+      )}
 
       <section id="profile-directory" className="bureau-section">
         <div className="bureau-container space-y-6">
@@ -666,6 +706,148 @@ export function EntityProfileDirectory({
         secondary={{ href: "/how-it-works", label: "How it works", icon: FileSearch }}
       />
     </main>
+  )
+}
+
+function DatabaseAuthorityPanel({
+  evidenceCount,
+  pillar,
+  profileCount,
+  reportCount,
+  verifiedCount,
+}: {
+  evidenceCount: number
+  pillar: PublicDatabasePillar
+  profileCount: number
+  reportCount: number
+  verifiedCount: number
+}) {
+  return (
+    <section className="border-y border-slate-200 bg-slate-50 py-8 sm:py-10">
+      <div className="bureau-container grid gap-5 lg:grid-cols-[0.78fr_1.22fr] lg:items-start">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="p-5 sm:p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+              Database authority
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
+              {pillar.authorityTitle}
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-slate-600">{pillar.authorityDescription}</p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <AuthorityMetric label="Profiles" value={profileCount.toLocaleString()} />
+              <AuthorityMetric label="Verified/claimed" value={verifiedCount.toLocaleString()} />
+              <AuthorityMetric label="Approved reports" value={reportCount.toLocaleString()} />
+              <AuthorityMetric label="Evidence labels" value={evidenceCount.toLocaleString()} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-4">
+          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+            <CardContent className="grid gap-5 p-5 sm:p-6 lg:grid-cols-2">
+              <DatabaseList title="Public signals" items={pillar.publicSignals} />
+              <DatabaseList title="How to read records" items={pillar.recordsExplained} />
+            </CardContent>
+          </Card>
+          <div className="grid gap-3 md:grid-cols-2">
+            {pillar.internalLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="group rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
+              >
+                <p className="text-sm font-semibold text-slate-950">{item.label}</p>
+                <p className="mt-1 text-sm leading-6 text-slate-600">{item.description}</p>
+                <span className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
+                  Open page
+                  <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function AllDatabasesAuthorityPanel({
+  clientCount,
+  contractorCount,
+  subcontractorCount,
+}: {
+  clientCount: number
+  contractorCount: number
+  subcontractorCount: number
+}) {
+  const counts = {
+    clients: clientCount,
+    contractors: contractorCount,
+    subcontractors: subcontractorCount,
+  } as const
+
+  return (
+    <section className="border-y border-slate-200 bg-slate-50 py-8 sm:py-10">
+      <div className="bureau-container">
+        <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+          <CardContent className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[0.62fr_1.38fr] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
+                Public database authority
+              </p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
+                Three databases, one relationship graph.
+              </h2>
+              <p className="mt-3 text-sm leading-6 text-slate-600">
+                Client Bureau separates client checks, contractor business trust, and subcontractor trade-partner context
+                so each public page answers a different business question without exposing private records.
+              </p>
+            </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {publicDatabasePillars.map((pillar) => (
+                <Link
+                  key={pillar.id}
+                  href={pillar.href}
+                  className="rounded-md border border-slate-200 bg-slate-50 p-4 transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-white"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-700">
+                    {counts[pillar.id].toLocaleString()} profiles
+                  </p>
+                  <h3 className="mt-2 font-semibold text-slate-950">{pillar.label}</h3>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{pillar.primaryIntent}</p>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  )
+}
+
+function DatabaseList({ items, title }: { items: string[]; title: string }) {
+  return (
+    <div>
+      <h3 className="font-semibold text-slate-950">{title}</h3>
+      <ul className="mt-3 grid gap-2">
+        {items.map((item) => (
+          <li key={item} className="flex gap-2 text-sm leading-6 text-slate-600">
+            <ShieldCheck className="mt-1 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+function AuthorityMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+      <p className="mt-1 text-2xl font-semibold text-slate-950">{value}</p>
+    </div>
   )
 }
 

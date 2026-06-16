@@ -164,6 +164,7 @@ import {
   protectionGuardrails,
   protectionWorkflowSteps,
 } from "@/lib/product-positioning"
+import { publicDatabasePillars } from "@/lib/public-site"
 import {
   adminNavigationGroups,
   contractorDashboardGroups,
@@ -652,6 +653,28 @@ describe("product positioning", () => {
     expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/admin/recovery",
     )
+  })
+
+  it("defines authority content for all three public database pillars", () => {
+    expect(publicDatabasePillars.map((pillar) => pillar.id)).toEqual([
+      "clients",
+      "contractors",
+      "subcontractors",
+    ])
+
+    for (const pillar of publicDatabasePillars) {
+      expect(pillar.audience.length).toBeGreaterThan(50)
+      expect(pillar.primaryIntent.length).toBeGreaterThan(50)
+      expect(pillar.authorityTitle).toContain(pillar.label)
+      expect(pillar.publicSignals.length).toBeGreaterThanOrEqual(4)
+      expect(pillar.recordsExplained.length).toBeGreaterThanOrEqual(3)
+      expect(pillar.internalLinks.length).toBeGreaterThanOrEqual(4)
+      expect(pillar.faqs.length).toBeGreaterThanOrEqual(2)
+      expect(pillar.internalLinks.some((item) => item.href.includes("methodology"))).toBe(true)
+      expect(`${pillar.description} ${pillar.authorityDescription}`.toLowerCase()).not.toMatch(
+        /blacklist|scammer|deadbeat|guarantee collection|legal advice/,
+      )
+    }
   })
 })
 

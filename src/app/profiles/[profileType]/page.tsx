@@ -4,6 +4,7 @@ import { notFound } from "next/navigation"
 import { EntityProfileDirectory, getProfileDirectoryFaqs } from "@/components/profile/entity-profile-directory"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
+import { getPublicDatabasePillar } from "@/lib/public-site"
 import { getPublicEntityProfilesService, searchProfilesService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type ProfileType } from "@/lib/types"
 
@@ -23,22 +24,25 @@ function toProfileType(value: string): ProfileType | undefined {
 }
 
 function titleForProfileType(profileType: ProfileType) {
-  if (profileType === "client") return "Client Database"
-  if (profileType === "subcontractor") return "Subcontractor Database"
+  const pillar =
+    profileType === "client"
+      ? getPublicDatabasePillar("clients")
+      : profileType === "contractor"
+        ? getPublicDatabasePillar("contractors")
+        : getPublicDatabasePillar("subcontractors")
 
-  return "Contractor Database"
+  return pillar?.label ?? "Public Database"
 }
 
 function descriptionForProfileType(profileType: ProfileType) {
-  if (profileType === "client") {
-    return "Browse the Client Bureau Client Database for clients, homeowners, customers, property owners, and businesses contractors worked for."
-  }
+  const pillar =
+    profileType === "client"
+      ? getPublicDatabasePillar("clients")
+      : profileType === "contractor"
+        ? getPublicDatabasePillar("contractors")
+        : getPublicDatabasePillar("subcontractors")
 
-  if (profileType === "subcontractor") {
-    return "Browse the Subcontractor Database by trade scope, GC/sub relationship context, documentation readiness, and payment-chain signals."
-  }
-
-  return "Browse the Contractor Database with service-business verification, service-area context, and moderated public project records."
+  return pillar?.primaryIntent ?? "Browse public Client Bureau profile records."
 }
 
 export async function generateMetadata({ params }: ProfileTypeDirectoryProps): Promise<Metadata> {
@@ -81,6 +85,12 @@ export default async function ProfileTypeDirectoryPage({
   )
   const states = [...new Set(typedProfiles.map((profile) => profile.state))].sort()
   const siteUrl = getSiteUrl()
+  const pillar =
+    profileType === "client"
+      ? getPublicDatabasePillar("clients")
+      : profileType === "contractor"
+        ? getPublicDatabasePillar("contractors")
+        : getPublicDatabasePillar("subcontractors")
 
   return (
     <>
@@ -91,8 +101,28 @@ export default async function ProfileTypeDirectoryPage({
           name: `${titleForProfileType(profileType)} | Client Bureau`,
           url: `${siteUrl}/profiles/${profileType}`,
           description: descriptionForProfileType(profileType),
+          mainEntity: {
+            "@id": `${siteUrl}/profiles/${profileType}#profile-list`,
+          },
         }}
       />
+      {pillar ? (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "@id": `${siteUrl}/profiles/${profileType}#database-links`,
+            name: `${pillar.label} related pages`,
+            itemListElement: pillar.internalLinks.map((item, index) => ({
+              "@type": "ListItem",
+              position: index + 1,
+              name: item.label,
+              url: `${siteUrl}${item.href}`,
+              description: item.description,
+            })),
+          }}
+        />
+      ) : null}
       <JsonLd data={getFaqSchema(getProfileDirectoryFaqs(profileType))} />
       <EntityProfileDirectory
         activeType={profileType}
