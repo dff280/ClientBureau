@@ -251,6 +251,32 @@ export default async function AdminSettingsPage() {
       tone: subcontractorProfileReady ? ("emerald" as const) : ("amber" as const),
     },
   ]
+  const releaseCandidateSteps = [
+    {
+      title: "Local quality gate",
+      detail:
+        "Run lint, tests, production build, route inventory, private workspace quality, local SEO, and mobile web readiness before pushing.",
+      value: "npm run lint && npm test && npm run build && npm run route:check && npm run workspace:check && npm run seo:check:local && npm run mobile:check",
+    },
+    {
+      title: "Live public gate",
+      detail:
+        "After deploy, confirm release identity, health, robots, sitemap, public profiles, schema, production copy, and private-data safety.",
+      value: "LIVE_BASE_URL=https://clientbureau.com npm run verify:live",
+    },
+    {
+      title: "Live SEO gate",
+      detail:
+        "Confirm canonical URLs, sitemap membership, indexability, structured data, directory links, and public privacy rules.",
+      value: "SEO_BASE_URL=https://clientbureau.com npm run seo:check",
+    },
+    {
+      title: "Strict authenticated gate",
+      detail:
+        "Use disposable contractor/admin QA accounts to prove dashboard/admin routes, sessions, no-store headers, and role boundaries.",
+      value: "npm run verify:live:release-candidate",
+    },
+  ]
   const settingsGroups: Array<{ title: string; items: Array<[string, string]> }> = [
     {
       title: "Moderation Rules",
@@ -402,6 +428,24 @@ export default async function AdminSettingsPage() {
             {operatorChecklist.map((item) => (
               <OperatorChecklistItem key={item.title} {...item} />
             ))}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          eyebrow="Release candidate"
+          title="Do not call a build launch-ready until signed-in QA passes."
+          description="Public SEO can pass while a logged-in workflow still has friction. This stricter gate proves the real contractor and admin experience before a serious launch push."
+        >
+          <div className="grid gap-3 lg:grid-cols-2">
+            {releaseCandidateSteps.map((step, index) => (
+              <ReleaseCandidateStep key={step.title} step={index + 1} {...step} />
+            ))}
+          </div>
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+            <p className="font-semibold">Operator rule</p>
+            <p className="mt-1">
+              Use disposable QA accounts only. Keep credentials in <code>.env.qa.local</code>, never commit them, and treat Stripe warnings as acceptable only while billing is intentionally deferred.
+            </p>
           </div>
         </DashboardSection>
 
@@ -582,6 +626,35 @@ function OperatorChecklistItem({
             <StatusBadge tone={tone}>check</StatusBadge>
           </div>
           <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+        </div>
+      </div>
+    </article>
+  )
+}
+
+function ReleaseCandidateStep({
+  step,
+  title,
+  detail,
+  value,
+}: {
+  step: number
+  title: string
+  detail: string
+  value: string
+}) {
+  return (
+    <article className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-slate-950 text-sm font-bold text-amber-300">
+          {step}
+        </span>
+        <div className="min-w-0">
+          <h3 className="font-semibold text-slate-950">{title}</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
+          <p className="mt-3 inline-flex max-w-full rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">
+            <code className="truncate">{value}</code>
+          </p>
         </div>
       </div>
     </article>

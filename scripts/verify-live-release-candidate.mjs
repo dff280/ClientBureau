@@ -17,11 +17,11 @@ const checks = [
     label: "Live SEO, metadata, sitemap, schema, and public privacy verification",
   },
   {
-    args: ["run", "verify:live:auth"],
+    args: ["run", "verify:live:auth:strict"],
     command: "npm",
     env: { LIVE_BASE_URL: baseUrl },
     hint:
-      "Authenticated QA uses disposable credentials when available. Set REQUIRE_AUTH_QA=1 to fail this gate when credentials are missing.",
+      "Authenticated QA requires disposable contractor/admin credentials. Add them to .env.qa.local or set CONTRACTOR_QA_EMAIL, CONTRACTOR_QA_PASSWORD, ADMIN_QA_EMAIL, and ADMIN_QA_PASSWORD.",
     label: "Authenticated contractor/admin workflow verification",
   },
 ]

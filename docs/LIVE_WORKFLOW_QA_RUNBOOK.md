@@ -44,7 +44,7 @@ Remove-Item Env:ADMIN_QA_PASSWORD
 
 Do not commit QA credentials. If no QA credentials are configured, `npm run verify:live:auth` still checks the live health gate and exits with skipped account-specific checks. Use `npm run verify:live:auth:strict` before a serious release candidate so missing QA accounts fail loudly.
 
-For final release-candidate sign-off, run the combined gate after `.env.qa.local` is filled:
+For final release-candidate sign-off, use `docs/RELEASE_CANDIDATE_CHECKLIST.md` and run the combined gate after `.env.qa.local` is filled:
 
 ```powershell
 npm run verify:live:release-candidate
