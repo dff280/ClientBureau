@@ -7,10 +7,18 @@ export type ClientRatingBand =
   | "Moderate caution"
   | "Elevated caution"
   | "High caution"
+  | "Early positive context"
+  | "Early mixed context"
+  | "Early concern context"
   | "Limited history"
 
 export function clientRatingBand(score: number, reportCount = 1): ClientRatingBand {
   if (reportCount <= 0) return "Limited history"
+  if (reportCount === 1) {
+    if (score >= 75) return "Early positive context"
+    if (score >= 60) return "Early mixed context"
+    return "Early concern context"
+  }
   if (score >= 90) return "Strong client history"
   if (score >= 75) return "Good client history"
   if (score >= 60) return "Moderate caution"

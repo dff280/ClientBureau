@@ -23,6 +23,16 @@ type ClientDatabaseSearchInput = {
 type ClientProfileConfidenceInput = ClientProfile &
   Partial<Pick<PublicClientProfile, "balanceSummary" | "clientResponses" | "evidence" | "positiveReports" | "reports">>
 
+type ClientRatingDisplayInput = Pick<ClientProfile, "clientBureauScore" | "reportCount" | "riskLevel"> &
+  Partial<Pick<PublicClientProfile, "balanceSummary" | "clientResponses" | "evidence" | "positiveReports" | "reports">> & {
+    evidenceOnFile?: boolean
+    openDisputeCount?: number
+    positiveSignalCount?: number
+    resolvedReportCount?: number
+  }
+
+type ClientRatingDisplayTone = "amber" | "emerald" | "rose" | "slate" | "sky"
+
 export function clientDatabaseSearchHref(input: ClientDatabaseSearchInput = {}) {
   const params = new URLSearchParams({ profileType: "client" })
 
@@ -81,6 +91,107 @@ export function clientProfileConfidence(profile: ClientProfileConfidenceInput) {
       `${evidenceConfidence} evidence confidence`,
       hasResponse ? "Client response context published" : "Response path available",
     ],
+  } as const
+}
+
+function clientPublicHistoryCounts(profile: ClientRatingDisplayInput) {
+  const reports = "reports" in profile && profile.reports ? profile.reports : []
+  const storedReportCount = profile.reportCount ?? reports.length
+  const positiveCount =
+    "positiveReports" in profile && profile.positiveReports
+      ? profile.positiveReports.length
+      : "positiveSignalCount" in profile
+        ? profile.positiveSignalCount ?? 0
+        : reports.filter((report) => isPositiveReportCategory(report.reportCategory)).length
+  const reportCount = Math.max(storedReportCount, reports.length, positiveCount)
+  const concernCount = reports.length
+    ? reports.filter((report) => !isPositiveReportCategory(report.reportCategory)).length
+    : Math.max(0, reportCount - positiveCount)
+  const openDisputeCount =
+    "balanceSummary" in profile && profile.balanceSummary
+      ? profile.balanceSummary.openDisputeCount
+      : "openDisputeCount" in profile
+        ? profile.openDisputeCount ?? 0
+        : 0
+  const resolvedReportCount =
+    "balanceSummary" in profile && profile.balanceSummary
+      ? profile.balanceSummary.resolvedReportCount
+      : "resolvedReportCount" in profile
+        ? profile.resolvedReportCount ?? 0
+        : 0
+  const evidenceCount =
+    "evidence" in profile && profile.evidence
+      ? profile.evidence.length
+      : reports.filter((report) => report.evidenceAttached).length
+  const hasEvidenceOnFile =
+    evidenceCount > 0 ||
+    reports.some((report) => report.evidenceAttached) ||
+    ("evidenceOnFile" in profile && Boolean(profile.evidenceOnFile))
+
+  return {
+    concernCount,
+    evidenceCount,
+    hasEvidenceOnFile,
+    openDisputeCount,
+    positiveCount,
+    reportCount,
+    resolvedReportCount,
+  }
+}
+
+export function clientRatingDisplay(profile: ClientRatingDisplayInput) {
+  const counts = clientPublicHistoryCounts(profile)
+  const ratingLabel = clientRatingBand(profile.clientBureauScore, counts.reportCount)
+  const hasNoHistory = counts.reportCount === 0
+  const isEarlyHistory = counts.reportCount === 1
+  const onlyPositiveContext = counts.reportCount > 0 && counts.concernCount === 0 && counts.positiveCount > 0
+  const hasConcernContext = counts.concernCount > 0
+  let contextLabel = "Limited public history"
+  let tone: ClientRatingDisplayTone = "slate"
+  let summary = "No approved public report history is available yet. Treat this record as a starting point, not a clearance signal."
+
+  if (hasNoHistory) {
+    contextLabel = "Limited public history"
+  } else if (onlyPositiveContext && isEarlyHistory) {
+    contextLabel = "Early positive context"
+    tone = "emerald"
+    summary = "One approved positive experience is available. Review the detail, but do not treat one report as a complete history."
+  } else if (onlyPositiveContext) {
+    contextLabel = "Positive reported context"
+    tone = "emerald"
+    summary = "Approved positive experiences are present and no approved concern reports are currently shown on this public profile."
+  } else if (hasConcernContext && isEarlyHistory) {
+    contextLabel = "Early concern context"
+    tone = "amber"
+    summary = "One approved concern report is available. Review the report detail, evidence label, response path, and resolution status before deciding."
+  } else if (counts.openDisputeCount > 0) {
+    contextLabel = `${profile.riskLevel} context with open dispute`
+    tone = "amber"
+    summary = "Approved concern context is available with an open response or dispute signal. Read the report and response sections together."
+  } else if (counts.resolvedReportCount > 0 && hasConcernContext) {
+    contextLabel = `${profile.riskLevel} context with resolution history`
+    tone = profile.riskLevel === "High" || profile.riskLevel === "Elevated" ? "amber" : "sky"
+    summary = "Approved concern context is present, and at least one report includes resolved, paid, settled, or admin-verified status."
+  } else if (hasConcernContext) {
+    contextLabel = `${profile.riskLevel} caution context`
+    tone = profile.riskLevel === "High" ? "rose" : profile.riskLevel === "Elevated" ? "amber" : "sky"
+    summary = "Approved concern reports contribute to this context signal. It is not a legal finding, guarantee, or background check."
+  }
+
+  return {
+    ...counts,
+    contextLabel,
+    ratingLabel,
+    scoreDisplay: hasNoHistory ? "Limited history" : `${profile.clientBureauScore}/100`,
+    scoreLabel: hasNoHistory
+      ? "Insufficient public history"
+      : isEarlyHistory
+        ? "Early context rating"
+        : "Client Bureau Context Rating",
+    shouldShowNumericScore: !hasNoHistory,
+    shouldShowRiskBadge: hasConcernContext && !isEarlyHistory,
+    summary,
+    tone,
   } as const
 }
 

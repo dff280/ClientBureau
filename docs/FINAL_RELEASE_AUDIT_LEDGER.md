@@ -62,7 +62,7 @@ No secrets or full environment dumps were recorded.
 | 02 | Contact, support, enterprise | Completed | Command and browser evidence recorded below; owner must apply inquiry-intake migration before production deploy |
 | 03 | Pricing, capabilities, deferred billing truth | Completed | Command and browser evidence recorded below |
 | 04 | Search | Completed | Command and browser evidence recorded below |
-| 05 | Client Database and rating semantics | Not started | Needs command and browser evidence |
+| 05 | Client Database and rating semantics | Completed | Command and browser evidence recorded below |
 | 06 | Contractor/Business Database | Not started | Needs command and browser evidence |
 | 07 | Subcontractor/Trade Database | Not started | Needs command and browser evidence |
 | 08 | Auth, onboarding, sessions, capabilities | Not started | Needs command and browser evidence |
@@ -448,3 +448,77 @@ No browser console errors were captured in the sampled scenarios.
 `PASS`
 
 Search now separates public database lookup from private identifier matching, gives entity-specific no-result guidance, preserves safe filter handoffs, and prevents raw phone/email-like identifiers from rendering or persisting through the public search surface.
+
+## Prompt 05 - Client Database And Rating Semantics
+
+| Item | Evidence |
+| --- | --- |
+| Branch | `codex/client-database-rating-final` |
+| Starting commit | `9bc16dd` (`Harden search product and private matching`) |
+| Scope | `/clients`, `/client/[slug]`, client search cards, directory cards, share cards, OpenGraph image, client rating helpers, unit tests |
+| Status | `PASS` locally; pending PR/release review |
+
+### Prompt 05 Findings
+
+| Severity | Finding | Evidence | Outcome |
+| --- | --- | --- | --- |
+| P1 fairness | Zero-history client profiles could inherit a stored numeric score/risk level that looked more certain than the approved public history supported. | Audit of `clientRatingBand`, `clientProfileConfidence`, public profile hero/sidebar, directory cards, search cards, share card, and OpenGraph image. | Added `clientRatingDisplay` and hid numeric score/risk-first presentation when no approved public history exists. |
+| P1 launch-quality | One-report profiles could receive normal strong/moderate/high labels even though one report is early context. | Unit audit around one positive and one adverse report states. | Added early-history labels: `Early positive context`, `Early mixed context`, and `Early concern context`. |
+| P1 conversion/trust | Public profile, search result, directory, share, and OG surfaces did not always use the same rating language. | Source audit of `/client/[slug]`, `SearchResultCard`, `SearchCommandCenter`, `ClientDirectoryView`, `PublicProfileShareCard`, and profile OG image. | Centralized display semantics so all public Client Database surfaces use the same context label, score label, and risk-badge rule. |
+| P2 clarity | Score factors could appear for profiles with no public history, creating an explanation for a score that should not be treated as established. | Sidebar rating card audit. | Sidebar score factors now appear only after approved public report history exists; limited profiles get explanatory copy instead. |
+
+### Prompt 05 Changes
+
+- Added a shared client rating display policy in `src/lib/client-database.ts` with report counts, concern/positive counts, evidence flags, open dispute context, resolved context, score display, context label, and risk-badge eligibility.
+- Extended `clientRatingBand` so one-report profiles use early-context labels instead of established-history labels.
+- Updated `/client/[slug]` so the hero badge, rating card, sidebar, share card, and OpenGraph image use cautious context labels and limited-history display.
+- Updated Client Database directory cards, search result cards, and predictive search preview cards to use the same rating semantics.
+- Preserved report dossier improvements: positive reports do not show `$0 unpaid`, concern reports use reported payment context, and public pages continue to avoid private identifiers, raw evidence, pending/rejected content, and admin notes.
+- Kept structured data safe: no `Review`, `AggregateRating`, fake stars, or hidden rating-value markup was added.
+
+### Prompt 05 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm test -- --run src/lib/__tests__/client-bureau.test.ts` | Pass | 126 focused tests passed after adding rating display cases. |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm test` | Pass | 126 tests passed. |
+| `npm run build` | Failed, then Pass | Initial build caught compact search preview typing; helper input was widened to the minimal public-safe fields it needs. Final build passed with 67 static pages. |
+| `npm run seo:check:local` | Pass | Public profile schema/privacy checks passed; no rating-rich-result markup. |
+| `npm run route:check` | Pass | Route/indexability inventory remains intact. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+
+### Prompt 05 Browser Evidence
+
+Browser checks were run against a local production preview at `http://127.0.0.1:4203`.
+
+| Scenario | Viewport | Result |
+| --- | ---: | --- |
+| `/client/john-smith-orlando-fl` | 1440px | Pass: public report summary and published report history visible, safe context copy present, no console errors, no horizontal overflow, no `$0 unpaid`, no private markers, no `AggregateRating`/`ratingValue`. |
+| `/client/maria-alvarez-tampa-fl` | 390px | Pass: positive-only profile shows safe positive/context language, public report sections visible, no console errors, no horizontal overflow, no `$0 unpaid`, no private markers, no rating-rich-result text. |
+| `/clients` | 390px | Pass: Client Database hub renders cleanly, no console errors, no horizontal overflow, no private markers, no rating-rich-result text. |
+| `/search?profileType=client&q=John` | 390px | Pass: client search results render, no console errors, no horizontal overflow, no `$0 unpaid`, no private markers, no rating-rich-result text. |
+
+Evidence artifact: `C:\Users\MikeM\.codex\browser-evidence\prompt-05-client-database-rating-browser-qa.json`.
+
+Note: the in-app browser screenshot command timed out during this run, so browser evidence was recorded as DOM/console/overflow/privacy metrics rather than screenshots. The browser checks still used the in-app browser runtime; no screenshot files were committed.
+
+### Prompt 05 Privacy, Security, And Legal Evidence
+
+- Limited/no-history profiles display `Limited public history` and no numeric score/risk badge as the primary public signal.
+- One-report profiles display early-context labels and avoid definitive excellent/dangerous language.
+- Risk badges only remain on public client surfaces when approved concern history exists beyond a single early report.
+- Positive records are included in rating semantics and public report cards without misleading `$0 unpaid` framing.
+- Mixed, disputed, resolved, evidence-backed, and response/correction states have unit coverage.
+- Structured data remains compliant and avoids review-rich-result or aggregate-rating markup.
+
+### Prompt 05 Owner Actions
+
+- Repeat browser QA on production after the PR is merged and deployed.
+- Continue to publish only approved, moderated, public-safe client history; do not manufacture records to influence score presentation.
+
+### Prompt 05 Verdict
+
+`PASS`
+
+The Client Database now presents ratings as cautious public context. Zero-history and early-history profiles no longer look definitively safe or risky, positive/resolved/corrected context is represented, and public profile/search/directory/share surfaces use one consistent rating policy.

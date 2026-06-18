@@ -66,6 +66,7 @@ import {
   clientDatabaseSearchHref,
   clientProfileConfidence,
   clientProfilePrimarySignals,
+  clientRatingDisplay,
 } from "@/lib/client-database"
 import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
@@ -574,6 +575,123 @@ describe("Client Bureau scoring", () => {
     expect(confidence.level).not.toBe("Limited")
     expect(signals.evidenceLabel).toBe("Evidence on file")
     expect(signals.reportMix).toBe("2 public / 1 positive")
+  })
+
+  it("does not present zero-history client profiles as definitive score or risk records", () => {
+    const profile = {
+      ...clientProfiles[0],
+      clientBureauScore: 100,
+      riskLevel: "Low" as const,
+      reportCount: 0,
+    }
+
+    const display = clientRatingDisplay(profile)
+
+    expect(display.shouldShowNumericScore).toBe(false)
+    expect(display.shouldShowRiskBadge).toBe(false)
+    expect(display.scoreDisplay).toBe("Limited history")
+    expect(display.contextLabel).toBe("Limited public history")
+    expect(display.summary).toContain("not a clearance signal")
+  })
+
+  it("uses early context labels for one positive or one adverse client report", () => {
+    const positiveProfile = {
+      ...clientProfiles[1],
+      clientBureauScore: 86,
+      reportCount: 1,
+      positiveSignalCount: 1,
+      riskLevel: "Low" as const,
+    }
+    const adverseProfile = {
+      ...clientProfiles[0],
+      clientBureauScore: 48,
+      reportCount: 1,
+      positiveSignalCount: 0,
+      riskLevel: "Elevated" as const,
+    }
+
+    const positiveDisplay = clientRatingDisplay(positiveProfile)
+    const adverseDisplay = clientRatingDisplay(adverseProfile)
+
+    expect(positiveDisplay.ratingLabel).toBe("Early positive context")
+    expect(positiveDisplay.shouldShowRiskBadge).toBe(false)
+    expect(adverseDisplay.ratingLabel).toBe("Early concern context")
+    expect(adverseDisplay.contextLabel).toBe("Early concern context")
+    expect(adverseDisplay.shouldShowRiskBadge).toBe(false)
+  })
+
+  it("keeps mixed, disputed, resolved, evidence-backed, and corrected client context explainable", () => {
+    const resolvedReport = {
+      ...baseReport,
+      id: "resolved_context",
+      reportCategory: "Late payment" as const,
+      amountUnpaid: 1200,
+      resolutionStatus: "Paid in full" as const,
+      evidenceAttached: true,
+      status: "approved" as const,
+    }
+    const disputedReport = {
+      ...baseReport,
+      id: "disputed_context",
+      reportCategory: "Non-payment" as const,
+      amountUnpaid: 3000,
+      resolutionStatus: "Disputed" as const,
+      status: "disputed" as const,
+    }
+    const positiveReport = {
+      ...baseReport,
+      id: "positive_context",
+      reportCategory: "Would work with again" as const,
+      amountUnpaid: 0,
+      resolutionStatus: "Paid in full" as const,
+      status: "approved" as const,
+    }
+    const reports = [resolvedReport, disputedReport, positiveReport]
+    const profile = {
+      ...clientProfiles[0],
+      clientBureauScore: 64,
+      reportCount: reports.length,
+      reports,
+      positiveReports: [positiveReport],
+      clientResponses: [
+        {
+          id: "response_qa",
+          clientId: clientProfiles[0].id,
+          name: "Client response",
+          emailHash: "private",
+          profileUrl: "/client/john-smith-orlando-fl",
+          requestType: "Correction request" as const,
+          verificationMethod: "Email verification",
+          responseSummary: "The client supplied correction context for moderator review.",
+          status: "published" as const,
+          createdAt: "2026-06-01T00:00:00.000Z",
+          updatedAt: "2026-06-02T00:00:00.000Z",
+        },
+      ],
+      evidence: [
+        {
+          id: "evidence_context",
+          reportId: "resolved_context",
+          fileName: "Private document reviewed",
+          fileType: "pdf",
+          storagePath: "private",
+          uploadedAt: "2026-06-01T00:00:00.000Z",
+        },
+      ],
+      balanceSummary: getReportedBalanceSummary(reports),
+    }
+
+    const display = clientRatingDisplay(profile)
+    const confidence = clientProfileConfidence(profile)
+
+    expect(display.shouldShowNumericScore).toBe(true)
+    expect(display.shouldShowRiskBadge).toBe(true)
+    expect(display.contextLabel).toContain("open dispute")
+    expect(display.concernCount).toBe(2)
+    expect(display.positiveCount).toBe(1)
+    expect(display.hasEvidenceOnFile).toBe(true)
+    expect(confidence.factors).toContain("Client response context published")
+    expect(JSON.stringify(display)).not.toMatch(/email|phone|storagePath|moderationNote/i)
   })
 })
 
@@ -2020,7 +2138,7 @@ describe("schemas and mock actions", () => {
 
   it("interprets client ratings and cleans public report copy", () => {
     expect(clientRatingBand(92, 2)).toBe("Strong client history")
-    expect(clientRatingBand(66, 1)).toBe("Moderate caution")
+    expect(clientRatingBand(66, 1)).toBe("Early mixed context")
     expect(clientRatingBand(50, 0)).toBe("Limited history")
     expect(cleanPublicReportText("Invoice was devliered   after completion.")).toBe(
       "Invoice was delivered after completion.",

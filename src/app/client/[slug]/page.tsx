@@ -17,7 +17,6 @@ import {
 
 import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
-import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
 import {
   CommunityDiscussionSection,
@@ -28,14 +27,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
+import { clientProfileConfidence, clientProfilePrimarySignals, clientRatingDisplay } from "@/lib/client-database"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
 import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
 import { getSiteUrl } from "@/lib/env"
 import { JsonLd, getClientProfileStructuredData } from "@/lib/seo"
 import { getPublicTrustSummary } from "@/lib/trust-verification"
 import {
-  clientRatingBand,
   clientRatingDisclaimer,
   clientRatingIndicators,
   responseStatusLabel,
@@ -143,8 +141,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const resolvedReports = profile.balanceSummary.resolvedReportCount
   const evidenceSummary = summarizeEvidence(profile.evidence)
   const trustSummary = getPublicTrustSummary(profile)
-  const ratingBand = clientRatingBand(profile.clientBureauScore, profile.reports.length)
   const confidence = clientProfileConfidence(profile)
+  const ratingDisplay = clientRatingDisplay(profile)
+  const ratingBand = ratingDisplay.ratingLabel
   const primarySignals = clientProfilePrimarySignals(profile)
   const responseStatus = responseStatusLabel(profile)
   const resolutionStatus = resolutionStatusLabel(profile)
@@ -171,7 +170,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               <Link href={cityHref} className="hover:text-white">{profile.city}</Link>
             </nav>
             <div className="flex flex-wrap items-center gap-3">
-              <RiskBadge riskLevel={profile.riskLevel} />
+              <ContextBadge label={ratingDisplay.contextLabel} tone={ratingDisplay.tone} />
               <Badge className="rounded-md bg-emerald-600 text-white">
                 <ShieldCheck className="size-3" aria-hidden="true" />
                 Public client record
@@ -247,7 +246,15 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 </Badge>
                 <span className="text-xs font-semibold uppercase text-slate-500">Client Bureau</span>
               </div>
-              <ScoreGauge score={profile.clientBureauScore} label="Context Rating" />
+              {ratingDisplay.shouldShowNumericScore ? (
+                <ScoreGauge score={profile.clientBureauScore} label={ratingDisplay.scoreLabel} />
+              ) : (
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase text-slate-500">{ratingDisplay.scoreLabel}</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-950">{ratingDisplay.scoreDisplay}</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{ratingDisplay.summary}</p>
+                </div>
+              )}
               <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
                 <p className="text-sm font-semibold text-amber-950">{ratingBand}</p>
                 <p className="mt-1 text-xs leading-5 text-amber-900">{clientRatingDisclaimer()}</p>
@@ -389,13 +396,17 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               profileSlug={profile.publicSlug}
               imageUrl={profileImageUrl}
               score={profile.clientBureauScore}
+              contextLabel={ratingDisplay.contextLabel}
+              ratingLabel={ratingDisplay.ratingLabel}
               riskLevel={profile.riskLevel}
               reportCount={profile.reports.length}
+              showNumericScore={ratingDisplay.shouldShowNumericScore}
+              showRiskBadge={ratingDisplay.shouldShowRiskBadge}
             />
             <SidebarRatingCard
               ratingBand={ratingBand}
+              ratingDisplay={ratingDisplay}
               ratingIndicators={ratingIndicators}
-              score={profile.clientBureauScore}
               scoreFactors={profile.scoreFactors}
               updatedAt={profile.updatedAt}
             />
@@ -407,6 +418,25 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
         </div>
       </section>
     </article>
+  )
+}
+
+function ContextBadge({ label, tone }: { label: string; tone: "amber" | "emerald" | "rose" | "slate" | "sky" }) {
+  const className =
+    tone === "emerald"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : tone === "rose"
+        ? "border-rose-200 bg-rose-50 text-rose-800"
+        : tone === "sky"
+          ? "border-sky-200 bg-sky-50 text-sky-800"
+          : tone === "amber"
+            ? "border-amber-200 bg-amber-50 text-amber-900"
+            : "border-slate-200 bg-slate-100 text-slate-700"
+
+  return (
+    <Badge variant="outline" className={`rounded-md px-2 py-1 ${className}`}>
+      {label}
+    </Badge>
   )
 }
 
@@ -694,14 +724,14 @@ function ReportActionCard({
 
 function SidebarRatingCard({
   ratingBand,
+  ratingDisplay,
   ratingIndicators,
-  score,
   scoreFactors,
   updatedAt,
 }: {
   ratingBand: string
+  ratingDisplay: ReturnType<typeof clientRatingDisplay>
   ratingIndicators: { label: string; value: string }[]
-  score: number
   scoreFactors: { label: string; impact: number; tone: "positive" | "negative" | "neutral"; description: string }[]
   updatedAt: string
 }) {
@@ -715,9 +745,10 @@ function SidebarRatingCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase text-slate-500">Client Bureau Context Rating</p>
-          <p className="mt-2 text-3xl font-semibold text-slate-950">{score}/100</p>
+          <p className="text-xs font-semibold uppercase text-slate-500">{ratingDisplay.scoreLabel}</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{ratingDisplay.scoreDisplay}</p>
           <p className="mt-1 text-sm font-semibold text-amber-800">{ratingBand}</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">{ratingDisplay.summary}</p>
           <p className="mt-2 text-xs leading-5 text-slate-600">Last updated {new Date(updatedAt).toLocaleDateString()}</p>
         </div>
         <div className="grid gap-2">
@@ -729,18 +760,24 @@ function SidebarRatingCard({
           ))}
         </div>
         <div className="space-y-2">
-          {scoreFactors.slice(0, 3).map((factor) => (
-            <div key={factor.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-slate-950">{factor.label}</p>
-                <span className={factor.impact < 0 ? "text-sm font-semibold text-rose-700" : "text-sm font-semibold text-emerald-700"}>
-                  {factor.impact > 0 ? "+" : ""}
-                  {factor.impact}
-                </span>
+          {ratingDisplay.shouldShowNumericScore ? (
+            scoreFactors.slice(0, 3).map((factor) => (
+              <div key={factor.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-slate-950">{factor.label}</p>
+                  <span className={factor.impact < 0 ? "text-sm font-semibold text-rose-700" : "text-sm font-semibold text-emerald-700"}>
+                    {factor.impact > 0 ? "+" : ""}
+                    {factor.impact}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{factor.description}</p>
               </div>
-              <p className="mt-1 text-xs leading-5 text-slate-600">{factor.description}</p>
+            ))
+          ) : (
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+              Score factors appear after approved public report history exists. Until then, this profile should be read as limited public context.
             </div>
-          ))}
+          )}
         </div>
       </CardContent>
     </Card>

@@ -17,8 +17,12 @@ interface PublicProfileShareCardProps {
   profileSlug: string
   imageUrl: string
   score: number
+  contextLabel: string
+  ratingLabel: string
   riskLevel: RiskLevel
   reportCount: number
+  showNumericScore: boolean
+  showRiskBadge: boolean
 }
 
 export function PublicProfileShareCard({
@@ -28,8 +32,12 @@ export function PublicProfileShareCard({
   profileSlug,
   imageUrl,
   score,
+  contextLabel,
+  ratingLabel,
   riskLevel,
   reportCount,
+  showNumericScore,
+  showRiskBadge,
 }: PublicProfileShareCardProps) {
   const [copied, setCopied] = useState(false)
   const [badgeCopied, setBadgeCopied] = useState(false)
@@ -128,7 +136,7 @@ export function PublicProfileShareCard({
           </div>
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="rounded-md bg-white/10 p-3">
-              <p className="text-2xl font-semibold">{score}</p>
+              <p className="text-2xl font-semibold">{showNumericScore ? score : "Limited"}</p>
               <p className="mt-1 text-[11px] font-semibold uppercase text-slate-300">rating</p>
             </div>
             <div className="rounded-md bg-white/10 p-3">
@@ -136,14 +144,23 @@ export function PublicProfileShareCard({
               <p className="mt-1 text-[11px] font-semibold uppercase text-slate-300">reports</p>
             </div>
             <div className="rounded-md bg-white/10 p-3">
-              <p className="text-2xl font-semibold">{riskLevel}</p>
-              <p className="mt-1 text-[11px] font-semibold uppercase text-slate-300">risk</p>
+              <p className="text-2xl font-semibold">{showRiskBadge ? riskLevel : "Context"}</p>
+              <p className="mt-1 text-[11px] font-semibold uppercase text-slate-300">signal</p>
             </div>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-md bg-white p-3">
-            <RiskBadge riskLevel={riskLevel} />
+            {showRiskBadge ? (
+              <RiskBadge riskLevel={riskLevel} />
+            ) : (
+              <Badge variant="outline" className="rounded-md border-slate-200 bg-slate-50 text-slate-700">
+                {contextLabel}
+              </Badge>
+            )}
             <span className="text-xs font-semibold text-slate-500">Moderated summaries only</span>
           </div>
+          <p className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs leading-5 text-slate-300">
+            {ratingLabel}. Ratings are public context signals, not credit scores, background checks, legal findings, or guarantees.
+          </p>
         </div>
       </div>
 
