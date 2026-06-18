@@ -84,18 +84,22 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
               <ArrowRight aria-hidden="true" />
             </Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(result.publicSlug)}`}>
-              <Bell aria-hidden="true" />
+          <div className="grid gap-2 text-sm font-semibold text-slate-700">
+            <Link
+              href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(result.publicSlug)}`}
+              className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 hover:border-amber-300 hover:text-slate-950"
+            >
+              <Bell className="size-4" aria-hidden="true" />
               Watch client
             </Link>
-          </Button>
-          <Button asChild variant="outline">
-            <Link href={reportHref}>
-              <FilePlus2 aria-hidden="true" />
+            <Link
+              href={reportHref}
+              className="inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-slate-600 hover:bg-white hover:text-slate-950"
+            >
+              <FilePlus2 className="size-4" aria-hidden="true" />
               Report experience
             </Link>
-          </Button>
+          </div>
           <p className="text-xs leading-5 text-slate-500">
             Client Database pages show approved summaries only. Private identifiers and evidence files stay hidden.
           </p>

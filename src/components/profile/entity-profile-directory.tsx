@@ -17,7 +17,7 @@ import {
 } from "lucide-react"
 
 import { EntityProfileResultCard } from "@/components/search/entity-profile-result-card"
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip, ProductMockupFrame } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { profileTypeLabel, profileTypePluralLabel } from "@/lib/entity-profiles"
@@ -447,71 +447,8 @@ export function EntityProfileDirectory({
           { label: "Evidence", value: evidenceCount.toLocaleString(), text: "Profiles with private evidence indicators." },
         ]}
       />
-      <TrustGuardrailStrip
-        items={[
-          "Approved profiles only",
-          "Private identifiers hidden",
-          "No raw evidence files",
-          activeType === "subcontractor" ? "Trade context separated" : "Response rights available",
-        ]}
-        dark
-      />
-
-      <section className="bg-white py-8 sm:py-10">
-        <div className="bureau-container grid gap-6 lg:grid-cols-[0.72fr_1fr] lg:items-start">
-          <div>
-            <p className={`text-sm font-semibold uppercase tracking-[0.16em] ${presentation.accent.text}`}>
-              {presentation.quickStartEyebrow}
-            </p>
-            <h2 className="mt-2 text-3xl font-semibold tracking-normal text-balance text-slate-950 sm:text-4xl">
-              {presentation.quickStartTitle}
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-              {presentation.quickStartDescription}
-            </p>
-          </div>
-          <div className="grid gap-3 md:grid-cols-3">
-            {presentation.quickStartCards.map((item) => {
-              const Icon = item.icon
-
-              return (
-                <Card key={item.title} className={`rounded-md shadow-sm transition hover:-translate-y-0.5 ${presentation.accent.panel}`}>
-                  <CardContent className="p-5">
-                    <span className={`flex size-11 items-center justify-center rounded-md ${presentation.accent.icon}`}>
-                      <Icon className="size-5" aria-hidden="true" />
-                    </span>
-                    <h3 className="mt-4 font-semibold text-slate-950">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {activePillar ? (
-        <DatabaseAuthorityPanel
-          pillar={activePillar}
-          profileCount={visibleProfiles.length}
-          verifiedCount={verifiedCount}
-          reportCount={reportCount}
-          evidenceCount={evidenceCount}
-        />
-      ) : (
-        <AllDatabasesAuthorityPanel
-          clientCount={profileCounts.find((item) => item.type === "client")?.value ?? 0}
-          contractorCount={profileCounts.find((item) => item.type === "contractor")?.value ?? 0}
-          subcontractorCount={profileCounts.find((item) => item.type === "subcontractor")?.value ?? 0}
-        />
-      )}
-
       <section id="profile-directory" className="bureau-section">
         <div className="bureau-container space-y-6">
-          {activeType === "subcontractor" ? (
-            <SubcontractorReadingGuide />
-          ) : null}
-
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-5 p-5">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -598,6 +535,14 @@ export function EntityProfileDirectory({
                   Filter profiles
                 </Button>
               </form>
+              <DatabaseTrustNote
+                items={[
+                  "Approved profiles only",
+                  "Private identifiers hidden",
+                  "No raw evidence files",
+                  activeType === "subcontractor" ? "Trade context separated" : "Response rights available",
+                ]}
+              />
             </CardContent>
           </Card>
 
@@ -695,6 +640,27 @@ export function EntityProfileDirectory({
               </CardContent>
             </Card>
           )}
+
+          <DatabaseReadingSection
+            presentation={presentation}
+            activeType={activeType}
+          />
+
+          {activePillar ? (
+            <DatabaseAuthorityPanel
+              pillar={activePillar}
+              profileCount={visibleProfiles.length}
+              verifiedCount={verifiedCount}
+              reportCount={reportCount}
+              evidenceCount={evidenceCount}
+            />
+          ) : (
+            <AllDatabasesAuthorityPanel
+              clientCount={profileCounts.find((item) => item.type === "client")?.value ?? 0}
+              contractorCount={profileCounts.find((item) => item.type === "contractor")?.value ?? 0}
+              subcontractorCount={profileCounts.find((item) => item.type === "subcontractor")?.value ?? 0}
+            />
+          )}
         </div>
       </section>
 
@@ -769,6 +735,63 @@ function DatabaseAuthorityPanel({
         </div>
       </div>
     </section>
+  )
+}
+
+function DatabaseReadingSection({
+  activeType,
+  presentation,
+}: {
+  activeType?: ProfileType
+  presentation: DirectoryRolePresentation
+}) {
+  return (
+    <section className="grid gap-5 rounded-md border border-slate-200 bg-white p-5 shadow-sm sm:p-6 lg:grid-cols-[0.68fr_1.32fr] lg:items-start">
+      <div>
+        <p className={`text-xs font-semibold uppercase tracking-[0.16em] ${presentation.accent.text}`}>
+          {presentation.quickStartEyebrow}
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
+          {presentation.quickStartTitle}
+        </h2>
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          {presentation.quickStartDescription}
+        </p>
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        {presentation.quickStartCards.map((item) => {
+          const Icon = item.icon
+
+          return (
+            <div key={item.title} className={`rounded-md border p-4 ${presentation.accent.panel}`}>
+              <span className={`flex size-10 items-center justify-center rounded-md ${presentation.accent.icon}`}>
+                <Icon className="size-5" aria-hidden="true" />
+              </span>
+              <h3 className="mt-3 font-semibold text-slate-950">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
+            </div>
+          )
+        })}
+      </div>
+      {activeType === "subcontractor" ? (
+        <div className="lg:col-span-2">
+          <SubcontractorReadingGuide />
+        </div>
+      ) : null}
+    </section>
+  )
+}
+
+function DatabaseTrustNote({ items }: { items: string[] }) {
+  return (
+    <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 sm:grid-cols-2 lg:grid-cols-4">
+      {items.map((item) => (
+        <div key={item} className="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <ShieldCheck className="size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+          <span>{item}</span>
+        </div>
+      ))}
+    </div>
   )
 }
 

@@ -5,7 +5,6 @@ import { ArrowRight, MapPinned, Search, ShieldCheck } from "lucide-react"
 import { RiskBadge } from "@/components/client/risk-badge"
 import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { StateSelect } from "@/components/forms/state-select"
-import { TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { clientDatabaseSearchHref, clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
@@ -75,25 +74,8 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
           ["States", states.length.toLocaleString()],
         ]}
       />
-      <TrustGuardrailStrip
-        items={[
-          "Approved profile links only",
-          "No raw contact identifiers",
-          "Evidence summarized safely",
-          "Client response paths included",
-        ]}
-        dark
-      />
       <div className="bureau-container space-y-8 py-10">
         <DatabaseQuickStart profileCount={profileCount} reportCount={reportCount} stateCount={states.length} />
-        {clientDatabasePillar ? (
-          <ClientDatabaseAuthority
-            evidenceLabel="Private evidence indicators"
-            profileCount={profileCount}
-            reportCount={reportCount}
-            stateCount={states.length}
-          />
-        ) : null}
 
         {states.length > 0 ? (
           <div className="grid gap-4 lg:grid-cols-2">
@@ -106,6 +88,14 @@ export function ClientDirectoryIndexView({ states }: { states: ClientDirectorySt
         )}
         {recentProfiles.length > 0 ? (
           <ProfileGrid title="Recently updated approved profiles" profiles={recentProfiles} />
+        ) : null}
+        {clientDatabasePillar ? (
+          <ClientDatabaseAuthority
+            evidenceLabel="Private evidence indicators"
+            profileCount={profileCount}
+            reportCount={reportCount}
+            stateCount={states.length}
+          />
         ) : null}
         <DirectoryEducation
           title="How to read a public Client Database record"
@@ -132,15 +122,6 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
           ["Cities", state.cities.length.toLocaleString()],
         ]}
       />
-      <TrustGuardrailStrip
-        items={[
-          "State directory is public-safe",
-          "Pending reports hidden",
-          "Private evidence sealed",
-          "Use as one intake signal",
-        ]}
-        dark
-      />
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs
           items={[
@@ -152,15 +133,6 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
           <FloridaCoveragePanel
             title="Florida counties, cities, towns, villages, and Census places are available for clean searching."
             description="Client Bureau uses official Florida geography data so contractors can search and submit records with consistent city, town, county, and local-market names. Empty markets stay out of the sitemap until they have useful public profile context."
-          />
-        ) : null}
-        {clientDatabasePillar ? (
-          <ClientDatabaseAuthority
-            compact
-            evidenceLabel="Evidence-on-file labels"
-            profileCount={state.profileCount}
-            reportCount={state.reportCount}
-            stateCount={state.cities.length}
           />
         ) : null}
         <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr]">
@@ -221,6 +193,15 @@ export function ClientDirectoryStateView({ state }: { state: ClientDirectoryStat
         </div>
 
         <ProfileGrid title={`Approved ${state.name} profiles`} profiles={state.profiles} />
+        {clientDatabasePillar ? (
+          <ClientDatabaseAuthority
+            compact
+            evidenceLabel="Evidence-on-file labels"
+            profileCount={state.profileCount}
+            reportCount={state.reportCount}
+            stateCount={state.cities.length}
+          />
+        ) : null}
         <DirectoryEducation
           title={`Using ${state.name} public profile context responsibly`}
           description={`Client Bureau organizes ${state.name} profiles for contractors who want a pre-job client check before they commit labor, materials, delivery capacity, or payment terms.`}
@@ -257,15 +238,6 @@ export function ClientDirectoryCityView({
           ["Last updated", formatDate(city.lastUpdated)],
         ]}
       />
-      <TrustGuardrailStrip
-        items={[
-          "City profile links are moderated",
-          "No street addresses displayed",
-          "Response context included when approved",
-          "Check before scheduling",
-        ]}
-        dark
-      />
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs
           items={[
@@ -289,15 +261,6 @@ export function ClientDirectoryCityView({
             ]}
           />
         ) : null}
-        {clientDatabasePillar ? (
-          <ClientDatabaseAuthority
-            compact
-            evidenceLabel="City-level public context"
-            profileCount={city.profileCount}
-            reportCount={city.reportCount}
-            stateCount={1}
-          />
-        ) : null}
         <Card className="rounded-md border-slate-200 bg-white shadow-sm">
           <CardContent className="grid gap-4 p-6 lg:grid-cols-[1fr_280px] lg:items-center">
             <div>
@@ -315,6 +278,15 @@ export function ClientDirectoryCityView({
           </CardContent>
         </Card>
         <ProfileGrid title={`Approved profiles in ${city.name}`} profiles={city.profiles} />
+        {clientDatabasePillar ? (
+          <ClientDatabaseAuthority
+            compact
+            evidenceLabel="City-level public context"
+            profileCount={city.profileCount}
+            reportCount={city.reportCount}
+            stateCount={1}
+          />
+        ) : null}
         <DirectoryEducation
           title={`What ${city.name} contractors can learn here`}
           description={`This city Client Database page helps business owners review approved public profile context before scheduling crews, ordering materials, accepting custom work, extending payment terms, or sending a contract packet.`}
@@ -340,15 +312,6 @@ export function ClientDirectoryCountyIndexView({ counties }: { counties: ClientD
           ["Counties with profiles", activeCounties.length.toLocaleString()],
           ["Approved reports", reportCount.toLocaleString()],
         ]}
-      />
-      <TrustGuardrailStrip
-        items={[
-          "Official county structure",
-          "Profile-backed pages only in sitemap",
-          "Empty locations stay noindex",
-          "Private data stays sealed",
-        ]}
-        dark
       />
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs
@@ -391,15 +354,6 @@ export function ClientDirectoryCountyView({ county }: { county: ClientDirectoryC
           ["Approved reports", county.reportCount.toLocaleString()],
           ["Local places", county.places.length.toLocaleString()],
         ]}
-      />
-      <TrustGuardrailStrip
-        items={[
-          "County-level browsing",
-          "Approved profiles only",
-          "No street addresses shown",
-          "No raw evidence files",
-        ]}
-        dark
       />
       <div className="bureau-container space-y-8 py-10">
         <DirectoryBreadcrumbs

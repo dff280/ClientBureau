@@ -99,18 +99,29 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                   <ArrowRight aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" className="w-full justify-center">
-                <Link href={watchHref}>
-                  <Bell aria-hidden="true" />
+              <div className="grid gap-2 text-sm font-semibold text-slate-700">
+                <Link
+                  href={watchHref}
+                  className="inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 hover:border-amber-300 hover:text-slate-950"
+                >
+                  <Bell className="size-4" aria-hidden="true" />
                   {presentation.watchLabel}
                 </Link>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-center">
-                <Link href={submitHref}>{presentation.reportLabel}</Link>
-              </Button>
-              <Button asChild variant="ghost" className="w-full justify-center">
-                <Link href={claimHref}>{presentation.claimLabel}</Link>
-              </Button>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                  <Link
+                    href={submitHref}
+                    className="rounded-md px-3 py-2 text-center text-slate-600 hover:bg-white hover:text-slate-950"
+                  >
+                    {presentation.reportLabel}
+                  </Link>
+                  <Link
+                    href={claimHref}
+                    className="rounded-md px-3 py-2 text-center text-slate-600 hover:bg-white hover:text-slate-950"
+                  >
+                    {presentation.claimLabel}
+                  </Link>
+                </div>
+              </div>
             </div>
 
             <div className="rounded-md border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
