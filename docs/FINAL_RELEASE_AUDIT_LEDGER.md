@@ -60,7 +60,7 @@ No secrets or full environment dumps were recorded.
 | --- | --- | --- | --- |
 | 01 | Public IA, homepage, header, footer | Completed | Command and browser evidence recorded below |
 | 02 | Contact, support, enterprise | Completed | Command and browser evidence recorded below; owner must apply inquiry-intake migration before production deploy |
-| 03 | Pricing, capabilities, deferred billing truth | Not started | Needs command and browser evidence |
+| 03 | Pricing, capabilities, deferred billing truth | Completed | Command and browser evidence recorded below |
 | 04 | Search | Not started | Needs command and browser evidence |
 | 05 | Client Database and rating semantics | Not started | Needs command and browser evidence |
 | 06 | Contractor/Business Database | Not started | Needs command and browser evidence |
@@ -293,3 +293,80 @@ No screenshot artifact was generated for Prompt 02; browser evidence was recorde
 `PASS WITH OWNER ACTION`
 
 The public contact and enterprise surfaces now have real, privacy-safe inquiry paths with admin retrieval and release checks. Production deployment should wait until the `0023` inquiry-intake migration is applied, then one disposable inquiry should be verified end to end.
+
+## Prompt 03 - Pricing, Capabilities, Deferred Billing Truth
+
+| Item | Evidence |
+| --- | --- |
+| Branch | `codex/pricing-capability-truth` |
+| Starting commit | `ef8c194` (`Add public inquiry intake for contact and enterprise`) |
+| Scope | `/pricing`, plan CTAs, signup plan-interest handoff, dashboard billing copy, subscription/service-fee checkout gates, billing readiness checks, capability documentation |
+| Status | `PASS` locally; pending PR/release review |
+
+### Prompt 03 Findings
+
+| Severity | Finding | Evidence | Outcome |
+| --- | --- | --- | --- |
+| P1 launch-quality | Pricing and shared pricing cards could route paid plans directly to `/api/stripe/checkout` while billing is intentionally deferred. | Source audit of `/pricing`, `PricingCard`, and Stripe checkout routes. | Added a server-side billing availability gate and routed paid-plan interest through signup/review until checkout is explicitly enabled and QA-proven. |
+| P1 launch-quality | Paid plan copy over-promised team/shared/export/manager controls that are not launch-proven self-serve features. | Audit of `pricingTiers`, comparison rows, and dashboard billing copy. | Replaced unsupported promises with review/scoping language and documented the feature classification matrix. |
+| P1 launch-quality | New account signup did not preserve paid plan interest. | Audit of `/signup?plan=...`, signup schema, web action, and mobile signup route. | Added `planInterest` validation, hidden form preservation, auth metadata, and post-signup billing-review routing for non-free plan interest. |
+| P1 release protection | Service-fee case actions and readiness text implied checkout could begin even while service-fee billing is not open. | Audit of recovery/lien actions and readiness summaries. | Gated recovery/lien service-fee checkout actions and changed precheck/case messages to "review before billing" when checkout is deferred. |
+
+### Prompt 03 Changes
+
+- Added `src/lib/billing-availability.ts` as the single server-safe billing availability policy for subscription and service-fee checkout.
+- Added `BILLING_CHECKOUT_ENABLED=false` to `.env.example` and deployment docs; Stripe keys alone do not open checkout.
+- Exposed billing availability through `/api/health` so live verification can detect readiness drift without exposing secrets.
+- Updated subscription and service-fee checkout routes to redirect/fail safely when billing is not intentionally enabled.
+- Reworked `/pricing` CTAs and plan language around Free account creation, Pro plan interest, Bureau Team review, Enterprise review, and deferred paid activation.
+- Removed direct checkout forms from shared pricing cards.
+- Preserved paid plan interest through web signup, mobile signup metadata, and post-signup redirects.
+- Updated dashboard Billing copy to show billing review mode without developer-facing Stripe/webhook wording.
+- Updated recovery and Florida lien service actions/readiness summaries so service-fee payment is reviewed before billing is collected unless checkout is explicitly active.
+- Added `docs/PRICING_CAPABILITY_MATRIX.md` documenting implemented, implemented-not-gated, partial/planned, and deferred capabilities.
+- Extended `scripts/verify-live-release.mjs` and `scripts/verify-seo.mjs` to fail if pricing exposes direct checkout forms, technical billing markers, or missing deferred-billing copy.
+
+### Prompt 03 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm test -- --run src/lib/__tests__/client-bureau.test.ts` | Pass | 121 focused tests passed after adding billing availability and service-readiness assertions. |
+| `npm run lint` | Pass | ESLint passed with no warnings after cleanup. |
+| `npm test` | Pass | 121 tests passed. |
+| `npm run build` | Pass | Next.js production build passed with 67 static pages. |
+| `npm run seo:check:local` | Pass | Includes new pricing deferred-billing, signup-route, no-direct-checkout, and technical-marker checks. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+| `npm run route:check` | Pass | Route/indexability inventory remains intact. |
+| `git diff --check` | Pass | No whitespace errors; only normal Windows LF-to-CRLF warnings appeared. |
+
+### Prompt 03 Browser Evidence
+
+Browser checks were run against a fresh local production build at `http://127.0.0.1:4201`.
+
+| Scenario | Result |
+| --- | --- |
+| `/pricing` desktop | Pass: deferred paid-plan copy visible, Free CTA visible, Pro routes to `/signup?plan=pro`, Team uses review language, no direct `/api/stripe/checkout` form, no technical billing markers, no horizontal overflow. |
+| `/signup?plan=pro` desktop | Pass: Pro plan-interest notice visible, hidden `planInterest=pro` input present, no horizontal overflow. |
+| `/dashboard/billing` desktop | Pass: billing review mode visible after dashboard content loaded, request-billing-review action visible, no technical billing markers, no horizontal overflow. |
+| Stale local server note | Port 4200 was serving an older preview during QA; the browser checks were repeated successfully on a fresh port 4201 preview built from this branch. |
+
+### Prompt 03 Privacy, Security, And Legal Evidence
+
+- Public pricing copy no longer exposes setup details such as missing Stripe keys, test mode, or webhook status.
+- Paid activation and service fees are described as reviewed before billing is collected while checkout is deferred.
+- Public copy avoids guarantees, collection promises, legal outcome claims, and unsupported team/export/manager-control promises.
+- Recovery and lien service checkout actions fail safely when billing is not open, leaving saved cases in private review.
+- Plan interest is stored as non-sensitive account metadata; no raw payment details are collected.
+- SEO and live verification now guard against direct checkout forms or technical billing markers on public pricing.
+
+### Prompt 03 Owner Actions
+
+- Keep `BILLING_CHECKOUT_ENABLED=false` until subscription checkout, service-fee checkout, webhooks, failed-payment states, and dashboard subscription updates are tested end to end in Stripe test mode.
+- Before enabling checkout, verify Pro and Team price IDs, webhook signature validation, idempotent webhook processing, checkout cancel/return states, service-fee orders, and customer-support copy.
+- Do not market Bureau Team seats, shared team controls, manager controls, CSV exports, or enterprise data partnerships as self-serve until those paths are implementation- and QA-proven.
+
+### Prompt 03 Verdict
+
+`PASS`
+
+Pricing, plan-interest, dashboard billing, and service-fee language now match the current product truth. Free signup remains open, paid interest is preserved for review, and public paid checkout stays closed until the explicit billing launch gate is enabled and QA-proven.

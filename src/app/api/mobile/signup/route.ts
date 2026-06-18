@@ -41,6 +41,11 @@ export async function POST(request: Request) {
   }
 
   if (getDataMode() !== "supabase") {
+    const message =
+      input.planInterest && input.planInterest !== "free"
+        ? "Account created. Plan interest was saved for billing review."
+        : "Account created."
+
     return mobileJson(
       ok(
         {
@@ -51,7 +56,7 @@ export async function POST(request: Request) {
           accountType: input.accountType,
           createdAt: new Date().toISOString(),
         } satisfies User,
-        "Account created.",
+        message,
       ),
       201,
     )
@@ -67,6 +72,7 @@ export async function POST(request: Request) {
         business_name: input.businessName,
         trade: input.trade,
         account_type: input.accountType,
+        plan_interest: input.planInterest ?? "free",
       },
     },
   })
@@ -181,7 +187,9 @@ export async function POST(request: Request) {
         createdAt: data.user?.created_at ?? new Date().toISOString(),
       } satisfies User,
       data.user
-        ? "Contractor account created. Log in to continue."
+        ? input.planInterest && input.planInterest !== "free"
+          ? "Contractor account created. Plan interest was saved for billing review."
+          : "Contractor account created. Log in to continue."
         : "Signup received. Check your email to confirm the account.",
     ),
     201,

@@ -138,7 +138,7 @@ export default async function DashboardPage({
       icon: UploadCloud,
     },
     {
-      label: "Choose plan",
+      label: "Review plan",
       complete: subscriptionTier !== "free",
       href: "/dashboard/billing",
       icon: CreditCard,

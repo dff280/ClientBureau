@@ -531,6 +531,40 @@ await verifyNoindexWorkflowPage("/clients/florida/winter-park", {
   requiredText: ["Official Florida market", "No approved public profiles are listed here yet", "Client Database"],
 })
 
+const pricingBillingPage = await read("/pricing")
+if (pricingBillingPage.response.ok) {
+  const pricingVisibleText = visiblePageText(pricingBillingPage.text)
+
+  if (pricingVisibleText.includes("Paid plan activation is reviewed before any billing is collected")) {
+    pass("/pricing explains deferred paid-plan activation")
+  } else {
+    fail("/pricing explains deferred paid-plan activation", "missing billing-review language")
+  }
+
+  if (pricingBillingPage.text.includes("/signup?plan=pro")) {
+    pass("/pricing routes paid plan interest through signup")
+  } else {
+    fail("/pricing routes paid plan interest through signup", "missing /signup?plan=pro")
+  }
+
+  if (pricingBillingPage.text.includes("/api/stripe/checkout")) {
+    fail("/pricing avoids direct checkout form", "/api/stripe/checkout found")
+  } else {
+    pass("/pricing avoids direct checkout form")
+  }
+
+  const technicalBillingMarkers = ["Stripe not configured", "test mode", "webhook pending", "checkout broken"]
+  const technicalBillingMarkersFound = technicalBillingMarkers.filter((marker) => pricingVisibleText.includes(marker))
+
+  if (technicalBillingMarkersFound.length === 0) {
+    pass("/pricing avoids technical billing markers")
+  } else {
+    fail("/pricing avoids technical billing markers", technicalBillingMarkersFound.join(", "))
+  }
+} else {
+  fail("/pricing billing truth check", String(pricingBillingPage.response.status))
+}
+
 const subcontractorTradeSearch = await read("/search?q=NoSuchClientBureau987&profileType=subcontractor&tradeCategory=Electrical")
 if (subcontractorTradeSearch.response.ok) {
   pass("/search preserves subcontractor trade request", "profileType=subcontractor&tradeCategory=Electrical")

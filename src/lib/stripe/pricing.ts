@@ -7,6 +7,8 @@ export interface PricingTier {
   cadence: string
   description: string
   stripePriceId: string
+  availability: "open" | "activation_review" | "scoped_review"
+  launchNote: string
   featured?: boolean
   features: string[]
 }
@@ -19,12 +21,14 @@ export const pricingTiers: PricingTier[] = [
     cadence: "forever",
     description: "For business owners who want a basic client check before accepting work.",
     stripePriceId: "price_free",
+    availability: "open",
+    launchNote: "Free account setup is open now. No card is required.",
     features: [
-      "Limited client profile search",
-      "One private client file",
-      "One client experience report",
-      "Basic public report viewing",
-      "Basic status tracking",
+      "Client Database search access",
+      "Basic saved search and watchlist workflow",
+      "One documented client experience report path",
+      "Public profile and response context viewing",
+      "Private dashboard setup",
     ],
   },
   {
@@ -34,18 +38,19 @@ export const pricingTiers: PricingTier[] = [
     cadence: "per month",
     description: "For active contractors and service businesses making client checks part of every job intake.",
     stripePriceId: "price_pro_monthly",
+    availability: "activation_review",
+    launchNote: "Create a free account first. Pro activation is reviewed before billing is collected.",
     featured: true,
     features: [
-      "Unlimited client profile searches",
-      "Saved client searches",
+      "Daily client checks and saved searches",
       "Watchlists and monitoring alerts",
       "Client intake assessments",
       "Contract signing links",
       "Evidence Vault workflow",
       "Client response tracking",
-      "Payment follow-up tracking",
-      "Unlimited client experience reports",
-      "Priority moderation queue",
+      "Payment follow-up and recovery workspace",
+      "Client experience report workflow",
+      "Florida lien service case workspace",
     ],
   },
   {
@@ -55,15 +60,15 @@ export const pricingTiers: PricingTier[] = [
     cadence: "per month",
     description: "For teams managing higher client volume and shared intake decisions.",
     stripePriceId: "price_team_monthly",
+    availability: "scoped_review",
+    launchNote: "Team activation is scoped with Client Bureau before any billing or seat rollout.",
     features: [
-      "Multi-seat business workspace",
-      "Shared watchlists and searches",
-      "CSV bulk import",
-      "Team reporting exports",
-      "Team Evidence Vault",
-      "Shared contract packets",
-      "Recovery case workspace",
-      "Manager review controls",
+      "Team workflow review",
+      "Shared process planning for searches and watchlists",
+      "CSV intake review path",
+      "Evidence and contract operating process",
+      "Recovery and lien-service coordination review",
+      "Manager review expectations scoped before rollout",
     ],
   },
   {
@@ -73,13 +78,15 @@ export const pricingTiers: PricingTier[] = [
     cadence: "annual options",
     description: "For regional groups, franchises, trade associations, and larger business-owner networks.",
     stripePriceId: "price_enterprise",
+    availability: "scoped_review",
+    launchNote: "Enterprise is a scoped review path, not instant self-serve checkout.",
     features: [
-      "Custom seats and search volume",
-      "API and data partnerships where appropriate",
-      "Priority moderation workflows",
-      "Custom contract and intake workflows",
-      "Policy review and onboarding support",
-      "Advanced audit and reporting needs",
+      "Seat and usage review",
+      "Moderation workflow review",
+      "Policy and onboarding support review",
+      "Contract and intake workflow scoping",
+      "Audit and reporting needs assessment",
+      "Data partnership discussions only when separately approved",
     ],
   },
 ]

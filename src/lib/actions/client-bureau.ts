@@ -115,6 +115,7 @@ import type {
 } from "@/lib/types"
 import { isPositiveReportCategory, reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
+import { getBillingAvailability } from "@/lib/billing-availability"
 import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
 import type { Database, Json } from "@/lib/database.types"
 import {
@@ -819,7 +820,11 @@ export async function signupAction(
   }
 
   const input = normalizeSignupTrade(parsed.data)
-  const redirectTo = getPostSignupRedirectPath(input.accountType, formData.get("next"))
+  const redirectTo = getPostSignupRedirectPath(input.accountType, formData.get("next"), input.planInterest)
+  const contractorSignupMessage =
+    input.planInterest && input.planInterest !== "free"
+      ? "Contractor account created. Plan interest was saved for billing review."
+      : "Contractor account created. You can now continue with Client Bureau tools."
 
   if (getDataMode() === "supabase") {
     const supabase = await createClient()
@@ -833,6 +838,7 @@ export async function signupAction(
           business_name: input.businessName,
           trade: input.trade,
           account_type: input.accountType,
+          plan_interest: input.planInterest ?? "free",
         },
       },
     })
@@ -947,7 +953,7 @@ export async function signupAction(
       data.user
         ? input.accountType === "client"
           ? "Client account created. You can respond, request correction, or claim a profile."
-          : "Contractor account created. You can now use protected Client Bureau tools."
+          : contractorSignupMessage
         : "Signup received. Check your email to confirm the account.",
     )
   }
@@ -964,7 +970,7 @@ export async function signupAction(
     },
     input.accountType === "client"
       ? "Client account created. You can respond, request correction, or claim a profile."
-      : "Contractor account created. You can now continue with Client Bureau tools.",
+      : contractorSignupMessage,
   )
 }
 
@@ -1546,12 +1552,18 @@ export async function submitManagedRecoveryCaseAction(
   try {
     const recoveryCase = await submitManagedRecoveryCaseService(user.id, parsed.data)
     if (!recoveryCase) return fail("Managed recovery cases are temporarily unavailable.")
+    const billing = getBillingAvailability()
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
     revalidatePath("/admin")
     revalidatePath("/admin/settings")
-    return ok(recoveryCase, "Managed recovery case submitted. Next step: pay the service fee and keep documents private.")
+    return ok(
+      recoveryCase,
+      billing.serviceFeeCheckoutAvailable
+        ? "Managed recovery case submitted. Next step: pay the service fee and keep documents private."
+        : "Managed recovery case submitted. Service fee payment is reviewed before billing is collected.",
+    )
   } catch (error) {
     return fail(actionErrorMessage(error, "Managed recovery case could not be submitted."))
   }
@@ -1573,6 +1585,14 @@ export async function createRecoveryServiceFeeCheckoutAction(
   const user = await requireContractorAccess()
 
   try {
+    const billing = getBillingAvailability()
+
+    if (!billing.serviceFeeCheckoutAvailable) {
+      return fail(
+        "Service fee payment is not open from the workspace yet. Your recovery case remains saved for private review.",
+      )
+    }
+
     const readiness = await runRecoveryPrecheckService(user.id, { caseId: parsed.data.entityId })
     if (!readiness.readyForCheckout) {
       return fail("Complete the recovery precheck before starting checkout.")
@@ -1603,11 +1623,19 @@ export async function runRecoveryPrecheckAction(
 
   try {
     const summary = await runRecoveryPrecheckService(user.id, parsed.data)
+    const billing = getBillingAvailability()
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
     revalidatePath("/admin")
-    return ok(summary, summary.readyForCheckout ? "Recovery precheck passed. Checkout can begin." : "Recovery precheck needs more information.")
+    return ok(
+      summary,
+      summary.readyForCheckout
+        ? billing.serviceFeeCheckoutAvailable
+          ? "Recovery precheck passed. Checkout can begin."
+          : "Recovery precheck passed. Service fee payment will be reviewed before billing is collected."
+        : "Recovery precheck needs more information.",
+    )
   } catch (error) {
     return fail(actionErrorMessage(error, "Recovery precheck could not be completed."))
   }
@@ -1627,11 +1655,19 @@ export async function runFloridaLienPrecheckAction(
 
   try {
     const summary = await runFloridaLienPrecheckService(user.id, parsed.data)
+    const billing = getBillingAvailability()
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
     revalidatePath("/admin")
-    return ok(summary, summary.readyForCheckout ? "Florida lien precheck passed. Checkout can begin." : "Florida lien precheck needs more information.")
+    return ok(
+      summary,
+      summary.readyForCheckout
+        ? billing.serviceFeeCheckoutAvailable
+          ? "Florida lien precheck passed. Checkout can begin."
+          : "Florida lien precheck passed. Service fee payment will be reviewed before billing is collected."
+        : "Florida lien precheck needs more information.",
+    )
   } catch (error) {
     return fail(actionErrorMessage(error, "Florida lien precheck could not be completed."))
   }
@@ -1787,12 +1823,18 @@ export async function submitFloridaLienCaseAction(
   try {
     const lienCase = await submitFloridaLienCaseService(user.id, input)
     if (!lienCase) return fail("Florida lien service is temporarily unavailable.")
+    const billing = getBillingAvailability()
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
     revalidatePath("/admin")
     revalidatePath("/admin/settings")
-    return ok(lienCase, "Florida lien service case submitted. Next step: pay the service fee and sign authorization.")
+    return ok(
+      lienCase,
+      billing.serviceFeeCheckoutAvailable
+        ? "Florida lien service case submitted. Next step: pay the service fee and sign authorization."
+        : "Florida lien service case submitted. Service fee payment is reviewed before billing is collected.",
+    )
   } catch (error) {
     return fail(actionErrorMessage(error, "Florida lien service case could not be submitted."))
   }
@@ -1814,6 +1856,14 @@ export async function createLienServiceFeeCheckoutAction(
   const user = await requireContractorAccess()
 
   try {
+    const billing = getBillingAvailability()
+
+    if (!billing.serviceFeeCheckoutAvailable) {
+      return fail(
+        "Florida lien service fee payment is not open from the workspace yet. Your case remains saved for private review.",
+      )
+    }
+
     const readiness = await runFloridaLienPrecheckService(user.id, { caseId: parsed.data.entityId })
     if (!readiness.readyForCheckout) {
       return fail("Complete the Florida lien precheck before starting checkout.")

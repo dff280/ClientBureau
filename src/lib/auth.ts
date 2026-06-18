@@ -302,8 +302,19 @@ export function getSafePostSignupReturnPath(requestedNext?: unknown) {
   return safeNext
 }
 
-export function getPostSignupRedirectPath(accountType: User["accountType"], requestedNext?: unknown) {
-  return getSafePostSignupReturnPath(requestedNext) ?? (accountType === "client" ? "/client-response" : "/dashboard")
+export function getPostSignupRedirectPath(
+  accountType: User["accountType"],
+  requestedNext?: unknown,
+  planInterest?: unknown,
+) {
+  const safeNext = getSafePostSignupReturnPath(requestedNext)
+
+  if (safeNext) return safeNext
+  if (accountType === "client") return "/client-response"
+
+  return typeof planInterest === "string" && ["pro", "bureau_team", "enterprise"].includes(planInterest)
+    ? `/dashboard/billing?planInterest=${encodeURIComponent(planInterest)}`
+    : "/dashboard"
 }
 
 export async function getCurrentUser(role: UserRole = "contractor"): Promise<User | null> {

@@ -14,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getBillingAvailability, billingInterestSignupHref, planInterestLabel, isBillingPlanInterest } from "@/lib/billing-availability"
 import { pageAssets } from "@/lib/page-assets"
 import { pricingTiers } from "@/lib/stripe/pricing"
 
@@ -27,20 +28,20 @@ export const metadata: Metadata = {
 }
 
 const proof = [
-  { label: "Start", value: "$0", text: "Check clients and report a documented experience before you upgrade." },
-  { label: "Best fit", value: "Pro", text: "Unlimited client checks, watchlists, contracts, evidence, and recovery tools." },
-  { label: "Teams", value: "Shared", text: "Multiple users, shared records, CSV intake, and manager review controls." },
-  { label: "Service work", value: "Add-on", text: "Recovery and Florida lien workflows use service-fee paths." },
+  { label: "Start", value: "$0", text: "Create an account, check clients, and document a first experience without a card." },
+  { label: "Best fit", value: "Pro", text: "Daily client checks, watchlists, contracts, evidence, recovery, and lien-service workspace." },
+  { label: "Teams", value: "Scoped", text: "Team usage, CSV intake, review controls, and seats are reviewed before rollout." },
+  { label: "Service work", value: "Reviewed", text: "Recovery and Florida lien service fees are handled separately from contractor-direct payments." },
 ]
 
 const comparisonRows = [
-  ["Client profile search", "Limited", "Unlimited", "Shared", "Custom"],
-  ["Watchlists and saved searches", "Basic", "Included", "Shared", "Advanced"],
-  ["Client experience reports", "One included", "Unlimited", "Team managed", "Custom"],
-  ["Contract signing links", "-", "Included", "Shared controls", "Custom workflows"],
-  ["Evidence Vault", "Basic", "Expanded", "Team vault", "Retention options"],
-  ["Payment recovery workflow", "-", "Service fee per case", "Team workflow", "Specialist workflow"],
-  ["Florida lien service", "-", "Notice and filing service fees", "Team review", "Specialist workflow"],
+  ["Client Database search", "Open", "Daily use", "Team workflow review", "Custom review"],
+  ["Watchlists and saved searches", "Basic", "Included", "Shared-process scoping", "Advanced review"],
+  ["Client experience reports", "First report path", "Report workflow", "Manager review scoping", "Custom policy review"],
+  ["Contract signing links", "Starter visibility", "Included workspace", "Team process review", "Custom workflow review"],
+  ["Evidence Vault", "Basic private records", "Expanded workflow", "Operating-process review", "Retention review"],
+  ["Payment recovery workflow", "Private notes", "Managed case workspace", "Team coordination review", "Specialist review"],
+  ["Florida lien service", "Information pages", "Case workspace", "Team review path", "Specialist review"],
 ]
 
 const faqs = [
@@ -52,28 +53,68 @@ const faqs = [
 
 const searchDossierAsset = pageAssets.searchDossier
 
-export default function PricingPage() {
+type PricingPageProps = {
+  searchParams: Promise<{
+    checkout?: string | string[]
+    plan?: string | string[]
+  }>
+}
+
+function firstParam(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value
+}
+
+export default async function PricingPage({ searchParams }: PricingPageProps) {
+  const params = await searchParams
+  const billing = getBillingAvailability()
+  const selectedPlan = firstParam(params.plan)
+  const selectedPlanLabel = isBillingPlanInterest(selectedPlan) ? planInterestLabel(selectedPlan) : undefined
+  const checkoutUnavailable = firstParam(params.checkout) === "unavailable"
+
   return (
     <>
       <PremiumHero
         eyebrow="Pricing"
-        title="Choose the client-protection workflow your business needs."
-        description="Client Bureau pricing is built around one practical idea: one avoided payment problem, unclear contract, or risky client decision can matter more than the monthly cost."
-        primary={{ href: "/signup?plan=pro", label: "Start Pro Contractor", icon: ArrowRight }}
+        title="Start free. Review paid activation when your workflow needs it."
+        description="Client Bureau pricing is built around one practical idea: check the client first, then decide whether daily contracts, evidence, recovery, lien service, or team workflow belongs in your process."
+        primary={{ href: "/signup?plan=free", label: "Create Free Account", icon: ArrowRight }}
         secondary={{ href: "/search", label: "Check a Client", icon: Radar }}
         aside={
           <ProductMockupFrame
             dark
             eyebrow="Pro workflow"
             title="One plan. One intake process."
-            description="Search, contract, document, recover, and monitor from the same private workspace."
+            description="Search, contract, document, recover, and monitor from the same private workspace. Paid activation is reviewed before billing is collected."
             imageSrc={searchDossierAsset.src}
             imageAlt={searchDossierAsset.alt}
-            points={["Unlimited checks on Pro", "Private evidence records", "Recovery and lien-service paths"]}
+            points={["Free account setup", "Private evidence records", "Recovery and lien-service paths"]}
           />
         }
       />
       <PremiumProofStrip items={proof} dark />
+      {!billing.subscriptionCheckoutAvailable || checkoutUnavailable ? (
+        <section className="border-b border-amber-200 bg-amber-50">
+          <div className="bureau-container py-5">
+            <div className="flex flex-col justify-between gap-3 rounded-md border border-amber-200 bg-white p-4 shadow-sm md:flex-row md:items-center">
+              <div>
+                <p className="text-sm font-semibold text-amber-800">
+                  {checkoutUnavailable && selectedPlanLabel
+                    ? `${selectedPlanLabel} activation is reviewed first`
+                    : billing.publicStatusLabel}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-amber-950">
+                  {billing.publicStatusDetail} Create a free account now, then use Billing or Enterprise review when you are ready to activate paid access.
+                </p>
+              </div>
+              <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                <Link href={selectedPlanLabel ? `/signup?plan=${selectedPlan}` : "/signup?plan=free"}>
+                  {selectedPlanLabel ? `Create account for ${selectedPlanLabel}` : "Create Free Account"}
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+      ) : null}
       <PublicDatabaseShowcase
         compact
         eyebrow="What every plan supports"
@@ -86,8 +127,8 @@ export default function PricingPage() {
           <NextBestStepCard
             eyebrow="Most contractors start here"
             title="Pro Contractor is the everyday operating plan."
-            description="Free is useful for a first check. Pro is the plan for businesses that want Client Bureau in daily intake, contracts, evidence, recovery, and monitoring."
-            primary={{ href: "/signup?plan=pro", label: "Start Pro Contractor", icon: ShieldCheck }}
+            description="Free is useful for a first check. Pro is the plan interest for businesses that want Client Bureau in daily intake, contracts, evidence, recovery, and monitoring."
+            primary={{ href: "/signup?plan=pro", label: "Create account for Pro", icon: ShieldCheck }}
             secondary={{ href: "/search", label: "Check a Client First", icon: Radar }}
             points={[
               "Client checks before estimates",
@@ -172,7 +213,18 @@ export default function PricingPage() {
 }
 
 function PlanCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
-  const href = tier.id === "enterprise" ? "/enterprise" : `/signup?plan=${tier.id}`
+  const href =
+    tier.id === "enterprise"
+      ? "/enterprise#enterprise-inquiry"
+      : billingInterestSignupHref(tier.id)
+  const cta =
+    tier.id === "free"
+      ? "Create free account"
+      : tier.id === "pro"
+        ? "Create account for Pro"
+        : tier.id === "bureau_team"
+          ? "Request team review"
+          : "Request enterprise review"
 
   return (
     <Card className={tier.featured ? "rounded-md border-2 border-amber-400 bg-slate-950 text-white shadow-xl" : "rounded-md border-slate-200 bg-white shadow-sm"}>
@@ -188,6 +240,9 @@ function PlanCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
           <span className={tier.featured ? "text-4xl font-semibold text-white" : "text-4xl font-semibold text-slate-950"}>{tier.price}</span>
           <span className={tier.featured ? "pb-1 text-sm text-slate-300" : "pb-1 text-sm text-slate-500"}>{tier.cadence}</span>
         </div>
+        <p className={tier.featured ? "rounded-md border border-white/10 bg-white/10 p-3 text-sm leading-6 text-slate-200" : "rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600"}>
+          {tier.launchNote}
+        </p>
         <div className="grid gap-2">
           {tier.features.slice(0, 6).map((feature) => (
             <div key={feature} className={tier.featured ? "flex gap-2 text-sm text-slate-200" : "flex gap-2 text-sm text-slate-600"}>
@@ -197,7 +252,7 @@ function PlanCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
           ))}
         </div>
         <Button asChild className={tier.featured ? "w-full bg-amber-500 text-slate-950 hover:bg-amber-400" : "w-full"} variant={tier.featured ? "default" : "outline"}>
-          <Link href={href}>{tier.id === "enterprise" ? "View enterprise" : "Choose plan"}</Link>
+          <Link href={href}>{cta}</Link>
         </Button>
       </CardContent>
     </Card>

@@ -9,6 +9,11 @@ import { generateMetadata as generateClientProfileMetadata } from "@/app/client/
 import { generateMetadata as generateBusinessProfileMetadata } from "@/app/business/[slug]/page"
 import { getPostSignupRedirectPath, getSafeInternalPath, getSafePostSignupReturnPath } from "@/lib/auth"
 import {
+  billingInterestSignupHref,
+  evaluateBillingAvailability,
+  planInterestLabel,
+} from "@/lib/billing-availability"
+import {
   buildBusinessSlug,
   businessHasApprovedNegativeSubjectHistory,
   businessInformationCompletenessScore,
@@ -778,6 +783,53 @@ describe("deployment URL helpers", () => {
   it("uses client response as the default client-account signup destination", () => {
     expect(getPostSignupRedirectPath("client", undefined)).toBe("/client-response")
     expect(getPostSignupRedirectPath("client", "/admin")).toBe("/client-response")
+  })
+
+  it("preserves paid plan interest without promising checkout during signup", () => {
+    expect(getPostSignupRedirectPath("contractor", undefined, "pro")).toBe(
+      "/dashboard/billing?planInterest=pro",
+    )
+    expect(getPostSignupRedirectPath("subcontractor", undefined, "bureau_team")).toBe(
+      "/dashboard/billing?planInterest=bureau_team",
+    )
+    expect(getPostSignupRedirectPath("contractor", "/search?q=John&state=FL", "pro")).toBe(
+      "/search?q=John&state=FL",
+    )
+    expect(billingInterestSignupHref("pro")).toBe("/signup?plan=pro")
+    expect(planInterestLabel("bureau_team")).toBe("Bureau Team")
+  })
+})
+
+describe("billing availability gates", () => {
+  it("keeps billing deferred without the explicit checkout launch flag", () => {
+    const billing = evaluateBillingAvailability({
+      checkoutEnabled: false,
+      stripeSecretKey: "sk_test_ready",
+      stripeWebhookSecret: "whsec_ready",
+      stripeProPriceId: "price_pro",
+      stripeTeamPriceId: "price_team",
+    })
+
+    expect(billing.status).toBe("deferred")
+    expect(billing.subscriptionCheckoutAvailable).toBe(false)
+    expect(billing.serviceFeeCheckoutAvailable).toBe(false)
+    expect(billing.publicStatusDetail).toContain("Paid plan activation is reviewed")
+    expect(billing.dashboardStatusDetail).toContain("checkout are not open")
+  })
+
+  it("enables subscription and service-fee checkout only when every launch gate is ready", () => {
+    const billing = evaluateBillingAvailability({
+      checkoutEnabled: true,
+      stripeSecretKey: "sk_test_ready",
+      stripeWebhookSecret: "whsec_ready",
+      stripeProPriceId: "price_pro",
+      stripeTeamPriceId: "price_team",
+    })
+
+    expect(billing.status).toBe("ready")
+    expect(billing.subscriptionCheckoutAvailable).toBe(true)
+    expect(billing.serviceFeeCheckoutAvailable).toBe(true)
+    expect(billing.publicStatusLabel).toBe("Checkout available")
   })
 })
 
@@ -2415,11 +2467,37 @@ describe("platform expansion schemas", () => {
       serviceFeeOrders,
       documentLinks: caseDocumentLinks,
     })
+    const readyRecoveryWithoutFee = buildRecoveryReadinessSummary({
+      recoveryCase: managedRecoveryCases[0],
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders: [],
+      documentLinks: caseDocumentLinks,
+    })
+    const recoveryCheckoutSummary = buildRecoveryReadinessSummary({
+      recoveryCase: managedRecoveryCases[0],
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders: [],
+      documentLinks: caseDocumentLinks,
+      serviceFeeCheckoutAvailable: true,
+    })
     const lienSummary = buildFloridaLienReadinessSummary({
       lienCase: floridaLienCases[0],
       evidenceVault: evidenceVaultItems,
       serviceFeeOrders,
       documentLinks: caseDocumentLinks,
+    })
+    const readyLienWithoutFee = buildFloridaLienReadinessSummary({
+      lienCase: floridaLienCases[0],
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders: [],
+      documentLinks: caseDocumentLinks,
+    })
+    const lienCheckoutSummary = buildFloridaLienReadinessSummary({
+      lienCase: floridaLienCases[0],
+      evidenceVault: evidenceVaultItems,
+      serviceFeeOrders: [],
+      documentLinks: caseDocumentLinks,
+      serviceFeeCheckoutAvailable: true,
     })
     const incompleteRecovery = buildRecoveryReadinessSummary({
       recoveryCase: {
@@ -2434,9 +2512,13 @@ describe("platform expansion schemas", () => {
     })
 
     expect(recoverySummary.readyForCheckout).toBe(true)
+    expect(readyRecoveryWithoutFee.nextAction).toContain("reviewed before billing")
+    expect(recoveryCheckoutSummary.nextAction).toContain("service fee checkout")
     expect(recoverySummary.feePaid).toBe(true)
     expect(recoverySummary.status).toBe("submitted")
     expect(lienSummary.readyForCheckout).toBe(true)
+    expect(readyLienWithoutFee.nextAction).toContain("reviewed before billing")
+    expect(lienCheckoutSummary.nextAction).toContain("service fee checkout")
     expect(lienSummary.feePaid).toBe(true)
     expect(lienSummary.checks.find((item) => item.id === "authorization")?.complete).toBe(true)
     expect(incompleteRecovery.readyForCheckout).toBe(false)

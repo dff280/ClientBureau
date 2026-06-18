@@ -70,11 +70,13 @@ export function buildRecoveryReadinessSummary({
   evidenceVault,
   serviceFeeOrders,
   documentLinks = [],
+  serviceFeeCheckoutAvailable = false,
 }: {
   recoveryCase: ManagedRecoveryCase
   evidenceVault: EvidenceVaultItem[]
   serviceFeeOrders: ServiceFeeOrder[]
   documentLinks?: CaseDocumentLink[]
+  serviceFeeCheckoutAvailable?: boolean
 }): ServiceReadinessSummary {
   const linkedEvidence = evidenceForIds(recoveryCase.evidenceVaultItemIds, evidenceVault)
   const linkedDocuments = documentLinks.filter((item) => item.entityId === recoveryCase.id)
@@ -106,12 +108,16 @@ export function buildRecoveryReadinessSummary({
     feeOrderId: feeOrder?.id,
     nextAction:
       status === "ready_for_checkout"
-        ? "Case is ready for service fee checkout."
+        ? serviceFeeCheckoutAvailable
+          ? "Case is ready for service fee checkout."
+          : "Case passed precheck. Service fee payment is reviewed before billing is collected."
         : status === "fee_due"
-          ? "Complete service fee payment before Resolution Desk outreach."
+          ? serviceFeeCheckoutAvailable
+            ? "Complete service fee payment before Resolution Desk outreach."
+            : "Service fee is due. Client Bureau can review billing before Resolution Desk outreach."
           : status === "submitted"
             ? recoveryCase.nextAction
-            : "Complete the missing precheck items before checkout.",
+            : "Complete the missing precheck items before service review.",
     checks,
     publicSafeSummary: "Private managed recovery case. Public profiles do not show raw documents, staff notes, or client contact details.",
   }
@@ -122,11 +128,13 @@ export function buildFloridaLienReadinessSummary({
   evidenceVault,
   serviceFeeOrders,
   documentLinks = [],
+  serviceFeeCheckoutAvailable = false,
 }: {
   lienCase: FloridaLienCase
   evidenceVault: EvidenceVaultItem[]
   serviceFeeOrders: ServiceFeeOrder[]
   documentLinks?: CaseDocumentLink[]
+  serviceFeeCheckoutAvailable?: boolean
 }): ServiceReadinessSummary {
   const linkedDocuments = documentLinks.filter((item) => item.entityId === lienCase.id)
   const feeKind = lienCase.workflowType === "notice_packet" ? "florida_lien_notice" : "florida_lien_filing"
@@ -159,12 +167,16 @@ export function buildFloridaLienReadinessSummary({
     feeOrderId: feeOrder?.id,
     nextAction:
       status === "ready_for_checkout"
-        ? "Case is ready for Florida service fee checkout."
+        ? serviceFeeCheckoutAvailable
+          ? "Case is ready for Florida service fee checkout."
+          : "Case passed precheck. Service fee payment is reviewed before billing is collected."
         : status === "fee_due"
-          ? "Complete service fee payment before attorney/vendor review."
+          ? serviceFeeCheckoutAvailable
+            ? "Complete service fee payment before attorney/vendor review."
+            : "Service fee is due. Client Bureau can review billing before attorney/vendor review."
           : status === "submitted"
             ? lienCase.nextAction
-            : "Complete the missing Florida lien precheck items before checkout.",
+            : "Complete the missing Florida lien precheck items before service review.",
     checks,
     publicSafeSummary: "Private Florida lien service case. Public pages do not show filings, legal descriptions, documents, staff notes, or client contact details.",
   }
@@ -176,12 +188,14 @@ export function buildServiceReadinessSummaries({
   evidenceVault,
   serviceFeeOrders,
   documentLinks = [],
+  serviceFeeCheckoutAvailable = false,
 }: {
   managedRecoveryCases: ManagedRecoveryCase[]
   floridaLienCases: FloridaLienCase[]
   evidenceVault: EvidenceVaultItem[]
   serviceFeeOrders: ServiceFeeOrder[]
   documentLinks?: CaseDocumentLink[]
+  serviceFeeCheckoutAvailable?: boolean
 }) {
   return [
     ...managedRecoveryCases.map((recoveryCase) =>
@@ -190,6 +204,7 @@ export function buildServiceReadinessSummaries({
         evidenceVault,
         serviceFeeOrders,
         documentLinks,
+        serviceFeeCheckoutAvailable,
       }),
     ),
     ...floridaLienCases.map((lienCase) =>
@@ -198,8 +213,8 @@ export function buildServiceReadinessSummaries({
         evidenceVault,
         serviceFeeOrders,
         documentLinks,
+        serviceFeeCheckoutAvailable,
       }),
     ),
   ]
 }
-
