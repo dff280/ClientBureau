@@ -41,6 +41,7 @@ import {
   buildServiceReadinessSummaries,
 } from "@/lib/service-readiness"
 import { normalizeStateCode } from "@/lib/locations"
+import { safeSearchQueryForStorage } from "@/lib/search-experience"
 import { buildClientSlug, ensureUniqueSlug, slugify } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
 import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
@@ -2727,7 +2728,7 @@ export async function saveClientSearchSupabase(
 ): Promise<SavedClientSearch | undefined> {
   const supabase = createServiceClient()
   const contractor = await getOrCreateContractorProfileForUser(userId)
-  const query = input.query?.trim() || "All public profiles"
+  const query = safeSearchQueryForStorage(input.query) || "All public profiles"
   const state = input.state?.toUpperCase() ?? null
   const profileType = input.profileType ?? null
   const tradeCategory = input.tradeCategory ?? null
@@ -2859,9 +2860,10 @@ export async function recordSearchEventSupabase(
 ): Promise<SearchAnalyticsEvent | undefined> {
   const supabase = createServiceClient()
   const contractor = userId ? await getOrCreateContractorProfileForUser(userId).catch(() => undefined) : undefined
+  const query = safeSearchQueryForStorage(input.query) || null
   const insertPayload = {
     contractor_id: contractor?.id ?? null,
-    query: input.query ?? null,
+    query,
     state: input.state?.toUpperCase() ?? null,
     risk_level: input.riskLevel ?? null,
     category: input.category ?? null,

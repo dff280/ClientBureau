@@ -1211,6 +1211,36 @@ if (searchPage.response.ok) {
   fail("/search returns 200", searchPage.error || String(searchPage.response.status))
 }
 
+const privateSearchPath = "/search?q=person%40example.com&state=FL&profileType=client"
+const privateSearchPage = await read(privateSearchPath)
+if (privateSearchPage.response.ok) {
+  const finalUrl = new URL(privateSearchPage.response.url)
+  const privateSearchVisible = visiblePageText(privateSearchPage.text)
+
+  if (finalUrl.pathname === "/search" && finalUrl.searchParams.get("privateMatch") === "1" && !finalUrl.searchParams.has("q")) {
+    pass("/search private identifier safe redirect", `${finalUrl.pathname}${finalUrl.search}`)
+  } else {
+    fail("/search private identifier safe redirect", `${finalUrl.pathname}${finalUrl.search}`)
+  }
+
+  if (!privateSearchPage.text.includes("person@example.com") && !privateSearchPage.text.includes("person%40example.com")) {
+    pass("/search private identifier redaction")
+  } else {
+    fail("/search private identifier redaction", "raw email found in HTML")
+  }
+
+  if (
+    privateSearchVisible.includes("Private identifier checks stay inside secure accounts") &&
+    privateSearchVisible.includes("not a clearance signal")
+  ) {
+    pass("/search private identifier safety copy")
+  } else {
+    fail("/search private identifier safety copy", "missing private-match safety copy")
+  }
+} else {
+  fail("/search private identifier safe redirect", privateSearchPage.error || String(privateSearchPage.response.status))
+}
+
 const mobileApp = await read("/mobile-app")
 if (mobileApp.response.ok) {
   pass("/mobile-app returns 200")

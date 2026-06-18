@@ -594,6 +594,36 @@ if (subcontractorTradeSearch.response.ok) {
 } else {
   fail("/search preserves subcontractor trade request", String(subcontractorTradeSearch.response.status))
 }
+
+const privateIdentifierSearch = await read("/search?q=person%40example.com&state=FL&profileType=client")
+if (privateIdentifierSearch.response.ok) {
+  const finalUrl = new URL(privateIdentifierSearch.response.url)
+  const visiblePrivateSearch = visiblePageText(privateIdentifierSearch.text)
+
+  if (finalUrl.pathname === "/search" && finalUrl.searchParams.get("privateMatch") === "1" && !finalUrl.searchParams.has("q")) {
+    pass("/search private identifier redirects to safe private-match URL", `${finalUrl.pathname}${finalUrl.search}`)
+  } else {
+    fail("/search private identifier redirects to safe private-match URL", `${finalUrl.pathname}${finalUrl.search}`)
+  }
+
+  if (!privateIdentifierSearch.text.includes("person@example.com") && !privateIdentifierSearch.text.includes("person%40example.com")) {
+    pass("/search private identifier not rendered in HTML")
+  } else {
+    fail("/search private identifier not rendered in HTML", "raw email found")
+  }
+
+  if (
+    visiblePrivateSearch.includes("Private identifier checks stay inside secure accounts") &&
+    visiblePrivateSearch.includes("not a clearance signal")
+  ) {
+    pass("/search private identifier no-result copy is safety-scoped")
+  } else {
+    fail("/search private identifier no-result copy is safety-scoped", "missing private-match safety copy")
+  }
+} else {
+  fail("/search private identifier returns 200 after safe redirect", String(privateIdentifierSearch.response.status))
+}
+
 const mobileAppPage = await read("/mobile-app")
 if (mobileAppPage.response.ok) {
   const mobileAppVisibleText = visiblePageText(mobileAppPage.text)

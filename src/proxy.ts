@@ -10,7 +10,27 @@ function markNoStore(response: NextResponse) {
   return response
 }
 
+function isPrivateIdentifierSearch(value: string) {
+  const digits = value.replace(/\D/g, "")
+
+  return value.includes("@") || digits.length >= 7
+}
+
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === "/search") {
+    const query = request.nextUrl.searchParams.get("q") ?? ""
+
+    if (isPrivateIdentifierSearch(query)) {
+      const safeUrl = request.nextUrl.clone()
+      safeUrl.searchParams.delete("q")
+      safeUrl.searchParams.set("privateMatch", "1")
+
+      return markNoStore(NextResponse.redirect(safeUrl))
+    }
+
+    return markNoStore(NextResponse.next())
+  }
+
   if ((process.env.DATA_MODE ?? "mock") === "mock") {
     return markNoStore(NextResponse.next())
   }
@@ -44,5 +64,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/submit-report/:path*", "/admin/:path*"],
+  matcher: ["/search", "/dashboard/:path*", "/submit-report/:path*", "/admin/:path*"],
 }

@@ -1,6 +1,8 @@
 import { reportCategories } from "@/lib/types"
 import type { ClientSearchResult, ProfileType, ReportCategory, RiskLevel, SearchSuggestion } from "@/lib/types"
 
+export const privateIdentifierSearchLabel = "Private identifier check"
+
 export interface SearchPreviewProfile {
   id: string
   firstName: string
@@ -109,6 +111,93 @@ export function isPrivateIdentifierSearch(value: string) {
   return value.includes("@") || digits.length >= 7
 }
 
+export function safeSearchQueryForStorage(value?: string) {
+  const trimmed = value?.trim() ?? ""
+
+  if (!trimmed) return ""
+  return isPrivateIdentifierSearch(trimmed) ? privateIdentifierSearchLabel : trimmed
+}
+
+export function safeSearchQueryForDisplay(value?: string) {
+  const trimmed = value?.trim() ?? ""
+
+  if (!trimmed) return ""
+  return isPrivateIdentifierSearch(trimmed) || trimmed === privateIdentifierSearchLabel
+    ? privateIdentifierSearchLabel
+    : trimmed
+}
+
+export function searchScopeLabel(profileType?: ProfileType) {
+  if (profileType === "client") return "Client Database"
+  if (profileType === "contractor") return "Contractor Database"
+  if (profileType === "subcontractor") return "Subcontractor Database"
+  return "public databases"
+}
+
+export function searchScopeResultLabel(profileType?: ProfileType) {
+  if (profileType === "client") return "approved client profiles"
+  if (profileType === "contractor") return "approved contractor business profiles"
+  if (profileType === "subcontractor") return "approved subcontractor and trade profiles"
+  return "approved public profiles"
+}
+
+export function searchNoResultCopy(input: {
+  profileType?: ProfileType
+  privateMatchIntent?: boolean
+  tradeCategory?: string
+  isAuthenticated?: boolean
+}) {
+  if (input.privateMatchIntent) {
+    return {
+      heading: "Private identifier checks stay inside secure accounts.",
+      body:
+        "Phone and email matching is treated as private account context. No raw identifier is published, saved in public links, or shown in public profile HTML. A private-match check with no visible result is not a clearance signal.",
+      primaryLabel: input.isAuthenticated ? "Open Watchlist" : "Create account to run private matching",
+      secondaryLabel: "Report a Client Experience",
+    }
+  }
+
+  if (input.profileType === "contractor") {
+    return {
+      heading: "No approved contractor profile is visible yet.",
+      body:
+        "Client Bureau does not have enough approved public contractor context for this search. That does not mean the business is verified, cleared, or risky; it means public information is limited.",
+      primaryLabel: input.isAuthenticated ? "Save to watchlist" : "Create account to save this search",
+      secondaryLabel: "Report a business experience",
+    }
+  }
+
+  if (input.profileType === "subcontractor") {
+    const tradeText = input.tradeCategory ? ` for ${input.tradeCategory}` : ""
+
+    return {
+      heading: `No approved subcontractor profile is visible${tradeText} yet.`,
+      body:
+        "Client Bureau does not have enough approved public trade-partner context for this search. Limited public history is not a clearance signal; use private documentation, watchlists, or a factual report when you have direct experience.",
+      primaryLabel: input.isAuthenticated ? "Save to watchlist" : "Create account to save this search",
+      secondaryLabel: "Report a trade experience",
+    }
+  }
+
+  if (input.profileType === "client") {
+    return {
+      heading: "No approved client profile is visible yet.",
+      body:
+        "Client Bureau does not have enough approved public client context for this search. That does not mean the client is safe, cleared, or verified; it means approved public information is limited.",
+      primaryLabel: input.isAuthenticated ? "Save to watchlist" : "Create account to save this search",
+      secondaryLabel: "Report a Client Experience",
+    }
+  }
+
+  return {
+    heading: "No approved public profile is visible yet.",
+    body:
+      "No approved public profile matched these filters. That is not a clearance signal; save the search, narrow the database, or submit a documented experience for moderation.",
+    primaryLabel: input.isAuthenticated ? "Save to watchlist" : "Create account to save this search",
+    secondaryLabel: "Report a Client Experience",
+  }
+}
+
 export function buildSearchHref({
   query,
   state,
@@ -116,6 +205,7 @@ export function buildSearchHref({
   category,
   profileType,
   tradeCategory,
+  privateMatch,
 }: {
   query?: string
   state?: string
@@ -123,10 +213,14 @@ export function buildSearchHref({
   category?: ReportCategory
   profileType?: ProfileType
   tradeCategory?: string
+  privateMatch?: boolean
 }) {
   const params = new URLSearchParams()
+  const trimmedQuery = query?.trim()
+  const privateQuery = Boolean(trimmedQuery && isPrivateIdentifierSearch(trimmedQuery))
 
-  if (query?.trim()) params.set("q", query.trim())
+  if (trimmedQuery && !privateQuery && !privateMatch) params.set("q", trimmedQuery)
+  if (privateMatch || privateQuery) params.set("privateMatch", "1")
   if (state?.trim()) params.set("state", state.trim().toUpperCase())
   if (riskLevel) params.set("risk", riskLevel)
   if (category) params.set("category", category)
@@ -207,8 +301,8 @@ export function buildSearchSuggestions(
       kind: "private_identifier",
       label: "Run a private identifier check",
       description: "Phone and email searches use private matching and never display raw identifiers publicly.",
-      href: buildSearchHref({ query, state, profileType: filters.profileType, tradeCategory: filters.tradeCategory }),
-      query,
+      href: buildSearchHref({ privateMatch: true, state, profileType: filters.profileType, tradeCategory: filters.tradeCategory }),
+      query: privateIdentifierSearchLabel,
       state,
       score: 100,
     })
@@ -295,7 +389,7 @@ export function buildSearchSuggestions(
       label: "No public preview found yet",
       description: "Save the search or submit a documented client experience for moderation.",
       href: "/submit-report",
-      query,
+      query: safeSearchQueryForStorage(query),
       state,
       score: 1,
     })
