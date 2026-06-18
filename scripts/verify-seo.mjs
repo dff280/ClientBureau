@@ -224,6 +224,20 @@ const homeCopyLeaks = findProductionCopyLeaks(home.text)
 if (homeCopyLeaks.length === 0) pass("Homepage production copy safety")
 else fail("Homepage production copy safety", homeCopyLeaks.join(", "))
 
+const homepageDecorativeProfileLinks = [
+  ...new Set([
+    ...clientProfileLinks(home.text),
+    ...businessProfileLinks(home.text),
+    ...entityProfileLinks(home.text, "contractor"),
+    ...entityProfileLinks(home.text, "subcontractor"),
+  ]),
+]
+if (homepageDecorativeProfileLinks.length === 0) {
+  pass("Homepage avoids decorative real profile links")
+} else {
+  fail("Homepage avoids decorative real profile links", homepageDecorativeProfileLinks.slice(0, 5).join(", "))
+}
+
 for (const type of ["Organization", "WebSite", "SoftwareApplication", "FAQPage"]) {
   if (home.text.includes(`"@type":"${type}"`) || home.text.includes(`"@type": "${type}"`)) {
     pass(`${type} schema present`)

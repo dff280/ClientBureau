@@ -159,7 +159,7 @@ export default function AboutPage() {
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="grid gap-5 p-6 lg:grid-cols-[1fr_300px] lg:items-center">
               <div>
-                <p className="text-xs font-semibold uppercase text-amber-700">Product doctrine</p>
+                <p className="text-xs font-semibold uppercase text-amber-700">Business workflow</p>
                 <h2 className="mt-2 text-2xl font-semibold tracking-normal text-slate-950">
                   Check before the job. Document during the job. Protect payment after the job.
                 </h2>
