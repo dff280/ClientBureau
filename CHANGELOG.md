@@ -6,6 +6,7 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ### Improved
 
+- Added a privacy-safe public inquiry intake for Contact and Enterprise with server validation, duplicate-submit protection, admin retrieval in Settings, a Supabase migration, and release checks for placeholder contact language.
 - Simplified the public homepage for the final release prompt pack: removed real profile snippets from the hero, replaced them with a privacy-safe database preview, kept the first action focused on client checking, and reinforced the three public database paths.
 - Extended public copy safety and SEO verification so public pages fail on roadmap/internal-product phrasing and the homepage fails if decorative direct profile links return.
 - Added the final release audit ledger with Prompt 00 release identity, health/readiness, route inventory, browser-sampling, command evidence, findings, and owner-action tracking.

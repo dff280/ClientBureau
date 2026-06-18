@@ -9,9 +9,11 @@ export const productionCopyLeakPatterns = [
   { label: "API auth implementation term", pattern: /\bbearer auth\b/i },
   { label: "environment variable leak", pattern: /\b(?:data_mode|platform_feature_data_mode)\b/i },
   { label: "secret/configuration implementation term", pattern: /\b(?:service role|webhook secret|publishable key)\b/i },
+  { label: "public contact placeholder", pattern: /\b(?:configured in production|contact details appear here|appear here when configured)\b/i },
+  { label: "unfinished public path language", pattern: /\b(?:coming later|coming soon|launch later)\b/i },
   { label: "internal platform-mode language", pattern: /\b(?:supabase-backed|safe mode)\b/i },
   { label: "aspirational roadmap language", pattern: /\b(?:the platform should|is becoming|we are building toward|product doctrine)\b/i },
-  { label: "roadmap implementation language", pattern: /\b(?:roadmap item|future sprint|launch later|coming soon)\b/i },
+  { label: "roadmap implementation language", pattern: /\b(?:roadmap item|future sprint)\b/i },
   {
     label: "inflammatory public language",
     pattern: /\b(?:blacklist|expose|shame|fraudster|scammer|deadbeat|guilty)\b/i,

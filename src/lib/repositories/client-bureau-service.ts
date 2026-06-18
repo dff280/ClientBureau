@@ -10,6 +10,7 @@ import {
   createPaymentRecoveryCase,
   createContractPacket,
   createContractShareLink,
+  createPublicInquiry,
   createPaymentPlan,
   createProjectJob,
   createServiceFeeOrder,
@@ -31,6 +32,7 @@ import {
   getPublicEntityProfile,
   getPublicEntityProfiles,
   getProfileClaims,
+  getPublicInquiries,
   getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
@@ -52,6 +54,7 @@ import {
   searchJobAccounts,
   searchClients,
   searchProfiles,
+  hasRecentPublicInquiry,
   setMockModerationDecisionReason,
   mergeEntityProfiles,
   reassignReportProfile,
@@ -94,6 +97,7 @@ import {
   createLienNoticeDraftSupabase,
   createPaymentPlanSupabase,
   createPaymentRecoveryCaseSupabase,
+  createPublicInquirySupabase,
   createProjectJobSupabase,
   createServiceFeeOrderSupabase,
   createWatchlistItemSupabase,
@@ -115,6 +119,7 @@ import {
   getPublicEntityProfileSupabase,
   getPublicEntityProfilesSupabase,
   getProfileClaimsSupabase,
+  getPublicInquiriesSupabase,
   linkEvidenceToServiceCaseSupabase,
   logPaymentRecoveryAttemptSupabase,
   logResolutionDeskContactSupabase,
@@ -135,6 +140,7 @@ import {
   searchJobAccountsSupabase,
   searchClientsSupabase,
   searchProfilesSupabase,
+  hasRecentPublicInquirySupabase,
   setModerationDecisionReasonSupabase,
   mergeEntityProfilesSupabase,
   reassignReportProfileSupabase,
@@ -209,6 +215,7 @@ import type {
   UpdateProjectJobInput,
   UpdateProjectJobParticipantInput,
   WatchlistItemInput,
+  PublicInquiryInput,
   ProfileClaimInput,
   AdminProfileClaimReviewInput,
   AdminProfileMergeInput,
@@ -229,6 +236,7 @@ import type {
   ProfileRedactionEvent,
   ProfileType,
   PublicEntityProfile,
+  PublicInquiry,
   ReportReassignmentEvent,
   SavedClientSearch,
   SearchAnalyticsEvent,
@@ -458,6 +466,12 @@ export async function getAdminWorkspaceDataService() {
   return getAdminWorkspaceData()
 }
 
+export async function getPublicInquiriesService(): Promise<PublicInquiry[]> {
+  if (shouldUseSupabase()) return getPublicInquiriesSupabase()
+
+  return getPublicInquiries()
+}
+
 export async function getContractorRiskOpsDataService(userId: string) {
   if (shouldUsePlatformSupabase()) return getContractorRiskOpsDataSupabase(userId)
 
@@ -526,6 +540,18 @@ export async function submitCommunityDiscussionService(input: {
   if (shouldUseSupabase()) return submitCommunityDiscussionSupabase(input)
 
   return submitCommunityDiscussion(input.profileSlug, input)
+}
+
+export async function hasRecentPublicInquiryService(email: string, topic: PublicInquiryInput["topic"]) {
+  if (shouldUseSupabase()) return hasRecentPublicInquirySupabase(email, topic)
+
+  return hasRecentPublicInquiry(email, topic)
+}
+
+export async function createPublicInquiryService(input: PublicInquiryInput): Promise<PublicInquiry> {
+  if (shouldUseSupabase()) return createPublicInquirySupabase(input)
+
+  return createPublicInquiry(input)
 }
 
 export async function reviewReportService(

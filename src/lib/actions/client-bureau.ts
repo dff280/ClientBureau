@@ -42,6 +42,7 @@ import {
   markRecoveryResolvedSchema,
   deleteSavedClientSearchSchema,
   profileShareEventSchema,
+  publicInquirySchema,
   savedClientSearchSchema,
   searchAnalyticsEventSchema,
   signupSchema,
@@ -101,6 +102,7 @@ import type {
   ServiceFeeOrder,
   ServiceReadinessSummary,
   ProfileShareEvent,
+  PublicInquiry,
   ProfileClaim,
   ProfileMergeEvent,
   ProfileRedactionEvent,
@@ -127,6 +129,7 @@ import {
   deleteAdminRecordService,
   assignModerationCaseService,
   createContractWorkspaceItemService,
+  createPublicInquiryService,
   createContractShareLinkService,
   createClientPipelineItemService,
   createClientRiskRoomService,
@@ -142,6 +145,7 @@ import {
   deleteReportDraftService,
   getPublicClientProfileService,
   getPublicEntityProfileService,
+  hasRecentPublicInquiryService,
   linkEvidenceToServiceCaseService,
   logPaymentRecoveryAttemptService,
   logResolutionDeskContactService,
@@ -631,6 +635,43 @@ export async function recordProfileShareAction(
   }
 
   return ok(event, "Profile share recorded.")
+}
+
+export async function submitPublicInquiryAction(
+  _previousState: ActionResult<PublicInquiry>,
+  formData: FormData,
+): Promise<ActionResult<PublicInquiry>> {
+  const parsed = publicInquirySchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Please correct the highlighted inquiry fields.", zodFieldErrors(parsed.error))
+  }
+
+  const alreadySubmitted = await hasRecentPublicInquiryService(parsed.data.email, parsed.data.topic).catch(() => false)
+
+  if (alreadySubmitted) {
+    return fail("This inquiry was already received. Wait a moment before sending the same request again.")
+  }
+
+  try {
+    const inquiry = await createPublicInquiryService({
+      ...parsed.data,
+      sourcePath: parsed.data.sourcePath ?? "/contact",
+    })
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/settings")
+    revalidatePath("/admin/audit-log")
+
+    return ok(
+      inquiry,
+      parsed.data.inquiryType === "enterprise"
+        ? "Enterprise inquiry received. Client Bureau will review the request privately and follow up through the email provided."
+        : "Support inquiry received. Client Bureau will review it privately and route it to the right workflow.",
+    )
+  } catch (error) {
+    return fail(actionErrorMessage(error, "Inquiry could not be submitted."))
+  }
 }
 
 export async function submitProfileClaimAction(

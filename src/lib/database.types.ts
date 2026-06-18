@@ -45,6 +45,9 @@ import type {
   ProfileClaimStatus,
   ProfileType,
   ProfileSubtype,
+  PublicInquiryStatus,
+  PublicInquiryTopic,
+  PublicInquiryType,
   ProjectJobStatus,
   ProjectJobPriority,
   ProjectJobType,
@@ -878,6 +881,42 @@ export interface Database {
           created_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["audit_logs"]["Insert"]>
+        Relationships: []
+      }
+      public_inquiries: {
+        Row: {
+          id: string
+          inquiry_type: PublicInquiryType
+          topic: PublicInquiryTopic
+          full_name: string
+          business_name: string | null
+          contact_email: string
+          contact_email_hash: string
+          contact_email_masked: string
+          message: string
+          source_path: string | null
+          status: PublicInquiryStatus
+          admin_note: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          inquiry_type: PublicInquiryType
+          topic: PublicInquiryTopic
+          full_name: string
+          business_name?: string | null
+          contact_email: string
+          contact_email_hash: string
+          contact_email_masked: string
+          message: string
+          source_path?: string | null
+          status?: PublicInquiryStatus
+          admin_note?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database["public"]["Tables"]["public_inquiries"]["Insert"]>
         Relationships: []
       }
       contractor_watchlist_items: DbTable<{

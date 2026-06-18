@@ -59,7 +59,7 @@ No secrets or full environment dumps were recorded.
 | Prompt | Category | Status | Evidence rule |
 | --- | --- | --- | --- |
 | 01 | Public IA, homepage, header, footer | Completed | Command and browser evidence recorded below |
-| 02 | Contact, support, enterprise | Not started | Needs command and browser evidence |
+| 02 | Contact, support, enterprise | Completed | Command and browser evidence recorded below; owner must apply inquiry-intake migration before production deploy |
 | 03 | Pricing, capabilities, deferred billing truth | Not started | Needs command and browser evidence |
 | 04 | Search | Not started | Needs command and browser evidence |
 | 05 | Client Database and rating semantics | Not started | Needs command and browser evidence |
@@ -216,3 +216,80 @@ Browser checks were run against the temporary local production build at `http://
 - No P0 or P1 blocker remains for the homepage/header/footer IA pass.
 - The homepage no longer uses real adverse or positive profile context as decorative marketing content.
 - Public copy-safety checks are stricter now and caught one legacy About page label during development; it was corrected before final checks passed.
+
+## Prompt 02 - Contact, Support Routing, Enterprise Inquiry
+
+| Item | Evidence |
+| --- | --- |
+| Branch | `codex/contact-support-enterprise-final` |
+| Starting commit | `68d8d9d` (`Finalize public IA homepage pass`) |
+| Scope | `/contact`, `/enterprise`, public inquiry validation, private inquiry storage, admin retrieval, privacy/terms copy, SEO/copy-safety checks |
+| Status | `PASS WITH OWNER ACTION` locally; pending PR/release review and production migration |
+
+### Prompt 02 Findings
+
+| Severity | Finding | Evidence | Outcome |
+| --- | --- | --- | --- |
+| P1 launch-quality | `/contact` could render setup-style public contact language when optional phone/address config was missing. | Source audit of `src/app/contact/page.tsx`; release prompt observed equivalent wording. | Removed placeholder/internal contact wording and routed missing public contact config to the guided inquiry/workflow model. |
+| P1 launch-quality | `/enterprise` routed prospects back into contact paths without a dedicated enterprise inquiry destination. | Source audit of `src/app/enterprise/page.tsx` and `/contact` enterprise card. | Added `/enterprise#enterprise-inquiry` with a privacy-safe form and updated contact enterprise CTA to the same destination. |
+| P1 launch-quality | Public inquiry intake needed an auditable private retrieval path instead of open evidence/contact collection. | Audit of existing repositories/admin settings showed no public inquiry queue. | Added `public_inquiries` migration, repository/service/action flow, validation, duplicate-submit guard, and admin Settings queue. |
+| P2 release protection | Existing checks did not fail on public setup phrases like `configured in production`. | Audit of `scripts/public-copy-safety.mjs` and `scripts/verify-seo.mjs`. | Extended public copy-safety and SEO verification to cover contact/enterprise inquiry surfaces and placeholder phrases. |
+
+### Prompt 02 Changes
+
+- Added `PublicInquiry` types, server-side schema validation, email masking/hash helpers, and the `submitPublicInquiryAction` server action.
+- Added `supabase/migrations/0023_public_inquiry_intake.sql` for private public-support and enterprise inquiries with admin-only RLS policies.
+- Added mock and Supabase repository/service support for inquiry create/list/recent-duplicate checks.
+- Added the reusable `PublicInquiryForm` with honeypot, privacy certification, validation/error/success states, and warnings against raw evidence or sensitive identifiers.
+- Reworked `/contact` so account help, client responses, enterprise review, and moderation/policy questions route to clear workflows, with a general support inquiry when a workflow does not fit.
+- Reworked `/enterprise` so enterprise prospects get a scoped, private inquiry path and qualified claims around team workflow, review, and onboarding.
+- Added admin Settings visibility for recent public support/enterprise inquiries with masked list context and private admin-only reply contact.
+- Updated Privacy and Terms copy to describe support/enterprise inquiry records and to prohibit evidence/private identifiers through general forms.
+- Added SEO/copy-safety checks for contact/enterprise inquiry form presence, placeholder contact language, and setup/coming-soon copy.
+- Added `docs/PUBLIC_INQUIRY_INTAKE_RUNBOOK.md` documenting the migration, privacy rules, admin retrieval, and release owner action.
+
+### Prompt 02 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm test` | Pass | 118 tests passed, including public inquiry validation and privacy-helper coverage. |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm run build` | Pass | Next.js production build passed with 67 static pages. |
+| `npm run seo:check:local` | Pass | Includes new contact/enterprise inquiry checks and public placeholder-language guard. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+
+### Prompt 02 Browser Evidence
+
+Browser checks were run against the temporary local production build at `http://127.0.0.1:4200`.
+
+| Scenario | Result |
+| --- | --- |
+| `/contact` desktop | Pass: form fields present, "General inquiry only" and "Do not paste raw evidence" warnings visible, no placeholder contact copy, no horizontal overflow. |
+| `/enterprise` desktop | Pass: enterprise inquiry form present, evidence warning visible, no placeholder contact copy, no horizontal overflow. |
+| `/contact` at 375px | Pass: support inquiry remained visible, no horizontal overflow. |
+| `/enterprise` at 375px | Pass: enterprise inquiry remained visible, no horizontal overflow. |
+| Invalid email on `/contact` | Pass: browser email validation blocked submit before server action and showed the native invalid-email validation message. |
+| Valid production inquiry submit | Deferred: not submitted against the local environment to avoid writing real production/staging inquiry data. Covered by schema/action/repository tests and requires owner-applied migration before production QA. |
+
+No screenshot artifact was generated for Prompt 02; browser evidence was recorded through DOM, viewport, and validation checks.
+
+### Prompt 02 Privacy, Security, And Legal Evidence
+
+- Public inquiry copy tells users not to submit raw evidence, private identifiers, contracts, documents, or sensitive case details through general contact/enterprise forms.
+- Server validation rejects sensitive-looking message content such as raw email addresses, phone numbers, private identifier language, and evidence-upload references.
+- Stored inquiries keep masked and hashed email values for list/search context while retaining the raw reply email only in the private admin-only table/view.
+- Public pages do not expose inquiry submissions, raw reply contacts, private evidence, pending/rejected report content, admin notes, or enterprise commitments.
+- Enterprise copy is qualified as scoped review/team workflow discussion and does not promise integrations, SLAs, custom data partnerships, legal outcomes, collection, or payment processing.
+- Public copy-safety checks now fail on setup-style phrases including `configured in production`, `contact details appear here`, and `coming later`.
+
+### Prompt 02 Owner Actions
+
+- Apply `supabase/migrations/0023_public_inquiry_intake.sql` before deploying this branch to production with Supabase-backed inquiry intake.
+- After migration, submit one disposable general support inquiry and one disposable enterprise inquiry, then confirm both appear in `/admin/settings#public-inquiries`.
+- Keep using dedicated workflows for evidence, report disputes, client responses, and moderated records; the public inquiry form is for routing only.
+
+### Prompt 02 Verdict
+
+`PASS WITH OWNER ACTION`
+
+The public contact and enterprise surfaces now have real, privacy-safe inquiry paths with admin retrieval and release checks. Production deployment should wait until the `0023` inquiry-intake migration is applied, then one disposable inquiry should be verified end to end.

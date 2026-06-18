@@ -74,6 +74,7 @@ import type {
   PaymentPlanInput,
   ProjectJobInput,
   ProjectJobParticipantInput,
+  PublicInquiryInput,
   RecoveryComplianceReviewInput,
   RemoveProjectJobParticipantInput,
   ResolutionDeskContactInput,
@@ -139,6 +140,7 @@ import type {
   ProfileClaim,
   ProfileMergeEvent,
   ProfileRedactionEvent,
+  PublicInquiry,
   ProjectJob,
   ProjectJobDetail,
   ProjectJobParticipant,
@@ -146,6 +148,7 @@ import type {
   ReportReassignmentEvent,
   Subscription,
 } from "@/lib/types"
+import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
 import {
   buildFloridaLienReadinessSummary,
   buildRecoveryReadinessSummary,
@@ -164,6 +167,7 @@ const profileClaims: ProfileClaim[] = []
 const profileMergeEvents: ProfileMergeEvent[] = []
 const reportReassignmentEvents: ReportReassignmentEvent[] = []
 const profileRedactionEvents: ProfileRedactionEvent[] = []
+const publicInquiryRecords: PublicInquiry[] = []
 
 type SimulatedClientReportInput = Partial<ClientReportInput> &
   Pick<
@@ -616,6 +620,58 @@ export function getAdminWorkspaceData(): AdminWorkspaceData {
     reviews: getPendingAdminReviews(),
     auditLog: auditLogs,
   }
+}
+
+export function getPublicInquiries(): PublicInquiry[] {
+  return [...publicInquiryRecords].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export function hasRecentPublicInquiry(email: string, topic: PublicInquiryInput["topic"]) {
+  const hash = hashInquiryEmail(email)
+  const recentCutoff = Date.now() - 2 * 60 * 1000
+
+  return publicInquiryRecords.some((inquiry) =>
+    inquiry.contactEmailHash === hash &&
+    inquiry.topic === topic &&
+    new Date(inquiry.createdAt).getTime() >= recentCutoff,
+  )
+}
+
+export function createPublicInquiry(input: PublicInquiryInput): PublicInquiry {
+  const contactEmail = normalizeInquiryEmail(input.email)
+  const now = new Date().toISOString()
+  const inquiry: PublicInquiry = {
+    id: `public_inquiry_${Date.now()}`,
+    inquiryType: input.inquiryType,
+    topic: input.topic,
+    fullName: input.fullName,
+    businessName: input.businessName,
+    contactEmail,
+    contactEmailHash: hashInquiryEmail(contactEmail),
+    contactEmailMasked: maskInquiryEmail(contactEmail),
+    message: input.message,
+    sourcePath: input.sourcePath,
+    status: "new",
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  publicInquiryRecords.unshift(inquiry)
+  auditLogs.unshift({
+    id: `audit_public_inquiry_${Date.now()}`,
+    action: "public_inquiry_submitted",
+    entityType: "setting",
+    entityId: inquiry.id,
+    summary: `${input.inquiryType === "enterprise" ? "Enterprise" : "Support"} inquiry queued for private review.`,
+    metadata: {
+      topic: input.topic,
+      contactEmailMasked: inquiry.contactEmailMasked,
+      sourcePath: inquiry.sourcePath ?? null,
+    },
+    createdAt: now,
+  })
+
+  return inquiry
 }
 
 export function searchClients(query = "", filters: SearchFilters = {}): ClientSearchResult[] {

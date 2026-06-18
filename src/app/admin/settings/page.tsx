@@ -10,8 +10,10 @@ import {
   FileCheck2,
   FileCode2,
   Globe2,
+  Inbox,
   Landmark,
   LockKeyhole,
+  MailCheck,
   Receipt,
   SearchCheck,
   Settings,
@@ -32,7 +34,9 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { profileSupportsType } from "@/lib/entity-profiles"
 import { getLaunchHealth } from "@/lib/launch-health"
-import { getPublicEntityProfilesService } from "@/lib/repositories/client-bureau-service"
+import { getPublicEntityProfilesService, getPublicInquiriesService } from "@/lib/repositories/client-bureau-service"
+import { publicInquiryTopicLabel, publicInquiryTypeLabel } from "@/lib/support-inquiries"
+import type { PublicInquiry } from "@/lib/types"
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -44,9 +48,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"
 
 export default async function AdminSettingsPage() {
-  const [health, publicEntityProfiles] = await Promise.all([
+  const [health, publicEntityProfiles, publicInquiries] = await Promise.all([
     getLaunchHealth(),
     getPublicEntityProfilesService(),
+    getPublicInquiriesService(),
   ])
   const readiness = health.readiness
   const missingTables = health.requiredTables.filter((table) => !table.exists)
@@ -61,6 +66,10 @@ export default async function AdminSettingsPage() {
   const releaseGateStatus = health.status === "ok" && readiness.coreLiveReady && readiness.platformCanUseSupabase
   const privacyGateStatus = readiness.platformSchemaReady && health.serviceRoleConfigured
   const stripeStatus = health.stripeConfigured && health.stripeWebhookConfigured
+  const openPublicInquiries = publicInquiries.filter((inquiry) =>
+    ["new", "reviewing"].includes(inquiry.status),
+  )
+  const enterpriseInquiryCount = publicInquiries.filter((inquiry) => inquiry.inquiryType === "enterprise").length
   const readinessSteps = liveOpsActive
     ? [
         {
@@ -174,6 +183,16 @@ export default async function AdminSettingsPage() {
       icon: Activity,
       tone: releaseGateStatus ? ("emerald" as const) : ("amber" as const),
     },
+    {
+      title: "Public inquiry intake",
+      status: openPublicInquiries.length > 0 ? "Needs review" : "Clear",
+      detail:
+        "Contact and enterprise submissions land in a private admin queue. Reply emails are admin-only and never appear in public pages.",
+      href: "/admin/settings#public-inquiries",
+      cta: "Review intake",
+      icon: Inbox,
+      tone: openPublicInquiries.length > 0 ? ("amber" as const) : ("emerald" as const),
+    },
   ]
   const launchGateCards = [
     {
@@ -203,6 +222,13 @@ export default async function AdminSettingsPage() {
       detail: "Stripe checkout and webhook configuration. Product can operate while billing remains deferred.",
       icon: Receipt,
       tone: stripeStatus ? ("emerald" as const) : ("slate" as const),
+    },
+    {
+      title: "Public intake",
+      value: `${openPublicInquiries.length}`,
+      detail: `${enterpriseInquiryCount} enterprise request${enterpriseInquiryCount === 1 ? "" : "s"} in the private inquiry queue.`,
+      icon: Inbox,
+      tone: openPublicInquiries.length > 0 ? ("amber" as const) : ("emerald" as const),
     },
     {
       title: "Subcontractor SEO",
@@ -428,6 +454,41 @@ export default async function AdminSettingsPage() {
             {operatorChecklist.map((item) => (
               <OperatorChecklistItem key={item.title} {...item} />
             ))}
+          </div>
+        </DashboardSection>
+
+        <DashboardSection
+          eyebrow="Private intake"
+          title="Public support and enterprise inquiries"
+          description="Contact and enterprise forms submit into this private queue. Use it for routing, not public profile evidence or sensitive case files."
+        >
+          <div id="public-inquiries" className="scroll-mt-24 rounded-md border border-slate-200 bg-white shadow-sm">
+            <div className="flex flex-col justify-between gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase text-amber-700">Admin-only queue</p>
+                <h3 className="mt-1 text-xl font-semibold text-slate-950">Recent public inquiries</h3>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Reply-to emails are private to staff. General inquiries should be routed to dashboard, response, claim, or moderation workflows when evidence is needed.
+                </p>
+              </div>
+              <StatusBadge tone={openPublicInquiries.length > 0 ? "amber" : "emerald"}>
+                {openPublicInquiries.length} open
+              </StatusBadge>
+            </div>
+            <div className="grid gap-3 p-5 lg:grid-cols-2">
+              {publicInquiries.slice(0, 6).map((inquiry) => (
+                <PublicInquiryCard key={inquiry.id} inquiry={inquiry} />
+              ))}
+              {publicInquiries.length === 0 ? (
+                <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-5 text-sm leading-6 text-slate-600 lg:col-span-2">
+                  <MailCheck className="mb-3 size-8 text-slate-950" aria-hidden="true" />
+                  <p className="font-semibold text-slate-950">No public inquiries are queued.</p>
+                  <p className="mt-1">
+                    The contact and enterprise pages are still functional. New submissions will appear here after the inquiry migration is applied.
+                  </p>
+                </div>
+              ) : null}
+            </div>
           </div>
         </DashboardSection>
 
@@ -686,6 +747,43 @@ function SettingsRuleGroup({
       </div>
     </article>
   )
+}
+
+function PublicInquiryCard({ inquiry }: { inquiry: PublicInquiry }) {
+  const statusTone = inquiry.status === "new" ? "amber" : inquiry.status === "resolved" ? "emerald" : "slate"
+
+  return (
+    <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">{publicInquiryTypeLabel(inquiry.inquiryType)}</p>
+          <h4 className="mt-1 font-semibold text-slate-950">{inquiry.fullName}</h4>
+          {inquiry.businessName ? <p className="mt-1 text-sm text-slate-600">{inquiry.businessName}</p> : null}
+        </div>
+        <StatusBadge tone={statusTone}>{inquiry.status}</StatusBadge>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-slate-600">
+        <span className="rounded-md border border-slate-200 bg-white px-2 py-1">{publicInquiryTopicLabel(inquiry.topic)}</span>
+        <span className="rounded-md border border-slate-200 bg-white px-2 py-1">{formatSettingsDate(inquiry.createdAt)}</span>
+      </div>
+      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-700">{inquiry.message}</p>
+      <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+        <p className="font-semibold">Private reply contact</p>
+        <p className="mt-1 break-all">{inquiry.contactEmail}</p>
+        <p className="mt-1 text-amber-900">
+          Keep replies factual and route evidence, reports, claims, or response details to the dedicated private workflow.
+        </p>
+      </div>
+    </article>
+  )
+}
+
+function formatSettingsDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(value))
 }
 
 function ReadinessStep({ title, detail, value }: { title: string; detail: string; value: string }) {

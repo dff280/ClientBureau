@@ -10,6 +10,7 @@ import {
   PremiumSectionHeader,
   ProductMockupFrame,
 } from "@/components/marketing/premium-page-shell"
+import { PublicInquiryForm } from "@/components/forms/public-inquiry-form"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getPublicContactInfo } from "@/lib/env"
@@ -43,8 +44,8 @@ const contactPaths = [
     icon: Building2,
     title: "Enterprise and teams",
     text: "Talk with Client Bureau about teams, regional groups, franchise networks, audit visibility, and onboarding.",
-    href: "/enterprise",
-    cta: "View enterprise",
+    href: "/enterprise#enterprise-inquiry",
+    cta: "Request review",
   },
   {
     icon: ShieldCheck,
@@ -74,7 +75,7 @@ export default function ContactPage() {
         eyebrow="Contact Client Bureau"
         title="Get to the right Client Bureau workflow without exposing private information."
         description="Use the correct path for account help, enterprise review, client response or correction requests, moderation questions, and business support."
-        primary={{ href: "/signup", label: "Create account", icon: Users }}
+        primary={{ href: "#support-inquiry", label: "Send support inquiry", icon: Mail }}
         secondary={{ href: "/client-response", label: "Submit client response", icon: MessageSquareText }}
         aside={
           <ProductMockupFrame
@@ -109,6 +110,22 @@ export default function ContactPage() {
                 </PremiumFeatureCard>
               ))}
             </div>
+
+            <div id="support-inquiry" className="scroll-mt-24">
+              <PremiumSectionHeader
+                eyebrow="Support inquiry"
+                title="Need help routing a request?"
+                description="Send a short general inquiry. Keep evidence, raw identifiers, report details, and private documents inside the dedicated workflows."
+              />
+              <div className="mt-5">
+                <PublicInquiryForm
+                  sourcePath="/contact"
+                  inquiryType="general_support"
+                  submitLabel="Send support inquiry"
+                  pendingLabel="Sending support inquiry..."
+                />
+              </div>
+            </div>
           </div>
 
           <aside className="space-y-5">
@@ -136,7 +153,7 @@ export default function ContactPage() {
                     <p className="flex gap-2">
                       <ShieldCheck className="mt-1 size-4 text-amber-700" aria-hidden="true" />
                       <span>
-                        Verified public phone and mailing address appear here when configured in production.
+                        Public phone or mailing address is not listed. Use the inquiry form or guided workflows so the request reaches the right private queue.
                       </span>
                     </p>
                   )}
@@ -166,7 +183,7 @@ export default function ContactPage() {
         title="Start with the workflow that matches what you need to do next."
         description="Search a client, submit a documented experience, respond to a profile, or ask about enterprise setup."
         primary={{ href: "/search", label: "Check a Client", icon: ShieldCheck }}
-        secondary={{ href: "/contact", label: "Contact options", icon: MessageSquareText }}
+        secondary={{ href: "#support-inquiry", label: "Send inquiry", icon: MessageSquareText }}
       />
     </main>
   )

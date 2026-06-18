@@ -141,6 +141,17 @@ export const reportRelationshipTypes = [
   "client_to_contractor",
   "business_to_business",
 ] as const
+export const publicInquiryTypes = ["general_support", "enterprise"] as const
+export const publicInquiryTopics = [
+  "account_help",
+  "report_or_moderation",
+  "client_response_or_correction",
+  "profile_claim_or_verification",
+  "enterprise_or_team_review",
+  "privacy_or_policy",
+  "other",
+] as const
+export const publicInquiryStatuses = ["new", "reviewing", "resolved", "spam", "archived"] as const
 
 export type ReportCategory = (typeof reportCategories)[number]
 export type RiskLevel = (typeof riskLevels)[number]
@@ -153,6 +164,9 @@ export type ProfileSubtype = ClientProfileSubtype | ContractorProfileSubtype | S
 export type ClaimedStatus = (typeof claimedStatuses)[number]
 export type ProfileClaimStatus = (typeof profileClaimStatuses)[number]
 export type ReportRelationshipType = (typeof reportRelationshipTypes)[number]
+export type PublicInquiryType = (typeof publicInquiryTypes)[number]
+export type PublicInquiryTopic = (typeof publicInquiryTopics)[number]
+export type PublicInquiryStatus = (typeof publicInquiryStatuses)[number]
 export type ReportConfidenceLevel = (typeof reportConfidenceLevels)[number]
 export type VerificationLevel = (typeof verificationLevels)[number]
 export type ProjectJobStatus = (typeof projectJobStatuses)[number]
@@ -536,6 +550,23 @@ export interface ProfileClaim {
   verificationSummary: string
   status: ProfileClaimStatus
   moderatorNote?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PublicInquiry {
+  id: string
+  inquiryType: PublicInquiryType
+  topic: PublicInquiryTopic
+  fullName: string
+  businessName?: string
+  contactEmail: string
+  contactEmailHash: string
+  contactEmailMasked: string
+  message: string
+  sourcePath?: string
+  status: PublicInquiryStatus
+  adminNote?: string
   createdAt: string
   updatedAt: string
 }
