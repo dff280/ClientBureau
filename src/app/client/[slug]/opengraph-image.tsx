@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og"
 
+import { clientRatingDisplay } from "@/lib/client-database"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
 
 export const alt = "Client Bureau public client profile card"
@@ -18,8 +19,9 @@ export default async function Image({ params }: ImageProps) {
   const profile = await getPublicClientProfileService(slug)
   const name = profile ? `${profile.firstName} ${profile.lastName}` : "Client Bureau Profile"
   const location = profile ? `${profile.city}, ${profile.state}` : "Public client profile"
-  const score = profile?.clientBureauScore ?? 0
-  const riskLevel = profile?.riskLevel ?? "Moderate"
+  const ratingDisplay = profile ? clientRatingDisplay(profile) : undefined
+  const score = ratingDisplay?.scoreDisplay ?? "Public context"
+  const contextLabel = ratingDisplay?.contextLabel ?? "Public profile"
   const reportCount = profile?.reports.length ?? 0
 
   return new ImageResponse(
@@ -73,7 +75,7 @@ export default async function Image({ params }: ImageProps) {
               display: "flex",
             }}
           >
-            {riskLevel} Risk
+            {contextLabel}
           </div>
         </div>
 
@@ -108,7 +110,7 @@ export default async function Image({ params }: ImageProps) {
                 {score}
               </div>
               <div style={{ display: "flex", color: "#cbd5e1", fontSize: 20, textTransform: "uppercase" }}>
-                Rating / 100
+                Context rating
               </div>
             </div>
             <div style={{ display: "flex", height: 1, background: "rgba(255,255,255,0.18)" }} />

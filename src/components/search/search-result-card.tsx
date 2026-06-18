@@ -16,13 +16,13 @@ import { ScoreGauge } from "@/components/client/score-gauge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { clientProfilePrimarySignals } from "@/lib/client-database"
-import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
+import { clientProfilePrimarySignals, clientRatingDisplay } from "@/lib/client-database"
+import { cleanPublicReportText } from "@/lib/client-rating"
 import type { ClientSearchResult } from "@/lib/types"
 
 export function SearchResultCard({ result }: { result: ClientSearchResult }) {
   const paymentLabel = result.paymentContextLabel ?? "Payment context reviewed"
-  const ratingBand = clientRatingBand(result.clientBureauScore, result.reportCount)
+  const ratingDisplay = clientRatingDisplay(result)
   const primarySignals = clientProfilePrimarySignals(result)
   const reportHref = `/submit-report?${new URLSearchParams({
     firstName: result.firstName,
@@ -36,15 +36,29 @@ export function SearchResultCard({ result }: { result: ClientSearchResult }) {
     <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm transition hover:border-amber-300 hover:shadow-md">
       <CardContent className="grid gap-6 p-5 lg:grid-cols-[190px_1fr_210px] lg:items-center">
         <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-          <ScoreGauge score={result.clientBureauScore} label="Client Bureau Rating" />
-          <p className="mt-2 text-sm font-semibold text-slate-700">{ratingBand}</p>
+          {ratingDisplay.shouldShowNumericScore ? (
+            <ScoreGauge score={result.clientBureauScore} label={ratingDisplay.scoreLabel} />
+          ) : (
+            <div>
+              <p className="text-xs font-semibold uppercase text-slate-500">{ratingDisplay.scoreLabel}</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-950">{ratingDisplay.scoreDisplay}</p>
+            </div>
+          )}
+          <p className="mt-2 text-sm font-semibold text-slate-700">{ratingDisplay.ratingLabel}</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">{ratingDisplay.summary}</p>
         </div>
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-xl font-semibold text-slate-950">
               {result.firstName} {result.lastName}
             </h2>
-            <RiskBadge riskLevel={result.riskLevel} />
+            {ratingDisplay.shouldShowRiskBadge ? (
+              <RiskBadge riskLevel={result.riskLevel} />
+            ) : (
+              <Badge variant="outline" className="rounded-md border-slate-200 bg-slate-50 text-slate-700">
+                {ratingDisplay.contextLabel}
+              </Badge>
+            )}
             <Badge variant="outline" className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-800">
               <ShieldCheck className="size-3" aria-hidden="true" />
               Public record

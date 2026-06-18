@@ -6,7 +6,7 @@ import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { StateSelect } from "@/components/forms/state-select"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { clientDatabaseSearchHref, clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
+import { clientDatabaseSearchHref, clientProfileConfidence, clientProfilePrimarySignals, clientRatingDisplay } from "@/lib/client-database"
 import type { ClientDirectoryCity, ClientDirectoryCounty, ClientDirectoryState } from "@/lib/client-directory"
 import { getClientCityDirectoryHref } from "@/lib/client-directory"
 import { floridaLocationLabel, floridaMunicipalities, floridaPlaceRecords } from "@/lib/florida-geography"
@@ -770,6 +770,7 @@ function ProfileGrid({ title, profiles }: { title: string; profiles: ClientProfi
 function ProfileDirectoryCard({ profile }: { profile: ClientProfile }) {
   const confidence = clientProfileConfidence(profile)
   const signals = clientProfilePrimarySignals(profile)
+  const ratingDisplay = clientRatingDisplay(profile)
 
   return (
     <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
@@ -784,13 +785,19 @@ function ProfileDirectoryCard({ profile }: { profile: ClientProfile }) {
               {profile.city}, {profile.state}
             </p>
           </div>
-          <RiskBadge riskLevel={profile.riskLevel} />
+          {ratingDisplay.shouldShowRiskBadge ? (
+            <RiskBadge riskLevel={profile.riskLevel} />
+          ) : (
+            <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700">
+              {ratingDisplay.contextLabel}
+            </span>
+          )}
         </div>
         <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950">
           {confidence.summary}
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
-          <DirectoryFact label="Context rating" value={`${profile.clientBureauScore}/100`} />
+          <DirectoryFact label={ratingDisplay.scoreLabel} value={ratingDisplay.scoreDisplay} />
           <DirectoryFact label="Reports" value={String(profile.reportCount)} />
           <DirectoryFact label="Rating label" value={signals.ratingLabel} />
         </div>

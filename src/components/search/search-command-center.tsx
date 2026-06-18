@@ -34,7 +34,8 @@ import {
   recordSearchEventAction,
   saveClientSearchAction,
 } from "@/lib/actions/client-bureau"
-import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
+import { clientRatingDisplay } from "@/lib/client-database"
+import { cleanPublicReportText } from "@/lib/client-rating"
 import {
   buildSearchHref,
   buildSearchExperienceStats,
@@ -579,60 +580,70 @@ export function SearchCommandCenter({
                   ) : null}
 
                   <div className="mt-4 grid gap-3">
-                    {instantProfiles.map((profile) => (
-                      <Link
-                        key={profile.id}
-                        href={`/client/${profile.publicSlug}`}
-                        onClick={() => trackSearchEvent("result_viewed", instantProfiles.length)}
-                        className="bureau-hover-lift group rounded-md border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-300 hover:shadow-md sm:p-4"
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="font-semibold text-slate-950">{formatClientName(profile)}</h3>
-                              <RiskBadge riskLevel={profile.riskLevel} />
-                            </div>
-                            {profile.businessName ? (
-                              <p className="mt-1 truncate text-sm font-medium text-slate-700">
-                                {profile.businessName}
+                    {instantProfiles.map((profile) => {
+                      const display = clientRatingDisplay(profile)
+
+                      return (
+                        <Link
+                          key={profile.id}
+                          href={`/client/${profile.publicSlug}`}
+                          onClick={() => trackSearchEvent("result_viewed", instantProfiles.length)}
+                          className="bureau-hover-lift group rounded-md border border-slate-200 bg-white p-3 shadow-sm transition hover:border-amber-300 hover:shadow-md sm:p-4"
+                        >
+                          <div className="flex flex-wrap items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-semibold text-slate-950">{formatClientName(profile)}</h3>
+                                {display.shouldShowRiskBadge ? (
+                                  <RiskBadge riskLevel={profile.riskLevel} />
+                                ) : (
+                                  <Badge variant="outline" className="rounded-md border-slate-200 bg-slate-50 text-slate-700">
+                                    {display.contextLabel}
+                                  </Badge>
+                                )}
+                              </div>
+                              {profile.businessName ? (
+                                <p className="mt-1 truncate text-sm font-medium text-slate-700">
+                                  {profile.businessName}
+                                </p>
+                              ) : null}
+                              <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
+                                <MapPin className="size-3.5" aria-hidden="true" />
+                                {profile.city}, {profile.state}
                               </p>
-                            ) : null}
-                            <p className="mt-1 flex items-center gap-1 text-sm text-slate-500">
-                              <MapPin className="size-3.5" aria-hidden="true" />
-                              {profile.city}, {profile.state}
-                            </p>
+                            </div>
+                            <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center sm:w-auto sm:shrink-0">
+                              <p className="text-xl font-semibold text-slate-950">{display.scoreDisplay}</p>
+                              <p className="text-[11px] font-semibold uppercase text-slate-500">rating</p>
+                            </div>
                           </div>
-                          <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center sm:w-auto sm:shrink-0">
-                            <p className="text-xl font-semibold text-slate-950">{profile.clientBureauScore}</p>
-                            <p className="text-[11px] font-semibold uppercase text-slate-500">rating</p>
+                          <p className="mt-2 text-xs font-semibold uppercase text-amber-700">
+                            {display.ratingLabel}
+                          </p>
+                          <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 sm:grid-cols-2">
+                            <span>
+                              <span className="block font-semibold uppercase text-slate-500">Match reason</span>
+                              {profile.matchedBy}
+                            </span>
+                            <span>
+                              <span className="block font-semibold uppercase text-slate-500">Recommended use</span>
+                              Open the profile before scheduling, quoting, or sending contract terms.
+                            </span>
                           </div>
-                        </div>
-                        <p className="mt-2 text-xs font-semibold uppercase text-amber-700">
-                          {clientRatingBand(profile.clientBureauScore, profile.reportCount)}
-                        </p>
-                        <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600 sm:grid-cols-2">
-                          <span>
-                            <span className="block font-semibold uppercase text-slate-500">Match reason</span>
-                            {profile.matchedBy}
-                          </span>
-                          <span>
-                            <span className="block font-semibold uppercase text-slate-500">Recommended use</span>
-                            Open the profile before scheduling, quoting, or sending contract terms.
-                          </span>
-                        </div>
-                        <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
-                          {cleanPublicReportText(profile.latestSummary) || "Approved public profile with moderated contractor-submitted reports."}
-                        </p>
-                        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
-                          <span>{profile.reportCount} approved signals</span>
-                          {profile.positiveSignalCount ? <span>{profile.positiveSignalCount} positive</span> : null}
-                          {profile.openDisputeCount ? <span>{profile.openDisputeCount} open dispute</span> : null}
-                          {profile.evidenceOnFile ? <span>Evidence on file</span> : null}
-                          {profile.latestCategory ? <span>{profile.latestCategory}</span> : null}
-                          <span className="text-amber-700 group-hover:text-amber-800">Open profile</span>
-                        </div>
-                      </Link>
-                    ))}
+                          <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">
+                            {cleanPublicReportText(profile.latestSummary) || "Approved public profile with moderated contractor-submitted reports."}
+                          </p>
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-slate-500">
+                            <span>{profile.reportCount} approved signals</span>
+                            {profile.positiveSignalCount ? <span>{profile.positiveSignalCount} positive</span> : null}
+                            {profile.openDisputeCount ? <span>{profile.openDisputeCount} open dispute</span> : null}
+                            {profile.evidenceOnFile ? <span>Evidence on file</span> : null}
+                            {profile.latestCategory ? <span>{profile.latestCategory}</span> : null}
+                            <span className="text-amber-700 group-hover:text-amber-800">Open profile</span>
+                          </div>
+                        </Link>
+                      )
+                    })}
 
                     {instantProfiles.length === 0 ? (
                       <div className="rounded-md border border-dashed border-slate-300 bg-white p-4 text-sm leading-6 text-slate-600">
