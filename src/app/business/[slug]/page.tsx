@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { businessVerificationContext } from "@/lib/entity-profiles"
 import { getSiteUrl } from "@/lib/env"
 import { getPublicBusinessProfileService, getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
 import { JsonLd } from "@/lib/seo"
@@ -113,10 +114,14 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
     ],
   }
   const badgeEmbed = `<a href="${siteUrl}/business/${profile.publicSlug}" rel="nofollow noopener">View ${profile.businessName} on Client Bureau</a>`
+  const verificationContext = businessVerificationContext({
+    profileType: "contractor",
+    verificationStatus: profile.verificationStatus,
+  })
   const proofItems = [
     { label: "Business", value: profile.trade, text: `${profile.city}, ${profile.state}` },
     { label: "Rating", value: profile.ratingGrade, text: `${profile.ratingScore}/100 with ${profile.ratingConfidence} confidence` },
-    { label: "Public status", value: profile.publicProfileStatus, text: "Private account details are not displayed." },
+    { label: "Public status", value: verificationContext.label, text: "Private account details are not displayed." },
     { label: "Contributions", value: String(profile.reportStats.published), text: "Approved public report contributions." },
   ]
 
@@ -126,7 +131,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
       <PremiumHero
         eyebrow="Public business profile"
         title={profile.businessName}
-        description={`${profile.trade} in ${profile.city}, ${profile.state}. This Client Bureau business profile summarizes verification status, documentation habits, approved contribution history, and business rating context without exposing private account details.`}
+        description={`${profile.trade} in ${profile.city}, ${profile.state}. This Client Bureau business profile summarizes public-safe verification context, documentation habits, approved contribution history, and business rating context without exposing private account details.`}
         primary={{ href: `/claim-profile?profileType=contractor&profileSlug=${encodeURIComponent(profile.publicSlug)}`, label: "Claim or update profile", icon: UserCheck }}
         secondary={{ href: "/business-rating-methodology", label: "Rating methodology", icon: HelpCircle }}
         aside={
@@ -144,7 +149,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
               <span className="text-slate-300">{profile.ratingConfidence} confidence</span>
             </div>
             <p className="rounded-md border border-white/10 bg-white/5 p-3 text-xs leading-5 text-slate-300">
-              {profile.ratingSummary}
+              {profile.ratingSummary} {verificationContext.disclaimer}
             </p>
           </div>
         }
@@ -258,6 +263,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
                 <ProfileFact label="Member since" value={new Date(profile.memberSince).toLocaleDateString()} />
                 <ProfileFact label="Last updated" value={new Date(profile.lastUpdated).toLocaleDateString()} />
                 <ProfileFact label="License" value={profile.licenseNumber ? "Information on file" : "Not provided"} />
+                <ProfileFact label="Verification context" value={verificationContext.label} />
               </CardContent>
             </Card>
 
@@ -309,7 +315,7 @@ export default async function BusinessProfilePage({ params }: BusinessProfilePag
                 <p className="text-sm leading-6 text-amber-950">
                   Client Bureau Business Rating is a platform-readiness signal. It is not a
                   customer review score, workmanship guarantee, credit score, license verification
-                  service, or legal determination.
+                  service, insurance confirmation, recommendation, or legal determination.
                 </p>
               </CardContent>
             </Card>

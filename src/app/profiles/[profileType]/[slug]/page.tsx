@@ -23,7 +23,16 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { JsonLd } from "@/lib/seo"
 import { getSiteUrl } from "@/lib/env"
-import { claimedStatusLabel, profileTypeLabel, profileTypePluralLabel, reportConfidenceLabel, relationshipLabel } from "@/lib/entity-profiles"
+import {
+  businessProfileClaimHref,
+  businessProfileFieldPolicyByClassification,
+  businessVerificationContext,
+  claimedStatusLabel,
+  profileTypeLabel,
+  profileTypePluralLabel,
+  reportConfidenceLabel,
+  relationshipLabel,
+} from "@/lib/entity-profiles"
 import { pageAssets } from "@/lib/page-assets"
 import { getPublicEntityProfileService } from "@/lib/repositories/client-bureau-service"
 import { profileTypes, type BusinessRatingFactor, type ProfileType } from "@/lib/types"
@@ -148,7 +157,7 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
   if (profileType === "subcontractor") {
     return {
       heroDescription:
-        "This subcontractor and trade-professional profile shows approved public trade context: specialty scope, GC/sub relationship signals, documentation readiness, payment-chain indicators, and claim/correction paths. Private identifiers and raw files stay sealed.",
+        "This subcontractor and trade-professional profile shows approved public trade context: specialty scope, GC/sub relationship signals, documentation readiness, payment-chain signals, and claim/correction paths. Private identifiers and raw files stay sealed.",
       dossierEyebrow: "Trade partner dossier",
       scoreLabel: "Trade partner rating",
       scoreCaption: "A public-safe trade signal based on scope, GC/sub relationships, payment-chain context, and evidence readiness.",
@@ -314,9 +323,13 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
   const siteUrl = getSiteUrl()
   const profileUrl = `${siteUrl}${profile.profileHref}`
   const reportHref = `/submit-report?profileType=${profile.profileType}&profileSubtype=${encodeURIComponent(String(profile.profileSubtype ?? ""))}&profileSlug=${encodeURIComponent(profile.slug)}&city=${encodeURIComponent(profile.city)}&state=${encodeURIComponent(profile.state)}`
-  const claimHref = `/claim-profile?profileType=${profile.profileType}&profileSlug=${encodeURIComponent(profile.slug)}`
+  const claimHref = businessProfileClaimHref(profile, profile.profileType)
   const responseHref = `/client-response?profile=${encodeURIComponent(profile.profileHref)}`
   const presentation = getEntityProfilePresentation(profile.profileType)
+  const verificationContext = businessVerificationContext(profile)
+  const safePublicFields = toPublicFieldDisplayPolicy(businessProfileFieldPolicyByClassification("safe_public"))
+  const optInPublicFields = toPublicFieldDisplayPolicy(businessProfileFieldPolicyByClassification("verified_opt_in_public"))
+  const privateFields = toPublicFieldDisplayPolicy(businessProfileFieldPolicyByClassification("private_admin_only"))
   const profileAsset =
     profile.profileType === "contractor"
       ? pageAssets.platformHero
@@ -408,14 +421,14 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           <ProductMockupFrame
             dark
             eyebrow={presentation.dossierEyebrow}
-            title={`${profile.ratingScore}/100 ${presentation.scoreLabel.toLowerCase()}`}
-            description={`${profile.reportCount} approved public ${profile.reportCount === 1 ? "report" : "reports"} with ${profile.evidenceSummaryLabel.toLowerCase()}. ${presentation.scoreCaption}`}
+            title={`${profile.ratingBand} ${presentation.scoreLabel.toLowerCase()}`}
+            description={`${verificationContext.label}. ${profile.reportCount} approved public ${profile.reportCount === 1 ? "summary" : "summaries"} with ${profile.evidenceSummaryLabel.toLowerCase()}. ${presentation.scoreCaption}`}
             imageSrc={profileAsset.src}
             imageAlt={profileAsset.alt}
             points={[
-              claimedStatusLabel(profile.claimedStatus),
+              verificationContext.label,
               profile.responseStatusLabel,
-              `${profile.resolvedReportCount} resolved or paid-in-full records`,
+              `${profile.resolvedReportCount} resolved or paid-in-full public records`,
             ]}
           />
         }
@@ -464,9 +477,12 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
                       : profileTypeLabel(profile.profileType)}
                   />
                   <ProfileFact label="Claim status" value={claimedStatusLabel(profile.claimedStatus)} />
-                  <ProfileFact label="Verification" value={profile.verificationBadges?.length ? profile.verificationBadges.join(", ") : presentation.verificationFallback} />
+                  <ProfileFact label="Verification context" value={verificationContext.label} />
                   <ProfileFact label="Evidence" value={profile.evidenceSummaryLabel} />
                   <ProfileFact label="Public visibility" value={presentation.profileVisibilityText} />
+                </div>
+                <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+                  {verificationContext.disclaimer}
                 </div>
                 <Button asChild className="w-full bg-slate-950 text-white hover:bg-slate-800">
                   <Link href={claimHref}>
@@ -479,6 +495,17 @@ export default async function EntityProfilePage({ params }: EntityProfilePagePro
           </aside>
 
           <div className="space-y-6">
+            {profile.profileType === "contractor" || profile.profileType === "subcontractor" ? (
+              <BusinessProfileReadGuide
+                safeFields={safePublicFields}
+                optInFields={optInPublicFields}
+                privateFields={privateFields}
+                summary={verificationContext.summary}
+                title={profile.profileType === "subcontractor" ? "How to read this trade profile" : "How to read this business profile"}
+                toneClass={presentation.accent.text}
+              />
+            ) : null}
+
             {profile.profileType === "contractor" || profile.profileType === "subcontractor" ? (
               <RatingMethodPanel
                 accentText={presentation.accent.text}
@@ -660,6 +687,70 @@ function ProfileFact({ label, value }: { label: string; value: string }) {
       <span className="text-right font-semibold text-slate-950">{value}</span>
     </div>
   )
+}
+
+function BusinessProfileReadGuide({
+  optInFields,
+  privateFields,
+  safeFields,
+  summary,
+  title,
+  toneClass,
+}: {
+  optInFields: PublicFieldDisplayPolicy[]
+  privateFields: PublicFieldDisplayPolicy[]
+  safeFields: PublicFieldDisplayPolicy[]
+  summary: string
+  title: string
+  toneClass: string
+}) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="p-6">
+        <p className={`text-sm font-semibold uppercase tracking-[0.18em] ${toneClass}`}>Public field policy</p>
+        <h2 className="mt-2 text-2xl font-black text-slate-950">{title}</h2>
+        <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{summary}</p>
+        <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <FieldPolicyColumn title="Safe public" items={safeFields} />
+          <FieldPolicyColumn title="Public after review" items={optInFields} />
+          <FieldPolicyColumn title="Private/admin only" items={privateFields} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function FieldPolicyColumn({
+  items,
+  title,
+}: {
+  items: PublicFieldDisplayPolicy[]
+  title: string
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">{title}</p>
+      <div className="mt-3 space-y-3">
+        {items.slice(0, 4).map((item) => (
+          <div key={item.label}>
+            <p className="text-sm font-semibold text-slate-950">{item.label}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">{item.explanation}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+type PublicFieldDisplayPolicy = {
+  explanation: string
+  label: string
+}
+
+function toPublicFieldDisplayPolicy(
+  items: ReturnType<typeof businessProfileFieldPolicyByClassification>,
+): PublicFieldDisplayPolicy[] {
+  return items.map(({ explanation, label }) => ({ explanation, label }))
 }
 
 function RatingMethodPanel({

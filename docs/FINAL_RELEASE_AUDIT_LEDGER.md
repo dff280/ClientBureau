@@ -522,3 +522,85 @@ Note: the in-app browser screenshot command timed out during this run, so browse
 `PASS`
 
 The Client Database now presents ratings as cautious public context. Zero-history and early-history profiles no longer look definitively safe or risky, positive/resolved/corrected context is represented, and public profile/search/directory/share surfaces use one consistent rating policy.
+
+## Prompt 06 - Contractor/Business Database, Verification Context, Claims, And Public Trust Profiles
+
+| Item | Evidence |
+| --- | --- |
+| Branch | `codex/contractor-database-final` |
+| Starting commit | `f161f69` (`Finalize client database rating semantics`) |
+| Scope | `/profiles/contractor`, `/profiles/subcontractor`, `/profiles/[profileType]/[slug]`, `/businesses`, `/business/[slug]`, contractor search result cards, admin contractor profile editor |
+| Status | `PASS` locally; pending PR/release review |
+
+### Prompt 06 Findings
+
+| Severity | Finding | Evidence | Outcome |
+| --- | --- | --- | --- |
+| P1 trust/legal | Contractor/subcontractor verification wording was not centralized, which made it easier for public copy to imply stronger verification than Client Bureau should claim. | Audit of profile detail pages, business directory, legacy business fallback, search result cards, and admin profile copy. | Added one non-endorsement verification context helper used across public business/trade profile surfaces. |
+| P1 privacy | Public pages needed an explicit field-classification policy for what can be public, review-gated, private/admin-only, or never public. | Audit of public profile detail presentation and business profile tests. | Added a shared business profile field policy and a “How to read this business/trade profile” guide with display-only labels. Internal field keys are stripped before rendering public page props. |
+| P1 identity integrity | Multi-capability accounts needed claim/profile URLs that preserve the requested contractor or subcontractor view without creating duplicate identities. | Audit of entity profile href helpers, search cards, public detail CTAs, and admin preview links. | Added `businessProfileClaimHref` and updated public/search CTAs plus admin preview links to preserve profile type and slug. |
+| P2 canonical cleanup | Legacy `/business/[slug]` should not compete with canonical contractor profile URLs. | Browser QA of `/business/ridgebuild-contracting-orlando-fl`. | Legacy business pages redirect to `/profiles/contractor/[slug]` when a unified public profile exists. |
+
+### Prompt 06 Changes
+
+- Added `businessProfilePublicFieldPolicy`, `businessProfileFieldPolicyByClassification`, `businessVerificationContext`, and `businessProfileClaimHref` in `src/lib/entity-profiles.ts`.
+- Made contractor and subcontractor safe descriptions role-specific instead of generic profile labels.
+- Added a public “How to read this business/trade profile” guide to profile detail pages with safe-public, review-gated, and private/admin-only field groups.
+- Updated profile detail sidebars, product mockups, and CTAs to use non-endorsement verification context instead of raw badge lists.
+- Updated contractor and subcontractor search result cards with claim/correction URLs that preserve `profileType` and `profileSlug`.
+- Reworked `/businesses` and legacy `/business/[slug]` copy to frame business profiles as public-safe trust profiles, not endorsements.
+- Updated the admin contractor editor so public preview links use canonical contractor/subcontractor profile routes and account classification copy explains capabilities without duplicating identity.
+- Added tests covering field classification, private-key redaction, non-endorsement verification wording, claim URL preservation, and role-specific public descriptions.
+
+### Prompt 06 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm test -- --run src/lib/__tests__/client-bureau.test.ts` | Pass | 130 focused tests passed after adding contractor/business field-policy and verification-context cases. |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm test` | Pass | 130 tests passed. |
+| `npm run build` | Pass | Next.js production build passed with 67 generated static pages. |
+| `npm run seo:check:local` | Pass | Contractor and subcontractor profile schema/privacy checks passed; claim-link preservation check passed. |
+| `npm run route:check` | Pass | Route/indexability inventory remains intact. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+
+### Prompt 06 Browser Evidence
+
+Browser checks were run against local production previews at `http://127.0.0.1:4204` and refreshed at `http://127.0.0.1:4205`.
+
+| Scenario | Viewport | Result |
+| --- | ---: | --- |
+| `/profiles/contractor` | 1440px | Pass: Contractor Database renders with canonical profile links, claim/correction links, no console errors, and no horizontal overflow. |
+| `/profiles/contractor/ridgebuild-contracting-orlando-fl` | 1440px and 390px | Pass: business profile guide, claim CTA, non-endorsement verification wording, canonical database links, no console errors, and no horizontal overflow. |
+| `/profiles/subcontractor/bright-line-electric-orlando-fl` | 390px | Pass: trade profile guide, subcontractor-specific language, payment-chain context, no console errors, and no horizontal overflow. |
+| `/businesses` | 768px | Pass: Contractor Database handoff, public-safe business cards, canonical contractor profile links, no console errors, and no horizontal overflow. |
+| `/search?profileType=contractor&q=RidgeBuild` | 390px | Pass: contractor result card links to canonical business profile and preserves claim target. |
+| `/claim-profile?profileType=contractor&profileSlug=ridgebuild-contracting-orlando-fl` | 390px | Pass: direct claim URL preserves contractor profile type and slug. |
+| `/business/ridgebuild-contracting-orlando-fl` | 1440px | Pass: redirected to `/profiles/contractor/ridgebuild-contracting-orlando-fl`. |
+
+Evidence artifacts:
+
+- `C:\Users\MikeM\.codex\browser-evidence\prompt-06-contractor-database-browser-qa.json`
+- `C:\Users\MikeM\.codex\browser-evidence\prompt-06-contractor-database-browser-qa-final.json`
+- `C:\Users\MikeM\.codex\browser-evidence\prompt-06-contractor-database-browser-qa-final-pass.json`
+
+### Prompt 06 Privacy, Security, And Legal Evidence
+
+- Public verification language now says labels are profile-context signals only and are not an endorsement or guarantee, recommendation, background check, license confirmation, insurance confirmation, or credit score.
+- Public profile detail pages explain safe public fields, review-gated public fields, private/admin-only fields, and never-public fields.
+- Public page props for the field guide use display labels only, so internal field keys such as `businessPhone`, `ownerIdentity`, and `internalNotes` are not needed in the public component payload.
+- Public surfaces continue to avoid raw emails, phone numbers, street addresses, private job data, evidence paths, pending/rejected content, and admin notes.
+- Contractor/subcontractor pages use safe schema only and do not add `Review`, `AggregateRating`, fake stars, or hidden rating-value markup.
+- Admin classification still treats `users.role` as auth/admin authorization, while public account capabilities control contractor/subcontractor view compatibility.
+
+### Prompt 06 Owner Actions
+
+- Repeat authenticated admin classification QA on production after merge/deploy using a real disposable admin account.
+- Confirm any real business that gains both contractor and subcontractor capabilities appears under both canonical profile views without duplicate records.
+- Continue to publish only real verified contractor/subcontractor profiles; do not create fake inventory for SEO or visual polish.
+
+### Prompt 06 Verdict
+
+`PASS`
+
+The Contractor/Business Database now has centralized non-endorsement verification language, a public field-policy guide, canonical claim/profile links, and tests for multi-capability identity safety. Contractor and subcontractor pages remain distinct while preserving privacy and schema safety.

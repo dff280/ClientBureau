@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import { entityProfileHref, profileSupportsType } from "@/lib/entity-profiles"
+import { businessVerificationContext, entityProfileHref, profileSupportsType } from "@/lib/entity-profiles"
 import { getSiteUrl } from "@/lib/env"
 import { getPublicBusinessProfilesService, getPublicEntityProfilesService } from "@/lib/repositories/client-bureau-service"
 
 export const metadata: Metadata = {
-  title: "Verified Business Profiles",
+  title: "Contractor Business Profiles",
   description:
-    "Browse Client Bureau business trust profiles for contractors and service businesses with verification, documentation, and public contribution ratings.",
+    "Browse Client Bureau contractor and service-business trust profiles with public-safe verification context, service areas, documentation signals, and claim paths.",
   alternates: {
     canonical: `${getSiteUrl()}/businesses`,
   },
@@ -62,9 +62,9 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
     <main className="bg-slate-100">
       <PremiumHero
         eyebrow="Business trust profiles"
-        title="Find verified contractors and service business owners."
-        description="Public business profiles help owners show verification status, documentation habits, approved contribution history, and Client Bureau Business Rating context without exposing private account details."
-        primary={{ href: "/claim-profile", label: "Claim your profile", icon: Building2 }}
+        title="Find contractor and service-business trust profiles."
+        description="Public business profiles show business identity, service context, approved public contribution signals, and claim/correction paths without exposing private account details."
+        primary={{ href: "/profiles/contractor", label: "Open Contractor Database", icon: Building2 }}
         secondary={{ href: "/business-rating-methodology", label: "Rating methodology", icon: Star }}
         aside={
           <div className="space-y-4 text-white">
@@ -84,9 +84,9 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
       <PremiumProofStrip
         items={[
           { label: "Profiles", value: "Public-safe", text: "Business pages avoid private account details and staff-only review notes." },
-          { label: "Signals", value: "Verified", text: "Verification, documentation, contribution history, and resolution posture." },
+          { label: "Signals", value: "Context", text: "Verification context, documentation habits, contribution history, and resolution posture." },
           { label: "Claims", value: "Structured", text: "Owners can claim or update profiles through a private workflow." },
-          { label: "Ratings", value: "Explained", text: "Business Rating is a readiness signal, not a customer review score." },
+          { label: "Ratings", value: "Explained", text: "Business Rating is a context signal, not an endorsement or guarantee." },
         ]}
         dark
       />
@@ -179,44 +179,11 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
 
           <div className="grid gap-4 lg:grid-cols-3">
             {filtered.map((profile) => (
-              <Link
+              <BusinessDirectoryCard
                 key={profile.id}
                 href={contractorProfileHrefBySlug.get(profile.publicSlug) ?? `/business/${profile.publicSlug}`}
-                className="group rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-slate-500">{profile.trade}</p>
-                    <h3 className="mt-2 text-xl font-semibold text-slate-950">{profile.businessName}</h3>
-                    <p className="mt-1 text-sm text-slate-600">{profile.city}, {profile.state}</p>
-                  </div>
-                  <div className="rounded-md bg-slate-950 px-3 py-2 text-center text-white">
-                    <p className="text-xs text-slate-300">Rating</p>
-                    <p className="text-xl font-semibold">{profile.ratingGrade}</p>
-                  </div>
-                </div>
-                <div className="mt-5 space-y-2">
-                  <Progress value={profile.ratingScore} />
-                  <div className="flex justify-between text-xs text-slate-500">
-                    <span>{profile.ratingScore}/100</span>
-                    <span>{profile.ratingConfidence} confidence</span>
-                  </div>
-                </div>
-                <div className="mt-4 grid gap-2 text-sm text-slate-600">
-                  <span className="inline-flex items-center gap-2">
-                    <CheckCircle2 className="size-4 text-emerald-700" aria-hidden="true" />
-                    {profile.publicProfileStatus}
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <Building2 className="size-4 text-amber-700" aria-hidden="true" />
-                    {profile.reportStats.published} public report contributions
-                  </span>
-                </div>
-                <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
-                  View business profile
-                  <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
-                </span>
-              </Link>
+                profile={profile}
+              />
             ))}
           </div>
           {filtered.length === 0 ? (
@@ -245,5 +212,61 @@ function DirectoryStat({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
       <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
     </div>
+  )
+}
+
+function BusinessDirectoryCard({
+  href,
+  profile,
+}: {
+  href: string
+  profile: Awaited<ReturnType<typeof getPublicBusinessProfilesService>>[number]
+}) {
+  const verification = businessVerificationContext({
+    profileType: "contractor",
+    verificationStatus: profile.verificationStatus,
+  })
+
+  return (
+    <Link
+      href={href}
+      className="group rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-amber-300"
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase text-slate-500">{profile.trade}</p>
+          <h3 className="mt-2 text-xl font-semibold text-slate-950">{profile.businessName}</h3>
+          <p className="mt-1 text-sm text-slate-600">{profile.city}, {profile.state}</p>
+        </div>
+        <div className="rounded-md bg-slate-950 px-3 py-2 text-center text-white">
+          <p className="text-xs text-slate-300">Context</p>
+          <p className="text-xl font-semibold">{profile.ratingGrade}</p>
+        </div>
+      </div>
+      <div className="mt-5 space-y-2">
+        <Progress value={profile.ratingScore} />
+        <div className="flex justify-between text-xs text-slate-500">
+          <span>{profile.ratingScore}/100</span>
+          <span>{profile.ratingConfidence} confidence</span>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2 text-sm text-slate-600">
+        <span className="inline-flex items-center gap-2">
+          <CheckCircle2 className="size-4 text-emerald-700" aria-hidden="true" />
+          {verification.label}
+        </span>
+        <span className="inline-flex items-center gap-2">
+          <Building2 className="size-4 text-amber-700" aria-hidden="true" />
+          {profile.reportStats.published} public report contributions
+        </span>
+      </div>
+      <p className="mt-3 text-xs leading-5 text-slate-500">
+        Ratings and verification context are public trust signals, not recommendations, license confirmations, or guarantees.
+      </p>
+      <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-amber-700">
+        View contractor profile
+        <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </Link>
   )
 }
