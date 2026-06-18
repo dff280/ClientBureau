@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 
 import { getCurrentUser } from "@/lib/auth"
+import { getBillingAvailability } from "@/lib/billing-availability"
 import { getDataMode, getSiteUrl } from "@/lib/env"
 import { pricingTiers } from "@/lib/stripe/pricing"
-import { getStripe, hasStripeConfig } from "@/lib/stripe/server"
+import { getStripe } from "@/lib/stripe/server"
 import { createServiceClient } from "@/lib/supabase/service"
 import type { SubscriptionTier } from "@/lib/types"
 
@@ -51,8 +52,9 @@ export async function POST(request: Request) {
 
   const tierConfig = pricingTiers.find((candidate) => candidate.id === tier)
   const priceId = priceIdForTier(tier)
+  const billing = getBillingAvailability()
 
-  if (!hasStripeConfig() || !priceId) {
+  if (!billing.subscriptionCheckoutAvailable || !priceId) {
     return NextResponse.redirect(`${siteUrl}/pricing?checkout=unavailable&plan=${tier}`, 303)
   }
 

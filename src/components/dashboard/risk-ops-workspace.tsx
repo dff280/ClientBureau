@@ -34,6 +34,7 @@ import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
 import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
+import type { BillingAvailability } from "@/lib/billing-availability"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -250,11 +251,13 @@ export function RiskOpsWorkspace({
   riskOps,
   clients,
   subscription,
+  billingAvailability,
 }: {
   focusTab?: DashboardWorkspaceTab
   riskOps: ContractorRiskOpsData
   clients: ClientProfile[]
   subscription?: Subscription
+  billingAvailability?: BillingAvailability
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -314,6 +317,7 @@ export function RiskOpsWorkspace({
   const openContractPackets = riskOps.contractPackets.filter((item) => !["signed", "archived"].includes(item.status)).length
   const billingPlan = pricingTiers.find((tier) => tier.id === (subscription?.tier ?? "free")) ?? pricingTiers[0]
   const billingStatus = !subscription || subscription.status === "mock" ? "active" : subscription.status.replaceAll("_", " ")
+  const billingReviewMode = !billingAvailability?.subscriptionCheckoutAvailable
   const billingPeriodEnd = subscription?.currentPeriodEnd
     ? new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(
         new Date(subscription.currentPeriodEnd),
@@ -1052,7 +1056,7 @@ export function RiskOpsWorkspace({
         <TabsContent value="billing" className="space-y-5">
           {toolIntro(
             "Billing",
-            "Review your plan, usage, invoices, and payment settings for Client Bureau contractor tools.",
+            "Review your plan, usage, billing availability, and account verification for Client Bureau contractor tools.",
           )}
           <div className="grid gap-5 xl:grid-cols-[1fr_0.9fr]">
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -1076,6 +1080,12 @@ export function RiskOpsWorkspace({
                   <Badge className="rounded-md bg-emerald-700 text-white capitalize">{billingStatus}</Badge>
                 </div>
                 <p className="text-sm leading-6 text-slate-600">{billingPlan.description}</p>
+                {billingAvailability ? (
+                  <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+                    <p className="font-semibold">{billingAvailability.dashboardStatusLabel}</p>
+                    <p className="mt-1">{billingAvailability.dashboardStatusDetail}</p>
+                  </div>
+                ) : null}
                 <div className="grid gap-3 md:grid-cols-3">
                   <BillingMetric label="Status" value={billingStatus} />
                   <BillingMetric label="Renewal" value={billingPeriodEnd} />
@@ -1097,7 +1107,7 @@ export function RiskOpsWorkspace({
                     <Link href="/pricing">Compare plans</Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link href="/contact">Contact billing</Link>
+                    <Link href="/contact#support-inquiry">Request billing review</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -1132,12 +1142,38 @@ export function RiskOpsWorkspace({
                   <CardTitle className="text-lg">Invoices and payment method</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3 p-5 text-sm text-slate-600">
-                  <BillingRow label="Latest invoice" value={billingPlan.id === "free" ? "No paid invoice issued" : "Sent to billing contact"} />
-                  <BillingRow label="Payment method" value={billingPlan.id === "free" ? "No card required" : "Secure card billing"} />
-                  <BillingRow label="Receipts" value="Delivered to the account email when payment is processed" />
+                  <BillingRow
+                    label="Latest invoice"
+                    value={
+                      billingReviewMode
+                        ? "No workspace invoice issued"
+                        : billingPlan.id === "free"
+                          ? "No paid invoice issued"
+                          : "Sent to billing contact"
+                    }
+                  />
+                  <BillingRow
+                    label="Payment method"
+                    value={
+                      billingReviewMode
+                        ? "Not collected from this workspace yet"
+                        : billingPlan.id === "free"
+                          ? "No card required"
+                          : "Secure card billing"
+                    }
+                  />
+                  <BillingRow
+                    label="Receipts"
+                    value={
+                      billingReviewMode
+                        ? "Available after billing is activated"
+                        : "Delivered to the account email when payment is processed"
+                    }
+                  />
                   <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
-                    Plan changes and payment updates should be reviewed from this billing workspace
-                    before expanding search, contract, recovery, and team usage.
+                    {billingReviewMode
+                      ? "Plan changes and service fees are reviewed before billing is collected. Your private workspace remains available for account records."
+                      : "Plan changes and payment updates should be reviewed from this billing workspace before expanding search, contract, recovery, and team usage."}
                   </div>
                 </CardContent>
               </Card>

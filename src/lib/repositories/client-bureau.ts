@@ -43,6 +43,7 @@ import {
   getScoreFactors,
   paymentReliabilityLabel,
 } from "@/lib/scoring"
+import { getBillingAvailability } from "@/lib/billing-availability"
 import {
   buildBusinessSlug,
   calculateBusinessRating,
@@ -1492,6 +1493,7 @@ export function runRecoveryPrecheck(input: ServicePrecheckInput): ServiceReadine
     evidenceVault: contractorRiskOps.evidenceVault,
     serviceFeeOrders: contractorRiskOps.serviceFeeOrders,
     documentLinks: contractorRiskOps.caseDocumentLinks,
+    serviceFeeCheckoutAvailable: getBillingAvailability().serviceFeeCheckoutAvailable,
   })
 }
 
@@ -1508,6 +1510,7 @@ export function runFloridaLienPrecheck(input: ServicePrecheckInput): ServiceRead
     evidenceVault: contractorRiskOps.evidenceVault,
     serviceFeeOrders: contractorRiskOps.serviceFeeOrders,
     documentLinks: contractorRiskOps.caseDocumentLinks,
+    serviceFeeCheckoutAvailable: getBillingAvailability().serviceFeeCheckoutAvailable,
   })
 }
 

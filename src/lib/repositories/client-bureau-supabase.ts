@@ -34,6 +34,7 @@ import {
   intakeRiskRecommendation,
   paymentRecoveryPriority,
 } from "@/lib/platform-features"
+import { getBillingAvailability } from "@/lib/billing-availability"
 import {
   buildFloridaLienReadinessSummary,
   buildRecoveryReadinessSummary,
@@ -4166,6 +4167,7 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
     ...mappedFloridaLienCases.map((item) => item.id),
     ...mappedServiceFeeOrders.map((item) => item.id),
   ])
+  const billing = getBillingAvailability()
 
   return {
     clientPipeline: (pipeline.data ?? []).map(mapClientPipelineItem),
@@ -4194,6 +4196,7 @@ export async function getContractorRiskOpsDataSupabase(userId: string): Promise<
       evidenceVault: mappedEvidenceVault,
       serviceFeeOrders: mappedServiceFeeOrders,
       documentLinks: mappedCaseDocumentLinks,
+      serviceFeeCheckoutAvailable: billing.serviceFeeCheckoutAvailable,
     }),
     caseDocumentLinks: mappedCaseDocumentLinks,
     caseStaffAssignments: (caseStaffAssignments.data ?? [])
@@ -4735,11 +4738,13 @@ export async function runRecoveryPrecheckSupabase(
 
   const recoveryCase = mapManagedRecoveryCase(requirePlatformRow("managed_recovery_cases", data))
   const context = await getRevenueReadinessContext(contractorId)
+  const billing = getBillingAvailability()
   const summary = buildRecoveryReadinessSummary({
     recoveryCase,
     evidenceVault: context.evidenceVault,
     serviceFeeOrders: context.serviceFeeOrders,
     documentLinks: context.documentLinks,
+    serviceFeeCheckoutAvailable: billing.serviceFeeCheckoutAvailable,
   })
   const checkedAt = new Date().toISOString()
 
@@ -4785,11 +4790,13 @@ export async function runFloridaLienPrecheckSupabase(
 
   const lienCase = mapFloridaLienCase(requirePlatformRow("florida_lien_cases", data))
   const context = await getRevenueReadinessContext(contractorId)
+  const billing = getBillingAvailability()
   const summary = buildFloridaLienReadinessSummary({
     lienCase,
     evidenceVault: context.evidenceVault,
     serviceFeeOrders: context.serviceFeeOrders,
     documentLinks: context.documentLinks,
+    serviceFeeCheckoutAvailable: billing.serviceFeeCheckoutAvailable,
   })
   const checkedAt = new Date().toISOString()
 

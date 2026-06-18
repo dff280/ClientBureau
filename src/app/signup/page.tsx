@@ -5,6 +5,7 @@ import { SignupForm } from "@/components/forms/auth-forms"
 import { PremiumFeatureCard, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSafePostSignupReturnPath } from "@/lib/auth"
+import { isBillingPlanInterest, planInterestLabel } from "@/lib/billing-availability"
 
 export const metadata: Metadata = {
   title: "Create Account",
@@ -19,12 +20,14 @@ export const metadata: Metadata = {
 }
 
 type SignupPageProps = {
-  searchParams: Promise<Partial<Record<"next", string>>>
+  searchParams: Promise<Partial<Record<"next" | "plan", string>>>
 }
 
 export default async function SignupPage({ searchParams }: SignupPageProps) {
   const params = await searchParams
   const redirectTo = getSafePostSignupReturnPath(params.next)
+  const planInterest = isBillingPlanInterest(params.plan) ? params.plan : undefined
+  const planInterestLabelText = planInterest ? planInterestLabel(planInterest) : undefined
 
   return (
     <section className="bg-slate-100">
@@ -71,9 +74,14 @@ export default async function SignupPage({ searchParams }: SignupPageProps) {
             <p className="text-sm leading-6 text-slate-600">
               Choose contractor/service-business access or client response access. Each path stays organized under the right workflow.
             </p>
+            {planInterestLabelText ? (
+              <p className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-950">
+                Selected plan interest: <strong>{planInterestLabelText}</strong>. Account setup is first; paid activation is reviewed before billing is collected.
+              </p>
+            ) : null}
           </CardHeader>
           <CardContent className="p-6">
-            <SignupForm redirectTo={redirectTo} />
+            <SignupForm redirectTo={redirectTo} planInterest={planInterest} />
           </CardContent>
         </Card>
 

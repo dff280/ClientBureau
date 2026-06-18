@@ -12,6 +12,7 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PRICE_PRO_MONTHLY: z.string().optional(),
   STRIPE_PRICE_TEAM_MONTHLY: z.string().optional(),
+  BILLING_CHECKOUT_ENABLED: z.enum(["true", "false"]).default("false"),
   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY: z.string().optional(),
   ADMIN_EMAILS: z.string().optional(),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional(),
@@ -63,6 +64,18 @@ export function getStripeSecretKey() {
 
 export function getStripeWebhookSecret() {
   return readEnv().STRIPE_WEBHOOK_SECRET
+}
+
+export function getStripeProPriceId() {
+  return readEnv().STRIPE_PRICE_PRO_MONTHLY
+}
+
+export function getStripeTeamPriceId() {
+  return readEnv().STRIPE_PRICE_TEAM_MONTHLY
+}
+
+export function isBillingCheckoutEnabled() {
+  return readEnv().BILLING_CHECKOUT_ENABLED === "true"
 }
 
 export function getAdminEmails() {

@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { signupAction } from "@/lib/actions/client-bureau"
+import { planInterestLabel, type BillingPlanInterest } from "@/lib/billing-availability"
 import {
   accountTypeOptions,
   businessTypes,
@@ -99,7 +100,13 @@ export function LoginForm({
   )
 }
 
-export function SignupForm({ redirectTo }: { redirectTo?: string }) {
+export function SignupForm({
+  redirectTo,
+  planInterest,
+}: {
+  redirectTo?: string
+  planInterest?: BillingPlanInterest
+}) {
   const [state, action] = useActionState(signupAction, initialUserState)
   const loginHref = redirectTo ? `/login?next=${encodeURIComponent(redirectTo)}` : "/login"
 
@@ -123,10 +130,19 @@ export function SignupForm({ redirectTo }: { redirectTo?: string }) {
     <form action={action} className="grid gap-5">
       <FloridaPlaceDatalist id="signup-florida-place-options" />
       {redirectTo ? <input type="hidden" name="next" value={redirectTo} /> : null}
+      {planInterest ? <input type="hidden" name="planInterest" value={planInterest} /> : null}
       {state.message ? (
         <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
           <AlertTitle>{state.ok ? "Profile created" : "Signup needs attention"}</AlertTitle>
           <AlertDescription>{state.message}</AlertDescription>
+        </Alert>
+      ) : null}
+      {planInterest && planInterest !== "free" ? (
+        <Alert className="rounded-md border-amber-200 bg-amber-50 text-amber-950">
+          <AlertTitle>{planInterestLabel(planInterest)} interest saved</AlertTitle>
+          <AlertDescription>
+            Create the account first. Paid activation is reviewed from Billing before any payment is collected.
+          </AlertDescription>
         </Alert>
       ) : null}
       <OnboardingBlock

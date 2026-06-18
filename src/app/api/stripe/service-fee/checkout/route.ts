@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
 
 import { getCurrentUser } from "@/lib/auth"
+import { getBillingAvailability } from "@/lib/billing-availability"
 import { getSiteUrl } from "@/lib/env"
 import {
   runFloridaLienPrecheckService,
   runRecoveryPrecheckService,
 } from "@/lib/repositories/client-bureau-service"
-import { getStripe, hasStripeConfig } from "@/lib/stripe/server"
+import { getStripe } from "@/lib/stripe/server"
 import type { ServiceFeeKind } from "@/lib/types"
 
 export const runtime = "nodejs"
@@ -72,7 +73,9 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${siteUrl}${config.cancelPath}&reason=precheck_required`, 303)
   }
 
-  if (!hasStripeConfig()) {
+  const billing = getBillingAvailability()
+
+  if (!billing.serviceFeeCheckoutAvailable) {
     return NextResponse.redirect(`${siteUrl}${config.cancelPath}&reason=unavailable`, 303)
   }
 

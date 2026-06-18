@@ -426,6 +426,7 @@ export const signupSchema = z.object({
   primaryGoal: optionalChoice(onboardingGoals),
   city: cityText("City"),
   state: stateCode("State"),
+  planInterest: z.enum(["free", "pro", "bureau_team", "enterprise"]).optional(),
 })
 
 export const loginSchema = z.object({

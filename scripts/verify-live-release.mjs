@@ -492,6 +492,51 @@ if (health.json?.stripeConfigured && health.json?.stripeWebhookConfigured) {
   warn("Stripe test/live configuration", "Stripe secret or webhook is not configured yet.")
 }
 
+const billing = health.json?.billing
+if (billing?.subscriptionCheckoutAvailable && billing?.serviceFeeCheckoutAvailable) {
+  pass("Billing checkout launch gate", "subscription and service-fee checkout available")
+} else if (billing?.status === "deferred") {
+  pass("Billing checkout launch gate", billing.publicStatusDetail || "billing intentionally deferred")
+} else {
+  fail("Billing checkout launch gate", "missing /api/health billing availability block")
+}
+
+const pricingForBilling = await read("/pricing")
+if (pricingForBilling.response.ok) {
+  const visiblePricing = visiblePageText(pricingForBilling.text)
+
+  if (!billing?.subscriptionCheckoutAvailable) {
+    if (visiblePricing.includes("Paid plan activation is reviewed before any billing is collected")) {
+      pass("/pricing deferred paid-plan copy")
+    } else {
+      fail("/pricing deferred paid-plan copy", "missing billing-review language")
+    }
+
+    if (pricingForBilling.text.includes("/signup?plan=pro")) {
+      pass("/pricing paid interest routes through signup")
+    } else {
+      fail("/pricing paid interest routes through signup", "missing /signup?plan=pro")
+    }
+
+    if (pricingForBilling.text.includes("/api/stripe/checkout")) {
+      fail("/pricing avoids direct subscription checkout form", "/api/stripe/checkout found")
+    } else {
+      pass("/pricing avoids direct subscription checkout form")
+    }
+  }
+
+  const technicalBillingMarkers = ["Stripe not configured", "test mode", "webhook pending", "checkout broken"]
+  const technicalBillingMarkersFound = technicalBillingMarkers.filter((marker) => visiblePricing.includes(marker))
+
+  if (technicalBillingMarkersFound.length === 0) {
+    pass("/pricing avoids technical billing markers")
+  } else {
+    fail("/pricing avoids technical billing markers", technicalBillingMarkersFound.join(", "))
+  }
+} else {
+  fail("/pricing billing availability copy", pricingForBilling.error || String(pricingForBilling.response.status))
+}
+
 const diagnosticPaths = ["/api/version", "/api/health", "/api/session", "/api/admin/session"]
 
 for (const path of diagnosticPaths) {

@@ -81,7 +81,7 @@ Launch health is available at:
 https://clientbureau.com/api/health
 ```
 
-It returns non-secret readiness information for data mode, platform feature mode, Supabase connectivity, service-role availability, Stripe configuration, webhook configuration, required table presence, and required platform column presence.
+It returns non-secret readiness information for data mode, platform feature mode, Supabase connectivity, service-role availability, Stripe configuration, webhook configuration, billing checkout availability, required table presence, and required platform column presence.
 
 ## 3. Stripe Billing
 
@@ -107,6 +107,8 @@ invoice.payment_failed
 ```
 
 Copy the webhook signing secret into `STRIPE_WEBHOOK_SECRET`.
+
+Keep `BILLING_CHECKOUT_ENABLED=false` until subscription checkout, service-fee checkout, webhook updates, and failure states pass test-mode QA. Stripe keys alone do not make public checkout available.
 
 Managed payment recovery and Florida lien service fees use Stripe payment-mode Checkout with
 dynamic price data. They do not require separate Stripe price IDs in this sprint. The webhook
@@ -177,6 +179,7 @@ STRIPE_SECRET_KEY=sk_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PRICE_PRO_MONTHLY=price_...
 STRIPE_PRICE_TEAM_MONTHLY=price_...
+BILLING_CHECKOUT_ENABLED=false
 NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=...
 ADMIN_EMAILS=owner@example.com
 NEXT_PUBLIC_GA_MEASUREMENT_ID=

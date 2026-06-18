@@ -1,4 +1,5 @@
 import { getDataMode, getPlatformFeatureDataMode, getStripeWebhookSecret } from "@/lib/env"
+import { getBillingAvailability, type BillingAvailability } from "@/lib/billing-availability"
 import type { Database } from "@/lib/database.types"
 import { hasStripeConfig } from "@/lib/stripe/server"
 import { hasSupabaseConfig, hasSupabaseServiceConfig } from "@/lib/supabase/config"
@@ -224,6 +225,7 @@ export type LaunchHealth = {
   serviceRoleConfigured: boolean
   stripeConfigured: boolean
   stripeWebhookConfigured: boolean
+  billing: BillingAvailability
   requiredTables: LaunchTableStatus[]
   requiredColumns: LaunchColumnStatus[]
   optionalEnhancementColumns: LaunchColumnStatus[]
@@ -451,6 +453,7 @@ export async function getLaunchHealth(): Promise<LaunchHealth> {
   const platformFeatureDataMode = getPlatformFeatureDataMode()
   const stripeConfigured = hasStripeConfig()
   const stripeWebhookConfigured = Boolean(getStripeWebhookSecret())
+  const billing = getBillingAvailability()
   const readiness = summarizeLaunchHealth({
     dataMode,
     platformFeatureDataMode,
@@ -476,6 +479,7 @@ export async function getLaunchHealth(): Promise<LaunchHealth> {
     serviceRoleConfigured,
     stripeConfigured,
     stripeWebhookConfigured,
+    billing,
     requiredTables,
     requiredColumns,
     optionalEnhancementColumns,

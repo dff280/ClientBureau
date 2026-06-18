@@ -3,11 +3,21 @@ import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { billingInterestSignupHref } from "@/lib/billing-availability"
 import type { PricingTier } from "@/lib/stripe/pricing"
 import { cn } from "@/lib/utils"
 
 export function PricingCard({ tier }: { tier: PricingTier }) {
   const isEnterprise = tier.id === "enterprise"
+  const href = isEnterprise ? "/enterprise#enterprise-inquiry" : billingInterestSignupHref(tier.id)
+  const cta =
+    tier.id === "free"
+      ? "Create free account"
+      : tier.id === "pro"
+        ? "Create account for Pro"
+        : tier.id === "bureau_team"
+          ? "Request team review"
+          : "Request enterprise review"
 
   return (
     <Card
@@ -32,6 +42,9 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
           <span className="text-4xl font-semibold text-slate-950">{tier.price}</span>
           <span className="ml-2 text-sm font-medium text-slate-500">{tier.cadence}</span>
         </div>
+        <p className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+          {tier.launchNote}
+        </p>
         <ul className="space-y-3 text-sm text-slate-700">
           {tier.features.map((feature) => (
             <li key={feature} className="flex gap-2">
@@ -42,25 +55,13 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
         </ul>
       </CardContent>
       <CardFooter>
-        {isEnterprise ? (
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/enterprise">View enterprise</Link>
-          </Button>
-        ) : (
-          <form action="/api/stripe/checkout" method="post" className="w-full">
-            <input type="hidden" name="tier" value={tier.id} />
-            <Button
-              type="submit"
-              className={cn(
-                "w-full",
-                tier.featured ? "bg-slate-950 text-white hover:bg-slate-800" : "",
-              )}
-              variant={tier.featured ? "default" : "outline"}
-            >
-              {tier.id === "free" ? "Create free account" : tier.featured ? "Start Pro Contractor" : "Choose plan"}
-            </Button>
-          </form>
-        )}
+        <Button
+          asChild
+          className={cn("w-full", tier.featured ? "bg-slate-950 text-white hover:bg-slate-800" : "")}
+          variant={tier.featured ? "default" : "outline"}
+        >
+          <Link href={href}>{cta}</Link>
+        </Button>
       </CardFooter>
     </Card>
   )

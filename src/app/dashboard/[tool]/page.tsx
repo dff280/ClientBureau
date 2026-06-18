@@ -24,6 +24,7 @@ import {
 } from "@/components/dashboard/risk-ops-workspace"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { getBillingAvailability } from "@/lib/billing-availability"
 import { getClientDashboardData } from "@/lib/dashboard-data"
 import { getPlatformFeatureDataMode, getSiteUrl } from "@/lib/env"
 import { getMockGrowthEngineData } from "@/lib/growth-engine"
@@ -566,6 +567,7 @@ export default async function DashboardToolPage({
   const featureDataMode = getPlatformFeatureDataMode()
   const liveBacked = featureDataMode === "supabase"
   const jobContext = getJobContext(rawSearchParams)
+  const billingAvailability = getBillingAvailability()
 
   if (!dashboard || !riskOps) {
     return (
@@ -706,6 +708,7 @@ export default async function DashboardToolPage({
           focusTab={config.tab}
           riskOps={riskOps}
           subscription={dashboard.subscription}
+          billingAvailability={billingAvailability}
         />
       ) : null}
     </ClientDashboardShell>
