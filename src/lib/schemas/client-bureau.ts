@@ -17,6 +17,8 @@ import {
   clientProfileSubtypes,
   contractorProfileSubtypes,
   isPositiveReportCategory,
+  publicInquiryTopics,
+  publicInquiryTypes,
   profileTypes,
   jobBillingRelationships,
   jobParticipantStatuses,
@@ -69,6 +71,22 @@ const optionalChoice = <T extends readonly [string, ...string[]]>(values: T) =>
   z.enum(values).optional().or(z.literal("")).transform((value) => value || undefined)
 
 const checkbox = z.preprocess((value) => value === "on" || value === "true" || value === true, z.boolean())
+
+const rawEmailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i
+const rawPhonePattern = /\b(?:\+?1[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}\b/
+const privateIdentifierPattern =
+  /\b(?:ssn|social security|driver'?s license|bank account|routing number|credit card|card number|gate code|lockbox|password|passcode)\b/i
+const evidenceUploadPattern =
+  /\b(?:attached|attachment|upload|evidence file|invoice file|screenshot|photo evidence|storage\/v1\/object|report-evidence)\b/i
+
+function hasGeneralInquirySensitiveDetails(value: string) {
+  return (
+    rawEmailPattern.test(value) ||
+    rawPhonePattern.test(value) ||
+    privateIdentifierPattern.test(value) ||
+    evidenceUploadPattern.test(value)
+  )
+}
 
 const money = (label: string) =>
   z.coerce
@@ -1158,6 +1176,25 @@ export const recoveryComplianceReviewSchema = z.object({
   },
 )
 
+export const publicInquirySchema = z.object({
+  inquiryType: z.enum(publicInquiryTypes),
+  topic: z.enum(publicInquiryTopics),
+  fullName: requiredText("Name", 2).max(100, "Keep your name under 100 characters."),
+  businessName: z.string().trim().max(140, "Keep the business name under 140 characters.").optional().transform((value) => value || undefined),
+  email: z.email("Enter a valid email address.").max(180, "Keep the email under 180 characters."),
+  message: requiredText("Message", 20)
+    .max(1200, "Keep the message under 1,200 characters.")
+    .refine((value) => !hasGeneralInquirySensitiveDetails(value), {
+      message:
+        "Do not paste raw emails, phone numbers, evidence details, private access codes, banking details, or attachment references into this general inquiry.",
+    }),
+  sourcePath: z.string().trim().max(180).optional().transform((value) => value || undefined),
+  privacyCertification: checkbox.refine((value) => value === true, {
+    message: "Confirm you understand this inquiry is not for raw evidence or sensitive identifiers.",
+  }),
+  website: z.string().trim().max(0, "Leave this field blank.").optional(),
+})
+
 export const moderationCaseAssignmentSchema = z.object({
   caseId: requiredText("Case ID"),
   assignedTo: requiredText("Reviewer ID"),
@@ -1231,6 +1268,7 @@ export type ContractSignatureInput = z.infer<typeof contractSignatureSchema>
 export type UpdateEvidenceVaultStatusInput = z.infer<typeof updateEvidenceVaultStatusSchema>
 export type AdminSavedViewInput = z.infer<typeof adminSavedViewSchema>
 export type RecoveryComplianceReviewInput = z.infer<typeof recoveryComplianceReviewSchema>
+export type PublicInquiryInput = z.infer<typeof publicInquirySchema>
 export type SavedClientSearchInput = z.infer<typeof savedClientSearchSchema>
 export type SearchAnalyticsEventInput = z.infer<typeof searchAnalyticsEventSchema>
 export type ProfileShareEventInput = z.infer<typeof profileShareEventSchema>

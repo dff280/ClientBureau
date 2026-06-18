@@ -46,9 +46,11 @@ import {
   adminProfileRedactionSchema,
   adminReportReassignmentSchema,
   profileShareEventSchema,
+  publicInquirySchema,
   savedClientSearchSchema,
   searchAnalyticsEventSchema,
 } from "@/lib/schemas/client-bureau"
+import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
 import {
   calculateClientBureauScore,
   getReportedBalanceSummary,
@@ -2706,6 +2708,34 @@ describe("platform expansion schemas", () => {
     expect(serialized).not.toContain("pending")
     expect(serialized).not.toContain("rejected")
     expect(serialized).not.toContain("signed-completion-form.pdf")
+  })
+
+  it("validates public inquiry intake without accepting private evidence details", () => {
+    const validInquiry = publicInquirySchema.safeParse({
+      inquiryType: "enterprise",
+      topic: "enterprise_or_team_review",
+      fullName: "Morgan Ellis",
+      businessName: "RidgeBuild Contracting",
+      email: "Morgan@RidgeBuild.example",
+      message: "We want a scoped review for a regional contractor team with multiple estimators and office users.",
+      sourcePath: "/enterprise",
+      privacyCertification: true,
+    })
+    const sensitiveInquiry = publicInquirySchema.safeParse({
+      inquiryType: "general_support",
+      topic: "report_or_moderation",
+      fullName: "Morgan Ellis",
+      email: "morgan@example.com",
+      message: "Please review the attached invoice and call 407-555-0199 about the report.",
+      sourcePath: "/contact",
+      privacyCertification: true,
+    })
+
+    expect(validInquiry.success).toBe(true)
+    expect(sensitiveInquiry.success).toBe(false)
+    expect(maskInquiryEmail("Morgan@RidgeBuild.example")).toContain("@")
+    expect(normalizeInquiryEmail("Morgan@RidgeBuild.example")).toBe("morgan@ridgebuild.example")
+    expect(hashInquiryEmail("Morgan@RidgeBuild.example")).toMatch(/^sha256:/)
   })
 
   it("covers Supabase contract packet migration fields in database types", () => {

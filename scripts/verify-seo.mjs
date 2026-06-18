@@ -383,6 +383,27 @@ async function verifyPublicPage(path, options = {}) {
   }
 }
 
+async function verifyPublicInquirySurface(path, requiredTexts) {
+  const page = await read(path)
+
+  if (!page.response.ok) {
+    fail(`${path} inquiry surface returns 200`, String(page.response.status))
+    return
+  }
+
+  const visibleText = visiblePageText(page.text)
+  for (const text of requiredTexts) {
+    if (visibleText.includes(text)) pass(`${path} inquiry copy ${text.slice(0, 60)}`)
+    else fail(`${path} inquiry copy ${text.slice(0, 60)}`, "missing")
+  }
+
+  if (page.text.includes('name="inquiryType"') && page.text.includes('name="privacyCertification"')) {
+    pass(`${path} inquiry form fields present`)
+  } else {
+    fail(`${path} inquiry form fields present`, "missing inquiryType or privacyCertification")
+  }
+}
+
 async function verifyNoindexWorkflowPage(path, options = {}) {
   const { requestPath = path, requiredText = [], expectedFollow = true } = options
   const page = await read(requestPath)
@@ -480,6 +501,17 @@ for (const path of publicContentPages) {
 for (const [path, options] of publicPageChecks.entries()) {
   await verifyPublicPage(path, options)
 }
+
+await verifyPublicInquirySurface("/contact", [
+  "Send support inquiry",
+  "General inquiry only",
+  "Do not paste raw evidence",
+])
+await verifyPublicInquirySurface("/enterprise", [
+  "Enterprise inquiry",
+  "Send enterprise inquiry",
+  "Do not submit case evidence",
+])
 
 await verifyCanonicalAlias("/clients/orlando-fl", "/clients/florida/orlando")
 

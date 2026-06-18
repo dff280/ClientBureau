@@ -45,6 +45,7 @@ export default function PrivacyPage() {
             bullets: [
               "Report submissions may include client name, business name, city, state, project type, payment status, category, public summary, detailed experience, and supporting documentation.",
               "Operational tools may include saved searches, watchlists, report drafts, intake assessments, contract packets, managed recovery notes, Florida lien service records, evidence vault items, and audit history.",
+              "Support and enterprise inquiries may include name, business name, reply email, topic, message, source page, and private routing status.",
               "Subscription and billing status may be used to determine plan access, usage limits, and account support needs.",
             ],
           },
@@ -80,6 +81,7 @@ export default function PrivacyPage() {
             body: "Client Bureau uses information to authenticate users, operate dashboards, process reports, support moderation, maintain public profiles, manage subscriptions, prevent abuse, review disputes, and preserve audit trails.",
             bullets: [
               "Admin review records may track reviewer, decision, status change, summary edits, publication state, and timestamps.",
+              "Support inquiry records may be used to route account, enterprise, privacy, moderation, response, or profile-claim requests to the correct private workflow.",
               "Security and anti-abuse signals may be used to protect accounts, reduce spam, and prevent unauthorized access.",
               "Aggregated, non-sensitive information may be used to improve product reliability and public-page quality.",
             ],

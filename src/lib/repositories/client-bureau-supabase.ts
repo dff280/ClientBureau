@@ -42,6 +42,7 @@ import {
 import { normalizeStateCode } from "@/lib/locations"
 import { buildClientSlug, ensureUniqueSlug, slugify } from "@/lib/slug"
 import { createServiceClient } from "@/lib/supabase/service"
+import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
 import type {
   AdminSavedViewInput,
   ClientPipelineItemInput,
@@ -70,6 +71,7 @@ import type {
   PaymentRecoveryCaseInput,
   ProjectJobInput,
   ProjectJobParticipantInput,
+  PublicInquiryInput,
   RecoveryComplianceReviewInput,
   RemoveProjectJobParticipantInput,
   ResolutionDeskContactInput,
@@ -135,6 +137,7 @@ import type {
   PublicClientProfile,
   PublicBusinessProfile,
   PublicEntityProfile,
+  PublicInquiry,
   ProfileClaim,
   ProfileMergeEvent,
   ProfileRedactionEvent,
@@ -172,6 +175,7 @@ type SubscriptionRow = Tables["subscriptions"]["Row"]
 type AdminReviewRow = Tables["admin_reviews"]["Row"]
 type CommunityDiscussionRow = Tables["community_discussions"]["Row"]
 type AuditLogRow = Tables["audit_logs"]["Row"]
+type PublicInquiryRow = Tables["public_inquiries"]["Row"]
 type ContractorWatchlistRow = Tables["contractor_watchlist_items"]["Row"]
 type WatchlistAlertRow = Tables["watchlist_alerts"]["Row"]
 type ReportDraftRow = Tables["report_drafts"]["Row"]
@@ -800,6 +804,25 @@ function mapAuditLog(row: AuditLogRow): AuditLogEntry {
     summary: row.summary,
     metadata,
     createdAt: row.created_at,
+  }
+}
+
+function mapPublicInquiry(row: PublicInquiryRow): PublicInquiry {
+  return {
+    id: row.id,
+    inquiryType: row.inquiry_type,
+    topic: row.topic,
+    fullName: row.full_name,
+    businessName: row.business_name ?? undefined,
+    contactEmail: row.contact_email,
+    contactEmailHash: row.contact_email_hash,
+    contactEmailMasked: row.contact_email_masked,
+    message: row.message,
+    sourcePath: row.source_path ?? undefined,
+    status: row.status,
+    adminNote: row.admin_note ?? undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   }
 }
 
@@ -3119,6 +3142,79 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     reviews,
     auditLog: auditResult.error ? [] : (auditResult.data ?? []).map(mapAuditLog),
   }
+}
+
+export async function getPublicInquiriesSupabase(): Promise<PublicInquiry[]> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("public_inquiries")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(50)
+
+  if (isMissingRelationError(error)) return []
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map(mapPublicInquiry)
+}
+
+export async function hasRecentPublicInquirySupabase(email: string, topic: PublicInquiryInput["topic"]) {
+  const supabase = createServiceClient()
+  const cutoff = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+  const { data, error } = await supabase
+    .from("public_inquiries")
+    .select("id")
+    .eq("contact_email_hash", hashInquiryEmail(email))
+    .eq("topic", topic)
+    .gte("created_at", cutoff)
+    .limit(1)
+
+  if (isMissingRelationError(error)) return false
+  if (error) throw new Error(error.message)
+
+  return Boolean(data?.length)
+}
+
+export async function createPublicInquirySupabase(input: PublicInquiryInput): Promise<PublicInquiry> {
+  const supabase = createServiceClient()
+  const contactEmail = normalizeInquiryEmail(input.email)
+  const { data, error } = await supabase
+    .from("public_inquiries")
+    .insert({
+      inquiry_type: input.inquiryType,
+      topic: input.topic,
+      full_name: input.fullName,
+      business_name: input.businessName ?? null,
+      contact_email: contactEmail,
+      contact_email_hash: hashInquiryEmail(contactEmail),
+      contact_email_masked: maskInquiryEmail(contactEmail),
+      message: input.message,
+      source_path: input.sourcePath ?? null,
+      status: "new",
+    })
+    .select("*")
+    .single()
+
+  if (isMissingRelationError(error)) {
+    throw new Error("Public inquiry intake is not installed. Apply supabase/migrations/0023_public_inquiry_intake.sql before enabling this release.")
+  }
+  if (error) throw new Error(error.message)
+
+  const inquiry = mapPublicInquiry(data)
+
+  await supabase.from("audit_logs").insert({
+    action: "public_inquiry_submitted",
+    entity_type: "setting",
+    entity_id: inquiry.id,
+    summary: `${input.inquiryType === "enterprise" ? "Enterprise" : "Support"} inquiry queued for private review.`,
+    metadata: {
+      topic: input.topic,
+      contactEmailMasked: inquiry.contactEmailMasked,
+      sourcePath: inquiry.sourcePath ?? null,
+    },
+  })
+
+  return inquiry
 }
 
 async function maybeCreateProjectJobGraph(
