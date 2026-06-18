@@ -10,10 +10,8 @@ export type NavigationGroup = {
 }
 
 export const publicPrimaryNav: NavigationItem[] = [
-  { href: "/search", label: "Check a Client", description: "Search clients before accepting work." },
-  { href: "/clients", label: "Client Database", description: "Browse approved client, homeowner, and customer profiles." },
-  { href: "/profiles/contractor", label: "Contractor Database", description: "Browse contractor and service-business profiles." },
-  { href: "/profiles/subcontractor", label: "Subcontractor Database", description: "Browse subcontractor and trade-partner profiles." },
+  { href: "/search", label: "Run Client Check", description: "Search client records before accepting work." },
+  { href: "/profiles", label: "Public Databases", description: "Browse Client, Contractor, and Subcontractor databases." },
   { href: "/pricing", label: "Pricing", description: "Choose a business protection plan." },
   { href: "/resources", label: "Resources", description: "Policies, methodology, and contractor guides." },
 ]
@@ -158,8 +156,7 @@ export const footerNavigationGroups: NavigationGroup[] = [
     title: "Tools and Services",
     links: [
       { href: "/platform", label: "Jobs" },
-      { href: "/contractor-contract-template", label: "Contracts" },
-      { href: "/contractor-contract-template", label: "Contract Templates" },
+      { href: "/contractor-contract-template", label: "Contracts & Templates" },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter" },
       { href: "/change-order-template", label: "Change Orders" },
       { href: "/payment-recovery-service", label: "Payment Recovery" },

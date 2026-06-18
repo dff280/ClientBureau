@@ -322,6 +322,54 @@ function pillarForProfileType(profileType?: ProfileType) {
   return undefined
 }
 
+function databaseProofItems({
+  activeType,
+  evidenceCount,
+  reportCount,
+  verifiedCount,
+  visibleCount,
+}: {
+  activeType?: ProfileType
+  evidenceCount: number
+  reportCount: number
+  verifiedCount: number
+  visibleCount: number
+}) {
+  if (activeType === "contractor") {
+    return [
+      { label: "Businesses", value: visibleCount.toLocaleString(), text: "Contractors and service companies with public trust profiles." },
+      { label: "Verification", value: verifiedCount.toLocaleString(), text: "Claimed or verified records with correction paths." },
+      { label: "Project context", value: reportCount.toLocaleString(), text: "Approved summaries tied to business and service history." },
+      { label: "Evidence labels", value: evidenceCount.toLocaleString(), text: "Private evidence indicators without raw file exposure." },
+    ]
+  }
+
+  if (activeType === "subcontractor") {
+    return [
+      { label: "Trade partners", value: visibleCount.toLocaleString(), text: "Specialty trades, crews, installers, vendors, and subs." },
+      { label: "Trade proof", value: verifiedCount.toLocaleString(), text: "Claimed or verified records with role-specific context." },
+      { label: "Payment chain", value: reportCount.toLocaleString(), text: "Approved summaries involving scope, retainage, or GC/sub context." },
+      { label: "Evidence readiness", value: evidenceCount.toLocaleString(), text: "Private evidence indicators for scope and payment-chain review." },
+    ]
+  }
+
+  if (activeType === "client") {
+    return [
+      { label: "Client records", value: visibleCount.toLocaleString(), text: "Homeowners, customers, property owners, and business clients." },
+      { label: "Response paths", value: verifiedCount.toLocaleString(), text: "Profiles with claim, correction, or response context when available." },
+      { label: "Reports", value: reportCount.toLocaleString(), text: "Approved positive, concern, dispute, and resolution summaries." },
+      { label: "Evidence", value: evidenceCount.toLocaleString(), text: "Private evidence indicators without raw identifiers." },
+    ]
+  }
+
+  return [
+    { label: "Profiles", value: visibleCount.toLocaleString(), text: "Public records across all approved profile types." },
+    { label: "Claimed", value: verifiedCount.toLocaleString(), text: "Claimed or verified records with correction paths." },
+    { label: "Reports", value: reportCount.toLocaleString(), text: "Approved public summaries across the relationship graph." },
+    { label: "Evidence", value: evidenceCount.toLocaleString(), text: "Profiles with private evidence indicators." },
+  ]
+}
+
 export function getProfileDirectoryFaqs(profileType?: ProfileType) {
   const pillar = pillarForProfileType(profileType)
 
@@ -416,6 +464,13 @@ export function EntityProfileDirectory({
     tradeCategory: showTradeFilter ? tradeCategory : undefined,
   })
   const activePillar = pillarForProfileType(activeType)
+  const proofItems = databaseProofItems({
+    activeType,
+    evidenceCount,
+    reportCount,
+    verifiedCount,
+    visibleCount: visibleProfiles.length,
+  })
 
   return (
     <main className="bg-slate-100">
@@ -440,12 +495,7 @@ export function EntityProfileDirectory({
 
       <PremiumProofStrip
         dark
-        items={[
-          { label: "Directory", value: visibleProfiles.length.toLocaleString(), text: presentation.proofNoun },
-          { label: "Verification", value: verifiedCount.toLocaleString(), text: "Claimed or verified profile records." },
-          { label: "Reports", value: reportCount.toLocaleString(), text: presentation.proofContext },
-          { label: "Evidence", value: evidenceCount.toLocaleString(), text: "Profiles with private evidence indicators." },
-        ]}
+        items={proofItems}
       />
       <section id="profile-directory" className="bureau-section">
         <div className="bureau-container space-y-6">

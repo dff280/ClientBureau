@@ -589,10 +589,8 @@ describe("product positioning", () => {
 
   it("exposes platform modules in public and contractor navigation", () => {
     expect(publicPrimaryNav.map((item) => item.label)).toEqual([
-      "Check a Client",
-      "Client Database",
-      "Contractor Database",
-      "Subcontractor Database",
+      "Run Client Check",
+      "Public Databases",
       "Pricing",
       "Resources",
     ])

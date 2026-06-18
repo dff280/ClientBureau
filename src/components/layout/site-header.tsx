@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useEffect, useState } from "react"
-import { BookOpen, ChevronDown, FilePlus2, LogIn, LogOut, Menu, Search, UserCircle } from "lucide-react"
+import { BookOpen, BriefcaseBusiness, ChevronDown, Database, FilePlus2, LogIn, LogOut, Menu, Search, UserCircle, Wrench } from "lucide-react"
 
 import { BrandMark } from "@/components/brand/brand-mark"
 import { Badge } from "@/components/ui/badge"
@@ -43,11 +43,31 @@ const contractorHeaderNav = [
 ]
 
 const publicHeaderNav = [
-  { href: "/search", label: "Check a Client" },
-  { href: "/clients", label: "Client Database" },
-  { href: "/profiles/contractor", label: "Contractor Database" },
-  { href: "/profiles/subcontractor", label: "Subcontractor Database" },
+  { href: "/search", label: "Run Client Check" },
+  { href: "/how-it-works", label: "How It Works" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/resources", label: "Resources" },
+]
+
+const publicDatabaseHeaderNav = [
+  {
+    href: "/clients",
+    label: "Client Database",
+    description: "Check clients, homeowners, property owners, and customers before work begins.",
+    icon: Search,
+  },
+  {
+    href: "/profiles/contractor",
+    label: "Contractor Database",
+    description: "Review contractor and service-business verification, service area, and public context.",
+    icon: BriefcaseBusiness,
+  },
+  {
+    href: "/profiles/subcontractor",
+    label: "Subcontractor Database",
+    description: "Inspect trade partner, crew, scope, and payment-chain context.",
+    icon: Wrench,
+  },
 ]
 
 const publicHeaderMenus = [
@@ -56,10 +76,7 @@ const publicHeaderMenus = [
     icon: BookOpen,
     items: [
       { href: "/submit-report", label: "Report a Client Experience", description: "Document a real client experience for moderation." },
-      { href: "/how-it-works", label: "How It Works", description: "See the before, during, and after workflow." },
-      { href: "/resources", label: "Resources", description: "Policies, methodology, and contractor guides." },
       { href: "/platform", label: "Platform Overview", description: "Client checks, jobs, contracts, evidence, and services in one workflow." },
-      { href: "/profiles", label: "All Public Databases", description: "Clients, contractors, and subcontractors in one profile graph." },
       { href: "/reports/recent", label: "Recent Reports", description: "Newly approved public report summaries." },
       { href: "/contractor-contract-template", label: "Contracts", description: "Agreement packets and e-signature workflow." },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter", description: "Florida-aware starter packet for scope, payment terms, and review prompts." },
@@ -148,6 +165,51 @@ export function SiteHeader() {
           })}
           {!session.authenticated ? (
             <>
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className={
+                    publicDatabaseHeaderNav.some((item) => isActiveHref(pathname, item.href)) || isActiveHref(pathname, "/profiles")
+                      ? "inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-1 text-amber-900 ring-1 ring-amber-200 transition hover:bg-amber-100"
+                      : "inline-flex items-center gap-1 rounded-md px-2 py-1 transition hover:bg-slate-100 hover:text-slate-950"
+                  }
+                >
+                  Databases
+                  <ChevronDown className="size-4" aria-hidden="true" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <DropdownMenuLabel className="flex items-center gap-2">
+                    <Database className="size-4 text-amber-700" aria-hidden="true" />
+                    Three public databases
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {publicDatabaseHeaderNav.map((item) => {
+                    const Icon = item.icon
+
+                    return (
+                      <DropdownMenuItem key={item.href} asChild>
+                        <Link href={item.href}>
+                          <span className="flex gap-3">
+                            <Icon className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
+                            <span className="grid gap-0.5">
+                              <span>{item.label}</span>
+                              <span className="text-xs font-normal text-slate-500">{item.description}</span>
+                            </span>
+                          </span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )
+                  })}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profiles">
+                      <span className="grid gap-0.5">
+                        <span>All Public Databases</span>
+                        <span className="text-xs font-normal text-slate-500">See the full profile graph across all record types.</span>
+                      </span>
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               {publicHeaderMenus.map((menu) => {
                 const Icon = menu.icon
                 const menuActive = menu.items.some((item) => isActiveHref(pathname, item.href))
@@ -278,6 +340,12 @@ export function SiteHeader() {
                     <div className="grid gap-2">
                       <p className="px-1 text-xs font-semibold uppercase text-amber-700">Start</p>
                       {publicPrimaryNav.map((item) => (
+                        <MobileNavLink key={item.href} item={item} active={isActiveHref(pathname, item.href)} />
+                      ))}
+                    </div>
+                    <div className="grid gap-2">
+                      <p className="px-1 text-xs font-semibold uppercase text-amber-700">Databases</p>
+                      {publicDatabaseHeaderNav.map((item) => (
                         <MobileNavLink key={item.href} item={item} active={isActiveHref(pathname, item.href)} />
                       ))}
                     </div>

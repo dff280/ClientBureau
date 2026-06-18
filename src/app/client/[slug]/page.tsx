@@ -210,7 +210,7 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                 <div>
                   <p className="text-xs font-semibold uppercase text-amber-300">Recommended next step</p>
                   <p className="mt-1 text-sm leading-6 text-slate-200">
-                    Use this profile as decision context, then document your own experience only after a real client interaction.
+                    Use this profile as one intake signal, then check another client or document a real experience after the job.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
@@ -218,30 +218,27 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
                     <Link href="/search?profileType=client">Check Another Client</Link>
                   </Button>
                   <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                    <Link href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(profile.publicSlug)}`}>Watch this client</Link>
+                    <Link href={reportHref}>Report a Client Experience</Link>
                   </Button>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
-                <Link href={reportHref}>
-                  <FilePlus2 aria-hidden="true" />
-                  Report a Client Experience
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                <Link href={positiveReportHref}>
-                  <ShieldCheck aria-hidden="true" />
-                  Add Positive Experience
-                </Link>
-              </Button>
-              <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white hover:text-slate-950">
-                <Link href={responseHref}>
-                  <MessageSquareText aria-hidden="true" />
-                  Respond or Correct
-                </Link>
-              </Button>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-semibold text-slate-200">
+              <Link href={positiveReportHref} className="inline-flex items-center gap-2 hover:text-white">
+                <ShieldCheck className="size-4" aria-hidden="true" />
+                Add Positive Experience
+              </Link>
+              <Link href={responseHref} className="inline-flex items-center gap-2 hover:text-white">
+                <MessageSquareText className="size-4" aria-hidden="true" />
+                Respond or Correct
+              </Link>
+              <Link
+                href={`/dashboard/watchlist?clientSlug=${encodeURIComponent(profile.publicSlug)}`}
+                className="inline-flex items-center gap-2 hover:text-white"
+              >
+                <Bell className="size-4" aria-hidden="true" />
+                Watch this client
+              </Link>
             </div>
           </div>
           <Card className="premium-card-glow rounded-md border-white/10 bg-white text-slate-950 shadow-2xl">
