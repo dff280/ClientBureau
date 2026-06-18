@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import { Bell, ClipboardCheck, FilePlus2, LockKeyhole, Radar, SearchCheck, ShieldCheck } from "lucide-react"
 
@@ -11,7 +12,15 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getCurrentUser } from "@/lib/auth"
 import { pageAssets } from "@/lib/page-assets"
 import { getContractorDashboardService, searchClientsService, searchProfilesService } from "@/lib/repositories/client-bureau-service"
-import { toSearchPreviewProfile } from "@/lib/search-experience"
+import {
+  buildSearchHref,
+  isPrivateIdentifierSearch,
+  safeSearchQueryForDisplay,
+  searchNoResultCopy,
+  searchScopeLabel,
+  searchScopeResultLabel,
+  toSearchPreviewProfile,
+} from "@/lib/search-experience"
 import { profileTypes, reportCategories, riskLevels, type ProfileType, type ReportCategory, type RiskLevel } from "@/lib/types"
 
 export const metadata: Metadata = {
@@ -36,6 +45,7 @@ type SearchParams = Promise<{
   category?: string
   profileType?: string
   tradeCategory?: string
+  privateMatch?: string
 }>
 
 function toRiskLevel(value?: string): RiskLevel | undefined {
@@ -52,10 +62,12 @@ function toProfileType(value?: string): ProfileType | undefined {
 
 function reportPrefillHref(query: string, state?: string, profileType?: ProfileType, tradeCategory?: string) {
   const params = new URLSearchParams()
-  const tokens = query
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
+  const tokens = isPrivateIdentifierSearch(query)
+    ? []
+    : query
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
 
   if (tokens[0]) params.set("firstName", tokens[0])
   if (tokens[1]) params.set("lastName", tokens[1])
@@ -66,19 +78,28 @@ function reportPrefillHref(query: string, state?: string, profileType?: ProfileT
   return `/submit-report${params.size ? `?${params.toString()}` : ""}`
 }
 
-function signupSearchHref(query: string, state?: string, riskLevel?: RiskLevel, category?: ReportCategory, profileType?: ProfileType, tradeCategory?: string) {
+function signupSearchHref(
+  query: string,
+  state?: string,
+  riskLevel?: RiskLevel,
+  category?: ReportCategory,
+  profileType?: ProfileType,
+  tradeCategory?: string,
+  privateMatch?: boolean,
+) {
   const params = new URLSearchParams()
-  const nextParams = new URLSearchParams()
+  const next = buildSearchHref({
+    query,
+    state,
+    riskLevel,
+    category,
+    profileType,
+    tradeCategory,
+    privateMatch: privateMatch || isPrivateIdentifierSearch(query),
+  })
 
-  if (query.trim()) nextParams.set("q", query.trim())
-  if (state) nextParams.set("state", state)
-  if (riskLevel) nextParams.set("risk", riskLevel)
-  if (category) nextParams.set("category", category)
-  if (profileType) nextParams.set("profileType", profileType)
-  if (tradeCategory) nextParams.set("tradeCategory", tradeCategory)
-
-  params.set("next", `/search${nextParams.size ? `?${nextParams.toString()}` : ""}`)
-  if (query.trim()) params.set("q", query.trim())
+  params.set("next", next)
+  if (query.trim() && !isPrivateIdentifierSearch(query)) params.set("q", query.trim())
 
   return `/signup?${params.toString()}`
 }
@@ -90,41 +111,56 @@ function profileTypeFilterHref(input: {
   category?: ReportCategory
   profileType?: ProfileType
   tradeCategory?: string
+  privateMatch?: boolean
 }) {
-  const params = new URLSearchParams()
-  if (input.query.trim()) params.set("q", input.query.trim())
-  if (input.state) params.set("state", input.state)
-  if (input.riskLevel) params.set("risk", input.riskLevel)
-  if (input.category) params.set("category", input.category)
-  if (input.profileType) params.set("profileType", input.profileType)
-  if (input.tradeCategory) params.set("tradeCategory", input.tradeCategory)
-
-  return `/search${params.size ? `?${params.toString()}` : ""}`
+  return buildSearchHref(input)
 }
 
 const searchDossierAsset = pageAssets.searchDossier
 
 export default async function SearchPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
-  const query = params.q ?? ""
+  const rawQuery = params.q ?? ""
   const state = params.state?.trim().toUpperCase() || undefined
   const riskLevel = toRiskLevel(params.risk)
   const category = toReportCategory(params.category)
   const profileType = toProfileType(params.profileType)
   const tradeCategory = params.tradeCategory?.trim() || undefined
-  const hasSearch = Boolean(query || state || riskLevel || category || tradeCategory || profileType)
-  const resultLimit = hasSearch ? 80 : 24
+  const rawQueryIsPrivateIdentifier = isPrivateIdentifierSearch(rawQuery)
+  if (rawQueryIsPrivateIdentifier) {
+    redirect(buildSearchHref({
+      privateMatch: true,
+      state,
+      riskLevel,
+      category,
+      profileType,
+      tradeCategory,
+    }))
+  }
+
+  const privateMatchIntent = params.privateMatch === "1"
+  const query = rawQuery
+  const hasSearch = Boolean(query || state || riskLevel || category || tradeCategory || profileType || privateMatchIntent)
+  const resultPageSize = 24
+  const resultLimit = hasSearch ? resultPageSize + 1 : 24
   const previewLimit = hasSearch ? 60 : 24
   const user = await getCurrentUser()
   const [results, previewResults, dashboard] = await Promise.all([
-    searchProfilesService(query, { state, riskLevel, category, profileType, tradeCategory, limit: resultLimit }),
+    privateMatchIntent
+      ? Promise.resolve([])
+      : searchProfilesService(query, { state, riskLevel, category, profileType, tradeCategory, limit: resultLimit }),
     searchClientsService("", { limit: previewLimit }),
     user ? getContractorDashboardService(user.id).catch(() => undefined) : Promise.resolve(undefined),
   ])
+  const visibleResults = results.slice(0, resultPageSize)
+  const hasMoreResults = results.length > resultPageSize
   const previewProfiles = previewResults.slice(0, previewLimit).map(toSearchPreviewProfile)
   const isAuthenticated = Boolean(user)
+  const noResult = searchNoResultCopy({ profileType, privateMatchIntent, tradeCategory, isAuthenticated })
+  const scopeLabel = searchScopeLabel(profileType)
+  const resultLabel = searchScopeResultLabel(profileType)
   const activeFilters = [
-    query.trim() ? `Search: ${query.trim()}` : undefined,
+    privateMatchIntent ? "Search: private identifier check" : query.trim() ? `Search: ${safeSearchQueryForDisplay(query)}` : undefined,
     state ? `State: ${state}` : undefined,
     profileType ? `Type: ${profileType === "client" ? "Clients" : profileType === "contractor" ? "Contractors" : "Subcontractors"}` : undefined,
     tradeCategory ? `Trade: ${tradeCategory}` : undefined,
@@ -151,8 +187,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                   Client Bureau search results
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200 sm:text-base">
-                  You are viewing approved public matches and safe previews. Private identifiers, raw evidence,
-                  pending records, rejected records, and staff-only review notes stay hidden.
+                  You are viewing approved public matches and safe previews from the {scopeLabel}. Private identifiers,
+                  raw evidence, pending records, rejected records, and staff-only review notes stay hidden.
                 </p>
                 {activeFilters.length > 0 ? (
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -166,14 +202,16 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
               </div>
               <div className="rounded-md border border-white/10 bg-white/10 p-4 shadow-xl shadow-slate-950/20">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-200">Result count</p>
-                <p className="mt-2 text-4xl font-semibold text-white">{results.length}</p>
+                <p className="mt-2 text-4xl font-semibold text-white">{hasMoreResults ? `${resultPageSize}+` : visibleResults.length}</p>
                 <p className="mt-1 text-sm leading-6 text-slate-200">
-                  {results.length === 1 ? "approved profile matched" : "approved profiles matched"} this search.
+                  {privateMatchIntent
+                    ? "Private identifier matching continues inside a secure account workflow."
+                    : `${visibleResults.length === 1 ? "approved profile matched" : "approved profiles matched"} this search.`}
                 </p>
                 <div className="mt-4 flex gap-2">
                   <Button asChild className="flex-1 bg-amber-500 text-slate-950 hover:bg-amber-400">
-                    <Link href={results.length > 0 ? "#profile-results" : "#client-search"}>
-                      {results.length > 0 ? "View matches" : "Review search"}
+                    <Link href={visibleResults.length > 0 ? "#profile-results" : "#client-search"}>
+                      {visibleResults.length > 0 ? "View matches" : "Review search"}
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15">
@@ -230,13 +268,14 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         <div className="bureau-container space-y-8">
 
         <SearchCommandCenter
-          key={`${query}|${state ?? ""}|${riskLevel ?? ""}|${category ?? ""}|${profileType ?? ""}|${tradeCategory ?? ""}`}
+          key={`${query}|${state ?? ""}|${riskLevel ?? ""}|${category ?? ""}|${profileType ?? ""}|${tradeCategory ?? ""}|${privateMatchIntent ? "private" : "public"}`}
           query={query}
           state={state}
           riskLevel={riskLevel}
           category={category}
           profileType={profileType}
           tradeCategory={tradeCategory}
+          privateMatchIntent={privateMatchIntent}
           profiles={previewProfiles}
           initialSavedSearches={dashboard?.savedSearches}
           isAuthenticated={isAuthenticated}
@@ -247,8 +286,8 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase text-slate-500">Server-verified results</p>
-                <p className="mt-1 text-sm font-medium text-slate-600">
-                  {results.length} {results.length === 1 ? "profile" : "profiles"} found across the Client, Contractor, and Subcontractor databases
+              <p className="mt-1 text-sm font-medium text-slate-600">
+                  {hasMoreResults ? `${resultPageSize}+` : visibleResults.length} {resultLabel} found{hasMoreResults ? ". Narrow filters for a tighter list." : "."}
                 </p>
               </div>
               <Button asChild variant="outline">
@@ -271,7 +310,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
 
                 return (
                   <Button key={label} asChild variant={active ? "default" : "outline"} className={active ? "bg-slate-950 text-white hover:bg-slate-800" : ""}>
-                    <Link href={profileTypeFilterHref({ query, state, riskLevel, category, profileType: typedValue, tradeCategory })}>
+                <Link href={profileTypeFilterHref({ query, state, riskLevel, category, profileType: typedValue, tradeCategory, privateMatch: privateMatchIntent })}>
                       {label}
                     </Link>
                   </Button>
@@ -283,11 +322,12 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
               hasSearch={hasSearch}
               isAuthenticated={isAuthenticated}
               query={query}
-              resultCount={results.length}
+              resultCount={visibleResults.length}
               state={state}
               profileType={profileType}
               tradeCategory={tradeCategory}
-              signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
+              privateMatchIntent={privateMatchIntent}
+              signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory, privateMatchIntent)}
             />
           </>
         ) : (
@@ -300,11 +340,18 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
         )}
 
         {hasSearch ? (
-          results.length > 0 ? (
+          visibleResults.length > 0 ? (
             <div id="profile-results" className="scroll-mt-24 grid gap-4">
-              {results.map((result) => (
+              {visibleResults.map((result) => (
                 <EntityProfileResultCard key={result.id} result={result} />
               ))}
+              {hasMoreResults ? (
+                <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+                  <CardContent className="p-5 text-sm leading-6 text-slate-600">
+                    Showing the first {resultPageSize} matches. Add a state, trade, profile type, or name/business term to narrow the search before making a work decision.
+                  </CardContent>
+                </Card>
+              ) : null}
             </div>
           ) : (
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
@@ -313,24 +360,23 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                   <FilePlus2 className="size-6" aria-hidden="true" />
                 </div>
                 <div className="space-y-2">
-                  <h2 className="text-2xl font-semibold text-slate-950">No public reports found yet.</h2>
+                  <h2 className="text-2xl font-semibold text-slate-950">{noResult.heading}</h2>
                   <p className="mx-auto max-w-2xl text-sm leading-6 text-slate-600">
-                    No public reports may exist yet, especially in early markets. Create a private client file,
-                    save this search, or submit a documented client experience for moderation.
+                    {noResult.body}
                   </p>
                 </div>
                 <div className="mx-auto flex flex-wrap justify-center gap-3">
                   {isAuthenticated ? (
                     <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                      <Link href="/dashboard/watchlist">Open Watchlist</Link>
+                      <Link href="/dashboard/watchlist">{noResult.primaryLabel}</Link>
                     </Button>
                   ) : (
                     <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                      <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>Create free account</Link>
+                      <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory, privateMatchIntent)}>{noResult.primaryLabel}</Link>
                     </Button>
                   )}
                   <Button asChild variant="outline">
-                    <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>Report a Client Experience</Link>
+                    <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>{noResult.secondaryLabel}</Link>
                   </Button>
                 </div>
               </CardContent>
@@ -351,6 +397,7 @@ function SearchActivationGuide({
   state,
   profileType,
   tradeCategory,
+  privateMatchIntent,
   signupHref,
 }: {
   hasSearch: boolean
@@ -360,15 +407,20 @@ function SearchActivationGuide({
   state?: string
   profileType?: ProfileType
   tradeCategory?: string
+  privateMatchIntent?: boolean
   signupHref: string
 }) {
-  const searchedLabel = query.trim() ? `"${query.trim()}"` : "this search"
+  const searchedLabel = privateMatchIntent
+    ? "this private identifier check"
+    : query.trim()
+      ? `"${safeSearchQueryForDisplay(query)}"`
+      : "this search"
   const resultTone = resultCount > 0 ? "text-emerald-800" : hasSearch ? "text-amber-800" : "text-slate-700"
   const resultCopy =
     resultCount > 0
-      ? `${resultCount} approved ${resultCount === 1 ? "profile" : "profiles"} matched. Open a profile before you quote, schedule, send contract terms, or order materials.`
+      ? `${resultCount} ${searchScopeResultLabel(profileType)} matched. Open a profile before you quote, schedule, send contract terms, or order materials.`
       : hasSearch
-        ? `No approved public profile is visible for ${searchedLabel} yet. That is not a clearance signal; save the search or document the experience.`
+        ? `No approved public profile is visible for ${searchedLabel} yet. That means public information is limited, not that the person or business is safe, verified, or cleared.`
         : "Run a client check before you commit labor, materials, scheduling, payment terms, or final invoice exposure."
 
   const actions = [

@@ -44,6 +44,7 @@ import {
   paymentReliabilityLabel,
 } from "@/lib/scoring"
 import { getBillingAvailability } from "@/lib/billing-availability"
+import { safeSearchQueryForStorage } from "@/lib/search-experience"
 import {
   buildBusinessSlug,
   calculateBusinessRating,
@@ -761,7 +762,7 @@ export function searchClients(query = "", filters: SearchFilters = {}): ClientSe
 }
 
 export function saveClientSearch(userId: string | undefined, input: SavedClientSearchInput): SavedClientSearch {
-  const query = input.query?.trim() || "All public profiles"
+  const query = safeSearchQueryForStorage(input.query) || "All public profiles"
   const now = new Date().toISOString()
   const existingIndex = savedClientSearchRecords.findIndex((search) =>
     search.contractorId === userId &&
@@ -813,7 +814,7 @@ export function recordSearchEvent(userId: string | undefined, input: SearchAnaly
   const event: SearchAnalyticsEvent = {
     id: `search_event_${Date.now()}_${searchAnalyticsEvents.length + 1}`,
     contractorId: userId,
-    query: input.query,
+    query: safeSearchQueryForStorage(input.query) || undefined,
     state: input.state?.toUpperCase(),
     riskLevel: input.riskLevel,
     category: input.category,

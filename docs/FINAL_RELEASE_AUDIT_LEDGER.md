@@ -61,7 +61,7 @@ No secrets or full environment dumps were recorded.
 | 01 | Public IA, homepage, header, footer | Completed | Command and browser evidence recorded below |
 | 02 | Contact, support, enterprise | Completed | Command and browser evidence recorded below; owner must apply inquiry-intake migration before production deploy |
 | 03 | Pricing, capabilities, deferred billing truth | Completed | Command and browser evidence recorded below |
-| 04 | Search | Not started | Needs command and browser evidence |
+| 04 | Search | Completed | Command and browser evidence recorded below |
 | 05 | Client Database and rating semantics | Not started | Needs command and browser evidence |
 | 06 | Contractor/Business Database | Not started | Needs command and browser evidence |
 | 07 | Subcontractor/Trade Database | Not started | Needs command and browser evidence |
@@ -370,3 +370,81 @@ Browser checks were run against a fresh local production build at `http://127.0.
 `PASS`
 
 Pricing, plan-interest, dashboard billing, and service-fee language now match the current product truth. Free signup remains open, paid interest is preserved for review, and public paid checkout stays closed until the explicit billing launch gate is enabled and QA-proven.
+
+## Prompt 04 - Search Product, Filters, Private Matching, No-Result Decisions
+
+| Item | Evidence |
+| --- | --- |
+| Branch | `codex/search-final-product-pass` |
+| Starting commit | `6a6e822` (`Clarify deferred billing and pricing capability truth`) |
+| Scope | `/search`, search command center, result cards, saved-search/search-analytics handoffs, private identifier handling, noindex/canonical verification |
+| Status | `PASS` locally; pending PR/release review |
+
+### Prompt 04 Findings
+
+| Severity | Finding | Evidence | Outcome |
+| --- | --- | --- | --- |
+| P1 launch-quality | Search no-result copy could say `No public reports found yet` even when users filtered for contractor or subcontractor profiles. | Source audit of `src/app/search/page.tsx` and browser/SEO checks for subcontractor trade no-result URLs. | Added profile-specific no-result copy for clients, contractors, subcontractors, all profiles, and private identifier checks. |
+| P1 privacy | Phone/email-like public search queries could be rendered in visible filter chips and passed through signup/report/saved-search/search-analytics handoffs. | Source audit of `/search`, `SearchCommandCenter`, `saveClientSearchAction`, `recordSearchEventAction`, mock repository, and Supabase repository. | Added safe query display/storage helpers, request-level `/search` private identifier redirects, client-side private-match submit routing, and repository/action redaction before persistence. |
+| P1 decision safety | No-result states needed stronger language that no visible public profile means limited public information, not a clearance or safety signal. | Audit of `SearchActivationGuide` and no-result card copy. | Added no-clearance wording to all no-result/private-match states and tests guarding against misleading safety language. |
+| P2 resilience | Large result sets could render too many cards without a clear bound. | Audit of `/search` result limit and render loop. | Bounded search rendering to the first 24 profiles with a narrowing prompt when more results are available. |
+
+### Prompt 04 Changes
+
+- Added `safeSearchQueryForStorage`, `safeSearchQueryForDisplay`, `searchNoResultCopy`, and search scope helpers in `src/lib/search-experience.ts`.
+- Updated `/search` so phone/email-like direct URLs redirect to `/search?privateMatch=1...` before raw identifiers render in public HTML.
+- Added `/search` handling in `src/proxy.ts` so direct raw private identifier query URLs are redirected at the request boundary.
+- Updated `SearchCommandCenter` so private identifier form submits route to safe private-match URLs, do not show unrelated public previews, and use zero public result counts.
+- Sanitized saved-search and search-analytics persistence in server actions, mock repositories, and Supabase repositories.
+- Replaced generic no-result copy with client/contractor/subcontractor/private-match-specific language.
+- Kept normal name/business search URLs and filter handoffs intact for signup, report intake, profile type switching, trade filters, and back/forward navigation.
+- Extended unit tests, SEO verification, and live-release verification for private identifier redaction, no-result semantics, and filter preservation.
+
+### Prompt 04 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `git status --short --branch` | Pass | On `codex/search-final-product-pass` before edits. |
+| `git fetch origin` | Pass | Origin fetched cleanly. |
+| `npm test -- --run src/lib/__tests__/client-bureau.test.ts` | Pass | 123 focused tests passed after adding search privacy/no-result tests. |
+| `npm run lint` | Pass | ESLint passed after implementation and again after proxy redirect fix. |
+| `npm test` | Pass | 123 tests passed. |
+| `npm run build` | Pass | Next.js production build passed with 67 static pages. |
+| `npm run seo:check:local` | Failed, then Pass | Initial failure proved server-component redirect was not enough for direct private-identifier URLs; after adding `/search` proxy redirect, SEO passed including private-match checks. |
+| `npm run route:check` | Pass | Route/indexability inventory remains intact. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+
+### Prompt 04 Browser Evidence
+
+Browser checks were run against a fresh local production preview at `http://127.0.0.1:4202`.
+
+| Scenario | Viewport | Result | Artifact |
+| --- | ---: | --- | --- |
+| `/search?q=John&state=FL` | 1440px | Pass: server-verified results, Client check guide, View Client Profile CTA, no console errors, no horizontal overflow. | `C:\Users\MikeM\.codex\browser-evidence\prompt-04-client-results-1440-1781761108804.png` |
+| `/search?q=NoSuchClientBureau987&profileType=contractor` | 768px | Pass: contractor-specific no-result copy, no generic `No public reports found yet`, no clearance language, no console errors, no overflow. | `C:\Users\MikeM\.codex\browser-evidence\prompt-04-contractor-no-result-768-1781761108804.png` |
+| `/search?q=NoSuchClientBureau987&profileType=subcontractor&tradeCategory=Electrical` | 375px | Pass: subcontractor/trade no-result copy, trade filter preserved, no generic report language, no console errors, no overflow. | `C:\Users\MikeM\.codex\browser-evidence\prompt-04-subcontractor-trade-no-result-375-1781761108804.png` |
+| Direct `/search?q=person%40example.com&state=FL&profileType=client` | 375px | Pass: redirected to `/search?state=FL&profileType=client&privateMatch=1`, raw email absent from HTML, private-match safety copy visible. | `C:\Users\MikeM\.codex\browser-evidence\prompt-04-private-identifier-direct-375-1781761108804.png` |
+| Search form submit with `person@example.com` | 375px | Pass: client-side submit landed on `/search?privateMatch=1`, raw email absent from HTML, private-match copy visible, back/forward restored `/search` and `/search?privateMatch=1`. | `C:\Users\MikeM\.codex\browser-evidence\prompt-04-private-form-375-1781761108804.png` |
+
+No browser console errors were captured in the sampled scenarios.
+
+### Prompt 04 Privacy, Security, And Legal Evidence
+
+- Raw phone/email-like search strings are converted to a `privateMatch=1` intent marker in generated search URLs.
+- Direct `/search?q=<email-or-phone>` requests are redirected by `src/proxy.ts` before the public page renders.
+- Server actions and both repository adapters sanitize saved-search and search-analytics `query` values before persistence.
+- Public no-result states explicitly say limited public history is not a clearance signal.
+- `/search` remains crawlable `noindex, follow` with canonical `/search`, and no search URLs enter the sitemap.
+- Search result cards still expose only approved profile context; raw identifiers, raw evidence, pending/rejected records, and admin notes remain out of public HTML.
+
+### Prompt 04 Owner Actions
+
+- Authenticated save/watchlist QA should be repeated with disposable contractor credentials on production after this PR is merged and deployed.
+- Repository timeout/failure states were not force-simulated in browser because the public service falls back between Supabase/mock adapters; keep an operational monitor on search repository errors.
+- Live verification must be rerun after deployment so `LIVE_BASE_URL=https://clientbureau.com npm run verify:live` confirms the new private-match checks against production.
+
+### Prompt 04 Verdict
+
+`PASS`
+
+Search now separates public database lookup from private identifier matching, gives entity-specific no-result guidance, preserves safe filter handoffs, and prevents raw phone/email-like identifiers from rendering or persisting through the public search surface.

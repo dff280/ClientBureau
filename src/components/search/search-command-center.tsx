@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   ArrowRight,
   BarChart3,
@@ -41,6 +42,8 @@ import {
   formatClientName,
   getPreviewSearchText,
   isPrivateIdentifierSearch,
+  safeSearchQueryForDisplay,
+  safeSearchQueryForStorage,
   rankSearchPreviewProfiles,
   type SearchPreviewProfile,
 } from "@/lib/search-experience"
@@ -86,6 +89,7 @@ interface SearchCommandCenterProps {
   category?: ReportCategory
   profileType?: ProfileType
   tradeCategory?: string
+  privateMatchIntent?: boolean
   profiles: SearchPreviewProfile[]
   initialSavedSearches?: InitialSavedSearch[]
   isAuthenticated?: boolean
@@ -95,7 +99,7 @@ const savedSearchStorageKey = "client-bureau.saved-searches"
 
 function savedSearchKey(search: Pick<SavedSearchRecord, "query" | "state" | "riskLevel" | "category" | "profileType" | "tradeCategory">) {
   return [
-    search.query.trim().toLowerCase(),
+    safeSearchQueryForStorage(search.query).trim().toLowerCase(),
     search.state?.trim().toUpperCase() ?? "",
     search.riskLevel ?? "",
     search.category ?? "",
@@ -126,10 +130,12 @@ function savedSearchFilterSummary(search: SavedSearchRecord) {
 
 function reportPrefillHref(query: string, state?: string, profileType?: ProfileType, tradeCategory?: string) {
   const params = new URLSearchParams()
-  const tokens = query
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
+  const tokens = isPrivateIdentifierSearch(query)
+    ? []
+    : query
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
 
   if (tokens[0]) params.set("firstName", tokens[0])
   if (tokens[1]) params.set("lastName", tokens[1])
@@ -164,11 +170,14 @@ export function SearchCommandCenter({
   category,
   profileType,
   tradeCategory,
+  privateMatchIntent = false,
   profiles,
   initialSavedSearches = [],
   isAuthenticated = false,
 }: SearchCommandCenterProps) {
+  const router = useRouter()
   const [liveQuery, setLiveQuery] = useState(query ?? "")
+  const [privateMatchMode, setPrivateMatchMode] = useState(privateMatchIntent)
   const [stateValue, setStateValue] = useState(state ?? "")
   const [riskValue, setRiskValue] = useState<RiskLevel | "">(riskLevel ?? "")
   const [categoryValue, setCategoryValue] = useState<ReportCategory | "">(category ?? "")
@@ -203,7 +212,7 @@ export function SearchCommandCenter({
   }, [initialSavedRecords])
 
   const stats = useMemo(() => buildSearchExperienceStats(profiles), [profiles])
-  const privateIdentifierIntent = isPrivateIdentifierSearch(deferredQuery)
+  const privateIdentifierIntent = privateMatchMode || isPrivateIdentifierSearch(deferredQuery)
   const stateFilter = stateValue.trim().toUpperCase()
   const riskFilter = riskValue || undefined
   const categoryFilter = categoryValue || undefined
@@ -235,9 +244,10 @@ export function SearchCommandCenter({
 
     return cache
   }, [filteredProfiles])
+  const safePublicResultCount = privateIdentifierIntent ? 0 : filteredProfiles.length
 
   const instantProfiles = useMemo(() => {
-    if (privateIdentifierIntent) return filteredProfiles.slice(0, 3)
+    if (privateIdentifierIntent) return []
 
     const matches = normalizedQuery
       ? filteredProfiles.filter((profile) => previewTextCache.get(profile.id)?.includes(normalizedQuery))
@@ -247,22 +257,26 @@ export function SearchCommandCenter({
   }, [filteredProfiles, normalizedQuery, privateIdentifierIntent, previewTextCache])
 
   const suggestions = useMemo(
-    () =>
-      buildSearchSuggestions(profiles, deferredQuery, stateFilter || undefined, {
-        profileType,
-        tradeCategory: tradeValue || undefined,
-      },
-      rankedProfiles,
-      ),
-    [deferredQuery, rankedProfiles, profileType, profiles, stateFilter, tradeValue],
+    () => {
+      if (privateIdentifierIntent) return []
+
+      return buildSearchSuggestions(profiles, deferredQuery, stateFilter || undefined, {
+          profileType,
+          tradeCategory: tradeValue || undefined,
+        },
+        rankedProfiles,
+      )
+    },
+    [deferredQuery, privateIdentifierIntent, rankedProfiles, profileType, profiles, stateFilter, tradeValue],
   )
 
   function buildSearchEventFormData(
     eventType: "search_submitted" | "suggestion_clicked" | "result_viewed" | "save_search" | "private_identifier_check" | "no_result",
-    resultCount = filteredProfiles.length,
+    resultCount = safePublicResultCount,
   ) {
     const formData = new FormData()
-    if (liveQuery.trim()) formData.set("query", liveQuery.trim())
+    const safeQuery = safeSearchQueryForStorage(liveQuery)
+    if (safeQuery) formData.set("query", safeQuery)
     if (stateFilter) formData.set("state", stateFilter)
     if (riskFilter) formData.set("riskLevel", riskFilter)
     if (categoryFilter) formData.set("category", categoryFilter)
@@ -277,7 +291,7 @@ export function SearchCommandCenter({
 
   function trackSearchEvent(
     eventType: "search_submitted" | "suggestion_clicked" | "result_viewed" | "save_search" | "private_identifier_check" | "no_result",
-    resultCount = filteredProfiles.length,
+    resultCount = safePublicResultCount,
   ) {
     startEventTransition(() => {
       void recordSearchEventAction(searchEventInitialState, buildSearchEventFormData(eventType, resultCount)).catch(() => undefined)
@@ -285,15 +299,16 @@ export function SearchCommandCenter({
   }
 
   function handleSaveSearch() {
+    const safeQuery = safeSearchQueryForStorage(liveQuery)
     const nextSearch: SavedSearchRecord = {
       id: `saved_${Date.now()}`,
-      query: liveQuery.trim() || "All public profiles",
+      query: safeQuery || "All public profiles",
       state: stateFilter || undefined,
       riskLevel: riskFilter,
       category: categoryFilter,
       profileType,
       tradeCategory: tradeValue || undefined,
-      resultCount: filteredProfiles.length,
+      resultCount: safePublicResultCount,
       createdAt: new Date().toISOString(),
     }
 
@@ -385,6 +400,7 @@ export function SearchCommandCenter({
     category: categoryFilter,
     profileType,
     tradeCategory: tradeValue || undefined,
+    privateMatch: privateIdentifierIntent,
   })
   const reportHref = reportPrefillHref(liveQuery, stateFilter || undefined, profileType, tradeValue || undefined)
 
@@ -405,7 +421,30 @@ export function SearchCommandCenter({
                 </Badge>
               </div>
 
-              <form action="/search" method="get" className="grid gap-3">
+              <form
+                action="/search"
+                method="get"
+                className="grid gap-3"
+                onSubmit={(event) => {
+                  if (!isPrivateIdentifierSearch(liveQuery)) {
+                    trackSearchEvent("search_submitted")
+                    return
+                  }
+
+                  event.preventDefault()
+                  setPrivateMatchMode(true)
+                  setLiveQuery("")
+                  trackSearchEvent("private_identifier_check", 0)
+                  router.push(buildSearchHref({
+                    privateMatch: true,
+                    state: stateFilter || undefined,
+                    riskLevel: riskFilter,
+                    category: categoryFilter,
+                    profileType,
+                    tradeCategory: tradeValue || undefined,
+                  }))
+                }}
+              >
                 <FloridaPlaceDatalist id="search-florida-place-options" />
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
@@ -413,6 +452,7 @@ export function SearchCommandCenter({
                     name="q"
                     value={liveQuery}
                     onChange={(event) => {
+                      setPrivateMatchMode(false)
                       setLiveQuery(event.target.value)
                       setSavedMessage("")
                     }}
@@ -422,6 +462,7 @@ export function SearchCommandCenter({
                     aria-label="Check clients"
                   />
                   {profileType ? <input type="hidden" name="profileType" value={profileType} /> : null}
+                  {privateIdentifierIntent ? <input type="hidden" name="privateMatch" value="1" /> : null}
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[120px_1fr_1fr_1fr_auto]">
@@ -703,10 +744,11 @@ export function SearchCommandCenter({
                           category: search.category,
                           profileType: search.profileType,
                           tradeCategory: search.tradeCategory,
+                          privateMatch: isPrivateIdentifierSearch(search.query) || search.query === "Private identifier check",
                         })}
                         className="min-w-0 flex-1 text-sm"
                       >
-                        <span className="block truncate font-semibold">{search.query}</span>
+                        <span className="block truncate font-semibold">{safeSearchQueryForDisplay(search.query)}</span>
                         <span className="block truncate text-xs text-slate-300">
                           {savedSearchFilterSummary(search) || "All filters"}
                         </span>
@@ -715,7 +757,7 @@ export function SearchCommandCenter({
                         type="button"
                         onClick={() => handleRemoveSavedSearch(search.id)}
                         className="rounded-md p-1 text-slate-300 transition hover:bg-white/10 hover:text-white"
-                        aria-label={`Remove saved search ${search.query}`}
+                        aria-label={`Remove saved search ${safeSearchQueryForDisplay(search.query)}`}
                       >
                         <X className="size-4" aria-hidden="true" />
                       </button>
@@ -766,7 +808,7 @@ export function SearchCommandCenter({
           <p className="mt-1 text-sm leading-6 text-slate-600">Review newly published moderated summaries.</p>
         </Link>
         <Link
-          href="/dashboard/watchlist"
+          href={isAuthenticated ? "/dashboard/watchlist" : `/signup?next=${encodeURIComponent("/dashboard/watchlist")}`}
         className="bureau-hover-lift rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300"
         >
           <Eye className="size-5 text-amber-700" aria-hidden="true" />

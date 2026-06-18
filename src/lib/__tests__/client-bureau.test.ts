@@ -75,7 +75,11 @@ import {
   buildSearchSuggestions,
   buildSearchExperienceStats,
   isPrivateIdentifierSearch,
+  privateIdentifierSearchLabel,
   rankSearchPreviewProfiles,
+  safeSearchQueryForDisplay,
+  safeSearchQueryForStorage,
+  searchNoResultCopy,
   toSearchPreviewProfile,
 } from "@/lib/search-experience"
 import {
@@ -1197,12 +1201,40 @@ describe("search and public profiles", () => {
   it("recognizes private identifier searches without exposing raw identifiers", () => {
     const previews = searchClients("").map(toSearchPreviewProfile)
     const suggestions = buildSearchSuggestions(previews, "person@example.com", "FL")
+    const href = buildSearchHref({
+      query: "(407) 555-1010",
+      state: "fl",
+      profileType: "client",
+    })
 
     expect(isPrivateIdentifierSearch("person@example.com")).toBe(true)
     expect(isPrivateIdentifierSearch("(407) 555-1010")).toBe(true)
+    expect(safeSearchQueryForStorage("person@example.com")).toBe(privateIdentifierSearchLabel)
+    expect(safeSearchQueryForDisplay("(407) 555-1010")).toBe(privateIdentifierSearchLabel)
+    expect(href).toBe("/search?privateMatch=1&state=FL&profileType=client")
+    expect(href).not.toContain("407")
     expect(suggestions[0]?.kind).toBe("private_identifier")
     expect(suggestions[0]?.description).toContain("private matching")
-    expect(JSON.stringify(suggestions)).not.toContain("407")
+    expect(JSON.stringify(suggestions)).not.toContain("person@example.com")
+  })
+
+  it("uses profile-specific no-result copy without implying clearance", () => {
+    const clientCopy = searchNoResultCopy({ profileType: "client" })
+    const contractorCopy = searchNoResultCopy({ profileType: "contractor" })
+    const subcontractorCopy = searchNoResultCopy({ profileType: "subcontractor", tradeCategory: "Electrical" })
+    const privateCopy = searchNoResultCopy({ privateMatchIntent: true })
+    const combined = [clientCopy, contractorCopy, subcontractorCopy, privateCopy]
+      .flatMap((item) => [item.heading, item.body])
+      .join(" ")
+      .toLowerCase()
+
+    expect(clientCopy.heading).toContain("client profile")
+    expect(contractorCopy.heading).toContain("contractor profile")
+    expect(subcontractorCopy.heading).toContain("subcontractor profile")
+    expect(privateCopy.heading).toContain("Private identifier")
+    expect(combined).toContain("not a clearance signal")
+    expect(combined).not.toContain("safe to hire")
+    expect(combined).not.toContain("cleared to work")
   })
 
   it("validates search activation inputs", () => {
@@ -1268,6 +1300,28 @@ describe("search and public profiles", () => {
     expect(contractorContext.id).not.toBe(first.id)
     expect(event.profileType).toBe("subcontractor")
     expect(event.tradeCategory).toBe("Electrical")
+  })
+
+  it("redacts private identifiers before saving searches and analytics events", () => {
+    const saved = saveClientSearch("contractor_private_identifier_context", {
+      query: "client@example.com",
+      state: "FL",
+      profileType: "client",
+      resultCount: 0,
+    })
+    const event = recordSearchEvent("contractor_private_identifier_context", {
+      query: "(407) 555-1212",
+      state: "FL",
+      profileType: "client",
+      resultCount: 0,
+      eventType: "private_identifier_check",
+      source: "search_page",
+    })
+
+    expect(saved.query).toBe(privateIdentifierSearchLabel)
+    expect(event.query).toBe(privateIdentifierSearchLabel)
+    expect(JSON.stringify([saved, event])).not.toContain("client@example.com")
+    expect(JSON.stringify([saved, event])).not.toContain("407")
   })
 
   it("only returns public profile data with reviewable reports", () => {

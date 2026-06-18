@@ -6,6 +6,7 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ### Improved
 
+- Hardened the public search product pass with profile-specific no-result language, bounded result rendering, private identifier redaction, safe saved-search/search-analytics persistence, and release checks for private-match redirects.
 - Added a pricing capability truth pass with a server-side billing availability gate, deferred-billing public copy, plan-interest signup preservation, service-fee checkout guards, and a documented pricing capability matrix.
 - Added a privacy-safe public inquiry intake for Contact and Enterprise with server validation, duplicate-submit protection, admin retrieval in Settings, a Supabase migration, and release checks for placeholder contact language.
 - Simplified the public homepage for the final release prompt pack: removed real profile snippets from the hero, replaced them with a privacy-safe database preview, kept the first action focused on client checking, and reinforced the three public database paths.

@@ -126,6 +126,7 @@ import {
 } from "@/lib/auth"
 import { getDataMode, getSiteUrl } from "@/lib/env"
 import { normalizeCityName, normalizeStateCode } from "@/lib/locations"
+import { safeSearchQueryForStorage } from "@/lib/search-experience"
 import {
   deleteAdminRecordService,
   assignModerationCaseService,
@@ -528,7 +529,11 @@ export async function saveClientSearchAction(
   }
 
   const user = await requireContractorAccess()
-  const saved = await saveClientSearchService(user.id, parsed.data)
+  const safeInput = {
+    ...parsed.data,
+    query: safeSearchQueryForStorage(parsed.data.query),
+  }
+  const saved = await saveClientSearchService(user.id, safeInput)
 
   revalidatePath("/dashboard")
   revalidatePath("/dashboard/watchlist")
@@ -538,12 +543,12 @@ export async function saveClientSearchAction(
       {
         id: parsed.data.searchId ?? `local_saved_${Date.now()}`,
         contractorId: user.id,
-        query: parsed.data.query || "All public profiles",
+        query: safeInput.query || "All public profiles",
         city: parsed.data.city,
         state: parsed.data.state?.toUpperCase(),
         riskLevel: parsed.data.riskLevel,
         category: parsed.data.category,
-        resultCount: parsed.data.resultCount,
+        resultCount: safeInput.resultCount,
         source: "local",
         createdAt: new Date().toISOString(),
         lastRunAt: new Date().toISOString(),
@@ -585,14 +590,18 @@ export async function recordSearchEventAction(
   }
 
   const user = await getCurrentUser().catch(() => undefined)
-  const event = await recordSearchEventService(user?.id, parsed.data)
+  const safeInput = {
+    ...parsed.data,
+    query: safeSearchQueryForStorage(parsed.data.query),
+  }
+  const event = await recordSearchEventService(user?.id, safeInput)
 
   if (!event) {
     return ok(
       {
         id: `local_search_event_${Date.now()}`,
         contractorId: user?.id,
-        query: parsed.data.query,
+        query: safeInput.query,
         state: parsed.data.state?.toUpperCase(),
         riskLevel: parsed.data.riskLevel,
         category: parsed.data.category,
