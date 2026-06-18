@@ -741,7 +741,7 @@ if (llmsTxt.response.ok) {
     `${expectedSiteUrl}/payment-recovery-service`,
     `${expectedSiteUrl}/florida-lien-filing-service`,
     "documented contractor and business-owner experiences",
-    "private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions",
+    "private phone numbers, emails, street addresses, raw evidence files, staff-only review notes, or unapproved submissions",
   ]
 
   for (const expectedText of llmsRequiredTexts) {
@@ -804,7 +804,7 @@ if (aiIndex.response.ok && aiIndex.json) {
   }
 
   const privacyRulesText = Array.isArray(aiIndex.json.privacyRules) ? aiIndex.json.privacyRules.join(" ") : ""
-  for (const requiredPhrase of ["raw emails", "phone numbers", "private addresses", "raw evidence files", "pending reports", "internal admin notes"]) {
+  for (const requiredPhrase of ["raw emails", "phone numbers", "private addresses", "raw evidence files", "pending reports", "staff-only review notes"]) {
     if (privacyRulesText.includes(requiredPhrase)) {
       pass(`/ai-index.json privacy rule ${requiredPhrase}`)
     } else {
