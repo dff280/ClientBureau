@@ -120,7 +120,7 @@ ${entityLinks || "- Unified client, contractor, and subcontractor profiles are l
 
 ## Content Standard
 
-Public Client Bureau pages use careful language: documented contractor and business-owner experiences, moderated summaries, evidence reviewed privately, private matching, client response, dispute context, business verification, and reported payment risk. Public pages should not display private phone numbers, emails, street addresses, raw evidence files, internal admin notes, or unapproved submissions.
+Public Client Bureau pages use careful language: documented contractor and business-owner experiences, moderated summaries, evidence reviewed privately, private matching, client response, dispute context, business verification, and reported payment risk. Public pages should not display private phone numbers, emails, street addresses, raw evidence files, staff-only review notes, or unapproved submissions.
 `
 
   return new Response(body, {

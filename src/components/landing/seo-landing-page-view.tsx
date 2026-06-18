@@ -56,7 +56,7 @@ export function SeoLandingPageView({
           { label: "Public content", value: "Approved", text: "Only moderated profile and report context appears on these pages." },
           { label: "Client-check intent", value: "High signal", text: "Built for contractors checking specific client, city, and report context." },
           { label: "Fairness", value: "Response-aware", text: "Client responses and disputes are included only after review." },
-          { label: "Privacy", value: "Protected", text: "Raw contact details, evidence files, and internal notes stay private." },
+          { label: "Privacy", value: "Protected", text: "Raw contact details, evidence files, and staff-only review notes stay private." },
         ]}
         dark
       />
@@ -407,7 +407,7 @@ function getLandingFaqs(page: SeoLandingPage) {
     {
       question: "Does Client Bureau show private phone numbers, emails, or evidence files?",
       answer:
-        "No. Public pages should not show raw phone numbers, email addresses, private addresses, raw evidence files, internal notes, pending reports, or rejected reports.",
+        "No. Public pages should not show raw phone numbers, email addresses, private addresses, raw evidence files, staff-only review notes, pending reports, or rejected reports.",
     },
     {
       question: "What should I do if no public profile appears?",

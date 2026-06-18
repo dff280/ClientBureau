@@ -43,7 +43,7 @@ const principles = [
   {
     icon: ShieldCheck,
     title: "Private by design",
-    text: "Raw evidence, private contact identifiers, addresses, internal notes, pending content, and rejected submissions stay out of public profiles.",
+    text: "Raw evidence, private contact identifiers, addresses, staff-only review notes, pending content, and rejected submissions stay out of public profiles.",
   },
 ]
 

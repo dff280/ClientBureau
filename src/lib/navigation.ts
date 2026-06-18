@@ -10,8 +10,10 @@ export type NavigationGroup = {
 }
 
 export const publicPrimaryNav: NavigationItem[] = [
-  { href: "/search", label: "Run Client Check", description: "Search client records before accepting work." },
-  { href: "/profiles", label: "Public Databases", description: "Browse Client, Contractor, and Subcontractor databases." },
+  { href: "/search", label: "Check a Client", description: "Search client records before accepting work." },
+  { href: "/clients", label: "Client Database", description: "Browse approved client, homeowner, property owner, and customer profiles." },
+  { href: "/profiles/contractor", label: "Contractor Database", description: "Public contractor and service-business profile records." },
+  { href: "/profiles/subcontractor", label: "Subcontractor Database", description: "Public subcontractor and trade professional records." },
   { href: "/pricing", label: "Pricing", description: "Choose a business protection plan." },
   { href: "/resources", label: "Resources", description: "Policies, methodology, and contractor guides." },
 ]
@@ -124,14 +126,13 @@ export const resourceNavigationGroups: NavigationGroup[] = [
 
 export const footerNavigationGroups: NavigationGroup[] = [
   {
-    title: "Public Databases",
+    title: "Databases",
     links: [
       { href: "/", label: "Home" },
       { href: "/search", label: "Check a Client" },
       { href: "/clients", label: "Client Database" },
       { href: "/profiles/contractor", label: "Contractor Database" },
       { href: "/profiles/subcontractor", label: "Subcontractor Database" },
-      { href: "/profiles", label: "All Public Databases" },
       { href: "/reports/recent", label: "Recent Reports" },
     ],
   },
@@ -143,44 +144,34 @@ export const footerNavigationGroups: NavigationGroup[] = [
       { href: "/pricing", label: "Pricing" },
       { href: "/resources", label: "Resources" },
       { href: "/mobile-app", label: "Mobile App" },
-      { href: "/enterprise", label: "Enterprise" },
-      { href: "/client-screening-for-contractors", label: "Client Screening" },
-      { href: "/contractor-verification", label: "Contractor Verification" },
-      { href: "/subcontractor-payment-chain-documentation", label: "Subcontractor Payment Chain" },
-      { href: "/evidence-privacy-for-contractors", label: "Evidence Privacy" },
-      { href: "/response-correction-rights", label: "Response Rights" },
       { href: "/submit-report", label: "Report a Client Experience" },
     ],
   },
   {
-    title: "Tools and Services",
+    title: "Services",
     links: [
-      { href: "/platform", label: "Jobs" },
       { href: "/contractor-contract-template", label: "Contracts & Templates" },
       { href: "/florida-contractor-agreement-template", label: "Florida Agreement Starter" },
       { href: "/change-order-template", label: "Change Orders" },
       { href: "/payment-recovery-service", label: "Payment Recovery" },
       { href: "/florida-lien-filing-service", label: "Florida Lien Filing" },
       { href: "/florida-lien-notice-service", label: "Florida Notice to Owner" },
-      { href: "/homeowner-wont-pay-contractor", label: "Unpaid Invoice Guide" },
-      { href: "/report-policy", label: "Evidence Vault" },
     ],
   },
   {
-    title: "Company and Rules",
+    title: "Trust",
     links: [
       { href: "/about", label: "About" },
       { href: "/contact", label: "Contact" },
       { href: "/claim-profile", label: "Claim a Profile" },
       { href: "/client-response", label: "Client Response" },
-      { href: "/response-correction-rights", label: "Response and Correction Rights" },
       { href: "/score-methodology", label: "Client Ratings" },
       { href: "/business-rating-methodology", label: "Business & Trade Ratings" },
+      { href: "/report-policy", label: "Report Policy" },
+      { href: "/dispute-policy", label: "Dispute Policy" },
+      { href: "/moderation-policy", label: "Moderation" },
       { href: "/terms", label: "Terms" },
       { href: "/privacy", label: "Privacy" },
-      { href: "/report-policy", label: "Report Policy" },
-      { href: "/dispute-policy", label: "Disputes" },
-      { href: "/moderation-policy", label: "Moderation" },
     ],
   },
 ]

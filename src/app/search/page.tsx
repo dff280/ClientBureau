@@ -152,7 +152,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
                 </h1>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-200 sm:text-base">
                   You are viewing approved public matches and safe previews. Private identifiers, raw evidence,
-                  pending records, rejected records, and internal notes stay hidden.
+                  pending records, rejected records, and staff-only review notes stay hidden.
                 </p>
                 {activeFilters.length > 0 ? (
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -242,52 +242,54 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           isAuthenticated={isAuthenticated}
         />
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase text-slate-500">Server-verified results</p>
-            <p className="mt-1 text-sm font-medium text-slate-600">
-          {results.length} {results.length === 1 ? "profile" : "profiles"} found across the Client, Contractor, and Subcontractor databases
-            </p>
-          </div>
-          <Button asChild variant="outline">
-            <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>
-              <FilePlus2 aria-hidden="true" />
-              Report a Client Experience
-            </Link>
-          </Button>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {[
-            ["All profiles", undefined],
-            ["Clients", "client"],
-            ["Contractors", "contractor"],
-            ["Subcontractors", "subcontractor"],
-          ].map(([label, value]) => {
-            const typedValue = value as ProfileType | undefined
-            const active = profileType === typedValue || (!profileType && !typedValue)
-
-            return (
-              <Button key={label} asChild variant={active ? "default" : "outline"} className={active ? "bg-slate-950 text-white hover:bg-slate-800" : ""}>
-                <Link href={profileTypeFilterHref({ query, state, riskLevel, category, profileType: typedValue, tradeCategory })}>
-                  {label}
+        {hasSearch ? (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase text-slate-500">Server-verified results</p>
+                <p className="mt-1 text-sm font-medium text-slate-600">
+                  {results.length} {results.length === 1 ? "profile" : "profiles"} found across the Client, Contractor, and Subcontractor databases
+                </p>
+              </div>
+              <Button asChild variant="outline">
+                <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>
+                  <FilePlus2 aria-hidden="true" />
+                  Report a Client Experience
                 </Link>
               </Button>
-            )
-          })}
-        </div>
+            </div>
 
-        {hasSearch ? (
-          <SearchActivationGuide
-            hasSearch={hasSearch}
-            isAuthenticated={isAuthenticated}
-            query={query}
-            resultCount={results.length}
-            state={state}
-            profileType={profileType}
-            tradeCategory={tradeCategory}
-            signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
-          />
+            <div className="flex flex-wrap gap-2">
+              {[
+                ["All profiles", undefined],
+                ["Clients", "client"],
+                ["Contractors", "contractor"],
+                ["Subcontractors", "subcontractor"],
+              ].map(([label, value]) => {
+                const typedValue = value as ProfileType | undefined
+                const active = profileType === typedValue || (!profileType && !typedValue)
+
+                return (
+                  <Button key={label} asChild variant={active ? "default" : "outline"} className={active ? "bg-slate-950 text-white hover:bg-slate-800" : ""}>
+                    <Link href={profileTypeFilterHref({ query, state, riskLevel, category, profileType: typedValue, tradeCategory })}>
+                      {label}
+                    </Link>
+                  </Button>
+                )
+              })}
+            </div>
+
+            <SearchActivationGuide
+              hasSearch={hasSearch}
+              isAuthenticated={isAuthenticated}
+              query={query}
+              resultCount={results.length}
+              state={state}
+              profileType={profileType}
+              tradeCategory={tradeCategory}
+              signupHref={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}
+            />
+          </>
         ) : (
           <PublicDatabaseShowcase
             compact
@@ -297,44 +299,44 @@ export default async function SearchPage({ searchParams }: { searchParams: Searc
           />
         )}
 
-        {results.length > 0 ? (
-          <div id="profile-results" className="scroll-mt-24 grid gap-4">
-            {results.map((result) => (
-              <EntityProfileResultCard key={result.id} result={result} />
-            ))}
-          </div>
-        ) : (
-          <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-            <CardContent className="grid gap-5 p-8 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-md bg-amber-100 text-amber-800">
-                <FilePlus2 className="size-6" aria-hidden="true" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-semibold text-slate-950">
-                  {hasSearch ? "No public reports found yet." : "Start with a client search."}
-                </h2>
-                <p className="mx-auto max-w-2xl text-sm leading-6 text-slate-600">
-                  No public reports may exist yet, especially in early markets. Create a private client file,
-                  save this search, or submit a documented client experience for moderation.
-                </p>
-              </div>
-              <div className="mx-auto flex flex-wrap justify-center gap-3">
-                {isAuthenticated ? (
-                  <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                    <Link href="/dashboard/watchlist">Open Watchlist</Link>
+        {hasSearch ? (
+          results.length > 0 ? (
+            <div id="profile-results" className="scroll-mt-24 grid gap-4">
+              {results.map((result) => (
+                <EntityProfileResultCard key={result.id} result={result} />
+              ))}
+            </div>
+          ) : (
+            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+              <CardContent className="grid gap-5 p-8 text-center">
+                <div className="mx-auto flex size-12 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+                  <FilePlus2 className="size-6" aria-hidden="true" />
+                </div>
+                <div className="space-y-2">
+                  <h2 className="text-2xl font-semibold text-slate-950">No public reports found yet.</h2>
+                  <p className="mx-auto max-w-2xl text-sm leading-6 text-slate-600">
+                    No public reports may exist yet, especially in early markets. Create a private client file,
+                    save this search, or submit a documented client experience for moderation.
+                  </p>
+                </div>
+                <div className="mx-auto flex flex-wrap justify-center gap-3">
+                  {isAuthenticated ? (
+                    <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                      <Link href="/dashboard/watchlist">Open Watchlist</Link>
+                    </Button>
+                  ) : (
+                    <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
+                      <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>Create free account</Link>
+                    </Button>
+                  )}
+                  <Button asChild variant="outline">
+                    <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>Report a Client Experience</Link>
                   </Button>
-                ) : (
-                  <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
-                    <Link href={signupSearchHref(query, state, riskLevel, category, profileType, tradeCategory)}>Create free account</Link>
-                  </Button>
-                )}
-                <Button asChild variant="outline">
-                  <Link href={reportPrefillHref(query, state, profileType, tradeCategory)}>Report a Client Experience</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                </div>
+              </CardContent>
+            </Card>
+          )
+        ) : null}
       </div>
     </section>
     </>
@@ -404,7 +406,7 @@ function SearchActivationGuide({
           <p className={`mt-2 text-sm leading-6 ${resultTone}`}>{resultCopy}</p>
           <div className="mt-4 flex items-start gap-2 rounded-md border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
             <ClipboardCheck className="mt-0.5 size-4 shrink-0 text-amber-700" aria-hidden="true" />
-            <span>Public results show approved context only. Private identifiers, raw evidence, pending content, and internal notes stay hidden.</span>
+            <span>Public results show approved context only. Private identifiers, raw evidence, pending content, and staff-only review notes stay hidden.</span>
           </div>
         </div>
         <div className="grid gap-3 md:grid-cols-3">

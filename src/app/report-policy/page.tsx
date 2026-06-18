@@ -65,7 +65,7 @@ export default function ReportPolicyPage() {
               "Do not include threats, insults, harassment, private addresses, full phone numbers, raw emails, family details, medical details, or unrelated personal information.",
               "Do not use inflammatory labels, criminal accusations, identity-based insults, or similar unsupported wording.",
               "Do not submit duplicate reports to inflate profile risk or reports that primarily pressure payment outside the moderated process.",
-              "Do not publish internal notes, settlement terms, confidential files, or evidence details that should stay private.",
+              "Do not publish staff-only review notes, settlement terms, confidential files, or evidence details that should stay private.",
             ],
           },
           {
@@ -84,7 +84,7 @@ export default function ReportPolicyPage() {
               "Pending reports are not shown on public profile pages or included in public search landing pages.",
               "Rejected reports remain private and should not influence public profile content.",
               "Approved reports may be edited for public readability, privacy, neutrality, and policy compliance.",
-              "Profiles should not display raw phone numbers, emails, private addresses, raw evidence, internal moderator notes, or unapproved client responses.",
+              "Profiles should not display raw phone numbers, emails, private addresses, raw evidence, staff-only review notes, or unapproved client responses.",
             ],
           },
           {

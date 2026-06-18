@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Link from "next/link"
 import {
   BellRing,
   BriefcaseBusiness,
@@ -15,14 +14,12 @@ import {
 
 import {
   BureauPanel,
-  GuidedActionPanel,
   PageProofStrip,
   PremiumCtaBand,
   PremiumHero,
   PremiumSectionHeader,
   ProductMockupFrame,
   PublicDatabaseShowcase,
-  PublicJourneyNav,
   WorkflowTimeline,
 } from "@/components/marketing/premium-page-shell"
 import { pageAssets } from "@/lib/page-assets"
@@ -89,7 +86,7 @@ const workflow = [
 
 const trustControls = [
   "Public profiles only show admin-approved summaries and safe public fields.",
-  "Raw phone numbers, emails, street addresses, storage paths, private files, and admin notes stay private.",
+  "Raw phone numbers, emails, street addresses, storage paths, private files, and staff-only review notes stay private.",
   "Positive reports, resolved outcomes, response rights, and dispute context are part of the record.",
   "Contracts, evidence, recovery cases, lien cases, and watchlist notes are private business workflows.",
 ]
@@ -126,7 +123,7 @@ const faqs = [
   {
     question: "Are private documents shown publicly?",
     answer:
-      "No. Public profiles may show approved evidence-on-file summaries, but raw evidence files, private identifiers, internal notes, and service records stay private.",
+      "No. Public profiles may show approved evidence-on-file summaries, but raw evidence files, private identifiers, staff-only review notes, and service records stay private.",
   },
 ]
 
@@ -161,13 +158,6 @@ export default function PlatformPage() {
         eyebrow="The public layer"
         title="Three databases make the platform easy to understand."
         description="Clients, contractors, and subcontractors are the records people browse. Private tools support what happens after the search."
-      />
-
-      <PublicJourneyNav
-        active="protect"
-        eyebrow="Public map"
-        title="The platform is organized around the job lifecycle."
-        description="Contractors should not have to decode software modules. Start with a client check, then move into contracts, evidence, recovery, or public record review as the job changes."
       />
 
       <section className="bureau-section bg-slate-50">
@@ -212,35 +202,6 @@ export default function PlatformPage() {
               )
             })}
           </div>
-        </div>
-      </section>
-
-      <section className="bureau-section bg-white">
-        <div className="bureau-container grid gap-6 lg:grid-cols-3">
-          <GuidedActionPanel
-            eyebrow="First move"
-            title="Run the check."
-            description="A new visitor should understand Client Bureau in one action: search the client before the job starts."
-            primary={{ href: "/search", label: "Check a Client", icon: Search }}
-            secondary={{ href: "/how-it-works", label: "How It Works", icon: ShieldCheck }}
-          />
-          <BureauPanel className="lg:col-span-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">Launch-ready paths</p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {[
-                ["Browse public records", "/clients"],
-                ["Compare contractor profiles", "/profiles/contractor"],
-                ["Review subcontractor profiles", "/profiles/subcontractor"],
-                ["Open payment recovery", "/payment-recovery-service"],
-                ["Start Florida lien service", "/florida-lien-filing-service"],
-                ["Download Android app", "/mobile-app"],
-              ].map(([label, href]) => (
-                <Link key={href} href={href} className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 transition hover:border-amber-300 hover:bg-white">
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </BureauPanel>
         </div>
       </section>
 

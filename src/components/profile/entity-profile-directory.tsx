@@ -108,7 +108,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       proofNoun: "Contractor and service-business profiles.",
       proofContext: "Business trust and public project signals.",
       resultDescription:
-        "Contractor pages focus on business verification, service-area context, public project records, claim status, and approved profile context. Private identifiers and internal notes stay sealed.",
+        "Contractor pages focus on business verification, service-area context, public project records, claim status, and approved profile context. Private identifiers and staff-only review notes stay sealed.",
       quickStartEyebrow: "Contractor Database",
       quickStartTitle: "Built for customer-facing businesses and prime contractors.",
       quickStartDescription:
@@ -132,7 +132,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       ],
       faqTitle: "Contractor profiles are business-trust records.",
       faqDescription:
-        "These profiles help service businesses and prime contractors show public verification and project context while keeping raw evidence, private contact data, and internal notes out of public view.",
+        "These profiles help service businesses and prime contractors show public verification and project context while keeping raw evidence, private contact data, and staff-only review notes out of public view.",
       ctaTitle: "Claim, verify, and strengthen your contractor profile.",
       ctaDescription:
         "Create an account to claim your profile, monitor public context, document client experiences, and keep your business record accurate.",
@@ -210,7 +210,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
       proofNoun: "Approved client/customer profiles in this view.",
       proofContext: "Approved client-experience report signals.",
       resultDescription:
-        "Client pages show approved context only and never display private phone numbers, emails, street addresses, raw evidence files, pending content, or internal notes.",
+        "Client pages show approved context only and never display private phone numbers, emails, street addresses, raw evidence files, pending content, or staff-only review notes.",
       quickStartEyebrow: "Client Database",
       quickStartTitle: "Check the customer before the job starts.",
       quickStartDescription:
@@ -260,7 +260,7 @@ function directoryRolePresentation(profileType?: ProfileType): DirectoryRolePres
     proofNoun: "Public-safe records available across all databases.",
     proofContext: "Approved or connected report signals.",
     resultDescription:
-      "Public pages show approved context only and never display private phone numbers, emails, street addresses, raw evidence files, pending content, or internal notes.",
+      "Public pages show approved context only and never display private phone numbers, emails, street addresses, raw evidence files, pending content, or staff-only review notes.",
     quickStartEyebrow: "Database graph",
     quickStartTitle: "Three databases, one relationship graph.",
     quickStartDescription:

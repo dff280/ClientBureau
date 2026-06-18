@@ -83,7 +83,7 @@ export default async function BusinessesPage({ searchParams }: { searchParams: B
 
       <PremiumProofStrip
         items={[
-          { label: "Profiles", value: "Public-safe", text: "Business pages avoid private account details and internal notes." },
+          { label: "Profiles", value: "Public-safe", text: "Business pages avoid private account details and staff-only review notes." },
           { label: "Signals", value: "Verified", text: "Verification, documentation, contribution history, and resolution posture." },
           { label: "Claims", value: "Structured", text: "Owners can claim or update profiles through a private workflow." },
           { label: "Ratings", value: "Explained", text: "Business Rating is a readiness signal, not a customer review score." },

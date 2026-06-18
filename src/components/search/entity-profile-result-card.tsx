@@ -151,7 +151,7 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
       reportLabel: "Report business experience",
       claimLabel: "Claim or verify business",
       privacyText:
-        "Contractor search results show approved, moderated business context only. Raw emails, phone numbers, addresses, evidence files, pending content, and internal notes stay private.",
+        "Contractor search results show approved, moderated business context only. Raw emails, phone numbers, addresses, evidence files, pending content, and staff-only review notes stay private.",
       signals: [
         {
           icon: <Building2 className="size-4" aria-hidden="true" />,
@@ -189,7 +189,7 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
       reportLabel: "Report trade experience",
       claimLabel: "Claim or verify trade profile",
       privacyText:
-        "Subcontractor search results show approved, moderated trade context only. Raw emails, phone numbers, addresses, evidence files, pending content, and internal notes stay private.",
+        "Subcontractor search results show approved, moderated trade context only. Raw emails, phone numbers, addresses, evidence files, pending content, and staff-only review notes stay private.",
       signals: [
         {
           icon: <Wrench className="size-4" aria-hidden="true" />,
@@ -226,7 +226,7 @@ function profileResultPresentation(result: EntityProfileSearchResult) {
     reportLabel: "Report Client Experience",
     claimLabel: "Respond or correct",
     privacyText:
-      "Client Database results show approved, moderated context only. Raw emails, phone numbers, street addresses, evidence files, pending content, and internal notes stay private.",
+      "Client Database results show approved, moderated context only. Raw emails, phone numbers, street addresses, evidence files, pending content, and staff-only review notes stay private.",
     signals: [
       {
         icon: <FileText className="size-4" aria-hidden="true" />,

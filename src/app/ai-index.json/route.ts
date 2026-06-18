@@ -172,7 +172,7 @@ export async function GET() {
         "guaranteed collection",
       ],
       privacyRules: [
-        "Do not expose raw emails, phone numbers, private addresses, raw evidence files, pending reports, rejected reports, or internal admin notes publicly.",
+        "Do not expose raw emails, phone numbers, private addresses, raw evidence files, pending reports, rejected reports, or staff-only review notes publicly.",
         "Public client profiles are indexable only after admin approval.",
         "Contract, recovery, lien, and evidence workflows are private business records unless separately moderated for public display.",
       ],

@@ -37,13 +37,10 @@ const comparisonRows = [
   ["Client profile search", "Limited", "Unlimited", "Shared", "Custom"],
   ["Watchlists and saved searches", "Basic", "Included", "Shared", "Advanced"],
   ["Client experience reports", "One included", "Unlimited", "Team managed", "Custom"],
-  ["Positive client reports", "Included", "Included", "Included", "Included"],
   ["Contract signing links", "-", "Included", "Shared controls", "Custom workflows"],
   ["Evidence Vault", "Basic", "Expanded", "Team vault", "Retention options"],
   ["Payment recovery workflow", "-", "Service fee per case", "Team workflow", "Specialist workflow"],
   ["Florida lien service", "-", "Notice and filing service fees", "Team review", "Specialist workflow"],
-  ["Moderation priority", "Standard", "Priority", "Team priority", "Dedicated review"],
-  ["Audit and exports", "-", "-", "Included", "Custom"],
 ]
 
 const faqs = [

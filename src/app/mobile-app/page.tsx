@@ -117,7 +117,7 @@ const faqs = [
   {
     question: "Does the mobile app expose private evidence?",
     answer:
-      "No. The app shows private evidence summaries and statuses. Raw evidence files, private identifiers, internal notes, and pending or rejected public content are not exposed publicly.",
+      "No. The app shows private evidence summaries and statuses. Raw evidence files, private identifiers, staff-only review notes, and pending or rejected public content are not exposed publicly.",
   },
   {
     question: "Who is the app for?",

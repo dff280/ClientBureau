@@ -120,7 +120,7 @@ function getEntityProfilePresentation(profileType: ProfileType): EntityProfilePr
       projectEyebrow: "Business project graph",
       projectTitle: "Public project and service records",
       projectDescription:
-        "Contractor project records connect approved summaries, evidence indicators, service locations, and resolution updates. Private files and internal notes are not shown.",
+        "Contractor project records connect approved summaries, evidence indicators, service locations, and resolution updates. Private files and staff-only review notes are not shown.",
       relationshipEyebrow: "Business relationship context",
       reportEyebrow: "Business report context",
       reportTitle: "Approved contractor-profile summaries",

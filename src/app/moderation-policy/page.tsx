@@ -44,7 +44,7 @@ export default function ModerationPolicyPage() {
             body: "Moderators review submissions before public publication. The review focuses on whether the submission is relevant, specific, supportable, privacy-safe, and written in a way that belongs on a serious business-intelligence platform.",
             bullets: [
               "Review project facts, category fit, payment status, reported amount, timeline, response context, and evidence references.",
-              "Check for raw emails, phone numbers, private addresses, unrelated personal details, internal notes, and raw evidence links.",
+              "Check for raw emails, phone numbers, private addresses, unrelated personal details, staff-only review notes, and raw evidence links.",
               "Identify duplicate reports, identity mismatch risk, unsupported claims, inflammatory wording, and missing public-summary context.",
               "Confirm whether the report is negative, positive, resolved, disputed, or needs more information.",
             ],

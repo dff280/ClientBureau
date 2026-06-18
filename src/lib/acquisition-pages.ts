@@ -449,7 +449,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       "Confirm the business name, trade category, city, state, and service area.",
       "Review public verification status, profile claim state, rating context, and public report history.",
       "Use claim, correction, or response paths when profile details need review.",
-      "Keep private records, evidence, job addresses, and internal notes out of public display.",
+      "Keep private records, evidence, job addresses, and staff-only review notes out of public display.",
     ],
     trustPoints: [
       "Contractor ratings are business trust indicators, not guarantees, legal findings, credit scores, or star reviews.",
@@ -487,7 +487,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       {
         question: "Does the Contractor Database publish private contact information?",
         answer:
-          "No. Public contractor profiles should not show raw emails, phone numbers, street addresses, private job records, evidence files, or admin notes.",
+          "No. Public contractor profiles should not show raw emails, phone numbers, street addresses, private job records, evidence files, or staff-only review notes.",
       },
     ],
   },
@@ -599,7 +599,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       "Upload or label evidence inside the private workspace.",
       "Connect evidence to a report, job, contract, recovery case, or lien service case.",
       "Use public-safe evidence labels such as invoice reviewed, contract reviewed, photo reviewed, or messages reviewed.",
-      "Never publish raw files, storage paths, private contact details, internal notes, or unmoderated evidence.",
+      "Never publish raw files, storage paths, private contact details, staff-only review notes, or unmoderated evidence.",
     ],
     trustPoints: [
       "Public pages can say evidence is on file without showing the evidence file.",
@@ -632,7 +632,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       {
         question: "What evidence appears publicly?",
         answer:
-          "Public pages should show only limited labels or moderated summaries. Raw files, private addresses, phone numbers, emails, evidence paths, and internal notes stay private.",
+          "Public pages should show only limited labels or moderated summaries. Raw files, private addresses, phone numbers, emails, evidence paths, and staff-only review notes stay private.",
       },
       {
         question: "Can evidence be used in recovery or lien workflows?",
@@ -678,7 +678,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     ],
     trustPoints: [
       "Responses, disputes, corrections, and resolution updates are moderated before public display.",
-      "Private evidence, contact details, and admin notes remain private during review.",
+      "Private evidence, contact details, and staff-only review notes remain private during review.",
       "Public pages should show balanced context without claiming legal conclusions or guaranteed outcomes.",
     ],
     relatedLinks: [

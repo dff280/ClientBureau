@@ -3,10 +3,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
-  Banknote,
   Bell,
   BriefcaseBusiness,
-  CalendarClock,
   FilePlus2,
   HelpCircle,
   Landmark,
@@ -21,18 +19,14 @@ import { LegalNotice } from "@/components/client/legal-notice"
 import { ReportCard } from "@/components/client/report-card"
 import { RiskBadge } from "@/components/client/risk-badge"
 import { ScoreGauge } from "@/components/client/score-gauge"
-import { ReportTimeline } from "@/components/profile/report-timeline"
 import {
   CommunityDiscussionSection,
   type PublicCommunityDiscussionEntry,
 } from "@/components/profile/community-discussion-section"
 import { PublicProfileShareCard } from "@/components/profile/public-profile-share-card"
-import { ScoreBreakdown } from "@/components/profile/score-breakdown"
-import { TrustVerificationPanel } from "@/components/profile/trust-verification-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { clientProfileConfidence, clientProfilePrimarySignals } from "@/lib/client-database"
 import { getPublicClientProfileService } from "@/lib/repositories/client-bureau-service"
@@ -47,7 +41,7 @@ import {
   responseStatusLabel,
   resolutionStatusLabel,
 } from "@/lib/client-rating"
-import { isPositiveReportCategory } from "@/lib/types"
+import { isPositiveReportCategory, type ClientReport } from "@/lib/types"
 
 type ClientProfilePageProps = {
   params: Promise<{ slug: string }>
@@ -142,6 +136,9 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
   const cityHref = getClientCityDirectoryHref(profile)
 
   const concernReports = profile.reports.filter((report) => !isPositiveReportCategory(report.reportCategory))
+  const allPublishedReports = [...concernReports, ...profile.positiveReports].sort(
+    (a, b) => new Date(b.approvedAt ?? b.createdAt).getTime() - new Date(a.approvedAt ?? a.createdAt).getTime(),
+  )
   const openDisputes = profile.balanceSummary.openDisputeCount
   const resolvedReports = profile.balanceSummary.resolvedReportCount
   const evidenceSummary = summarizeEvidence(profile.evidence)
@@ -327,12 +324,17 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
       <section className="bureau-section bureau-paper">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
           <div className="space-y-6">
-            <div className="grid gap-3 md:grid-cols-4">
-              <TrustMetric label="Client experience reports" value={String(profile.reports.length)} />
-              <TrustMetric label="Positive references" value={String(profile.positiveReports.length)} />
-              <TrustMetric label="Open disputes" value={String(openDisputes)} />
-              <TrustMetric label="Resolved reports" value={String(resolvedReports)} />
-            </div>
+            <PublicReportSummary
+              concernCount={concernReports.length}
+              confidenceLevel={trustSummary.confidence.level}
+              evidenceSummary={evidenceSummary}
+              name={name}
+              openDisputes={openDisputes}
+              positiveCount={profile.positiveReports.length}
+              reportCount={allPublishedReports.length}
+              resolvedReports={resolvedReports}
+              totalReportedUnpaid={profile.balanceSummary.totalReportedUnpaid}
+            />
 
             <ProfileDecisionGuide
               clientName={name}
@@ -340,156 +342,31 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               profileSlug={profile.publicSlug}
               reportHref={reportHref}
               responseHref={responseHref}
-              reportCount={profile.reports.length}
+              reportCount={allPublishedReports.length}
               openDisputes={openDisputes}
               evidenceSummary={evidenceSummary}
             />
 
-            <TrustVerificationPanel profileName={name} summary={trustSummary} />
-
-            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <ShieldCheck className="size-5 text-amber-700" aria-hidden="true" />
-                  Rating indicators
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-3">
-                <BalanceFact label="Client Bureau Rating" value={`${profile.clientBureauScore}/100`} />
-                <BalanceFact label="Rating band" value={ratingBand} />
-                {ratingIndicators.map((indicator) => (
-                  <BalanceFact key={indicator.label} label={indicator.label} value={indicator.value} />
-                ))}
-                <BalanceFact label="Last updated" value={new Date(profile.updatedAt).toLocaleDateString()} />
-              </CardContent>
-            </Card>
-
-            <Card className="bureau-hover-lift overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader className="border-b border-slate-200 bg-slate-50">
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <CalendarClock className="size-5 text-amber-700" aria-hidden="true" />
-                  Contractor report timeline
-                </CardTitle>
-                <p className="text-sm leading-6 text-slate-600">
-                  A public timeline of approved report activity, evidence-review markers, disputes, and publication updates.
-                </p>
-              </CardHeader>
-              <CardContent className="p-5">
-                <ReportTimeline events={profile.timeline} />
-              </CardContent>
-            </Card>
-
-            <ProfileSearchSummary
-              name={name}
-              location={location}
-              score={profile.clientBureauScore}
-              riskLevel={profile.riskLevel}
-              reportCount={profile.reports.length}
-              evidenceSummary={evidenceSummary}
+            <PublishedReportHistory
+              reports={allPublishedReports}
+              concernCount={concernReports.length}
+              positiveCount={profile.positiveReports.length}
             />
 
-            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <Banknote className="size-5 text-amber-700" aria-hidden="true" />
-                  Reported balance summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-4">
-                <BalanceFact label="Total reported unpaid" value={formatCurrency(profile.balanceSummary.totalReportedUnpaid)} />
-                <BalanceFact label="Currently unresolved" value={formatCurrency(profile.balanceSummary.unresolvedAmount)} />
-                <BalanceFact label="Resolved or paid context" value={formatCurrency(profile.balanceSummary.resolvedAmount)} />
-                <BalanceFact label="Resolution reports" value={String(resolvedReports)} />
-              </CardContent>
-            </Card>
+            <ResponseResolutionPanel
+              clientResponses={profile.clientResponses.map((response) => response.responseSummary)}
+              openDisputes={openDisputes}
+              resolvedReports={resolvedReports}
+              responseHref={responseHref}
+            />
 
-            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <HelpCircle className="size-5 text-amber-700" aria-hidden="true" />
-                  Why this score?
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-2">
-                {profile.scoreBreakdown.map((factor) => (
-                  <div key={factor.label} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="font-semibold text-slate-950">{factor.label}</p>
-                      <span className="text-sm font-semibold text-slate-600">{factor.score}/100</span>
-                    </div>
-                    <Progress value={factor.score} className="mt-3" />
-                    <p className="mt-2 text-xs leading-5 text-slate-600">{factor.description}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-
-            <div className="space-y-3">
-              <h2 className="text-3xl font-semibold text-slate-950">Client experience reports</h2>
-              <p className="max-w-3xl text-sm leading-6 text-slate-600">
-                These contractor-submitted reports are published after moderation and are presented
-                as reported experiences, not legal findings or unsupported accusations.
-              </p>
-            </div>
-            {concernReports.length > 0 ? (
-              <div className="grid gap-4">
-                {concernReports.map((report) => (
-                  <ReportCard key={report.id} report={report} />
-                ))}
-              </div>
-            ) : (
-              <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-                <CardContent className="p-6 text-sm text-slate-600">
-                  No approved concern reports are currently published for this profile.
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-semibold text-slate-950">Positive references</h2>
-                <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                  Approved positive references help show paid-as-agreed, cooperative, or would-work-with-again client experiences.
-                </p>
-              </div>
-              {profile.positiveReports.length > 0 ? (
-                <div className="grid gap-4">
-                  {profile.positiveReports.map((report) => (
-                    <ReportCard key={report.id} report={report} />
-                  ))}
-                </div>
-              ) : (
-                <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-                  <CardContent className="p-6 text-sm text-slate-600">
-                    No approved positive reports are currently published for this profile.
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-
-            <Card className="bureau-hover-lift rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-xl">
-                  <MessageSquareText className="size-5 text-amber-700" aria-hidden="true" />
-                  Dispute and resolution context
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
-                <p>
-                  Open disputes: <span className="font-semibold text-slate-950">{openDisputes}</span>
-                </p>
-                <p>
-                  Resolved reports: <span className="font-semibold text-slate-950">{resolvedReports}</span>
-                </p>
-                <p>
-                  Clients may submit a response, correction request, dispute, or resolution update.
-                  Approved context appears publicly after moderation.
-                </p>
-                <Button asChild variant="outline">
-                  <Link href={responseHref}>Submit response or correction</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <EvidenceModerationPanel
+              confidenceScore={trustSummary.confidence.score}
+              confidenceLevel={trustSummary.confidence.level}
+              evidenceSummary={evidenceSummary}
+              moderationFactors={trustSummary.confidence.factors}
+              timelineCount={profile.timeline.length}
+            />
 
             <CommunityDiscussionSection
               profileSlug={profile.publicSlug}
@@ -499,6 +376,12 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
 
           <aside className="space-y-5">
             <LegalNotice />
+            <ReportActionCard
+              positiveReportHref={positiveReportHref}
+              reportHref={reportHref}
+              responseHref={responseHref}
+              searchHref="/search?profileType=client"
+            />
             <PublicProfileShareCard
               name={name}
               location={location}
@@ -509,77 +392,21 @@ export default async function ClientProfilePage({ params }: ClientProfilePagePro
               riskLevel={profile.riskLevel}
               reportCount={profile.reports.length}
             />
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Rating factors</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ScoreBreakdown score={profile.clientBureauScore} factors={profile.scoreFactors} />
-              </CardContent>
-            </Card>
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <ShieldAlert className="size-5 text-amber-700" aria-hidden="true" />
-                  Moderation status
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
-                <p>Public profile is active.</p>
-                <p>All published reports are admin-approved or marked with dispute context.</p>
-                <p>Private matching identifiers are stored as hashes.</p>
-                <p>
-                  Review confidence: <span className="font-semibold text-slate-950">{trustSummary.confidence.level}</span>
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <CalendarClock className="size-5 text-amber-700" aria-hidden="true" />
-                  Evidence on file
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm leading-6 text-slate-600">
-                {evidenceSummary.map((item) => (
-                  <p key={item}>{item}</p>
-                ))}
-              </CardContent>
-            </Card>
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-lg">Client response</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {profile.clientResponses.length > 0 ? (
-                  profile.clientResponses.map((response) => (
-                    <p key={response.id} className="text-sm leading-6 text-slate-700">
-                      {response.responseSummary}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-sm leading-6 text-slate-600">
-                    No published client response is currently attached to this profile.
-                  </p>
-                )}
-                <Button asChild variant="outline" className="w-full">
-                  <Link href={responseHref}>Are you this client?</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <SidebarRatingCard
+              ratingBand={ratingBand}
+              ratingIndicators={ratingIndicators}
+              score={profile.clientBureauScore}
+              scoreFactors={profile.scoreFactors}
+              updatedAt={profile.updatedAt}
+            />
+            <SidebarModerationCard
+              confidenceLevel={trustSummary.confidence.level}
+              evidenceSummary={evidenceSummary}
+            />
           </aside>
         </div>
       </section>
     </article>
-  )
-}
-
-function TrustMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="bureau-hover-lift rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-slate-950">{value}</p>
-    </div>
   )
 }
 
@@ -619,52 +446,335 @@ function HeroFact({ label, value }: { label: string; value: string }) {
   )
 }
 
-function ProfileSearchSummary({
-  name,
-  location,
-  score,
-  riskLevel,
-  reportCount,
+function PublicReportSummary({
+  concernCount,
+  confidenceLevel,
   evidenceSummary,
+  name,
+  openDisputes,
+  positiveCount,
+  reportCount,
+  resolvedReports,
+  totalReportedUnpaid,
 }: {
-  name: string
-  location: string
-  score: number
-  riskLevel: string
-  reportCount: number
+  concernCount: number
+  confidenceLevel: string
   evidenceSummary: string[]
+  name: string
+  openDisputes: number
+  positiveCount: number
+  reportCount: number
+  resolvedReports: number
+  totalReportedUnpaid: number
+}) {
+  return (
+    <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
+      <CardContent className="grid gap-6 p-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Public report summary</p>
+          <h2 className="mt-2 text-3xl font-semibold text-slate-950">
+            Report context for {name}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-700">
+            This dossier groups approved contractor-submitted summaries, positive references,
+            response and resolution context, and private evidence indicators. It is not a legal
+            finding, credit score, collection action, or guarantee.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <ReportSummaryMetric label="Published reports" value={String(reportCount)} text={`${concernCount} concern / ${positiveCount} positive`} />
+          <ReportSummaryMetric label="Reported payment context" value={formatPaymentContext(totalReportedUnpaid)} text="Shown as reported context only." />
+          <ReportSummaryMetric label="Response and disputes" value={`${openDisputes} open`} text={`${resolvedReports} resolved or paid context`} />
+          <ReportSummaryMetric label="Evidence" value={evidenceSummary.at(-1) ?? "Private"} text="Raw files are not public." />
+          <ReportSummaryMetric label="Review confidence" value={confidenceLevel} text="Based on moderation and evidence signals." />
+          <ReportSummaryMetric label="Fairness path" value="Available" text="Response, dispute, correction, or resolution update." />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ReportSummaryMetric({ label, text, value }: { label: string; text: string; value: string }) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
+      <p className="mt-2 text-xl font-semibold text-slate-950">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
+function PublishedReportHistory({
+  concernCount,
+  positiveCount,
+  reports,
+}: {
+  concernCount: number
+  positiveCount: number
+  reports: ClientReport[]
+}) {
+  return (
+    <section className="space-y-4" aria-labelledby="published-report-history">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-700">Published report history</p>
+          <h2 id="published-report-history" className="mt-2 text-3xl font-semibold text-slate-950">
+            Approved public reports
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Concern reports and positive references use the same moderated dossier format so the public record is easier to scan.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="outline" className="rounded-md border-rose-200 bg-white text-rose-900">
+            {concernCount} concern
+          </Badge>
+          <Badge variant="outline" className="rounded-md border-emerald-200 bg-white text-emerald-900">
+            {positiveCount} positive
+          </Badge>
+        </div>
+      </div>
+      {reports.length > 0 ? (
+        <div className="grid gap-5">
+          {reports.map((report) => (
+            <ReportCard key={report.id} report={report} />
+          ))}
+        </div>
+      ) : (
+        <Card className="rounded-md border-dashed border-slate-300 bg-white shadow-sm">
+          <CardContent className="p-6 text-sm leading-6 text-slate-600">
+            No approved public reports are currently published for this profile. Contractors can submit a factual experience for moderation after a real interaction.
+          </CardContent>
+        </Card>
+      )}
+    </section>
+  )
+}
+
+function ResponseResolutionPanel({
+  clientResponses,
+  openDisputes,
+  resolvedReports,
+  responseHref,
+}: {
+  clientResponses: string[]
+  openDisputes: number
+  resolvedReports: number
+  responseHref: string
+}) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardHeader className="border-b border-slate-100 bg-slate-50">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <MessageSquareText className="size-5 text-amber-700" aria-hidden="true" />
+          Response and resolution
+        </CardTitle>
+        <p className="text-sm leading-6 text-slate-600">
+          Clients may submit response, dispute, correction, or resolution context. Approved updates appear publicly after moderation.
+        </p>
+      </CardHeader>
+      <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_240px]">
+        <div className="space-y-3">
+          {clientResponses.length > 0 ? (
+            clientResponses.map((summary) => (
+              <div key={summary} className="rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                {summary}
+              </div>
+            ))
+          ) : (
+            <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+              No published client response is currently attached to this profile.
+            </div>
+          )}
+        </div>
+        <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 text-sm">
+          <ReportSummaryMetric label="Open disputes" value={String(openDisputes)} text="Reviewed before public display." />
+          <ReportSummaryMetric label="Resolved reports" value={String(resolvedReports)} text="Paid, settled, resolved, or admin verified." />
+          <Button asChild variant="outline" className="w-full">
+            <Link href={responseHref}>Respond or Correct</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function EvidenceModerationPanel({
+  confidenceLevel,
+  confidenceScore,
+  evidenceSummary,
+  moderationFactors,
+  timelineCount,
+}: {
+  confidenceLevel: string
+  confidenceScore: number
+  evidenceSummary: string[]
+  moderationFactors: string[]
+  timelineCount: number
+}) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardHeader className="border-b border-slate-100 bg-slate-50">
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <ShieldAlert className="size-5 text-amber-700" aria-hidden="true" />
+          Evidence and moderation
+        </CardTitle>
+        <p className="text-sm leading-6 text-slate-600">
+          Public profiles show moderated summaries and evidence labels only. Raw files, private identifiers, staff-only review notes, and pending or rejected content stay private.
+        </p>
+      </CardHeader>
+      <CardContent className="grid gap-4 p-5 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase text-slate-500">Evidence labels</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {evidenceSummary.map((item) => (
+              <Badge key={item} variant="outline" className="rounded-md bg-white">
+                {item}
+              </Badge>
+            ))}
+          </div>
+          <p className="mt-3 text-xs leading-5 text-slate-600">
+            {timelineCount} public timeline {timelineCount === 1 ? "marker" : "markers"} available after moderation.
+          </p>
+        </div>
+        <div className="rounded-md border border-slate-200 bg-white p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase text-slate-500">Review confidence</p>
+              <p className="mt-2 text-2xl font-semibold text-slate-950">{confidenceLevel}</p>
+            </div>
+            <Badge className="rounded-md bg-slate-950 text-white">{confidenceScore}/100</Badge>
+          </div>
+          <div className="mt-4 grid gap-2">
+            {moderationFactors.map((factor) => (
+              <p key={factor} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs leading-5 text-slate-600">
+                {factor}
+              </p>
+            ))}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ReportActionCard({
+  positiveReportHref,
+  reportHref,
+  responseHref,
+  searchHref,
+}: {
+  positiveReportHref: string
+  reportHref: string
+  responseHref: string
+  searchHref: string
 }) {
   return (
     <Card className="rounded-md border-amber-200 bg-amber-50 shadow-sm">
-      <CardContent className="grid gap-4 p-5 lg:grid-cols-[1fr_220px] lg:items-center">
-        <div>
-          <p className="text-xs font-semibold uppercase text-amber-900">Profile summary for searchers</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-            {name} in {location}: public client context for contractors
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-700">
-            This public page summarizes moderated contractor-submitted experiences, approved report
-            status, private evidence-review indicators, rating context, and client response options.
-            It is not a legal finding and does not publish raw contact details or private files.
-          </p>
+      <CardHeader>
+        <CardTitle className="text-lg text-amber-950">Next action</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-2">
+        <Button asChild className="bg-amber-500 text-slate-950 hover:bg-amber-400">
+          <Link href={searchHref}>Check Another Client</Link>
+        </Button>
+        <Button asChild variant="outline" className="bg-white">
+          <Link href={reportHref}>Report a Client Experience</Link>
+        </Button>
+        <Button asChild variant="outline" className="bg-white">
+          <Link href={positiveReportHref}>Add Positive Experience</Link>
+        </Button>
+        <Button asChild variant="outline" className="bg-white">
+          <Link href={responseHref}>Respond or Correct</Link>
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function SidebarRatingCard({
+  ratingBand,
+  ratingIndicators,
+  score,
+  scoreFactors,
+  updatedAt,
+}: {
+  ratingBand: string
+  ratingIndicators: { label: string; value: string }[]
+  score: number
+  scoreFactors: { label: string; impact: number; tone: "positive" | "negative" | "neutral"; description: string }[]
+  updatedAt: string
+}) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <HelpCircle className="size-5 text-amber-700" aria-hidden="true" />
+          Rating context
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase text-slate-500">Client Bureau Context Rating</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{score}/100</p>
+          <p className="mt-1 text-sm font-semibold text-amber-800">{ratingBand}</p>
+          <p className="mt-2 text-xs leading-5 text-slate-600">Last updated {new Date(updatedAt).toLocaleDateString()}</p>
         </div>
-        <div className="grid gap-2 rounded-md border border-amber-200 bg-white p-4 text-sm">
-          <div className="flex justify-between gap-3">
-            <span className="text-slate-500">Rating</span>
-            <span className="font-semibold text-slate-950">{score}/100</span>
-          </div>
-          <div className="flex justify-between gap-3">
-            <span className="text-slate-500">Risk level</span>
-            <span className="font-semibold text-slate-950">{riskLevel}</span>
-          </div>
-          <div className="flex justify-between gap-3">
-            <span className="text-slate-500">Approved reports</span>
-            <span className="font-semibold text-slate-950">{reportCount}</span>
-          </div>
-          <div className="flex justify-between gap-3">
-            <span className="text-slate-500">Evidence</span>
-            <span className="text-right font-semibold text-slate-950">{evidenceSummary.at(-1)}</span>
-          </div>
+        <div className="grid gap-2">
+          {ratingIndicators.slice(0, 4).map((indicator) => (
+            <div key={indicator.label} className="flex justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm">
+              <span className="text-slate-500">{indicator.label}</span>
+              <span className="text-right font-semibold text-slate-950">{indicator.value}</span>
+            </div>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {scoreFactors.slice(0, 3).map((factor) => (
+            <div key={factor.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-slate-950">{factor.label}</p>
+                <span className={factor.impact < 0 ? "text-sm font-semibold text-rose-700" : "text-sm font-semibold text-emerald-700"}>
+                  {factor.impact > 0 ? "+" : ""}
+                  {factor.impact}
+                </span>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-slate-600">{factor.description}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function SidebarModerationCard({
+  confidenceLevel,
+  evidenceSummary,
+}: {
+  confidenceLevel: string
+  evidenceSummary: string[]
+}) {
+  return (
+    <Card className="rounded-md border-slate-200 bg-white shadow-sm">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg">
+          <ShieldAlert className="size-5 text-amber-700" aria-hidden="true" />
+          Public safety
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
+        <p>Public profile is active and moderated.</p>
+        <p>Published reports are approved or marked with dispute context.</p>
+        <p>Private matching identifiers are stored as hashes.</p>
+        <p>
+          Review confidence: <span className="font-semibold text-slate-950">{confidenceLevel}</span>
+        </p>
+        <div className="flex flex-wrap gap-2 pt-1">
+          {evidenceSummary.map((item) => (
+            <Badge key={item} variant="outline" className="rounded-md bg-slate-50">
+              {item}
+            </Badge>
+          ))}
         </div>
       </CardContent>
     </Card>
@@ -818,15 +928,6 @@ function ProfileDecisionAction({
       </div>
       <span className="mt-4 text-sm font-semibold text-amber-700 group-hover:text-amber-800">{label}</span>
     </Link>
-  )
-}
-
-function BalanceFact({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
-      <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-2 text-xl font-semibold text-slate-950">{value}</p>
-    </div>
   )
 }
 

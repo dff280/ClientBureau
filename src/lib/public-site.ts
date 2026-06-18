@@ -71,7 +71,7 @@ export const publicDatabasePillars: PublicDatabasePillar[] = [
     recordsExplained: [
       "Approved public reports are moderated summaries of reported experiences.",
       "Positive experiences and resolved context matter alongside payment issues.",
-      "Private identifiers, raw files, pending reports, rejected reports, and admin notes are not public.",
+      "Private identifiers, raw files, pending reports, rejected reports, and staff-only review notes are not public.",
     ],
     internalLinks: [
       {
@@ -133,7 +133,7 @@ export const publicDatabasePillars: PublicDatabasePillar[] = [
     recordsExplained: [
       "Contractor profiles focus on customer-facing business readiness and project responsibility.",
       "A business may also have subcontractor capability when it works under another contractor.",
-      "Private verification phone, raw evidence, internal notes, and private job data stay sealed.",
+      "Private verification phone, raw evidence, staff-only review notes, and private job data stay sealed.",
     ],
     internalLinks: [
       {

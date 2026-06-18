@@ -16,7 +16,6 @@ import type { LucideIcon } from "lucide-react"
 import { LegalNotice } from "@/components/client/legal-notice"
 import { RiskBadge } from "@/components/client/risk-badge"
 import { PremiumCtaBand, PublicDatabaseShowcase } from "@/components/marketing/premium-page-shell"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -84,13 +83,6 @@ const workflowSteps = [
   },
 ]
 
-const productPreview = [
-  ["Client Database", "Check clients, homeowners, property owners, customers, and businesses before accepting work."],
-  ["Contractor Database", "Review service-business and contractor profiles with public verification and project context."],
-  ["Subcontractor Database", "Inspect trade partner profiles, scope context, and payment-chain signals."],
-  ["Private tools", "Turn a public check into jobs, contracts, evidence, recovery, lien service, and watchlists."],
-]
-
 const trustGuardrails = [
   ["Moderated summaries", "Public records are reviewed before display and written as reported experiences."],
   ["Private evidence", "Raw evidence files, private addresses, phone numbers, and emails stay out of public profiles."],
@@ -117,7 +109,7 @@ const faqs = [
   {
     question: "What stays private?",
     answer:
-      "Raw evidence, private contact identifiers, job notes, internal admin notes, and private workflow records are not shown publicly.",
+      "Raw evidence, private contact identifiers, job notes, staff-only review notes, and private workflow records are not shown publicly.",
   },
 ]
 
@@ -127,11 +119,6 @@ export default async function Home() {
   const recentReports = profiles
     .flatMap((profile) => profile.reports.map((report) => ({ profile, report })))
     .slice(0, 3)
-  const totalReportedUnpaid = profiles.reduce(
-    (total, profile) =>
-      total + profile.reports.reduce((reportTotal, report) => reportTotal + Math.max(report.amountUnpaid, 0), 0),
-    0,
-  )
   const heroPreview = recentReports[0]
 
   return (
@@ -217,28 +204,6 @@ export default async function Home() {
               <WorkflowStepCard key={step.phase} step={step} />
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="bureau-section bg-slate-950 text-white">
-        <div className="bureau-container grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
-          <div className="space-y-6">
-            <SectionIntro
-              eyebrow="Product preview"
-              title="A client check should feel like a business decision file."
-              text="The record should answer the practical questions: who matched, what was reported, what evidence is on file, whether there is a response, and what to do next."
-              dark
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              {productPreview.map(([label, text]) => (
-                <div key={label} className="rounded-md border border-white/10 bg-white/[0.06] p-4">
-                  <p className="font-semibold text-amber-200">{label}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-300">{text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <ProductDossierPreview item={heroPreview} totalReportedUnpaid={totalReportedUnpaid} />
         </div>
       </section>
 
@@ -336,40 +301,6 @@ function WorkflowStepCard({
           <ArrowRight aria-hidden="true" />
         </Link>
       </Button>
-    </div>
-  )
-}
-
-function ProductDossierPreview({
-  item,
-  totalReportedUnpaid,
-}: {
-  item?: {
-    profile: HomepageProfile
-    report: HomepageProfile["reports"][number]
-  }
-  totalReportedUnpaid: number
-}) {
-  return (
-    <div className="rounded-md border border-white/10 bg-white/[0.06] p-5 shadow-2xl shadow-slate-950/40">
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">Official dossier preview</p>
-          <h3 className="mt-2 text-2xl font-semibold text-white">Search result, public record, and next action</h3>
-        </div>
-        <Badge className="rounded-md bg-emerald-500/15 text-emerald-100">
-          <ShieldCheck className="mr-1 size-3" aria-hidden="true" />
-          Moderated
-        </Badge>
-      </div>
-      <div className="mt-5">
-        <HeroProfilePreview item={item} />
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-3">
-        <DarkFact label="Aggregate context" value={formatCurrency(totalReportedUnpaid)} />
-        <DarkFact label="Evidence" value="Private" />
-        <DarkFact label="Response" value="Available" />
-      </div>
     </div>
   )
 }

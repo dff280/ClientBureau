@@ -2,17 +2,15 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import {
   ArrowRight,
-  BadgeCheck,
   Building2,
   CheckCircle2,
   ClipboardCheck,
   MailCheck,
   ShieldCheck,
-  Star,
   UserCheck,
 } from "lucide-react"
 
-import { PremiumCtaBand, PremiumHero, PremiumProofStrip, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumCtaBand, PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { JsonLd, getFaqSchema } from "@/lib/seo"
 import { ProfileClaimForm } from "@/components/forms/profile-claim-form"
 import { StateSelect } from "@/components/forms/state-select"
@@ -40,29 +38,6 @@ export const metadata: Metadata = {
   },
 }
 
-const steps = [
-  {
-    icon: Building2,
-    title: "Find or create the profile",
-    text: "Start with your business name, trade, city, and state so the profile can connect to the right account.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Verify business details",
-    text: "Add reasonable verification signals such as business email, license details, insurance context, or service areas.",
-  },
-  {
-    icon: Star,
-    title: "Request reviews after real work",
-    text: "Send positive reference, resolution update, and documented experience requests through a moderated workflow.",
-  },
-  {
-    icon: BadgeCheck,
-    title: "Share a branded profile badge",
-    text: "Use a Client Bureau profile link on your site so people can verify your public business profile.",
-  },
-]
-
 const faqs = [
   {
     question: "Who can claim a Client Bureau business profile?",
@@ -72,7 +47,7 @@ const faqs = [
   {
     question: "Does claiming a profile publish private business records?",
     answer:
-      "No. Private account details, billing records, raw evidence, client emails, phone numbers, and internal notes remain private.",
+      "No. Private account details, billing records, raw evidence, client emails, phone numbers, and staff-only review notes remain private.",
   },
   {
     question: "Can claimed profiles request positive reviews?",
@@ -156,32 +131,8 @@ export default async function ClaimProfilePage({ searchParams }: ClaimProfilePag
         ]}
         dark
       />
-      <TrustGuardrailStrip
-        items={[
-          "Claim review before status changes",
-          "Private business details stay private",
-          "Trade and state data stay structured",
-          "Public edits require moderation",
-        ]}
-        dark
-      />
-
       <section className="bureau-section">
-        <div className="bureau-container space-y-8">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {steps.map((step) => (
-              <Card key={step.title} className="rounded-md border-slate-200 bg-white shadow-sm">
-                <CardContent className="space-y-4 p-5">
-                  <span className="flex size-10 items-center justify-center rounded-md bg-slate-950 text-amber-300">
-                    <step.icon className="size-5" aria-hidden="true" />
-                  </span>
-                  <h2 className="text-lg font-semibold text-slate-950">{step.title}</h2>
-                  <p className="text-sm leading-6 text-slate-600">{step.text}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
+        <div className="bureau-container">
           <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
             <Card className="rounded-md border-slate-200 bg-white shadow-sm">
               <CardContent className="space-y-5 p-6">

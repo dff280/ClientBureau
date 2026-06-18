@@ -57,7 +57,7 @@ const system = [
 ]
 
 const safeguards = [
-  "Private identifiers, street addresses, raw evidence, and internal notes stay out of public profiles.",
+  "Private identifiers, street addresses, raw evidence, and staff-only review notes stay out of public profiles.",
   "Public records are moderated and written as documented reported experiences.",
   "Responses, corrections, disputes, positive reports, and resolution context are part of the fairness model.",
 ]

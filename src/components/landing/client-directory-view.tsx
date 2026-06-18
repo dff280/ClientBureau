@@ -1,5 +1,4 @@
 import Link from "next/link"
-import type { LucideIcon } from "lucide-react"
 import { ArrowRight, MapPinned, Search, ShieldCheck } from "lucide-react"
 
 import { RiskBadge } from "@/components/client/risk-badge"
@@ -24,7 +23,7 @@ const directoryFaqs = [
   {
     question: "Does the Client Database show private client contact information?",
     answer:
-      "No. Public directory and profile pages should not display raw phone numbers, email addresses, street addresses, raw evidence files, internal notes, pending reports, or rejected reports.",
+      "No. Public directory and profile pages should not display raw phone numbers, email addresses, street addresses, raw evidence files, staff-only review notes, pending reports, or rejected reports.",
   },
   {
     question: "How should contractors use Client Database pages?",
@@ -603,11 +602,6 @@ function DatabaseQuickStart({
               Check a Client
             </Button>
           </form>
-          <div className="grid gap-3 md:grid-cols-3">
-            <QuickStartStep icon={Search} title="Search clients" text="Look up approved public records by identity, market, or private-match intent." />
-            <QuickStartStep icon={MapPinned} title="Browse by location" text="Use state and city directories when you are researching a local market." />
-            <QuickStartStep icon={ShieldCheck} title="Understand the record" text="Review rating context, evidence labels, response paths, and positive or concern history." />
-          </div>
         </div>
         <div className="border-t border-slate-200 bg-slate-950 p-5 text-white sm:p-6 lg:border-l lg:border-t-0">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-300">Database proof</p>
@@ -618,7 +612,7 @@ function DatabaseQuickStart({
           </div>
           <div className="mt-5 rounded-md border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-300">
             Public profiles never show raw phone numbers, emails, street addresses, raw evidence files,
-            pending reports, rejected reports, or internal notes.
+            pending reports, rejected reports, or staff-only review notes.
           </div>
         </div>
       </CardContent>
@@ -701,24 +695,6 @@ function CountyDirectoryCard({ county }: { county: ClientDirectoryCounty }) {
         </div>
       </CardContent>
     </Card>
-  )
-}
-
-function QuickStartStep({
-  icon: Icon,
-  text,
-  title,
-}: {
-  icon: LucideIcon
-  text: string
-  title: string
-}) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-white p-4">
-      <Icon className="size-5 text-amber-700" aria-hidden="true" />
-      <p className="mt-3 font-semibold text-slate-950">{title}</p>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
-    </div>
   )
 }
 
@@ -851,7 +827,7 @@ function DirectoryEducation({ title, description }: { title: string; description
     },
     {
       title: "Private matching stays private",
-      text: "Searches may use private identifiers, but public pages do not show raw emails, phones, street addresses, evidence files, or internal notes.",
+      text: "Searches may use private identifiers, but public pages do not show raw emails, phones, street addresses, evidence files, or staff-only review notes.",
     },
     {
       title: "Response and resolution context",

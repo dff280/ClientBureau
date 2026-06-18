@@ -46,7 +46,7 @@ export function TrustVerificationPanel({
             <p className="text-sm leading-6 text-slate-600">
               Client Bureau separates verified public signals from private records. This page shows
               approved public context, moderation status, and evidence indicators without exposing
-              raw files, contact details, or internal notes.
+              raw files, contact details, or staff-only review notes.
             </p>
           </CardHeader>
           <CardContent className="grid gap-3 p-5 md:grid-cols-2">

@@ -93,7 +93,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <PremiumFeatureCard
             icon={ShieldCheck}
             title="Private records stay private"
-            text="Raw identifiers, evidence files, internal notes, and private service cases are not public profile content."
+            text="Raw identifiers, evidence files, staff-only review notes, and private service cases are not public profile content."
           />
         </div>
       </div>

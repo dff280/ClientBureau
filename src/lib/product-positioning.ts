@@ -88,7 +88,7 @@ export const protectionWorkflowSteps: ProtectionWorkflowStep[] = [
 export const protectionGuardrails = [
   {
     title: "Private by default",
-    text: "Raw evidence, private identifiers, street addresses, internal notes, and unapproved content stay out of public profiles.",
+    text: "Raw evidence, private identifiers, street addresses, staff-only review notes, and unapproved content stay out of public profiles.",
     icon: ShieldCheck,
   },
   {

@@ -9,7 +9,6 @@ import {
   PremiumSectionHeader,
   ProductMockupFrame,
   PublicDatabaseShowcase,
-  PublicJourneyNav,
 } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -52,7 +51,7 @@ const faqs = [
   {
     question: "Are private emails, phone numbers, and evidence files public?",
     answer:
-      "No. Public pages do not display private contact identifiers, street addresses, internal notes, or raw evidence files.",
+      "No. Public pages do not display private contact identifiers, street addresses, staff-only review notes, or raw evidence files.",
   },
 ]
 
@@ -87,13 +86,6 @@ export default function ResourcesPage() {
         eyebrow="Public records first"
         title="Resources support the Client, Contractor, and Subcontractor databases."
         description="The guides explain how records are created, moderated, rated, corrected, and connected to private business tools."
-      />
-
-      <PublicJourneyNav
-        active="help"
-        eyebrow="Find the right guide"
-        title="Resources are organized by what you are trying to do."
-        description="Check the client first, protect the job before work starts, browse approved public records, or review policies and response paths when a record needs context."
       />
 
       <section className="bureau-section">

@@ -1,9 +1,9 @@
 import type { Metadata } from "next"
 import type { LucideIcon } from "lucide-react"
-import { CheckCircle2, Clock3, FileText, MessageSquareText, Scale, ShieldCheck } from "lucide-react"
+import { CheckCircle2, FileText, MessageSquareText, Scale, ShieldCheck } from "lucide-react"
 
 import { ClientResponseForm } from "@/components/forms/client-response-form"
-import { PremiumHero, PremiumProofStrip, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
+import { PremiumHero, PremiumProofStrip } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export const metadata: Metadata = {
@@ -16,29 +16,6 @@ export const metadata: Metadata = {
 }
 
 export const dynamic = "force-dynamic"
-
-const responseWorkflow = [
-  {
-    icon: ShieldCheck,
-    title: "Verify contact",
-    text: "The submitter provides contact information so moderators can match the response to the correct profile.",
-  },
-  {
-    icon: FileText,
-    title: "Review documentation",
-    text: "Documents, links, or proof are reviewed privately. Raw files are not published on public profiles.",
-  },
-  {
-    icon: Clock3,
-    title: "Moderation review",
-    text: "Moderators review privacy, relevance, tone, profile match, and whether the update adds useful public context.",
-  },
-  {
-    icon: CheckCircle2,
-    title: "Publish approved context",
-    text: "Approved responses, corrections, disputes, or resolution updates can appear publicly with careful wording.",
-  },
-]
 
 const proof = [
   { label: "Response types", value: "4 paths", text: "Response, dispute, correction request, or resolution update." },
@@ -100,21 +77,12 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
             <p className="text-xl font-semibold">Fairness is part of the product.</p>
             <p className="text-sm leading-6 text-slate-300">
               Active disputes are labeled carefully. Approved responses can appear beside report
-              context without exposing raw documents, phone numbers, emails, or internal notes.
+              context without exposing raw documents, phone numbers, emails, or staff-only review notes.
             </p>
           </div>
         }
       />
       <PremiumProofStrip items={proof} dark />
-      <TrustGuardrailStrip
-        items={[
-          "Verification before display",
-          "Raw documents stay private",
-          "Disputes are labeled carefully",
-          "Resolution updates can add context",
-        ]}
-        dark
-      />
 
       <section className="bureau-section">
         <div className="bureau-container grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -161,22 +129,6 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
               </CardContent>
             </Card>
 
-            <Card className="rounded-md border-slate-200 bg-white shadow-sm">
-              <CardHeader>
-                <CardTitle>What happens after you submit?</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 md:grid-cols-2">
-                {responseWorkflow.map((step) => (
-                  <div key={step.title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex items-center gap-2">
-                      <step.icon className="size-5 text-amber-700" aria-hidden="true" />
-                      <h2 className="font-semibold text-slate-950">{step.title}</h2>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{step.text}</p>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
           </div>
 
           <aside className="space-y-5">
@@ -204,7 +156,7 @@ export default async function ClientResponsePage({ searchParams }: ClientRespons
                 </p>
                 <p className="text-sm leading-6 text-slate-600">
                   Client Bureau does not publish raw identity documents, private evidence files,
-                  phone numbers, emails, or internal moderator notes.
+                  phone numbers, emails, or staff-only review notes.
                 </p>
               </CardContent>
             </Card>
