@@ -6,6 +6,8 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ### Improved
 
+- Simplified the public homepage for the final release prompt pack: removed real profile snippets from the hero, replaced them with a privacy-safe database preview, kept the first action focused on client checking, and reinforced the three public database paths.
+- Extended public copy safety and SEO verification so public pages fail on roadmap/internal-product phrasing and the homepage fails if decorative direct profile links return.
 - Added the final release audit ledger with Prompt 00 release identity, health/readiness, route inventory, browser-sampling, command evidence, findings, and owner-action tracking.
 - Simplified the contractor dashboard home and focused tool pages with compact account status, clearer start-here actions, one quick-start panel per tool, collapsed create panels, and plain-English private-record language.
 - Added an admin command-center Release QA panel that links staff to release identity, admin session, dashboard persistence, and public privacy checks.

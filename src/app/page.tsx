@@ -2,9 +2,10 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import {
   ArrowRight,
+  Database,
+  EyeOff,
   FileCheck2,
   FilePlus2,
-  MessageSquareText,
   ReceiptText,
   Scale,
   Search,
@@ -14,24 +15,10 @@ import {
 import type { LucideIcon } from "lucide-react"
 
 import { LegalNotice } from "@/components/client/legal-notice"
-import { RiskBadge } from "@/components/client/risk-badge"
 import { PremiumCtaBand, PublicDatabaseShowcase } from "@/components/marketing/premium-page-shell"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import {
-  getPublicClientProfileService,
-  getPublicClientProfilesService,
-} from "@/lib/repositories/client-bureau-service"
 import { primaryHook, primarySearchCta, reportExperienceCta } from "@/lib/product-positioning"
-import {
-  cleanPublicReportText,
-  clientRatingBand,
-  clientRatingDisclaimer,
-  evidenceConfidenceLabel,
-  responseStatusLabel,
-} from "@/lib/client-rating"
-import { isPositiveReportCategory } from "@/lib/types"
 import {
   getFaqSchema,
   getLocalBusinessSchema,
@@ -49,10 +36,6 @@ export const metadata: Metadata = {
     canonical: "/",
   },
 }
-
-export const dynamic = "force-dynamic"
-
-type HomepageProfile = NonNullable<Awaited<ReturnType<typeof getPublicClientProfileService>>>
 
 const heroHeadline = "Check a Client Before You Take the Job."
 
@@ -113,13 +96,8 @@ const faqs = [
   },
 ]
 
-export default async function Home() {
+export default function Home() {
   const localBusinessSchema = getLocalBusinessSchema()
-  const profiles = await getHomepageProfiles()
-  const recentReports = profiles
-    .flatMap((profile) => profile.reports.map((report) => ({ profile, report })))
-    .slice(0, 3)
-  const heroPreview = recentReports[0]
 
   return (
     <>
@@ -157,7 +135,7 @@ export default async function Home() {
                   <Input
                     id="homepage-client-search"
                     name="q"
-                    placeholder="Search by client, business, contractor, subcontractor, city, state, phone, or email"
+                    placeholder="Search by client, business, city, state, or private-match detail"
                     className="h-14 border-0 pl-12 text-base text-slate-950 shadow-none focus-visible:ring-0"
                   />
                 </div>
@@ -185,7 +163,7 @@ export default async function Home() {
               </div>
             </div>
 
-            <HeroProfilePreview item={heroPreview} />
+            <HeroDossierPreview />
           </div>
         </div>
       </section>
@@ -234,15 +212,6 @@ export default async function Home() {
       />
     </>
   )
-}
-
-async function getHomepageProfiles(): Promise<HomepageProfile[]> {
-  const publicProfiles = await getPublicClientProfilesService()
-  const detailedProfiles = await Promise.all(
-    publicProfiles.map((profile) => getPublicClientProfileService(profile.publicSlug)),
-  )
-
-  return detailedProfiles.filter((profile): profile is HomepageProfile => Boolean(profile))
 }
 
 function SectionIntro({
@@ -305,95 +274,53 @@ function WorkflowStepCard({
   )
 }
 
-function HeroProfilePreview({
-  item,
-}: {
-  item?: {
-    profile: HomepageProfile
-    report: HomepageProfile["reports"][number]
-  }
-}) {
-  if (!item) {
-    return (
-      <Card className="rounded-md border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur">
-        <CardContent className="space-y-5 p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase text-amber-200">Client Bureau Rating preview</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">What a client check shows</h2>
-            </div>
-            <ShieldCheck className="size-7 text-amber-200" aria-hidden="true" />
-          </div>
-          <p className="text-sm leading-6 text-slate-200">
-            Approved profiles show moderated summaries, rating context, evidence-on-file labels, positive reports,
-            and a client response path. Private identifiers and raw evidence stay private.
-          </p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <DarkFact label="Rating" value="0-100" />
-            <DarkFact label="Evidence" value="Private" />
-            <DarkFact label="Response" value="Available" />
-          </div>
-          <p className="text-xs leading-5 text-slate-300">{clientRatingDisclaimer()}</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const { profile, report } = item
-  const paymentFact = getReportPaymentFact(report)
-  const ratingLabel = clientRatingBand(profile.clientBureauScore, profile.reports.length)
-  const evidenceConfidence = evidenceConfidenceLabel({
-    evidenceCount: profile.evidence.length,
-    reportCount: profile.reports.length,
-    hasEvidenceOnFile: profile.reports.some((reportItem) => reportItem.evidenceAttached),
-  })
-
+function HeroDossierPreview() {
   return (
-    <Card className="rounded-md border-white/15 bg-white/10 text-white shadow-2xl backdrop-blur">
-      <CardContent className="space-y-5 p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase text-amber-200">Client Bureau Rating</p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">
-              {profile.firstName} {profile.lastName}
-            </h2>
-            <p className="mt-1 text-sm text-slate-300">
-              {profile.city}, {profile.state}
-            </p>
-          </div>
-          <RiskBadge riskLevel={profile.riskLevel} />
+    <aside className="rounded-md border border-white/15 bg-white/10 p-5 text-white shadow-2xl backdrop-blur" aria-label="Client Bureau database preview">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-amber-200">Database check preview</p>
+          <h2 className="mt-2 text-2xl font-semibold text-white">One search. Three public databases.</h2>
         </div>
+        <Database className="size-7 text-amber-200" aria-hidden="true" />
+      </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
-          <DarkFact label="Rating" value={`${profile.clientBureauScore}/100`} />
-          <DarkFact label="Band" value={ratingLabel} />
-          <DarkFact label={paymentFact.label} value={paymentFact.value} />
+      <div className="mt-5 rounded-md border border-white/10 bg-slate-950/35 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="rounded-md bg-amber-400 px-2.5 py-1 text-xs font-bold uppercase text-slate-950">Client check</span>
+          <span className="rounded-md border border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200">Contractor profile</span>
+          <span className="rounded-md border border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-200">Subcontractor profile</span>
         </div>
+        <p className="mt-4 text-sm leading-6 text-slate-200">
+          Results show approved public context only: rating labels, report mix, evidence-on-file indicators,
+          response paths, verification state, and clear next steps.
+        </p>
+      </div>
 
-        <div className="rounded-md border border-white/10 bg-slate-950/35 p-4">
-          <p className="text-xs font-semibold uppercase text-slate-400">{report.reportCategory}</p>
-          <p className="mt-2 text-sm leading-6 text-slate-200">{cleanPublicReportText(report.publicSummary)}</p>
-        </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+        <DarkFact icon={ShieldCheck} label="Public records" value="Moderated" />
+        <DarkFact icon={EyeOff} label="Private details" value="Hidden" />
+        <DarkFact icon={FileCheck2} label="Response path" value="Available" />
+      </div>
 
-        <div className="grid gap-2 text-xs font-semibold text-slate-200 sm:grid-cols-2">
-          <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
-            <FileCheck2 className="size-4 text-amber-200" aria-hidden="true" />
-            Evidence confidence: {evidenceConfidence}
-          </span>
-          <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
-            <MessageSquareText className="size-4 text-amber-200" aria-hidden="true" />
-            {responseStatusLabel(profile)}
-          </span>
-        </div>
+      <div className="mt-5 grid gap-2 text-xs font-semibold text-slate-200">
+        <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
+          <ShieldCheck className="size-4 text-amber-200" aria-hidden="true" />
+          No raw emails, phones, street addresses, private notes, or raw evidence in public previews.
+        </span>
+        <span className="inline-flex items-center gap-2 rounded-md border border-white/10 px-3 py-2">
+          <Scale className="size-4 text-amber-200" aria-hidden="true" />
+          Ratings are context signals, not guarantees, credit scores, or legal findings.
+        </span>
+      </div>
 
-        <Button asChild className="w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
-          <Link href={`/client/${profile.publicSlug}`}>
-            View public profile
-            <ArrowRight aria-hidden="true" />
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
+      <Button asChild className="mt-5 w-full bg-amber-500 text-slate-950 hover:bg-amber-400">
+        <Link href="/search">
+          Start a private-safe search
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </Button>
+    </aside>
   )
 }
 
@@ -407,40 +334,12 @@ function TrustGuardrailCard({ title, text }: { title: string; text: string }) {
   )
 }
 
-function DarkFact({ label, value }: { label: string; value: string }) {
+function DarkFact({ icon: Icon, label, value }: { icon: LucideIcon; label: string; value: string }) {
   return (
     <div className="rounded-md border border-white/10 bg-white/5 p-3">
+      <Icon className="mb-2 size-4 text-amber-200" aria-hidden="true" />
       <p className="text-xs font-semibold uppercase text-slate-400">{label}</p>
       <p className="mt-1 font-semibold text-white">{value}</p>
     </div>
   )
-}
-
-function getReportPaymentFact(report: HomepageProfile["reports"][number]) {
-  if (isPositiveReportCategory(report.reportCategory)) {
-    return {
-      label: "Client experience",
-      value: "Positive",
-    }
-  }
-
-  if (report.amountUnpaid <= 0) {
-    return {
-      label: "Payment issue",
-      value: "None reported",
-    }
-  }
-
-  return {
-    label: "Reported unpaid balance",
-    value: formatCurrency(report.amountUnpaid),
-  }
-}
-
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(value)
 }

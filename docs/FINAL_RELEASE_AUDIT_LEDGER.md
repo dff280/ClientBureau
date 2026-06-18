@@ -58,7 +58,7 @@ No secrets or full environment dumps were recorded.
 
 | Prompt | Category | Status | Evidence rule |
 | --- | --- | --- | --- |
-| 01 | Public IA, homepage, header, footer | Not started | Needs command and browser evidence |
+| 01 | Public IA, homepage, header, footer | Completed | Command and browser evidence recorded below |
 | 02 | Contact, support, enterprise | Not started | Needs command and browser evidence |
 | 03 | Pricing, capabilities, deferred billing truth | Not started | Needs command and browser evidence |
 | 04 | Search | Not started | Needs command and browser evidence |
@@ -154,3 +154,65 @@ Summary:
 `PASS WITH OWNER ACTION`
 
 Prompt 00 established reliable release truth. Production is current with `origin/main` and local baseline, health/readiness is green, and automated local/live gates passed. Remaining owner actions are not release-truth blockers: Stripe is intentionally deferred, disposable QA credentials are still needed for strict authenticated release-candidate verification, and P1 mobile overflow findings should be handled in the appropriate later prompts.
+
+## Prompt 01 - Public IA, Homepage, Header, Footer
+
+| Item | Evidence |
+| --- | --- |
+| Branch | `codex/public-ia-homepage-final` |
+| Starting commit | `3fce077` (`Add final release audit baseline`) |
+| Scope | Homepage, public IA guardrails, copy-safety checks, SEO verifier homepage rules |
+| Status | `PASS` locally; pending PR/release review |
+
+### Section And CTA Inventory
+
+| Surface | Decision |
+| --- | --- |
+| Hero | One headline, one search form, one primary `Run Client Check` action, one secondary report action. |
+| Database choices | `Client Database`, `Contractor Database`, and `Subcontractor Database` remain the first major choice after the hero. |
+| Workflow | Kept as a single before/during/after section with one CTA per card. |
+| Trust/fairness | Kept as one guardrail section with private-evidence and response-rights copy. |
+| Final CTA | Kept as a single search/report band. |
+| Real profile snippets | Removed from homepage hero; replaced with a privacy-safe database preview that does not link to real public profiles. |
+| Header/footer | Existing database-first header/footer already exposed the critical public paths and passed route inventory; no route changes were needed. |
+
+### Prompt 01 Changes
+
+- Removed homepage runtime fetching of public client profiles for decorative hero content.
+- Replaced the real-record hero card with a privacy-safe `HeroDossierPreview` that explains approved public context, private evidence boundaries, and response paths without showing a real person, profile, report, or unpaid amount.
+- Removed `force-dynamic` from the homepage by eliminating the live profile dependency; the homepage now prerenders as static content in `next build`.
+- Tightened the homepage search placeholder from raw phone/email language to "private-match detail."
+- Replaced public About page "Product doctrine" wording with customer-facing "Business workflow" wording.
+- Extended `scripts/public-copy-safety.mjs` to catch aspirational roadmap/internal copy such as `the platform should`, `is becoming`, `we are building toward`, and `product doctrine`.
+- Extended `scripts/verify-seo.mjs` so the homepage fails if it contains decorative direct links to real client, contractor, subcontractor, or business profile detail pages.
+
+### Prompt 01 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm test` | Pass | 117 tests passed. |
+| `npm run build` | Pass | Homepage now builds as a static route (`○ /`). |
+| `npm run seo:check:local` | Pass | Includes new homepage decorative-profile-link guard and production-copy rules. |
+| `npm run route:check` | Pass | Public/header/footer route inventory remains intact. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+| `npm run verify:local` | Pass | Full local release gate passed after stopping the temporary browser-QA standalone server that had locked `.next/standalone` on Windows. |
+
+### Prompt 01 Browser Evidence
+
+Browser checks were run against the temporary local production build at `http://127.0.0.1:4200`.
+
+| Scenario | Result |
+| --- | --- |
+| Homepage at 375px | Pass: no horizontal overflow, H1 visible, one mobile menu button, desktop nav hidden, footer present, no direct profile links. |
+| Homepage at 768px | Pass: no horizontal overflow, three database labels visible, footer present, no console errors. |
+| Homepage at 1440px | Pass: no horizontal overflow, three database labels visible, footer present, no console errors. |
+| Mobile menu open | Pass: drawer opened, `Check a Client` plus the three database paths were visible, no horizontal overflow. |
+| Mobile menu close | Pass: visible close control closed the drawer with no overflow. |
+| Local session nuance | The standalone local `/api/session` returned the mock contractor session (`morgan@ridgebuild.com`), so hydrated mobile menu account actions reflected mock-auth state. Public logged-out navigation remains covered by SSR route inventory and SEO checks. |
+
+### Prompt 01 Findings
+
+- No P0 or P1 blocker remains for the homepage/header/footer IA pass.
+- The homepage no longer uses real adverse or positive profile context as decorative marketing content.
+- Public copy-safety checks are stricter now and caught one legacy About page label during development; it was corrected before final checks passed.
