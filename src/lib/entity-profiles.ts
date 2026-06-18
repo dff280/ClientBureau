@@ -23,6 +23,7 @@ import {
   type ReportConfidenceLevel,
   type ReportRelationshipType,
   type SearchFilters,
+  type VerificationStatus,
 } from "@/lib/types"
 
 export function profileTypeLabel(type: ProfileType) {
@@ -52,6 +53,144 @@ export function claimedStatusLabel(status: ClaimedStatus) {
   }
 
   return labels[status]
+}
+
+export type PublicBusinessFieldClassification =
+  | "safe_public"
+  | "verified_opt_in_public"
+  | "private_admin_only"
+  | "never_public"
+
+export type PublicBusinessFieldPolicy = {
+  field: string
+  label: string
+  classification: PublicBusinessFieldClassification
+  explanation: string
+}
+
+export const businessProfilePublicFieldPolicy: PublicBusinessFieldPolicy[] = [
+  {
+    field: "businessName",
+    label: "Business display name",
+    classification: "safe_public",
+    explanation: "Shown on public contractor and subcontractor profiles when the record is approved for public display.",
+  },
+  {
+    field: "tradeCategory",
+    label: "Trade or service category",
+    classification: "safe_public",
+    explanation: "Used for directory filters, profile cards, and role-specific contractor or subcontractor context.",
+  },
+  {
+    field: "cityState",
+    label: "City and state",
+    classification: "safe_public",
+    explanation: "Market-level location is public; street addresses, job addresses, and site access details are not.",
+  },
+  {
+    field: "serviceArea",
+    label: "Service area",
+    classification: "verified_opt_in_public",
+    explanation: "Can be summarized publicly after business review; exact private job or home addresses remain private.",
+  },
+  {
+    field: "websiteUrl",
+    label: "Website",
+    classification: "verified_opt_in_public",
+    explanation: "Can be shown only when the profile owner or moderator has approved it as a public business link.",
+  },
+  {
+    field: "licenseNumber",
+    label: "License indicator",
+    classification: "verified_opt_in_public",
+    explanation: "Public pages may say license information is on file, but should not present Client Bureau as a licensing authority.",
+  },
+  {
+    field: "businessPhone",
+    label: "Verification phone",
+    classification: "private_admin_only",
+    explanation: "Used for verification and admin review only; raw phone numbers should never appear in public profile HTML.",
+  },
+  {
+    field: "email",
+    label: "Account or claimant email",
+    classification: "private_admin_only",
+    explanation: "Used for login, claim review, and moderation contact only; raw email addresses stay out of public pages.",
+  },
+  {
+    field: "ownerIdentity",
+    label: "Owner identity",
+    classification: "private_admin_only",
+    explanation: "Owner names are not public unless intentionally approved as a business display field or authorized representative label.",
+  },
+  {
+    field: "internalNotes",
+    label: "Internal notes",
+    classification: "never_public",
+    explanation: "Moderator notes, account health, billing context, staff notes, private evidence paths, and hashes are never public.",
+  },
+]
+
+export function businessProfileFieldPolicyByClassification(classification: PublicBusinessFieldClassification) {
+  return businessProfilePublicFieldPolicy.filter((item) => item.classification === classification)
+}
+
+export function businessProfileClaimHref(input: Pick<EntityProfile, "profileType" | "slug" | "accountCapabilities">, requestedType?: ProfileType) {
+  const profileType = profileTypeForView(input, requestedType)
+  const params = new URLSearchParams({
+    profileType,
+    profileSlug: input.slug,
+  })
+
+  return `/claim-profile?${params.toString()}`
+}
+
+export function businessVerificationContext(input: {
+  claimedStatus?: ClaimedStatus
+  verificationLevel?: EntityProfile["verificationLevel"]
+  verificationBadges?: string[]
+  verificationStatus?: VerificationStatus
+  profileType?: ProfileType
+}) {
+  const profileLabel = input.profileType === "subcontractor" ? "trade profile" : "business profile"
+  const verified =
+    input.claimedStatus === "verified" ||
+    input.verificationLevel === "business_verified" ||
+    input.verificationStatus === "verified"
+  const claimed = input.claimedStatus === "claimed" || input.claimedStatus === "verified" || verified
+  const pending = input.claimedStatus === "claim_pending" || input.verificationStatus === "pending"
+  const disputed = input.claimedStatus === "disputed"
+  const label = verified
+    ? "Verification context reviewed"
+    : disputed
+      ? "Claim disputed"
+      : pending
+        ? "Verification in review"
+        : claimed
+          ? "Claimed profile"
+          : "Unclaimed profile"
+  const summary = verified
+    ? `Client Bureau has reviewed public profile context for this ${profileLabel}. This is not a license, insurance, bond, quality, payment, or legal-outcome guarantee.`
+    : disputed
+      ? `A claim or correction issue is in dispute. Public changes should wait for moderation review and supporting context.`
+      : pending
+        ? `A claim or verification request is being reviewed before ownership, verification labels, or public profile status changes.`
+        : claimed
+          ? `An authorized profile relationship is on file, but public details still require moderation before changes are shown.`
+          : `This ${profileLabel} can be claimed or corrected through moderation. Limited public context should not be treated as an endorsement or warning.`
+
+  return {
+    label,
+    summary,
+    isVerified: verified,
+    isClaimed: claimed,
+    isPending: pending,
+    publicBadges: input.verificationBadges?.filter((badge) =>
+      !/@|phone|email|internal|private|hash|note|billing/i.test(badge),
+    ) ?? [],
+    disclaimer:
+      "Verification labels are profile-context signals only. They are not an endorsement or guarantee, recommendation, background check, license confirmation, insurance confirmation, or credit score.",
+  }
 }
 
 export function defaultProfileSubtype(profileType: ProfileType): ProfileSubtype {
@@ -397,6 +536,12 @@ export function buildPublicEntityProfile(input: {
     profile.evidenceOnFileCount > 0
       ? `${profile.evidenceOnFileCount} private evidence ${profile.evidenceOnFileCount === 1 ? "item" : "items"} on file`
       : "Evidence can be reviewed privately"
+  const safeDescription =
+    profile.profileType === "contractor"
+      ? "Contractor and service-business profile with public-safe verification context, service-area signals, approved project summaries, and claim or correction paths. It is not an endorsement or guarantee."
+      : profile.profileType === "subcontractor"
+        ? "Subcontractor and trade-professional profile with public-safe trade scope, GC/sub relationship context, payment-chain signals, and claim or correction paths. It is not an endorsement or guarantee."
+        : `${profileTypeLabel(profile.profileType)} profile with moderated Client Bureau context. Public pages show approved summaries only.`
 
   return {
     ...profile,
@@ -405,7 +550,7 @@ export function buildPublicEntityProfile(input: {
     relationships,
     relatedClient: input.relatedClient,
     relatedContractor: input.relatedContractor,
-    safeDescription: `${profileTypeLabel(profile.profileType)} profile with moderated Client Bureau context. Public pages show approved summaries only.`,
+    safeDescription,
     responseStatusLabel,
     evidenceSummaryLabel,
     profileHref: entityProfileHref(profile, input.requestedProfileType),

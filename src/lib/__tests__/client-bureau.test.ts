@@ -92,6 +92,9 @@ import {
 } from "@/lib/trade-taxonomy"
 import {
   buildEntityProfileSlug,
+  businessProfileClaimHref,
+  businessProfileFieldPolicyByClassification,
+  businessVerificationContext,
   defaultProfileSubtype,
   deriveEntityProfiles,
   entityProfileHref,
@@ -153,6 +156,7 @@ import {
 import {
   getPublicClientProfile,
   getPublicBusinessProfile,
+  getPublicEntityProfile,
   createContractShareLink,
   addProjectJobParticipant,
   createProjectJob,
@@ -355,6 +359,74 @@ describe("Client Bureau unified profiles", () => {
     expect(valid.success).toBe(true)
     expect(valid.success && valid.data.accountCapabilities).toEqual(["contractor", "subcontractor"])
     expect(invalid.success).toBe(false)
+  })
+
+  it("classifies contractor public fields so private verification data cannot become public copy", () => {
+    const safePublic = businessProfileFieldPolicyByClassification("safe_public").map((item) => item.field)
+    const optInPublic = businessProfileFieldPolicyByClassification("verified_opt_in_public").map((item) => item.field)
+    const privateOnly = businessProfileFieldPolicyByClassification("private_admin_only").map((item) => item.field)
+    const neverPublic = businessProfileFieldPolicyByClassification("never_public").map((item) => item.field)
+
+    expect(safePublic).toEqual(expect.arrayContaining(["businessName", "tradeCategory", "cityState"]))
+    expect(optInPublic).toEqual(expect.arrayContaining(["serviceArea", "websiteUrl", "licenseNumber"]))
+    expect(privateOnly).toEqual(expect.arrayContaining(["businessPhone", "email", "ownerIdentity"]))
+    expect(neverPublic).toContain("internalNotes")
+    expect(safePublic).not.toContain("businessPhone")
+    expect(safePublic).not.toContain("email")
+    expect(optInPublic).not.toContain("internalNotes")
+  })
+
+  it("describes contractor verification as context instead of endorsement or licensing proof", () => {
+    const verified = businessVerificationContext({
+      claimedStatus: "claimed",
+      profileType: "contractor",
+      verificationStatus: "verified",
+      verificationBadges: ["Verified business", "Private phone verified", "internal note"],
+    })
+    const unclaimed = businessVerificationContext({
+      claimedStatus: "unclaimed",
+      profileType: "contractor",
+      verificationStatus: "unverified",
+    })
+
+    expect(verified.label).toBe("Verification context reviewed")
+    expect(verified.summary).toContain("not a license")
+    expect(verified.summary).toContain("guarantee")
+    expect(verified.disclaimer).toContain("not an endorsement or guarantee")
+    expect(verified.disclaimer).toContain("recommendation")
+    expect(verified.publicBadges).toEqual(["Verified business"])
+    expect(JSON.stringify(verified)).not.toContain("Private phone verified")
+    expect(JSON.stringify(verified)).not.toContain("internal note")
+    expect(unclaimed.label).toBe("Unclaimed profile")
+    expect(unclaimed.summary).toContain("can be claimed or corrected")
+  })
+
+  it("builds profile-type-preserving claim URLs for multi-capability business identities", () => {
+    const superiorProfile = entityProfiles.find((profile) => profile.businessName === "Superior Renovations & Painting")
+
+    expect(superiorProfile).toBeTruthy()
+    expect(businessProfileClaimHref(superiorProfile!, "contractor")).toBe(
+      `/claim-profile?profileType=contractor&profileSlug=${superiorProfile!.slug}`,
+    )
+    expect(businessProfileClaimHref(superiorProfile!, "subcontractor")).toBe(
+      `/claim-profile?profileType=subcontractor&profileSlug=${superiorProfile!.slug}`,
+    )
+  })
+
+  it("uses role-specific public-safe descriptions for business and trade profile views", () => {
+    const superiorProfile = entityProfiles.find((profile) => profile.businessName === "Superior Renovations & Painting")
+
+    expect(superiorProfile).toBeTruthy()
+
+    const contractorView = getPublicEntityProfile("contractor", superiorProfile!.slug)
+    const subcontractorView = getPublicEntityProfile("subcontractor", superiorProfile!.slug)
+
+    expect(contractorView?.safeDescription).toContain("Contractor and service-business profile")
+    expect(contractorView?.safeDescription).toContain("not an endorsement or guarantee")
+    expect(subcontractorView?.safeDescription).toContain("Subcontractor and trade-professional profile")
+    expect(subcontractorView?.safeDescription).toContain("payment-chain signals")
+    expect(JSON.stringify(contractorView)).not.toContain("businessPhone")
+    expect(JSON.stringify(subcontractorView)).not.toContain("internal note")
   })
 
   it("filters unified search by profile type and state", () => {

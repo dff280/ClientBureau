@@ -307,6 +307,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
   const accountCapabilities = normalizedCapabilities(contractor.accountCapabilities, primaryAccountType)
   const profileSlug = contractor.publicSlug ?? buildBusinessSlug(contractor)
   const enabledProfileUrls = accountCapabilities.map((profileType) => `/profiles/${profileType}/${profileSlug}`)
+  const primaryPreviewHref = enabledProfileUrls[0] ?? `/profiles/contractor/${profileSlug}`
   const profileGaps = [
     !contractor.licenseNumber ? "license" : null,
     !contractor.serviceArea ? "service area" : null,
@@ -367,9 +368,9 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
               </Button>
             </SheetTrigger>
             <Button asChild variant="outline">
-              <Link href={`/business/${buildBusinessSlug(contractor)}`} target="_blank">
+              <Link href={primaryPreviewHref} target="_blank">
                 <ExternalLink aria-hidden="true" />
-                Public profile
+                Public preview
               </Link>
             </Button>
           </>
@@ -379,7 +380,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
           <ReadinessItem
             icon={BadgeCheck}
             label="Verification"
-            text={contractor.verificationStatus === "verified" ? "Verified business" : contractor.verificationStatus === "pending" ? "Review pending" : "Not verified yet"}
+            text={contractor.verificationStatus === "verified" ? "Verification context reviewed" : contractor.verificationStatus === "pending" ? "Review pending" : "Not verified yet"}
             tone={verificationTone}
           />
           <ReadinessItem
@@ -430,7 +431,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Account classification</p>
                 <h3 className="mt-2 text-lg font-semibold text-slate-950">Set how this account appears across Client Bureau</h3>
                 <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-600">
-                  Choose the primary workspace and every public profile capability this business can support. This does not grant admin access or expose private contact data.
+                  Choose the primary workspace and every public profile view this business can support. This does not grant admin access, duplicate the identity, or expose private contact data.
                 </p>
               </div>
               <span className="rounded-md border border-blue-200 bg-white px-3 py-2 text-xs font-semibold uppercase text-blue-800">
@@ -450,7 +451,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
                 <div>
                   <p className="text-sm font-semibold text-slate-950">Public capabilities</p>
                   <p className="mt-1 text-xs leading-5 text-slate-600">
-                    Select every public view this account should support. The primary account type must be included.
+                    Select every public database view this account should support. The primary account type must be included and the same identity can appear in more than one view.
                   </p>
                   <div className="mt-3 grid gap-2">
                     <CapabilityCheckbox
@@ -506,7 +507,7 @@ export function AdminContractorEditor({ contractor }: { contractor: ContractorPr
                   <span>
                     <span className="block font-semibold text-slate-950">Public visibility enabled</span>
                     <span className="mt-1 block text-xs leading-5 text-slate-600">
-                      Public profile pages may show approved, moderated profile context only. Private contact details and notes stay hidden.
+                      Public profile pages may show approved, moderated profile context only. Private contact details, verification phone, account email, internal notes, and private job data stay hidden.
                     </span>
                   </span>
                 </label>

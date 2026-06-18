@@ -17,13 +17,19 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { businessProfileClaimHref, businessVerificationContext } from "@/lib/entity-profiles"
 import type { EntityProfileSearchResult } from "@/lib/types"
 
 export function EntityProfileResultCard({ result }: { result: EntityProfileSearchResult }) {
   const presentation = profileResultPresentation(result)
+  const verificationContext = businessVerificationContext(result)
+  const publicStatusLabel =
+    result.profileType === "contractor" || result.profileType === "subcontractor"
+      ? verificationContext.label
+      : "Approved public profile"
   const scoreTone = result.ratingScore >= 80 ? "text-emerald-700" : result.ratingScore >= 65 ? "text-amber-700" : "text-rose-700"
   const submitHref = `/submit-report?profileType=${result.profileType}&profileSubtype=${encodeURIComponent(String(result.profileSubtype ?? ""))}&profileSlug=${encodeURIComponent(result.slug)}&city=${encodeURIComponent(result.city)}&state=${encodeURIComponent(result.state)}`
-  const claimHref = `/claim-profile?profileSlug=${encodeURIComponent(result.slug)}&profileType=${encodeURIComponent(result.profileType)}`
+  const claimHref = businessProfileClaimHref(result, result.profileType)
   const watchHref = `/dashboard/watchlist?profileSlug=${encodeURIComponent(result.slug)}`
 
   return (
@@ -42,7 +48,7 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                   </span>
                   <span className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase text-emerald-800">
                     <ShieldCheck className="mr-1 inline size-3" aria-hidden="true" />
-                    Approved public profile
+                    {publicStatusLabel}
                   </span>
                 </div>
 
@@ -73,6 +79,11 @@ export function EntityProfileResultCard({ result }: { result: EntityProfileSearc
                 {result.latestSummary ||
                   presentation.fallbackSummary}
               </p>
+              {result.profileType === "contractor" || result.profileType === "subcontractor" ? (
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  {verificationContext.disclaimer}
+                </p>
+              ) : null}
             </div>
 
             <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
