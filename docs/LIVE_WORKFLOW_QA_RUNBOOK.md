@@ -1,6 +1,6 @@
 # Client Bureau Live Workflow QA Runbook
 
-Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency, flexible Jobs participant roles, Jobs cross-tool links, and admin-visible site error reporting.
+Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency, flexible Jobs participant roles, Jobs cross-tool links, and admin-visible site error reporting. For the private Jobs project-file workflow, use `docs/JOBS_PROJECT_FILE_RUNBOOK.md` alongside this checklist.
 
 ## 1. Release And Health Gate
 

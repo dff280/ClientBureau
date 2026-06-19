@@ -1,16 +1,12 @@
 # Client Bureau Jobs Project File Runbook
 
-Use this when releasing the private Jobs cross-tool workflow. Jobs are private contractor workspace records that connect site/scope details, participants, reports, contracts, evidence, recovery, lien service, and activity without exposing project details publicly.
+Use this runbook for the private Jobs project-file workflow. Jobs are contractor workspace records that connect site/scope details, participants, reports, contracts, evidence, recovery, lien service, and activity without exposing private project details publicly.
 
-## Database Prerequisite
+## Database Status
 
-Apply:
+Migration `supabase/migrations/0024_job_cross_tool_links.sql` is required and is applied in production as of the Web Launch RC completion pass.
 
-```sql
-supabase/migrations/0024_job_cross_tool_links.sql
-```
-
-This migration adds nullable `project_job_id` links to:
+It adds nullable `project_job_id` links to existing tool tables:
 
 - `report_drafts`
 - `payment_recovery_cases`
@@ -21,11 +17,11 @@ This migration adds nullable `project_job_id` links to:
 - `contract_packets`
 - `evidence_vault_items`
 
-The columns are nullable so existing records continue working. They reference `project_jobs(id)` with `on delete set null`, so retiring a private job never deletes reports, contracts, evidence, or service records.
+The columns are nullable so existing live records keep working. They reference `project_jobs(id)` with `on delete set null`, so deleting or retiring a private job file never deletes reports, contracts, evidence, or service records.
 
 ## Health Gate
 
-After applying the migration and rebuilding production:
+After every production rebuild, verify:
 
 ```powershell
 $env:LIVE_BASE_URL="https://clientbureau.com"
@@ -33,33 +29,42 @@ npm run verify:live
 Remove-Item Env:LIVE_BASE_URL
 ```
 
-Expected:
+Expected result:
 
 - `/api/health` reports `coreLiveReady: true`.
 - `/api/health` reports `platformCanUseSupabase: true`.
-- Platform column count includes the Jobs cross-tool link columns.
+- Required platform columns include all Jobs cross-tool link columns.
 - `recommendedPlatformFeatureDataMode` remains `supabase`.
-
-If the columns are missing, keep advanced platform mode rolled back or apply the migration before releasing linked Jobs workflows.
 
 ## Contractor QA
 
 Use a disposable contractor account.
 
 1. Open `/dashboard/jobs`.
-2. Create a private Job with job name, city/state, job type, trade category, scope, and property/site context.
+2. Create a private Job with job name, city/state, job type, trade category, scope summary, and property/site context.
 3. Open `/dashboard/jobs/[jobId]`.
-4. Add participants: property owner/client, hiring contractor, subcontractor, vendor/supplier.
-5. Confirm copy explains account/profile type versus role on this job.
-6. Remove one disposable participant role and confirm the underlying profile/account still exists.
-7. Create one linked record from the Job context in each available tool: report draft, contract, recovery, lien service, and evidence.
-8. Refresh the Job detail page and confirm linked records remain attached.
+4. Add participants: property owner/client, hiring contractor, subcontractor, and vendor/supplier when relevant.
+5. Confirm the participant form explains that account/profile type is general identity, while role on this job, hired-by, and reports-to are job-specific.
+6. Remove one disposable participant role and confirm the checkbox is required, the profile/account still exists, and only the job participant row changes.
+7. From the Job file, create or start one linked record in each available tool: report draft, contract workspace item or packet, recovery case, Florida lien service or notice draft, and evidence vault item/status.
+8. Refresh `/dashboard/jobs/[jobId]` and confirm linked records appear in the Job detail linked-record panels.
+
+## Admin QA
+
+Use a disposable admin account.
+
+1. Confirm `/admin`, `/admin/audit-log`, and `/admin/error-log` remain accessible without session loss.
+2. Confirm profile/report moderation pages do not expose private Job details in public-preview cards.
+3. Approve or reject only safe disposable report records.
+4. Confirm public profile pages still show approved public summaries only.
+5. Confirm audit events and site error rows do not print private access notes, raw evidence paths, or secret values.
 
 ## Privacy Rules
 
-Never expose these private Job fields publicly:
+The following Job fields are private workspace data and must not appear on public client, contractor, subcontractor, business, report, sitemap, schema, analytics, or SEO surfaces:
 
 - street address
+- unit or parcel detail unless deliberately public through a moderated report summary
 - access instructions
 - parking instructions
 - gate, lockbox, or private access notes
@@ -70,4 +75,16 @@ Never expose these private Job fields publicly:
 - private contract snapshots
 - admin notes
 
-Public pages may show only approved, moderated, public-safe summaries.
+Public pages may mention only approved, moderated, public-safe summaries and should never expose private Job context directly.
+
+## Rollback Guidance
+
+If production advanced tools fail after deployment:
+
+1. Keep `DATA_MODE=supabase` for core auth, reports, admin approval, and public profiles.
+2. Temporarily set `PLATFORM_FEATURE_DATA_MODE=mock`.
+3. Rebuild production.
+4. Fix the missing column or action path.
+5. Re-enable `PLATFORM_FEATURE_DATA_MODE=supabase` only after `/api/health` is green.
+
+Do not remove the nullable `project_job_id` columns during rollback; they are forward-compatible and preserve existing records.
