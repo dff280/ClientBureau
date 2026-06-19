@@ -31,6 +31,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { claimedStatusLabel, deriveEntityProfiles, entityProfileHref, profileSupportsType, profileTypeLabel } from "@/lib/entity-profiles"
 import { getAdminWorkspaceDataService, getProfileClaimsService, getPublicBusinessProfilesService } from "@/lib/repositories/client-bureau-service"
+import { subcontractorLaunchReadiness } from "@/lib/subcontractor-launch-readiness"
 import { tradeCategories, tradeCategoryGroups, tradeCategoryMatches } from "@/lib/trade-taxonomy"
 import { profileTypes, verificationLevels, type EntityProfile, type ProfileClaim, type ProfileType } from "@/lib/types"
 
@@ -126,25 +127,27 @@ export default async function AdminProfilesPage({ searchParams }: { searchParams
   const publicCount = profiles.filter((profile) => profile.isPublic).length
   const claimedCount = profiles.filter((profile) => profile.claimedStatus === "claimed" || profile.claimedStatus === "verified").length
   const subcontractorProfiles = profiles.filter((profile) => profileSupportsType(profile, "subcontractor"))
-  const publicSubcontractorCount = subcontractorProfiles.filter((profile) => profile.isPublic).length
-  const verifiedSubcontractorCount = subcontractorProfiles.filter((profile) =>
-    ["claimed", "verified"].includes(profile.claimedStatus) || profile.verificationBadges?.length,
-  ).length
-  const subcontractorLaunchReadyCount = subcontractorProfiles.filter((profile) =>
-    subcontractorLaunchReadiness(profile).ready,
-  ).length
-  const subcontractorLaunchCandidates = subcontractorProfiles
-    .map((profile) => ({
-      profile,
-      readiness: subcontractorLaunchReadiness(profile),
-    }))
-    .sort((a, b) => b.readiness.score - a.readiness.score || Number(b.profile.isPublic) - Number(a.profile.isPublic))
-    .slice(0, 4)
   const duplicateGroups = profiles.reduce<Record<string, EntityProfile[]>>((groups, profile) => {
     if (!profile.duplicateGroupKey) return groups
     groups[profile.duplicateGroupKey] = [...(groups[profile.duplicateGroupKey] ?? []), profile]
     return groups
   }, {})
+  const duplicateCountForProfile = (profile: EntityProfile) =>
+    profile.duplicateGroupKey ? duplicateGroups[profile.duplicateGroupKey]?.length ?? 0 : 0
+  const publicSubcontractorCount = subcontractorProfiles.filter((profile) => profile.isPublic).length
+  const verifiedSubcontractorCount = subcontractorProfiles.filter((profile) =>
+    ["claimed", "verified"].includes(profile.claimedStatus) || profile.verificationBadges?.length,
+  ).length
+  const subcontractorLaunchReadyCount = subcontractorProfiles.filter((profile) =>
+    subcontractorLaunchReadiness(profile, { duplicateCount: duplicateCountForProfile(profile) }).ready,
+  ).length
+  const subcontractorLaunchCandidates = subcontractorProfiles
+    .map((profile) => ({
+      profile,
+      readiness: subcontractorLaunchReadiness(profile, { duplicateCount: duplicateCountForProfile(profile) }),
+    }))
+    .sort((a, b) => b.readiness.score - a.readiness.score || Number(b.profile.isPublic) - Number(a.profile.isPublic))
+    .slice(0, 4)
   const duplicateGroupCount = Object.values(duplicateGroups).filter((group) => group.length > 1).length
   const duplicateSignals = profiles.filter((profile) => {
     if (!profile.duplicateGroupKey) return false
@@ -748,6 +751,16 @@ function SubcontractorLaunchCandidateCard({
           Ready for final moderator note and public profile privacy preview.
         </div>
       )}
+      {readiness.warnings.length > 0 ? (
+        <div className="mt-3 rounded-md border border-blue-200 bg-blue-50 p-3">
+          <p className="text-xs font-semibold uppercase text-blue-800">Launch notes</p>
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-sm leading-6 text-blue-950">
+            {readiness.warnings.slice(0, 3).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
       <div className="mt-4 flex flex-wrap gap-2">
         <Button asChild size="sm" variant="outline">
           <Link href={manageHref}>
@@ -778,35 +791,6 @@ function ProfileFact({ label, value }: { label: string; value: string | number }
       <dd className="mt-1 text-sm font-semibold text-slate-950">{value}</dd>
     </div>
   )
-}
-
-function subcontractorLaunchReadiness(profile: EntityProfile) {
-  const missing: string[] = []
-  const publicSummary = profile.publicSummary?.trim() ?? ""
-  const hasVerification =
-    ["claimed", "verified"].includes(profile.claimedStatus) ||
-    Boolean(profile.verificationBadges?.length) ||
-    ["business_verified", "license_verified", "insurance_verified", "admin_verified"].includes(String(profile.verificationLevel))
-
-  if (!profileSupportsType(profile, "subcontractor")) missing.push("Profile type or account capabilities must include subcontractor")
-  if (!profile.displayName && !profile.businessName) missing.push("Real business or trade display name")
-  if (!profile.city || !profile.state) missing.push("City and state")
-  if (!profile.profileSubtype) missing.push("Subcontractor subtype")
-  if (!profile.tradeCategory && !profile.profileSubtype) missing.push("Canonical trade category or clear trade subtype")
-  if (publicSummary.length < 40) missing.push("Neutral public-safe summary")
-  if (!hasVerification) missing.push("Claim, verification, or documented moderator context")
-  if (!profile.isPublic) missing.push("Public visibility enabled after review")
-  if (!["subcontractor_trade_partner_reliability", "subcontractor_trade_partner_reliability_v3"].includes(profile.ratingModel ?? "")) {
-    missing.push("Rating model set to Trade Partner Reliability")
-  }
-  if (profile.ratingScore <= 0) missing.push("Trade Partner Reliability Rating")
-  if (profile.claimedStatus === "disputed") missing.push("Dispute resolved or clearly moderated before launch")
-
-  return {
-    missing,
-    ready: missing.length === 0,
-    score: Math.max(0, Math.min(100, 100 - missing.length * 12)),
-  }
 }
 
 function profilePriority(profile: EntityProfile, duplicateGroups: Record<string, EntityProfile[]>) {

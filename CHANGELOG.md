@@ -6,6 +6,10 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ### Improved
 
+- Added a Subcontractor/Trade Database launch-readiness policy with shared admin/test guardrails for real verified trade profiles, duplicate identity review, correct Trade Partner rating models, and private-marker redaction.
+- Improved the Subcontractor Database public directory with a compact verified-trade launch standard panel and no-fake-inventory messaging for low or zero inventory markets.
+- Tightened SEO verification so subcontractor detail inventory warns when no real verified profile is available and only passes the launch-context check when verified trade/profile signals are present.
+- Aligned live release verification with the current `/businesses` contractor database copy.
 - Added a Contractor/Business Database trust-profile pass with a shared public field policy, non-endorsement verification context, role-specific contractor/subcontractor profile descriptions, canonical profile claim URLs, and admin preview links that preserve multi-capability identities.
 - Added a Client Database rating-semantics pass so zero-history and one-report profiles display limited/early context, public client profiles/search/directory/share cards avoid over-certain score or risk framing, and client rating tests cover positive, adverse, disputed, resolved, evidence-backed, and response/correction states.
 - Hardened the public search product pass with profile-specific no-result language, bounded result rendering, private identifier redaction, safe saved-search/search-analytics persistence, and release checks for private-match redirects.

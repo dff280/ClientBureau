@@ -15,6 +15,8 @@ A public subcontractor profile is ready when staff can confirm:
 - The subtype clearly describes the trade role, such as licensed subcontractor, installer, crew, labor provider, or specialty trade.
 - Claim status, verification status, or moderator notes support why the record can be public.
 - The public summary is neutral, factual, and free of private identifiers.
+- Public text has no raw email, phone number, street address, private evidence path, admin note, staff note, lockbox, gate code, or private access detail.
+- Duplicate or similar-identity records are reviewed before publication.
 - Any report context is admin-approved and public-safe.
 - Evidence is summarized only as evidence-on-file indicators, never raw files or storage paths.
 - Public preview shows no raw email, phone number, street address, private contract detail, private payment record, pending/rejected content, or admin note.
@@ -34,6 +36,8 @@ A public subcontractor profile is ready when staff can confirm:
    - claim or verification context
    - profile type or account capability set for subcontractor/trade work
    - rating model set to Trade Partner Reliability when the public view is a subcontractor/trade profile
+   - duplicate identity signals resolved or documented
+   - no private markers in the public summary
    - moderator note for the publication decision
 6. Open the public profile preview from the readiness card.
 7. Confirm the public page reads as a trade-partner dossier, not a generic contractor page.
@@ -61,6 +65,9 @@ with candidates as (
     verification_badges,
     is_public,
     public_summary,
+    duplicate_group_key,
+    public_field_redactions,
+    redaction_note,
     rating_model,
     rating_score,
     rating_band,
@@ -81,15 +88,22 @@ scored as (
       case when trade_category is null and profile_subtype is null then 'trade category or clear subtype' end,
       case when public_summary is null or length(trim(public_summary)) < 40 then 'neutral public-safe summary' end,
       case
+        when public_summary ~* '[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}'
+          or public_summary ~* '(\\+?1[\\s.-]?)?(\\(?[0-9]{3}\\)?[\\s.-]?)?[0-9]{3}[\\s.-]?[0-9]{4}'
+          or public_summary ~* '(storage/v1|s3://|evidence/|uploads/|admin note|internal note|staff note|gate code|lockbox)'
+        then 'public summary must remove private identifiers or internal markers'
+      end,
+      case
         when claimed_status not in ('claimed', 'verified')
          and coalesce(array_length(verification_badges, 1), 0) = 0
          and coalesce(verification_level, '') not in ('business_verified', 'license_verified', 'insurance_verified', 'admin_verified')
         then 'claim, verification, or documented moderator context'
       end,
       case when is_public is not true then 'public visibility enabled after review' end,
-      case when rating_model is distinct from 'subcontractor_trade_partner_reliability' then 'rating model set to Trade Partner Reliability' end,
+      case when rating_model not in ('subcontractor_trade_partner_reliability', 'subcontractor_trade_partner_reliability_v3') then 'rating model set to Trade Partner Reliability' end,
       case when coalesce(rating_score, 0) <= 0 then 'Trade Partner Reliability Rating' end,
-      case when claimed_status = 'disputed' then 'dispute resolved or clearly moderated before launch' end
+      case when claimed_status = 'disputed' then 'dispute resolved or clearly moderated before launch' end,
+      case when duplicate_group_key is not null then 'duplicate identity group reviewed or resolved' end
     ], null) as missing_fields
   from candidates
 )
@@ -109,6 +123,8 @@ select
   rating_band,
   report_count,
   evidence_on_file_count,
+  duplicate_group_key,
+  redaction_note,
   greatest(0, 100 - (coalesce(array_length(missing_fields, 1), 0) * 12)) as readiness_score,
   missing_fields,
   updated_at
@@ -132,7 +148,7 @@ set
       from unnest(coalesce(account_capabilities, array[]::text[]) || array['subcontractor']) as capability(value)
     )
   ),
-  rating_model = 'subcontractor_trade_partner_reliability',
+  rating_model = 'subcontractor_trade_partner_reliability_v3',
   is_public = true,
   updated_at = now()
 where id = '<profile_id>'

@@ -499,6 +499,9 @@ export function EntityProfileDirectory({
       />
       <section id="profile-directory" className="bureau-section">
         <div className="bureau-container space-y-6">
+          {activeType === "subcontractor" ? (
+            <SubcontractorLaunchGuidance profileCount={visibleProfiles.length} />
+          ) : null}
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="space-y-5 p-5">
               <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
@@ -829,6 +832,52 @@ function DatabaseReadingSection({
         </div>
       ) : null}
     </section>
+  )
+}
+
+function SubcontractorLaunchGuidance({ profileCount }: { profileCount: number }) {
+  const items = [
+    {
+      title: "Real verified trade records",
+      text: "Subcontractor profiles are published only after staff confirm the trade identity, city/state, public-safe summary, and claim or verification context.",
+    },
+    {
+      title: "Payment-chain context",
+      text: "Profiles are designed to separate GC/sub relationships, assigned scope, retainage, pay applications, completion context, and response rights.",
+    },
+    {
+      title: "No fake inventory",
+      text: "Client Bureau will not create placeholder trade profiles for SEO. Empty markets stay useful for search, claims, and documented reports.",
+    },
+  ]
+
+  return (
+    <Card className="overflow-hidden rounded-md border-blue-200 bg-gradient-to-br from-blue-950 via-slate-950 to-slate-900 text-white shadow-sm">
+      <CardContent className="grid gap-5 p-5 sm:p-6 lg:grid-cols-[0.72fr_1.28fr] lg:items-center">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-200">
+            Verified trade launch standard
+          </p>
+          <h2 className="mt-2 text-2xl font-semibold tracking-normal">
+            {profileCount > 0
+              ? "Published trade profiles have passed public-readiness review."
+              : "The Subcontractor Database opens only with real verified trade records."}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-slate-300">
+            This database is built for subcontractors, crews, installers, vendors, and specialty trades. Public pages show
+            approved context only; private evidence, contact data, project access notes, and staff review notes stay sealed.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {items.map((item) => (
+            <div key={item.title} className="rounded-md border border-white/10 bg-white/10 p-4">
+              <h3 className="font-semibold text-white">{item.title}</h3>
+              <p className="mt-2 text-sm leading-6 text-slate-300">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
