@@ -567,6 +567,25 @@ const authTransitionChecks = [
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
   },
   {
+    name: "/api/auth/password-reset invalid email",
+    path: "/api/auth/password-reset",
+    method: "POST",
+    body: new URLSearchParams({
+      email: "not-an-email",
+    }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  },
+  {
+    name: "/api/auth/update-password missing session",
+    path: "/api/auth/update-password",
+    method: "POST",
+    body: new URLSearchParams({
+      password: "release-verifier-password",
+      confirmPassword: "release-verifier-password",
+    }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+  },
+  {
     name: "/api/auth/logout",
     path: "/api/auth/logout",
     method: "GET",
@@ -674,6 +693,8 @@ if (robots.response.ok) {
     "Allow: /profiles",
     "Allow: /search",
     "Allow: /login",
+    "Allow: /forgot-password",
+    "Allow: /reset-password",
     "Allow: /signup",
     "Allow: /submit-report",
     "Allow: /claim-profile",
@@ -1108,6 +1129,47 @@ if (loginWithUnsafeNext.response.ok) {
   }
 } else {
   fail("/login blocks unsafe return path", loginWithUnsafeNext.error || String(loginWithUnsafeNext.response.status))
+}
+
+const loginWithApiNext = await read(`/login?next=${encodeURIComponent("/api/health")}`)
+if (loginWithApiNext.response.ok) {
+  const nextValue = hiddenInputValue(loginWithApiNext.text, "next")
+  const signupNextValues = linkParamValues(loginWithApiNext.text, "/signup", "next")
+
+  if (!nextValue && signupNextValues.length === 0) {
+    pass("/login blocks API return path", "no hidden next or signup next preserved")
+  } else {
+    fail(
+      "/login blocks API return path",
+      `hidden=${nextValue || "missing"}; signup=${signupNextValues.length > 0 ? signupNextValues.join(", ") : "missing"}`,
+    )
+  }
+} else {
+  fail("/login blocks API return path", loginWithApiNext.error || String(loginWithApiNext.response.status))
+}
+
+const forgotPasswordPage = await read("/forgot-password")
+if (forgotPasswordPage.response.ok) {
+  assertNoindexPage("/forgot-password", forgotPasswordPage.text, [
+    "Account recovery",
+    "Reset your Client Bureau password.",
+    "Request reset link",
+  ])
+  pass("/forgot-password returns 200")
+} else {
+  fail("/forgot-password returns 200", forgotPasswordPage.error || String(forgotPasswordPage.response.status))
+}
+
+const resetPasswordPage = await read("/reset-password")
+if (resetPasswordPage.response.ok) {
+  assertNoindexPage("/reset-password", resetPasswordPage.text, [
+    "Secure password update",
+    "Choose a new password.",
+    "Set new password",
+  ])
+  pass("/reset-password returns 200")
+} else {
+  fail("/reset-password returns 200", resetPasswordPage.error || String(resetPasswordPage.response.status))
 }
 
 const signupSafeNext = "/search?q=John&state=FL"

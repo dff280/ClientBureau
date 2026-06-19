@@ -84,7 +84,9 @@ const privateNoindexRoutes = new Set([
 ])
 
 const crawlableNoindexRoutes = new Set([
+  "/forgot-password",
   "/login",
+  "/reset-password",
   "/search",
   "/signup",
   "/submit-report",

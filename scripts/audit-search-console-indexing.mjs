@@ -28,7 +28,7 @@ function classifyPath(pathname) {
     return "robotsBlockedPrivate"
   }
 
-  if (["/login", "/search", "/signup", "/submit-report"].some((prefix) => matchesPrefix(pathname, prefix))) {
+  if (["/forgot-password", "/login", "/reset-password", "/search", "/signup", "/submit-report"].some((prefix) => matchesPrefix(pathname, prefix))) {
     return "crawlableNoindexUtility"
   }
 

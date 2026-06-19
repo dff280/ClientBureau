@@ -1,7 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
-import { getSafeInternalPath } from "@/lib/auth"
+import { getSafeAuthCallbackReturnPath } from "@/lib/auth"
 import { withNoStore } from "@/lib/http"
 import { createClient } from "@/lib/supabase/server"
 import { getInternalRedirectUrl } from "@/lib/urls"
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code")
   const tokenHash = requestUrl.searchParams.get("token_hash")
   const type = requestUrl.searchParams.get("type") as EmailOtpType | null
-  const next = getSafeInternalPath(requestUrl.searchParams.get("next")) ?? "/dashboard"
+  const next = getSafeAuthCallbackReturnPath(requestUrl.searchParams.get("next")) ?? "/dashboard"
   const supabase = await createClient()
 
   if (code) {

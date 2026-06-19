@@ -90,6 +90,12 @@ export function LoginForm({
       <PendingSubmitButton pendingText="Signing in..." className="bg-slate-950 text-white hover:bg-slate-800">
         Sign in
       </PendingSubmitButton>
+      <div className="flex flex-col gap-2 text-center text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between sm:text-left">
+        <Link href="/forgot-password" className="font-semibold text-amber-700">
+          Forgot password?
+        </Link>
+        <span>Use the email connected to your Client Bureau account.</span>
+      </div>
       <p className="text-center text-sm text-slate-600">
         New to Client Bureau?{" "}
         <Link href={signupHref} className="font-semibold text-amber-700">
@@ -148,7 +154,7 @@ export function SignupForm({
       <OnboardingBlock
         icon={<Target className="size-4" aria-hidden="true" />}
         title="Choose account type"
-        text="This keeps contractor tools and client response tools separate from the start."
+        text="This guides your first workspace. Admins can add public capabilities later, and job roles can vary by project."
       >
         <div className="grid gap-3 md:grid-cols-2">
           {accountTypeOptions.map((option) => (
@@ -313,6 +319,92 @@ export function SignupForm({
           Login
         </Link>
       </p>
+    </form>
+  )
+}
+
+export function PasswordResetRequestForm({ message, sent }: { message?: string; sent?: boolean }) {
+  return (
+    <form action="/api/auth/password-reset" method="post" className="grid gap-4">
+      {message ? (
+        <Alert variant={sent ? "default" : "destructive"} className="rounded-md">
+          <AlertTitle>{sent ? "Check your email" : "Reset needs attention"}</AlertTitle>
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      ) : null}
+      <div className="space-y-2">
+        <Label htmlFor="email">Account email</Label>
+        <Input
+          id="email"
+          name="email"
+          type="email"
+          placeholder="you@company.com"
+          autoComplete="email"
+          inputMode="email"
+          required
+        />
+      </div>
+      <PendingSubmitButton pendingText="Sending reset link..." className="bg-slate-950 text-white hover:bg-slate-800">
+        Send reset link
+      </PendingSubmitButton>
+      <p className="text-center text-sm text-slate-600">
+        Remembered it?{" "}
+        <Link href="/login" className="font-semibold text-amber-700">
+          Sign in
+        </Link>
+      </p>
+    </form>
+  )
+}
+
+export function PasswordUpdateForm({ message }: { message?: string }) {
+  const [showPassword, setShowPassword] = useState(false)
+
+  return (
+    <form action="/api/auth/update-password" method="post" className="grid gap-4">
+      {message ? (
+        <Alert variant="destructive" className="rounded-md">
+          <AlertTitle>Password update needs attention</AlertTitle>
+          <AlertDescription>{message}</AlertDescription>
+        </Alert>
+      ) : null}
+      <div className="space-y-2">
+        <Label htmlFor="password">New password</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Minimum 8 characters"
+            autoComplete="new-password"
+            className="pr-12"
+            required
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-1/2 inline-flex size-8 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+            onClick={() => setShowPassword((value) => !value)}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+          >
+            {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
+          </button>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword">Confirm new password</Label>
+        <Input
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          placeholder="Re-enter password"
+          autoComplete="new-password"
+          required
+        />
+      </div>
+      <PendingSubmitButton pendingText="Updating password..." className="bg-slate-950 text-white hover:bg-slate-800">
+        Update password
+      </PendingSubmitButton>
     </form>
   )
 }

@@ -9,7 +9,9 @@ export const robotsBlockedPathPrefixes = [
 ] as const
 
 export const crawlableNoindexPathPrefixes = [
+  "/forgot-password",
   "/login",
+  "/reset-password",
   "/search",
   "/signup",
   "/submit-report",

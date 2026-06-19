@@ -7,7 +7,13 @@ import { formDataToObject } from "@/lib/actions/result"
 import sitemap from "@/app/sitemap"
 import { generateMetadata as generateClientProfileMetadata } from "@/app/client/[slug]/page"
 import { generateMetadata as generateBusinessProfileMetadata } from "@/app/business/[slug]/page"
-import { getPostSignupRedirectPath, getSafeInternalPath, getSafePostSignupReturnPath } from "@/lib/auth"
+import {
+  getPostSignupRedirectPath,
+  getSafeAuthCallbackReturnPath,
+  getSafeInternalPath,
+  getSafeLoginReturnPath,
+  getSafePostSignupReturnPath,
+} from "@/lib/auth"
 import {
   billingInterestSignupHref,
   evaluateBillingAvailability,
@@ -1048,6 +1054,15 @@ describe("deployment URL helpers", () => {
     expect(getSafeInternalPath("/admin/reports")).toBe("/admin/reports")
     expect(getSafeInternalPath("//evil.example/admin")).toBeUndefined()
     expect(getSafeInternalPath("https://evil.example/admin")).toBeUndefined()
+    expect(getSafeInternalPath("/dashboard\\admin")).toBeUndefined()
+    expect(getSafeLoginReturnPath("/admin/reports")).toBe("/admin/reports")
+    expect(getSafeLoginReturnPath("/dashboard/reports")).toBe("/dashboard/reports")
+    expect(getSafeLoginReturnPath("/api/health")).toBeUndefined()
+    expect(getSafeLoginReturnPath("/auth/callback?next=/admin")).toBeUndefined()
+    expect(getSafeLoginReturnPath("/contract/private-token")).toBeUndefined()
+    expect(getSafeLoginReturnPath("/forgot-password")).toBeUndefined()
+    expect(getSafeAuthCallbackReturnPath("/reset-password")).toBe("/reset-password")
+    expect(getSafeAuthCallbackReturnPath("/admin")).toBeUndefined()
     expect(noStoreHeaders["Cache-Control"]).toContain("no-store")
   })
 
@@ -1079,6 +1094,13 @@ describe("deployment URL helpers", () => {
   it("uses client response as the default client-account signup destination", () => {
     expect(getPostSignupRedirectPath("client", undefined)).toBe("/client-response")
     expect(getPostSignupRedirectPath("client", "/admin")).toBe("/client-response")
+    expect(getPostSignupRedirectPath("client", "/dashboard/watchlist")).toBe("/client-response")
+    expect(getPostSignupRedirectPath("client", "/client-response?profile=john")).toBe(
+      "/client-response?profile=john",
+    )
+    expect(getPostSignupRedirectPath("client", "/claim-profile?profileType=client")).toBe(
+      "/claim-profile?profileType=client",
+    )
   })
 
   it("preserves paid plan interest without promising checkout during signup", () => {

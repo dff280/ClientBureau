@@ -64,8 +64,8 @@ No secrets or full environment dumps were recorded.
 | 04 | Search | Completed | Command and browser evidence recorded below |
 | 05 | Client Database and rating semantics | Completed | Command and browser evidence recorded below |
 | 06 | Contractor/Business Database | Completed | PR #8 merged, deployed, and live release identity verified at commit `671db36f823acf268708daf00841456e3943c160` |
-| 07 | Subcontractor/Trade Database | PR-ready | Local command, SEO, and browser evidence recorded on `codex/subcontractor-database-launch-final`; deploy after PR review |
-| 08 | Auth, onboarding, sessions, capabilities | Not started | Needs command and browser evidence |
+| 07 | Subcontractor/Trade Database | Completed | PR #9 merged, deployed, and live release identity verified at commit `d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f` |
+| 08 | Auth, onboarding, sessions, capabilities | In progress | Local command, browser, and route-transition evidence recorded on `codex/auth-onboarding-final`; PR pending |
 | 09 | Jobs and participants | Not started | Needs command and browser evidence |
 | 10 | Contractor dashboard | Not started | Needs command and browser evidence |
 | 11 | Reports, response, disputes, claims | Not started | Needs command and browser evidence |
@@ -94,6 +94,53 @@ No secrets or full environment dumps were recorded.
 | Prompt 07 SEO local | `npm run seo:check:local` | Pass; subcontractor launch-context check passes when verified trade signals exist |
 | Prompt 07 mobile readiness | `npm run mobile:check` | Pass |
 | Prompt 07 browser sample | Local production preview at `http://127.0.0.1:4300` checked `/profiles/subcontractor`, `/profiles/subcontractor/bright-line-electric-orlando-fl`, `/search?profileType=subcontractor&tradeCategory=Electrical`, and `/admin/profiles?type=subcontractor` at mobile width | Pass; no public overflow or private-data leak found |
+| Prompt 07 PR/deploy | PR #9 merged to `main`; VPS `/api/version` reports `0.4.2` at `d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f` | Pass |
+| Prompt 07 live verification | `LIVE_BASE_URL=https://clientbureau.com EXPECTED_APP_VERSION=0.4.2 EXPECTED_GIT_COMMIT=d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f npm run verify:live` | Pass |
+| Prompt 07 live SEO | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
+
+## Prompt 08 - Authentication, Onboarding, Sessions, And Capabilities
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Branch | `codex/auth-onboarding-final` from updated `main` at `d3e963f` | In progress |
+| Safe login returns | `/login?next=/dashboard/reports` preserves `/dashboard/reports`; `/login?next=/api/health` drops the unsafe return path | Pass |
+| Signup return policy | Contractor/subcontractor signups can preserve safe workspace paths; client signups are routed to safe client-response/claim/profile paths | Pass |
+| Password recovery | Added crawlable `noindex, follow` `/forgot-password` and `/reset-password` pages plus `POST /api/auth/password-reset` and `POST /api/auth/update-password` | Pass |
+| Client access boundary | Client-response accounts are redirected away from contractor dashboard tools unless they are admins | Pass |
+| Account model docs | `docs/AUTH_ONBOARDING_SESSION_RUNBOOK.md` explains `users.role`, `users.account_type`, `entity_profiles.account_capabilities`, and job-specific participant roles | Pass |
+
+### Prompt 08 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm test` | Pass | 135 tests passed, including auth return-path and client-signup routing cases. |
+| `npm run route:check` | Pass | `/forgot-password` and `/reset-password` are classified as crawlable `noindex, follow` utility pages. |
+| `npm run build` | Pass | Next.js production build passed with 71 generated static pages. |
+| `npm run seo:check:local` | Pass | Auth/reset pages passed metadata, noindex/follow, production-copy, and private-marker checks. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+
+### Prompt 08 Browser And Route Evidence
+
+Browser checks were run against a local production preview at `http://127.0.0.1:4301`.
+
+| Scenario | Viewports | Result |
+| --- | ---: | --- |
+| `/login?next=/dashboard/reports` | 375px, 768px, 1440px | Pass: no overflow, canonical `/login`, `noindex, follow`, forgot-password link visible, and hidden `next` preserved as `/dashboard/reports`. |
+| `/login?next=/api/health` | 375px, 768px, 1440px | Pass: no overflow, canonical `/login`, `noindex, follow`, and unsafe API return path removed from hidden form inputs. |
+| `/forgot-password` and `/forgot-password?sent=1` | 375px, 768px, 1440px | Pass: no overflow, canonical `/forgot-password`, `noindex, follow`, reset request form posts to `/api/auth/password-reset`, and user-enumeration-safe copy is shown. |
+| `/reset-password` | 375px, 768px, 1440px | Pass: no overflow, canonical `/reset-password`, `noindex, follow`, and update form posts to `/api/auth/update-password`. |
+| `/signup?next=/dashboard/watchlist` | 375px, 768px, 1440px | Pass: no overflow, canonical `/signup`, `noindex, follow`, and safe contractor/subcontractor workspace return is preserved while client signup routing is enforced server-side. |
+| `POST /api/auth/password-reset` | Local curl | Pass: valid-looking email redirects to `/forgot-password?sent=1`; invalid email redirects to safe validation state; responses include `Cache-Control: no-store`. |
+| `POST /api/auth/update-password` | Local curl | Pass: validation redirects safely; local mock mode uses the mock success path, while Supabase mode calls `auth.updateUser` before success. |
+
+### Prompt 08 Privacy, Security, And Owner Actions
+
+- Login, signup, reset, auth callback, and password-update redirects now reject external URLs, protocol-relative URLs, API/auth/contract/private token paths, and malformed backslash/control-character paths.
+- `/auth/callback` allows `/reset-password` for recovery links but blocks `/admin`, `/api`, `/auth`, `/contract`, `/login`, and `/signup` return targets.
+- Admin authorization error copy no longer exposes internal allowlist or Supabase implementation details.
+- Password reset requests do not reveal whether an account exists for a valid-looking email address.
+- Owner action: after this PR is merged and deployed, perform one production password-reset email test with a disposable account and rerun live verification.
 
 ## Command Evidence
 

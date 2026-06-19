@@ -8,7 +8,7 @@ import { users } from "@/lib/mock-data"
 import { hasSupabaseServiceConfig } from "@/lib/supabase/config"
 import { createClient } from "@/lib/supabase/server"
 import { createServiceClient } from "@/lib/supabase/service"
-import type { User, UserRole } from "@/lib/types"
+import { accountTypes, type AccountType, type User, type UserRole } from "@/lib/types"
 
 type UserRow = Database["public"]["Tables"]["users"]["Row"]
 type SupabaseAuthUserLike = Pick<SupabaseAuthUser, "id" | "email" | "user_metadata" | "created_at">
@@ -46,13 +46,17 @@ function fallbackUserFromAuth(user: SupabaseAuthUserLike): User {
     typeof user.user_metadata.full_name === "string"
       ? user.user_metadata.full_name
       : user.email ?? "Client Bureau user"
+  const metadataAccountType =
+    typeof user.user_metadata.account_type === "string" && accountTypes.includes(user.user_metadata.account_type as AccountType)
+      ? (user.user_metadata.account_type as AccountType)
+      : "contractor"
 
   return {
     id: user.id,
     email: user.email ?? "",
     fullName,
     role: isConfiguredAdminEmail(user.email) ? "admin" : "contractor",
-    accountType: user.user_metadata.account_type === "client" ? "client" : "contractor",
+    accountType: metadataAccountType,
     createdAt: user.created_at,
   }
 }
@@ -279,27 +283,90 @@ export async function resolveAuthenticatedUserProfile(
   return createdProfile ? mapUser(createdProfile) : fallbackUser
 }
 
-export function getSafeInternalPath(value?: unknown) {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined
-}
+function normalizedInternalPath(value?: unknown) {
+  if (typeof value !== "string") return undefined
 
-export function getSafePostSignupReturnPath(requestedNext?: unknown) {
-  const safeNext = getSafeInternalPath(requestedNext)
+  const trimmed = value.trim()
 
-  if (
-    !safeNext ||
-    safeNext.startsWith("/admin") ||
-    safeNext.startsWith("/api") ||
-    safeNext.startsWith("/auth") ||
-    safeNext === "/login" ||
-    safeNext.startsWith("/login?") ||
-    safeNext === "/signup" ||
-    safeNext.startsWith("/signup?")
-  ) {
+  if (!trimmed || !trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\") || /[\u0000-\u001f]/.test(trimmed)) {
     return undefined
   }
 
+  try {
+    const parsed = new URL(trimmed, "https://clientbureau.com")
+
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`
+  } catch {
+    return undefined
+  }
+}
+
+function startsWithRoute(path: string, route: string) {
+  return path === route || path.startsWith(`${route}/`) || path.startsWith(`${route}?`)
+}
+
+const authReturnBlockedRoutes = [
+  "/api",
+  "/auth",
+  "/contract",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+] as const
+
+const clientSignupAllowedRoutes = [
+  "/client-response",
+  "/claim-profile",
+  "/search",
+  "/client",
+  "/clients",
+  "/profiles",
+  "/reports",
+  "/resources",
+  "/pricing",
+  "/contact",
+] as const
+
+export function getSafeInternalPath(value?: unknown) {
+  return normalizedInternalPath(value)
+}
+
+export function getSafeLoginReturnPath(value?: unknown) {
+  const safeNext = normalizedInternalPath(value)
+
+  if (!safeNext) return undefined
+  if (authReturnBlockedRoutes.some((route) => startsWithRoute(safeNext, route))) return undefined
+
   return safeNext
+}
+
+export function getSafePostSignupReturnPath(requestedNext?: unknown) {
+  const safeNext = getSafeLoginReturnPath(requestedNext)
+
+  if (!safeNext || startsWithRoute(safeNext, "/admin")) return undefined
+
+  return safeNext
+}
+
+export function getSafeAuthCallbackReturnPath(value?: unknown) {
+  const safeNext = normalizedInternalPath(value)
+
+  if (!safeNext) return undefined
+  if (["/api", "/auth", "/contract", "/login", "/signup", "/forgot-password"].some((route) => startsWithRoute(safeNext, route))) {
+    return undefined
+  }
+  if (startsWithRoute(safeNext, "/admin")) return undefined
+
+  return safeNext
+}
+
+function getSafeClientSignupReturnPath(requestedNext?: unknown) {
+  const safeNext = getSafePostSignupReturnPath(requestedNext)
+
+  if (!safeNext) return undefined
+
+  return clientSignupAllowedRoutes.some((route) => startsWithRoute(safeNext, route)) ? safeNext : undefined
 }
 
 export function getPostSignupRedirectPath(
@@ -307,7 +374,8 @@ export function getPostSignupRedirectPath(
   requestedNext?: unknown,
   planInterest?: unknown,
 ) {
-  const safeNext = getSafePostSignupReturnPath(requestedNext)
+  const safeNext =
+    accountType === "client" ? getSafeClientSignupReturnPath(requestedNext) : getSafePostSignupReturnPath(requestedNext)
 
   if (safeNext) return safeNext
   if (accountType === "client") return "/client-response"
@@ -336,7 +404,7 @@ export async function getCurrentUser(role: UserRole = "contractor"): Promise<Use
 }
 
 function loginRedirect(next?: string): never {
-  const safeNext = getSafeInternalPath(next)
+  const safeNext = getSafeLoginReturnPath(next)
   const target = safeNext ? `?next=${encodeURIComponent(safeNext)}` : ""
 
   redirect(`/login${target}`)
@@ -357,6 +425,10 @@ export async function requireContractorAccess(next?: string) {
 
   if (!["contractor", "admin"].includes(user.role)) {
     loginRedirect(next)
+  }
+
+  if (user.role !== "admin" && user.accountType === "client") {
+    redirect("/client-response")
   }
 
   return user

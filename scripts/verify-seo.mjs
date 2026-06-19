@@ -519,6 +519,12 @@ await verifyNoindexWorkflowPage("/login", {
   requestPath: "/login?next=%2Fdashboard%2Freports",
   requiredText: ["Secure account access", "Return to your business protection workspace.", "Sign in to Client Bureau"],
 })
+await verifyNoindexWorkflowPage("/forgot-password", {
+  requiredText: ["Account recovery", "Reset your Client Bureau password.", "Request reset link"],
+})
+await verifyNoindexWorkflowPage("/reset-password", {
+  requiredText: ["Secure password update", "Choose a new password.", "Set new password"],
+})
 await verifyNoindexWorkflowPage("/signup", {
   requestPath: "/signup?next=%2Fsearch%3Fq%3DJohn%26state%3DFL",
   requiredText: ["Business protection account", "Create the account that helps protect your next job.", "Create your Client Bureau account"],
