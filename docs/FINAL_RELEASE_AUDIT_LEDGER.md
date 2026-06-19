@@ -66,7 +66,7 @@ No secrets or full environment dumps were recorded.
 | 06 | Contractor/Business Database | Completed | PR #8 merged, deployed, and live release identity verified at commit `671db36f823acf268708daf00841456e3943c160` |
 | 07 | Subcontractor/Trade Database | Completed | PR #9 merged, deployed, and live release identity verified at commit `d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f` |
 | 08 | Auth, onboarding, sessions, capabilities | Completed | PR #10 merged, deployed, and live release identity verified at commit `f31f12bd2e152b5907fbcf91071c203a7b343498` |
-| 09 | Jobs and participants | In progress | Branch `codex/jobs-project-file-final`; command evidence started and migration `0024_job_cross_tool_links.sql` added |
+| 09 | Jobs and participants | In review | Draft PR #11 `codex/jobs-project-file-final`; local gates passed; owner must apply migration `0024_job_cross_tool_links.sql` before merge/deploy |
 | 10 | Contractor dashboard | Not started | Needs command and browser evidence |
 | 11 | Reports, response, disputes, claims | Not started | Needs command and browser evidence |
 | 12 | Contracts and Evidence Vault | Not started | Needs command and browser evidence |
@@ -155,13 +155,48 @@ Browser checks were run against a local production preview at `http://127.0.0.1:
 
 | Item | Evidence | Result |
 | --- | --- | --- |
-| Branch | `codex/jobs-project-file-final` from updated `main` at `f31f12b` | In progress |
+| Branch | `codex/jobs-project-file-final` from updated `main` at `f31f12b` | Draft PR #11 |
+| PR | https://github.com/dff280/ClientBureau/pull/11 at commit `4a638dcec009a0ffedb3c6057d23e66df054914a` | Open, draft, mergeable |
 | Migration | `supabase/migrations/0024_job_cross_tool_links.sql` adds nullable `project_job_id` links to report drafts, recovery cases, lien records, contract records, and evidence vault items | Added |
 | Health gate | `requiredJobToolLinkColumns` added to `/api/health` required platform columns | Added |
 | Tool handoff | Job-context dashboard forms submit durable `projectJobId` while keeping private address/access/notes out of query strings | Added |
 | Participant clarity | Added reports-to participant selector and explicit remove-role confirmation | Added |
 | Job detail visibility | `/dashboard/jobs/[jobId]` now summarizes linked reports, contracts, evidence, recovery, and lien records | Added |
-| Command evidence | `npm test` | Pass, 137 tests |
+| Command evidence | `npm run lint`, `npm test`, `npm run build`, `npm run seo:check:local`, `npm run route:check`, `npm run mobile:check` | Pass |
+| Browser evidence | Local built preview `/dashboard/jobs` at `http://localhost:4200/dashboard/jobs` | Pass: page title `Jobs Dashboard`, H1 `Jobs`, no runtime error |
+
+### Prompt 09 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm test` | Pass | 137 tests passed, including durable job-tool links and participant-removal confirmation. |
+| `npm run build` | Pass | Production build passed after fixing linked published-report label fallback. |
+| `npm run seo:check:local` | Pass | Public SEO, sitemap, schema, and privacy checks unaffected. |
+| `npm run route:check` | Pass | Dashboard Jobs routes remain classified as private `noindex/nofollow`. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+
+### Prompt 09 Browser And Route Evidence
+
+Browser checks were run against a fresh local production preview at `http://localhost:4200`.
+
+| Scenario | Result |
+| --- | --- |
+| `/dashboard/jobs` | Pass: page loaded from built output with title `Jobs Dashboard | Client Bureau`, H1 `Jobs`, no application/runtime error. |
+| `/dashboard/jobs/[jobId]` | Route compiled and returned 200 by HTTP when a valid route was requested; visual detail QA still needs a signed-in/test-owned production Job after migration `0024` is applied. |
+
+### Prompt 09 Owner Actions
+
+- Apply `supabase/migrations/0024_job_cross_tool_links.sql` in Supabase before merging/deploying PR #11.
+- After migration, confirm `/api/health` reports the added job cross-tool link columns as present and `platformCanUseSupabase: true`.
+- Run signed-in contractor QA with a real/disposable account: create a Job, add participants, create report/contract/recovery/lien/evidence records from that Job, refresh, and confirm `/dashboard/jobs/[jobId]` shows the linked records.
+- Do not expose job address, access instructions, gate/lockbox notes, site safety notes, private job notes, participant notes, raw evidence, or private contract data on public profile pages.
+
+### Prompt 09 Verdict
+
+`PASS LOCALLY / WAITING ON OWNER DATABASE ACTION`
+
+Prompt 09 is implemented and ready for database activation review. The branch must remain draft until migration `0024_job_cross_tool_links.sql` is applied and signed-in Jobs workflow QA can prove durable Supabase persistence on production.
 
 ## Command Evidence
 
