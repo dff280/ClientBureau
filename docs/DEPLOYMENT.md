@@ -206,9 +206,9 @@ Generate the server action encryption key:
 openssl rand -base64 32
 ```
 
-Use `PLATFORM_FEATURE_DATA_MODE=supabase` after migrations `0003` through `0020` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Migration `0021_saved_search_filter_context.sql` is an enhancement migration for durable saved-search filter context; `/api/health` reports it under `optionalEnhancementColumns` and `readiness.enhancementColumnCount` without blocking live ops. Use `mock` as the safe mode while the newest profile-rating or Jobs participant columns are missing, or if an advanced ops workflow needs review.
+Use `PLATFORM_FEATURE_DATA_MODE=supabase` after required migrations through `0024_job_cross_tool_links.sql` are applied and `/api/health` confirms `readiness.platformCanUseSupabase: true`. Migration `0021_saved_search_filter_context.sql` is an enhancement migration for durable saved-search filter context; `/api/health` reports it under `optionalEnhancementColumns` and `readiness.enhancementColumnCount` without blocking live ops. Use `mock` as the safe mode while the newest profile-rating, Jobs participant, or Jobs cross-tool link columns are missing, or if an advanced ops workflow needs review.
 
-If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, rating transparency, or flexible Jobs participant columns, first confirm all migrations through `0020` have been applied. If only saved-search filter-context columns are missing, apply `0021` when convenient; the application falls back safely but saved searches will not durably retain profile/trade filters until it is applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
+If `/api/health` reports missing contract, managed recovery, Florida lien readiness, unified profile, project/job graph, response graph, rating transparency, flexible Jobs participant, or Jobs cross-tool link columns, first confirm all required migrations through `0024` have been applied. If only saved-search filter-context columns are missing, apply `0021` when convenient; the application falls back safely but saved searches will not durably retain profile/trade filters until it is applied. For older databases that received only part of the platform rollout, this repair migration remains safe to run:
 
 ```text
 supabase/migrations/0013_live_platform_schema_backfill.sql
@@ -224,7 +224,7 @@ npm run migrations:graph:file
 
 You can also confirm the same gate from `https://clientbureau.com/admin` or `https://clientbureau.com/admin/settings`. The Live Ops Readiness panel should show Supabase-backed platform mode before a normal production release.
 
-After applying `0019` and `0020`, publish at least one real, verified subcontractor/trade-professional profile before running acquisition campaigns against `/profiles/subcontractor`. Do not create fake public profiles to satisfy SEO checks.
+After applying `0019`, `0020`, and `0024`, publish at least one real, verified subcontractor/trade-professional profile before running acquisition campaigns against `/profiles/subcontractor`. Do not create fake public profiles to satisfy SEO checks.
 
 After the required tables are verified, enable live-backed platform operations:
 

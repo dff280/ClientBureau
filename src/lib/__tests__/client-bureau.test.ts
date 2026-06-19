@@ -173,8 +173,12 @@ import {
   getPublicClientProfile,
   getPublicBusinessProfile,
   getPublicEntityProfile,
+  createContractPacket,
+  createContractWorkspaceItem,
   createContractShareLink,
   addProjectJobParticipant,
+  createLienNoticeDraft,
+  createPaymentRecoveryCase,
   createProjectJob,
   createServiceFeeOrder,
   getContractPacketByShareToken,
@@ -188,6 +192,7 @@ import {
   signLienFilingAuthorization,
   searchClients,
   saveClientSearch,
+  saveReportDraft,
   removeProjectJobParticipant,
   signContractShare,
   simulateApprovalPublication,
@@ -265,6 +270,7 @@ import {
   projectJobSchema,
   recoveryComplianceReviewSchema,
   reportDraftSchema,
+  removeProjectJobParticipantSchema,
   serviceFeeCheckoutSchema,
   updateClientPipelineStageSchema,
   updateContractPacketStatusSchema,
@@ -1255,12 +1261,19 @@ describe("launch health gates", () => {
       exists: !missing.includes(`${column.table}.${column.name}`),
     }))
 
+    const jobToolLinkColumns = requiredJobToolLinkColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: !missing.includes(`${column.table}.${column.name}`),
+    }))
+
     return [
       ...contractColumns,
       ...revenueColumns,
       ...multiProfileColumns,
       ...ratingTransparencyColumns,
       ...flexibleJobColumns,
+      ...jobToolLinkColumns,
     ]
   }
 
@@ -1452,6 +1465,29 @@ describe("launch health gates", () => {
     expect(summary.platformCanUseSupabase).toBe(false)
     expect(summary.missingPlatformColumns).toContain("client_responses.entity_profile_id")
     expect(summary.missingPlatformColumns).toContain("client_responses.project_job_id")
+    expect(summary.platformColumnCount.ready).toBe(summary.platformColumnCount.total - 2)
+  })
+
+  it("keeps job cross-tool workflows gated until tool link columns exist", () => {
+    const summary = summarizeLaunchHealth({
+      dataMode: "supabase",
+      platformFeatureDataMode: "mock",
+      supabaseConfigured: true,
+      serviceRoleConfigured: true,
+      stripeConfigured: true,
+      stripeWebhookConfigured: true,
+      requiredTables: tableStatuses(),
+      requiredColumns: columnStatuses([
+        "contract_packets.project_job_id",
+        "managed_recovery_cases.project_job_id",
+      ]),
+    })
+
+    expect(summary.platformTablesReady).toBe(true)
+    expect(summary.platformSchemaReady).toBe(false)
+    expect(summary.platformCanUseSupabase).toBe(false)
+    expect(summary.missingPlatformColumns).toContain("contract_packets.project_job_id")
+    expect(summary.missingPlatformColumns).toContain("managed_recovery_cases.project_job_id")
     expect(summary.platformColumnCount.ready).toBe(summary.platformColumnCount.total - 2)
   })
 })
@@ -3099,6 +3135,127 @@ describe("platform expansion schemas", () => {
     expect(updated.participantStatus).toBe("active")
     expect(removed.participantStatus).toBe("removed")
     expect(getEntityProfiles().filter((profile) => profile.id === accountId)).toHaveLength(beforeProfileCount)
+  })
+
+  it("keeps private job links durable across dashboard tools", () => {
+    const projectJobId = "job_pool_deck_01"
+
+    expect(
+      removeProjectJobParticipantSchema.safeParse({
+        jobId: projectJobId,
+        participantId: "participant_pool_deck_sub",
+        confirmRemoveParticipant: true,
+      }).success,
+    ).toBe(true)
+
+    expect(
+      removeProjectJobParticipantSchema.safeParse({
+        jobId: projectJobId,
+        participantId: "participant_pool_deck_sub",
+      }).success,
+    ).toBe(false)
+
+    const reportDraft = saveReportDraft({
+      contractorId: "contractor_03",
+      projectJobId,
+      clientName: "John Smith",
+      projectType: "Pool and spa service",
+      estimatedValue: 6800,
+      amountAtRisk: 1200,
+      summary: "Private draft attached to the pool deck job file with invoice and completion context.",
+      nextStep: "Gather photos and invoice records.",
+      status: "draft",
+    })
+    const recoveryCase = createPaymentRecoveryCase("contractor_03", {
+      projectJobId,
+      clientName: "John Smith",
+      city: "Orlando",
+      state: "FL",
+      amountDue: 1200,
+      invoiceAgeDays: 35,
+      preferredChannel: "email",
+      summary: "Private payment recovery record tied to the pool deck job file.",
+      factualCertification: true,
+    })
+    const managedRecovery = submitManagedRecoveryCase("contractor_03", {
+      projectJobId,
+      clientName: "John Smith",
+      clientEmail: "john@example.test",
+      city: "Orlando",
+      state: "FL",
+      amountDue: 1200,
+      invoiceAgeDays: 35,
+      preferredChannel: "email",
+      evidenceVaultItemIds: "evidence_01",
+      summary: "Resolution Desk case tied to the same private pool deck job file.",
+      factualCertification: true,
+      serviceTermsCertification: true,
+    })
+    const lienDraft = createLienNoticeDraft("contractor_03", {
+      projectJobId,
+      clientName: "John Smith",
+      projectType: "Pool and spa service",
+      propertyCity: "Orlando",
+      state: "FL",
+      amountDue: 1200,
+      lastWorkDate: "2026-06-01",
+      reviewCertification: true,
+    })
+    const floridaLienCase = submitFloridaLienCase("contractor_03", {
+      projectJobId,
+      workflowType: "claim_of_lien_filing",
+      clientName: "John Smith",
+      ownerName: "John Smith",
+      propertyCounty: "Orange",
+      propertyCity: "Orlando",
+      state: "FL",
+      contractorRole: "subcontractor",
+      projectType: "Pool and spa service",
+      contractAmount: 6800,
+      amountDue: 1200,
+      lastWorkDate: "2026-06-01",
+      noticeHistory: "Notice history is documented privately for the job file.",
+      deliveryMethod: "certified_mail",
+      filingMethod: "attorney_vendor",
+      privateSummary: "Private Florida lien case summary attached to the pool deck job.",
+      accuracyCertification: true,
+      filingTermsCertification: true,
+    })
+    const contractDraft = createContractWorkspaceItem("contractor_03", {
+      projectJobId,
+      clientName: "John Smith",
+      projectType: "Pool and spa service",
+      templateType: "service_agreement",
+      contractValue: 6800,
+      depositRequired: 1200,
+      milestoneBilling: true,
+      summary: "Agreement controls tied to the private pool deck job file.",
+    })
+    const contractPacket = createContractPacket("contractor_03", {
+      projectJobId,
+      clientName: "John Smith",
+      projectType: "Pool and spa service",
+      templateType: "service_agreement",
+      packetValue: 6800,
+      depositRequired: 1200,
+      milestoneCount: 2,
+      requiredBeforeScheduling: true,
+      scopeSummary: "Pool deck painting scope summary for the private job file.",
+      includedWork: "Surface prep, painting, and cleanup.",
+      excludedWork: "Structural repairs and unrelated pool equipment.",
+      paymentTerms: "Deposit before scheduling and balance at completion.",
+      changeOrderPolicy: "Written approval required before extra work.",
+      cancellationPolicy: "Cancellation must be documented in writing.",
+      nextAction: "Review packet before sending.",
+    })
+
+    expect(reportDraft.projectJobId).toBe(projectJobId)
+    expect(recoveryCase.projectJobId).toBe(projectJobId)
+    expect(managedRecovery.projectJobId).toBe(projectJobId)
+    expect(lienDraft.projectJobId).toBe(projectJobId)
+    expect(floridaLienCase.projectJobId).toBe(projectJobId)
+    expect(contractDraft.projectJobId).toBe(projectJobId)
+    expect(contractPacket.projectJobId).toBe(projectJobId)
   })
 
   it("validates recovery attempts, payment plans, contract packets, and admin controls", () => {

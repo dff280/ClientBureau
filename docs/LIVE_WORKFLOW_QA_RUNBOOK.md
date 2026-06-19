@@ -57,6 +57,7 @@ Required result:
 - `/api/version` shows the expected package version and Git commit.
 - `/api/health` reports `coreLiveReady: true`.
 - If `PLATFORM_FEATURE_DATA_MODE=supabase`, `/api/health` must also report `platformCanUseSupabase: true` and `recommendedPlatformFeatureDataMode: supabase`.
+- Jobs cross-tool link readiness must be green before declaring private project files fully live: report drafts, contracts, evidence vault items, recovery cases, managed recovery cases, lien readiness drafts, and Florida lien cases should all support nullable `project_job_id`.
 - `/api/health` reports optional saved-search enhancement readiness through `optionalEnhancementColumns` and `readiness.enhancementColumnCount`. Missing `0021` saved-search filter columns may warn, but should be applied before marketing pushes that rely on saved subcontractor/trade searches.
 - `/admin/error-log` is protected, loads for admins, and can triage browser/manual issue reports after `0025_site_error_reports.sql` is applied.
 - If `PLATFORM_FEATURE_DATA_MODE=mock`, `/api/health` may warn that a newer advanced-platform column is missing or that an ops workflow is in rollback mode; core auth, reports, admin approval, and public profiles should remain live.
@@ -81,6 +82,8 @@ Use a real contractor/business-owner account.
 3. Confirm each route loads content or a clear empty state, never a blank page.
 4. Create or update one safe test record in each live-backed tool:
    - create a private Job and add a participant role
+   - from that Job, create a contract packet and confirm it appears under linked records on `/dashboard/jobs/[jobId]`
+   - from that Job, create a recovery or Florida lien service record and confirm it appears under linked records on `/dashboard/jobs/[jobId]`
    - save a search or watch a client
    - save a report draft
    - create an agreement packet

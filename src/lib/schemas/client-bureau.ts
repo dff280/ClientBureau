@@ -696,6 +696,7 @@ export const updateWatchlistItemSchema = z.object({
 export const reportDraftSchema = z.object({
   draftId: optionalText,
   clientId: optionalText,
+  projectJobId: z.string().trim().optional(),
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
   estimatedValue: money("Estimated project value"),
@@ -724,6 +725,7 @@ export const intakeAssessmentSchema = z.object({
 })
 
 export const paymentRecoveryCaseSchema = z.object({
+  projectJobId: z.string().trim().optional(),
   clientName: requiredText("Client name"),
   city: requiredText("City"),
   state: stateCode("State"),
@@ -742,6 +744,7 @@ export const paymentRecoveryCaseSchema = z.object({
 })
 
 export const managedRecoveryCaseSchema = z.object({
+  projectJobId: z.string().trim().optional(),
   clientName: requiredText("Client name"),
   clientEmail: z.email("Enter a valid client email.").optional().or(z.literal("")),
   city: requiredText("City"),
@@ -811,6 +814,7 @@ export const markRecoveryResolvedSchema = z.object({
 })
 
 export const lienNoticeDraftSchema = z.object({
+  projectJobId: z.string().trim().optional(),
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
   otherProjectTypeDetail: z.string().trim().max(80, "Keep other project type detail under 80 characters.").optional().transform((value) => value || undefined),
@@ -826,6 +830,7 @@ export const lienNoticeDraftSchema = z.object({
 })
 
 export const floridaLienCaseSchema = z.object({
+  projectJobId: z.string().trim().optional(),
   workflowType: z.enum(["notice_packet", "claim_of_lien_filing"]),
   clientName: requiredText("Client name"),
   ownerName: requiredText("Owner name"),
@@ -923,6 +928,7 @@ export const adminRecordLienReleaseSchema = z.object({
 })
 
 export const contractWorkspaceItemSchema = z.object({
+  projectJobId: z.string().trim().optional(),
   clientName: requiredText("Client name"),
   projectType: requiredText("Project type"),
   otherProjectTypeDetail: z.string().trim().max(80, "Keep other project type detail under 80 characters.").optional().transform((value) => value || undefined),
@@ -1041,6 +1047,10 @@ export const updateProjectJobParticipantSchema = projectJobParticipantSchema.ext
 export const removeProjectJobParticipantSchema = z.object({
   jobId: requiredText("Job ID"),
   participantId: requiredText("Participant ID"),
+  confirmRemoveParticipant: checkbox.optional(),
+}).refine((value) => value.confirmRemoveParticipant === true, {
+  path: ["confirmRemoveParticipant"],
+  message: "Confirm this role should be removed from the job file.",
 })
 
 export const paymentRecoveryAttemptSchema = z.object({
@@ -1077,6 +1087,7 @@ export const paymentPlanSchema = z.object({
 })
 
 export const contractPacketSchema = z.object({
+  projectJobId: z.string().trim().optional(),
   clientName: requiredText("Client name"),
   clientLegalName: optionalText,
   contractorLegalName: optionalText,

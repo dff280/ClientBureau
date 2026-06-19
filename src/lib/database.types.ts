@@ -1028,6 +1028,7 @@ export interface Database {
         id: string
         contractor_id: string
         client_id: string | null
+        project_job_id: string | null
         client_name: string
         project_type: string
         estimated_value: number
@@ -1040,6 +1041,7 @@ export interface Database {
         id?: string
         contractor_id: string
         client_id?: string | null
+        project_job_id?: string | null
         client_name: string
         project_type: string
         estimated_value?: number
@@ -1157,6 +1159,7 @@ export interface Database {
         id: string
         contractor_id: string
         client_profile_id: string | null
+        project_job_id: string | null
         client_name: string
         city: string
         state: string
@@ -1175,6 +1178,7 @@ export interface Database {
         id?: string
         contractor_id: string
         client_profile_id?: string | null
+        project_job_id?: string | null
         client_name: string
         city: string
         state: string
@@ -1194,6 +1198,7 @@ export interface Database {
         id: string
         contractor_id: string
         client_profile_id: string | null
+        project_job_id: string | null
         client_name: string
         project_type: string
         property_city: string
@@ -1211,6 +1216,7 @@ export interface Database {
         id?: string
         contractor_id: string
         client_profile_id?: string | null
+        project_job_id?: string | null
         client_name: string
         project_type: string
         property_city: string
@@ -1229,6 +1235,7 @@ export interface Database {
         id: string
         contractor_id: string
         client_profile_id: string | null
+        project_job_id: string | null
         client_name: string
         project_type: string
         template_type: ContractTemplateType
@@ -1244,6 +1251,7 @@ export interface Database {
         id?: string
         contractor_id: string
         client_profile_id?: string | null
+        project_job_id?: string | null
         client_name: string
         project_type: string
         template_type: ContractTemplateType
@@ -1375,6 +1383,7 @@ export interface Database {
       contract_packets: DbTable<{
         id: string
         contractor_id: string
+        project_job_id: string | null
         client_name: string
         project_type: string
         template_type: ContractTemplateType
@@ -1419,6 +1428,7 @@ export interface Database {
       }, {
         id?: string
         contractor_id: string
+        project_job_id?: string | null
         client_name: string
         project_type: string
         template_type: ContractTemplateType
@@ -1465,6 +1475,7 @@ export interface Database {
         id: string
         contractor_id: string
         report_id: string | null
+        project_job_id: string | null
         client_name: string
         label: string
         file_category: string
@@ -1477,6 +1488,7 @@ export interface Database {
         id?: string
         contractor_id: string
         report_id?: string | null
+        project_job_id?: string | null
         client_name: string
         label: string
         file_category: string
@@ -1583,6 +1595,7 @@ export interface Database {
       managed_recovery_cases: DbTable<{
         id: string
         contractor_id: string
+        project_job_id: string | null
         client_name: string
         client_email_hash: string | null
         client_email_masked: string | null
@@ -1610,6 +1623,7 @@ export interface Database {
       }, {
         id?: string
         contractor_id: string
+        project_job_id?: string | null
         client_name: string
         client_email_hash?: string | null
         client_email_masked?: string | null
@@ -1684,6 +1698,7 @@ export interface Database {
       florida_lien_cases: DbTable<{
         id: string
         contractor_id: string
+        project_job_id: string | null
         workflow_type: FloridaLienWorkflowType
         client_name: string
         owner_name: string
@@ -1721,6 +1736,7 @@ export interface Database {
       }, {
         id?: string
         contractor_id: string
+        project_job_id?: string | null
         workflow_type: FloridaLienWorkflowType
         client_name: string
         owner_name: string

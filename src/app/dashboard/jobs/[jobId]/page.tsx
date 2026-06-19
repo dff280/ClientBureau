@@ -33,13 +33,25 @@ export default async function DashboardJobDetailPage({
   params: Promise<{ jobId: string }>
 }) {
   const { jobId } = await params
-  const { user } = await getClientDashboardData(`/dashboard/jobs/${jobId}`)
+  const { user, dashboard, riskOps } = await getClientDashboardData(`/dashboard/jobs/${jobId}`)
   const [job, accounts] = await Promise.all([
     getProjectJobDetailService(user.id, jobId),
     searchJobAccountsService(),
   ])
 
   if (!job) notFound()
+
+  const linkedRecords = {
+    contractDocuments: riskOps?.contractDocuments.filter((item) => item.projectJobId === job.id) ?? [],
+    contractPackets: riskOps?.contractPackets.filter((item) => item.projectJobId === job.id) ?? [],
+    evidenceVault: riskOps?.evidenceVault.filter((item) => item.projectJobId === job.id) ?? [],
+    floridaLienCases: riskOps?.floridaLienCases.filter((item) => item.projectJobId === job.id) ?? [],
+    lienNoticeDrafts: riskOps?.lienNoticeDrafts.filter((item) => item.projectJobId === job.id) ?? [],
+    managedRecoveryCases: riskOps?.managedRecoveryCases.filter((item) => item.projectJobId === job.id) ?? [],
+    paymentRecoveryCases: riskOps?.paymentRecoveryCases.filter((item) => item.projectJobId === job.id) ?? [],
+    reportDrafts: riskOps?.reportDrafts.filter((item) => item.projectJobId === job.id) ?? [],
+    reports: dashboard?.reports.filter((item) => item.projectJobId === job.id) ?? [],
+  }
 
   const address = [job.addressLine1, job.addressLine2, job.city, job.state, job.postalCode]
     .filter(Boolean)
@@ -78,7 +90,7 @@ export default async function DashboardJobDetailPage({
         </div>
       </section>
 
-      <JobDetailWorkspace job={job} accounts={accounts} />
+      <JobDetailWorkspace job={job} accounts={accounts} linkedRecords={linkedRecords} />
     </ClientDashboardShell>
   )
 }

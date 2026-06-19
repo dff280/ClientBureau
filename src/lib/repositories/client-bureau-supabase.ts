@@ -245,6 +245,17 @@ function isMissingContractPacketColumnError(error: { message?: string; code?: st
   )
 }
 
+function isMissingJobToolLinkColumnError(error: { message?: string; code?: string } | null | undefined) {
+  const message = error?.message?.toLowerCase() ?? ""
+
+  return (
+    error?.code === "42703" ||
+    error?.code === "PGRST204" ||
+    message.includes("project_job_id") ||
+    message.includes("projectjobid")
+  )
+}
+
 function isMissingReportIntakeColumnError(error: { message?: string; code?: string } | null | undefined) {
   const message = error?.message?.toLowerCase() ?? ""
 
@@ -933,6 +944,7 @@ function mapReportDraft(row: ReportDraftRow): ReportDraft {
     id: row.id,
     contractorId: row.contractor_id,
     clientId: row.client_id ?? undefined,
+    projectJobId: row.project_job_id ?? undefined,
     clientName: row.client_name,
     projectType: row.project_type,
     estimatedValue: row.estimated_value,
@@ -1015,6 +1027,7 @@ function mapPaymentRecoveryCase(row: PaymentRecoveryCaseRow): PaymentRecoveryCas
   return {
     id: row.id,
     contractorId: row.contractor_id,
+    projectJobId: row.project_job_id ?? undefined,
     clientName: row.client_name,
     city: row.city,
     state: row.state,
@@ -1036,6 +1049,7 @@ function mapLienNoticeDraft(row: LienNoticeDraftRow): LienNoticeDraft {
   return {
     id: row.id,
     contractorId: row.contractor_id,
+    projectJobId: row.project_job_id ?? undefined,
     clientName: row.client_name,
     projectType: row.project_type,
     propertyCity: row.property_city,
@@ -1134,6 +1148,7 @@ function mapFloridaLienCase(row: FloridaLienCaseRow): FloridaLienCase {
   return {
     id: row.id,
     contractorId: row.contractor_id,
+    projectJobId: row.project_job_id ?? undefined,
     workflowType: row.workflow_type,
     clientName: row.client_name,
     ownerName: row.owner_name,
@@ -1267,6 +1282,7 @@ function mapContractWorkspaceItem(row: ContractWorkspaceItemRow): ContractWorksp
   return {
     id: row.id,
     contractorId: row.contractor_id,
+    projectJobId: row.project_job_id ?? undefined,
     clientName: row.client_name,
     projectType: row.project_type,
     templateType: row.template_type,
@@ -1357,6 +1373,7 @@ function mapContractPacket(row: ContractPacketRow): ContractPacket {
   return {
     id: row.id,
     contractorId: row.contractor_id,
+    projectJobId: row.project_job_id ?? undefined,
     clientName: row.client_name,
     clientLegalName: row.client_legal_name ?? undefined,
     contractorLegalName: row.contractor_legal_name ?? undefined,
@@ -1405,6 +1422,7 @@ function mapEvidenceVaultItem(row: EvidenceVaultItemRow): EvidenceVaultItem {
     id: row.id,
     contractorId: row.contractor_id,
     reportId: row.report_id ?? undefined,
+    projectJobId: row.project_job_id ?? undefined,
     clientName: row.client_name,
     label: row.label,
     fileCategory: row.file_category as EvidenceVaultItem["fileCategory"],
@@ -4190,6 +4208,10 @@ function platformTableError(table: string, error: { message?: string; code?: str
     throw new Error("Missing contract signing packet columns. Apply Supabase migration 0007_contract_signing_packets.sql before enabling Supabase-backed contract workflows.")
   }
 
+  if (isMissingJobToolLinkColumnError(error)) {
+    throw new Error("Missing job cross-tool link columns. Apply Supabase migration 0024_job_cross_tool_links.sql before enabling durable Jobs-to-tools workflows.")
+  }
+
   throw new Error(error.message ?? `Platform table ${table} could not be read.`)
 }
 
@@ -4651,6 +4673,7 @@ export async function saveReportDraftSupabase(userId: string, input: ReportDraft
   const payload = {
     contractor_id: contractorId,
     client_id: input.clientId || null,
+    project_job_id: input.projectJobId || null,
     client_name: input.clientName,
     project_type: input.projectType,
     estimated_value: input.estimatedValue,
@@ -4731,6 +4754,7 @@ export async function createPaymentRecoveryCaseSupabase(userId: string, input: P
     .from("payment_recovery_cases")
     .insert({
       contractor_id: contractorId,
+      project_job_id: input.projectJobId || null,
       client_name: input.clientName,
       city: input.city,
       state: input.state.toUpperCase(),
@@ -4762,6 +4786,7 @@ export async function submitManagedRecoveryCaseSupabase(userId: string, input: M
     .from("managed_recovery_cases")
     .insert({
       contractor_id: contractorId,
+      project_job_id: input.projectJobId || null,
       client_name: input.clientName,
       client_email_hash: input.clientEmail ? hashIdentifier(input.clientEmail) : null,
       client_email_masked: input.clientEmail ? maskEmail(input.clientEmail) : null,
@@ -5172,6 +5197,7 @@ export async function submitFloridaLienCaseSupabase(userId: string, input: Flori
     .from("florida_lien_cases")
     .insert({
       contractor_id: contractorId,
+      project_job_id: input.projectJobId || null,
       workflow_type: input.workflowType,
       client_name: input.clientName,
       owner_name: input.ownerName,
@@ -5446,6 +5472,7 @@ export async function createContractWorkspaceItemSupabase(userId: string, input:
     .from("contract_workspace_items")
     .insert({
       contractor_id: contractorId,
+      project_job_id: input.projectJobId || null,
       client_name: input.clientName,
       project_type: input.projectType,
       template_type: input.templateType,
@@ -5581,6 +5608,7 @@ export async function createContractPacketSupabase(userId: string, input: Contra
     .from("contract_packets")
     .insert({
       contractor_id: contractorId,
+      project_job_id: input.projectJobId || null,
       client_name: input.clientName,
       client_legal_name: input.clientLegalName || null,
       contractor_legal_name: input.contractorLegalName || null,

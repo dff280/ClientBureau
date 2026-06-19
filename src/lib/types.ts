@@ -769,6 +769,7 @@ export interface ReportDraft {
   id: string
   contractorId: string
   clientId?: string
+  projectJobId?: string
   clientName: string
   projectType: string
   estimatedValue: number
@@ -809,6 +810,7 @@ export interface EvidenceReviewSummary {
 export interface PaymentRecoveryCase {
   id: string
   contractorId: string
+  projectJobId?: string
   clientName: string
   city: string
   state: string
@@ -828,6 +830,7 @@ export interface PaymentRecoveryCase {
 export interface ManagedRecoveryCase {
   id: string
   contractorId: string
+  projectJobId?: string
   clientName: string
   clientEmailMasked?: string
   city: string
@@ -882,6 +885,7 @@ export interface RecoveryResolutionOffer {
 export interface LienNoticeDraft {
   id: string
   contractorId: string
+  projectJobId?: string
   clientName: string
   projectType: string
   propertyCity: string
@@ -900,6 +904,7 @@ export interface LienNoticeDraft {
 export interface FloridaLienCase {
   id: string
   contractorId: string
+  projectJobId?: string
   workflowType: FloridaLienWorkflowType
   clientName: string
   ownerName: string
@@ -1055,6 +1060,7 @@ export interface CaseAuditEvent {
 export interface ContractWorkspaceItem {
   id: string
   contractorId: string
+  projectJobId?: string
   clientName: string
   projectType: string
   templateType: ContractTemplateType
@@ -1171,6 +1177,7 @@ export interface SignedContractSnapshot {
 export interface ContractPacket {
   id: string
   contractorId: string
+  projectJobId?: string
   clientName: string
   projectType: string
   templateType: ContractTemplateType
@@ -1217,6 +1224,7 @@ export interface EvidenceVaultItem {
   id: string
   contractorId: string
   reportId?: string
+  projectJobId?: string
   clientName: string
   label: string
   fileCategory: "invoice" | "screenshot" | "contract" | "photo" | "pdf" | "other"
