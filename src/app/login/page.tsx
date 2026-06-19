@@ -4,7 +4,7 @@ import { LockKeyhole, Radar, ReceiptText, ShieldCheck } from "lucide-react"
 import { LoginForm } from "@/components/forms/auth-forms"
 import { PremiumFeatureCard, TrustGuardrailStrip } from "@/components/marketing/premium-page-shell"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getSafeInternalPath } from "@/lib/auth"
+import { getSafeLoginReturnPath } from "@/lib/auth"
 
 export const metadata: Metadata = {
   title: "Sign In",
@@ -19,14 +19,15 @@ export const metadata: Metadata = {
 }
 
 type LoginPageProps = {
-  searchParams: Promise<Partial<Record<"error" | "loggedOut" | "next", string>>>
+  searchParams: Promise<Partial<Record<"error" | "loggedOut" | "next" | "reset", string>>>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams
-  const redirectTo = getSafeInternalPath(params.next)
+  const redirectTo = getSafeLoginReturnPath(params.next)
   const message =
     params.error ??
+    (params.reset ? "Password updated. Sign in with the new password to continue." : undefined) ??
     (params.loggedOut ? "You have been logged out. Sign in again to continue." : undefined)
   const messageVariant = params.error ? "destructive" : "default"
 
@@ -51,7 +52,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <ShieldCheck className="size-8 text-amber-300" aria-hidden="true" />
               <p className="text-xl font-semibold">Return to the work you opened.</p>
               <p className="text-sm leading-6 text-slate-300">
-                Sign in and continue with the dashboard, admin area, report form, or workflow you were trying to reach.
+                Sign in and continue with the dashboard, report form, client response, or admin workspace you were trying to reach.
               </p>
             </CardContent>
           </Card>

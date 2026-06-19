@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-import { getSafeInternalPath, resolveAuthenticatedUserProfile } from "@/lib/auth"
+import { getSafeLoginReturnPath, resolveAuthenticatedUserProfile } from "@/lib/auth"
 import { formDataToObject } from "@/lib/actions/result"
 import { getDataMode } from "@/lib/env"
 import { withNoStore } from "@/lib/http"
@@ -24,7 +24,7 @@ function redirectToPath(request: Request, path: string) {
 
 export async function POST(request: Request) {
   const formData = await request.formData()
-  const next = getSafeInternalPath(formData.get("next"))
+  const next = getSafeLoginReturnPath(formData.get("next"))
   const parsed = loginSchema.safeParse(formDataToObject(formData))
 
   if (getDataMode() === "mock") {
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   if (wantsAdmin && user.role !== "admin") {
     return redirectToLogin(request, {
       error:
-        "This account is signed in, but it is not marked as an admin. Add the exact email to ADMIN_EMAILS or promote it in Supabase.",
+        "This account does not have admin access. Sign in with an admin account or ask the account owner to review access.",
       next: next ?? "/admin",
     })
   }

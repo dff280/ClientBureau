@@ -434,6 +434,20 @@ export const loginSchema = z.object({
   password: requiredText("Password", 6),
 })
 
+export const passwordResetRequestSchema = z.object({
+  email: z.email("Enter a valid account email."),
+})
+
+export const passwordUpdateSchema = z
+  .object({
+    password: requiredText("New password", 8).max(128, "Keep the password under 128 characters."),
+    confirmPassword: requiredText("Confirm password", 8),
+  })
+  .refine((value) => value.password === value.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords must match.",
+  })
+
 export const adminReviewSchema = z.object({
   reportId: requiredText("Report ID"),
   decision: z.enum(["approved", "rejected"]),

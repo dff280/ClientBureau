@@ -45,6 +45,7 @@ The release-candidate command must fail if contractor/admin QA credentials are m
 Use a disposable contractor or service-business account.
 
 - Sign up, log in, log out, and log back in.
+- Request a password reset with a disposable account, open the latest reset link, update the password, and log in again.
 - Open `/dashboard` and confirm it shows Check a Client, Today's Work, Jobs, recent records, and clear empty states.
 - Create a private Job with property/site info, scope, and participant roles.
 - Save or watch a client search.
