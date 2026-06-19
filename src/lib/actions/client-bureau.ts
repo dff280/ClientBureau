@@ -446,6 +446,13 @@ function revalidateGraphAdminPaths() {
   revalidatePath("/llms.txt")
 }
 
+function revalidateJobContext(projectJobId?: string) {
+  if (!projectJobId) return
+
+  revalidatePath("/dashboard/jobs")
+  revalidatePath(`/dashboard/jobs/${projectJobId}`)
+}
+
 async function getAdminMutationUser(context: string, formData: FormData) {
   const admin = await getCurrentUser("admin")
 
@@ -1456,6 +1463,7 @@ export async function saveReportDraftAction(
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/reports")
+    revalidateJobContext(draft.projectJobId)
     return ok(draft, "Report draft saved.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Report draft could not be saved."))
@@ -1536,6 +1544,7 @@ export async function createPaymentRecoveryCaseAction(
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/recovery")
+    revalidateJobContext(recoveryCase.projectJobId)
     return ok(recoveryCase, "Recovery case created with compliance safeguards.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Recovery case could not be created."))
@@ -1567,6 +1576,7 @@ export async function submitManagedRecoveryCaseAction(
     revalidatePath("/dashboard/recovery")
     revalidatePath("/admin")
     revalidatePath("/admin/settings")
+    revalidateJobContext(recoveryCase.projectJobId)
     return ok(
       recoveryCase,
       billing.serviceFeeCheckoutAvailable
@@ -1806,6 +1816,7 @@ export async function createLienNoticeDraftAction(
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/lien-readiness")
+    revalidateJobContext(noticeDraft.projectJobId)
     return ok(noticeDraft, "Lien packet created for state-specific review.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Lien packet could not be created."))
@@ -1838,6 +1849,7 @@ export async function submitFloridaLienCaseAction(
     revalidatePath("/dashboard/lien-readiness")
     revalidatePath("/admin")
     revalidatePath("/admin/settings")
+    revalidateJobContext(lienCase.projectJobId)
     return ok(
       lienCase,
       billing.serviceFeeCheckoutAvailable
@@ -2086,6 +2098,7 @@ export async function createContractWorkspaceItemAction(
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
+    revalidateJobContext(contractItem.projectJobId)
     return ok(contractItem, "Agreement draft created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Agreement draft could not be created."))
@@ -2352,6 +2365,7 @@ export async function createContractPacketAction(
 
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
+    revalidateJobContext(packet.projectJobId)
     return ok(packet, "Contract signing link workspace created.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Contract signing link could not be created."))

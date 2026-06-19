@@ -20,6 +20,7 @@ import { DashboardReports } from "@/components/dashboard/dashboard-reports"
 import { DashboardSection, StatusBadge, ToolQuickStart } from "@/components/dashboard/dashboard-ui"
 import {
   RiskOpsWorkspace,
+  type DashboardJobContext,
   type DashboardWorkspaceTab,
 } from "@/components/dashboard/risk-ops-workspace"
 import { Button } from "@/components/ui/button"
@@ -67,7 +68,7 @@ function firstSearchValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
-function getJobContext(searchParams: Awaited<DashboardToolSearchParams>) {
+function getJobContext(searchParams: Awaited<DashboardToolSearchParams>): DashboardJobContext | null {
   const jobId = firstSearchValue(searchParams.jobId)
   const jobTitle = firstSearchValue(searchParams.jobTitle)
 
@@ -709,6 +710,7 @@ export default async function DashboardToolPage({
           riskOps={riskOps}
           subscription={dashboard.subscription}
           billingAvailability={billingAvailability}
+          jobContext={jobContext}
         />
       ) : null}
     </ClientDashboardShell>

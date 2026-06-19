@@ -65,8 +65,8 @@ No secrets or full environment dumps were recorded.
 | 05 | Client Database and rating semantics | Completed | Command and browser evidence recorded below |
 | 06 | Contractor/Business Database | Completed | PR #8 merged, deployed, and live release identity verified at commit `671db36f823acf268708daf00841456e3943c160` |
 | 07 | Subcontractor/Trade Database | Completed | PR #9 merged, deployed, and live release identity verified at commit `d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f` |
-| 08 | Auth, onboarding, sessions, capabilities | In progress | Local command, browser, and route-transition evidence recorded on `codex/auth-onboarding-final`; PR pending |
-| 09 | Jobs and participants | Not started | Needs command and browser evidence |
+| 08 | Auth, onboarding, sessions, capabilities | Completed | PR #10 merged, deployed, and live release identity verified at commit `f31f12bd2e152b5907fbcf91071c203a7b343498` |
+| 09 | Jobs and participants | In progress | Branch `codex/jobs-project-file-final`; command evidence started and migration `0024_job_cross_tool_links.sql` added |
 | 10 | Contractor dashboard | Not started | Needs command and browser evidence |
 | 11 | Reports, response, disputes, claims | Not started | Needs command and browser evidence |
 | 12 | Contracts and Evidence Vault | Not started | Needs command and browser evidence |
@@ -102,7 +102,7 @@ No secrets or full environment dumps were recorded.
 
 | Item | Evidence | Result |
 | --- | --- | --- |
-| Branch | `codex/auth-onboarding-final` from updated `main` at `d3e963f` | In progress |
+| Branch | `codex/auth-onboarding-final` from updated `main` at `d3e963f` | Completed and merged |
 | Safe login returns | `/login?next=/dashboard/reports` preserves `/dashboard/reports`; `/login?next=/api/health` drops the unsafe return path | Pass |
 | Signup return policy | Contractor/subcontractor signups can preserve safe workspace paths; client signups are routed to safe client-response/claim/profile paths | Pass |
 | Password recovery | Added crawlable `noindex, follow` `/forgot-password` and `/reset-password` pages plus `POST /api/auth/password-reset` and `POST /api/auth/update-password` | Pass |
@@ -140,7 +140,28 @@ Browser checks were run against a local production preview at `http://127.0.0.1:
 - `/auth/callback` allows `/reset-password` for recovery links but blocks `/admin`, `/api`, `/auth`, `/contract`, `/login`, and `/signup` return targets.
 - Admin authorization error copy no longer exposes internal allowlist or Supabase implementation details.
 - Password reset requests do not reveal whether an account exists for a valid-looking email address.
-- Owner action: after this PR is merged and deployed, perform one production password-reset email test with a disposable account and rerun live verification.
+- Owner action: perform one production password-reset email test with a disposable account before final release-candidate sign-off.
+
+### Prompt 08 Merge And Live Evidence
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Prompt 08 PR | PR #10 `codex/auth-onboarding-final` merged into `main` | Pass |
+| Prompt 08 deploy | VPS `/api/version` reports `0.4.2` at `f31f12bd2e152b5907fbcf91071c203a7b343498` | Pass |
+| Prompt 08 live verification | `LIVE_BASE_URL=https://clientbureau.com EXPECTED_APP_VERSION=0.4.2 EXPECTED_GIT_COMMIT=f31f12bd2e152b5907fbcf91071c203a7b343498 npm run verify:live` | Pass; Stripe warning only |
+| Prompt 08 live SEO | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
+
+## Prompt 09 - Jobs, Participants, And Private Project Files
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Branch | `codex/jobs-project-file-final` from updated `main` at `f31f12b` | In progress |
+| Migration | `supabase/migrations/0024_job_cross_tool_links.sql` adds nullable `project_job_id` links to report drafts, recovery cases, lien records, contract records, and evidence vault items | Added |
+| Health gate | `requiredJobToolLinkColumns` added to `/api/health` required platform columns | Added |
+| Tool handoff | Job-context dashboard forms submit durable `projectJobId` while keeping private address/access/notes out of query strings | Added |
+| Participant clarity | Added reports-to participant selector and explicit remove-role confirmation | Added |
+| Job detail visibility | `/dashboard/jobs/[jobId]` now summarizes linked reports, contracts, evidence, recovery, and lien records | Added |
+| Command evidence | `npm test` | Pass, 137 tests |
 
 ## Command Evidence
 

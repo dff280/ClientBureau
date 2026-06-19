@@ -22,7 +22,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { profileTypeLabel } from "@/lib/entity-profiles"
-import type { ActionResult, EntityProfile, ProjectJob, ProjectJobDetail, ProjectJobParticipant } from "@/lib/types"
+import type {
+  ActionResult,
+  ClientReport,
+  ContractPacket,
+  ContractWorkspaceItem,
+  EntityProfile,
+  EvidenceVaultItem,
+  FloridaLienCase,
+  LienNoticeDraft,
+  ManagedRecoveryCase,
+  PaymentRecoveryCase,
+  ProjectJob,
+  ProjectJobDetail,
+  ProjectJobParticipant,
+  ReportDraft,
+} from "@/lib/types"
 import {
   jobBillingRelationships,
   jobParticipantStatuses,
@@ -35,6 +50,18 @@ import {
 
 const jobState: ActionResult<ProjectJob> = { ok: false, message: "" }
 const participantState: ActionResult<ProjectJobParticipant> = { ok: false, message: "" }
+
+export type JobLinkedRecords = {
+  contractDocuments: ContractWorkspaceItem[]
+  contractPackets: ContractPacket[]
+  evidenceVault: EvidenceVaultItem[]
+  floridaLienCases: FloridaLienCase[]
+  lienNoticeDrafts: LienNoticeDraft[]
+  managedRecoveryCases: ManagedRecoveryCase[]
+  paymentRecoveryCases: PaymentRecoveryCase[]
+  reportDrafts: ReportDraft[]
+  reports: ClientReport[]
+}
 
 function labelize(value: string) {
   return value
@@ -362,10 +389,14 @@ export function JobsWorkspace({ accounts, jobs }: { accounts: EntityProfile[]; j
 function ParticipantFormFields({
   accounts,
   participant,
+  participants = [],
 }: {
   accounts: EntityProfile[]
   participant?: ProjectJobParticipant
+  participants?: ProjectJobParticipant[]
 }) {
+  const reportTargets = participants.filter((item) => item.id !== participant?.id && item.participantStatus !== "removed")
+
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="grid gap-2">
@@ -387,7 +418,7 @@ function ParticipantFormFields({
       </div>
       <SelectField label="Role on this job" name="roleOnJob" options={projectProfileRoles} defaultValue={participant?.role ?? "client"} />
       <div className="grid gap-2">
-        <Label htmlFor={participant ? `hiredByAccountId-${participant.id}` : "hiredByAccountId"}>Hired by / reports to account</Label>
+        <Label htmlFor={participant ? `hiredByAccountId-${participant.id}` : "hiredByAccountId"}>Hired by account</Label>
         <select
           id={participant ? `hiredByAccountId-${participant.id}` : "hiredByAccountId"}
           name="hiredByAccountId"
@@ -397,6 +428,22 @@ function ParticipantFormFields({
           <option value="">Not specified</option>
           {accounts.map((account) => (
             <option key={account.id} value={account.id}>{account.displayName}</option>
+          ))}
+        </select>
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor={participant ? `reportsToParticipantId-${participant.id}` : "reportsToParticipantId"}>Reports to participant</Label>
+        <select
+          id={participant ? `reportsToParticipantId-${participant.id}` : "reportsToParticipantId"}
+          name="reportsToParticipantId"
+          defaultValue={participant?.reportsToParticipantId ?? ""}
+          className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm text-slate-700 outline-none transition focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="">Not specified</option>
+          {reportTargets.map((target) => (
+            <option key={target.id} value={target.id}>
+              {(target.profile?.displayName ?? target.profileId)} / {labelize(target.role)}
+            </option>
           ))}
         </select>
       </div>
@@ -418,7 +465,15 @@ function ParticipantFormFields({
   )
 }
 
-export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[]; job: ProjectJobDetail }) {
+export function JobDetailWorkspace({
+  accounts,
+  job,
+  linkedRecords,
+}: {
+  accounts: EntityProfile[]
+  job: ProjectJobDetail
+  linkedRecords?: JobLinkedRecords
+}) {
   const [jobUpdateState, jobUpdateAction] = useActionState(updateProjectJobAction, jobState)
   const [addState, addAction] = useActionState(addProjectJobParticipantAction, participantState)
   const [updateState, updateAction] = useActionState(updateProjectJobParticipantAction, participantState)
@@ -448,6 +503,8 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
         <JobActionLink href={jobContextHref("/dashboard/evidence", job)} icon={ShieldCheck} title="Organize evidence" text="Attach invoices, photos, contracts, and messages to this job context." />
         <JobActionLink href={jobContextHref("/dashboard/recovery", job)} icon={BriefcaseBusiness} title="Payment recovery" text="Open a managed case from this job if payment becomes an issue." />
       </div>
+
+      <LinkedRecordsPanel job={job} linkedRecords={linkedRecords} />
 
       <DashboardSection
         eyebrow="Job information"
@@ -493,7 +550,7 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
 
         <form action={addAction} className="space-y-5 rounded-md border border-slate-200 bg-slate-50 p-4">
           <input type="hidden" name="jobId" value={job.id} />
-          <ParticipantFormFields accounts={accounts} />
+          <ParticipantFormFields accounts={accounts} participants={visibleParticipants} />
           <FieldError name="accountId" errors={addState.ok ? undefined : addState.fieldErrors} />
           <FieldError name="roleOnJob" errors={addState.ok ? undefined : addState.fieldErrors} />
           <ActionMessage state={addState} />
@@ -518,15 +575,31 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
                     <ParticipantFact label="Account type" value={participant.profile ? profileTypeLabel(participant.profile.profileType) : "Existing profile"} />
                     <ParticipantFact label="Status" value={labelize(participant.participantStatus)} />
                     <ParticipantFact
-                      label="Hired by / reports to"
+                      label="Hired by"
                       value={participant.hiredByProfileId ? accounts.find((account) => account.id === participant.hiredByProfileId)?.displayName ?? "Linked account" : "Not specified"}
+                    />
+                    <ParticipantFact
+                      label="Reports to"
+                      value={
+                        participant.reportsToParticipantId
+                          ? visibleParticipants.find((item) => item.id === participant.reportsToParticipantId)?.profile?.displayName ?? "Linked participant"
+                          : "Not specified"
+                      }
                     />
                   </div>
                   {participant.scopeAssigned ? <p className="mt-2 text-sm leading-6 text-slate-600">{participant.scopeAssigned}</p> : null}
                 </div>
-                <form action={removeAction}>
+                <form action={removeAction} className="grid gap-2 rounded-md border border-rose-100 bg-rose-50 p-3">
                   <input type="hidden" name="jobId" value={job.id} />
                   <input type="hidden" name="participantId" value={participant.id} />
+                  <label className="flex max-w-xs items-start gap-2 text-xs leading-5 text-rose-950">
+                    <input
+                      type="checkbox"
+                      name="confirmRemoveParticipant"
+                      className="mt-1 size-4 rounded border-rose-300"
+                    />
+                    Confirm this only removes the role from this job file.
+                  </label>
                   <PendingSubmitButton variant="outline" pendingText="Removing...">
                     <Trash2 aria-hidden="true" />
                     Remove role from job
@@ -538,7 +611,7 @@ export function JobDetailWorkspace({ accounts, job }: { accounts: EntityProfile[
                 <form action={updateAction} className="mt-4 space-y-4">
                   <input type="hidden" name="jobId" value={job.id} />
                   <input type="hidden" name="participantId" value={participant.id} />
-                  <ParticipantFormFields accounts={accounts} participant={participant} />
+                  <ParticipantFormFields accounts={accounts} participant={participant} participants={visibleParticipants} />
                   <ActionMessage state={updateState} />
                   <PendingSubmitButton variant="outline" pendingText="Saving participant...">
                     Save participant
@@ -628,6 +701,101 @@ function JobActionLink({
         Open tool <ArrowRight className="size-4 transition group-hover:translate-x-0.5" aria-hidden="true" />
       </span>
     </Link>
+  )
+}
+
+function LinkedRecordsPanel({
+  job,
+  linkedRecords,
+}: {
+  job: ProjectJobDetail
+  linkedRecords?: JobLinkedRecords
+}) {
+  const reportLabel = (item: ClientReport) => item.legacyClientName ?? `${item.projectType} report`
+
+  const rows = [
+    {
+      count: (linkedRecords?.reports.length ?? 0) + (linkedRecords?.reportDrafts.length ?? 0),
+      helper: "Published or draft report records tied to this job.",
+      href: jobContextHref("/dashboard/reports", job),
+      items: [
+        ...(linkedRecords?.reports ?? []).map((item) => `${reportLabel(item)} / ${labelize(item.status)}`),
+        ...(linkedRecords?.reportDrafts ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+      ],
+      title: "Reports",
+    },
+    {
+      count: (linkedRecords?.contractPackets.length ?? 0) + (linkedRecords?.contractDocuments.length ?? 0),
+      helper: "Agreement drafts and signing packets tied to this job.",
+      href: jobContextHref("/dashboard/contracts", job),
+      items: [
+        ...(linkedRecords?.contractPackets ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+        ...(linkedRecords?.contractDocuments ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+      ],
+      title: "Contracts",
+    },
+    {
+      count: linkedRecords?.evidenceVault.length ?? 0,
+      helper: "Private evidence vault items tied to this job.",
+      href: jobContextHref("/dashboard/evidence", job),
+      items: (linkedRecords?.evidenceVault ?? []).map((item) => `${item.label} / ${labelize(item.status)}`),
+      title: "Evidence",
+    },
+    {
+      count: (linkedRecords?.paymentRecoveryCases.length ?? 0) + (linkedRecords?.managedRecoveryCases.length ?? 0),
+      helper: "Private recovery records tied to this job.",
+      href: jobContextHref("/dashboard/recovery", job),
+      items: [
+        ...(linkedRecords?.managedRecoveryCases ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+        ...(linkedRecords?.paymentRecoveryCases ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+      ],
+      title: "Recovery",
+    },
+    {
+      count: (linkedRecords?.lienNoticeDrafts.length ?? 0) + (linkedRecords?.floridaLienCases.length ?? 0),
+      helper: "Florida notice, readiness, and lien service records tied to this job.",
+      href: jobContextHref("/dashboard/lien-readiness", job),
+      items: [
+        ...(linkedRecords?.floridaLienCases ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+        ...(linkedRecords?.lienNoticeDrafts ?? []).map((item) => `${item.clientName} / ${labelize(item.status)}`),
+      ],
+      title: "Lien service",
+    },
+  ]
+
+  return (
+    <DashboardSection
+      eyebrow="Linked records"
+      title="Current records attached to this job"
+      description="When you start a tool from this job file, the private job link stays with the new record so it can be reviewed from one place."
+    >
+      <div className="grid gap-3 md:grid-cols-5">
+        {rows.map((row) => (
+          <Link
+            key={row.title}
+            href={row.href}
+            className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-amber-300 hover:bg-amber-50/40"
+          >
+            <p className="text-xs font-semibold uppercase text-slate-500">{row.title}</p>
+            <p className="mt-2 text-3xl font-semibold text-slate-950">{row.count}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{row.helper}</p>
+            {row.items.length > 0 ? (
+              <div className="mt-3 grid gap-1 border-t border-slate-100 pt-3 text-xs leading-5 text-slate-600">
+                {row.items.slice(0, 3).map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+                {row.items.length > 3 ? <span>{row.items.length - 3} more linked records</span> : null}
+              </div>
+            ) : null}
+          </Link>
+        ))}
+      </div>
+      {rows.every((row) => row.count === 0) ? (
+        <div className="mt-4 rounded-md border border-dashed border-slate-300 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+          No linked records yet. Start with a contract packet, evidence file, report draft, recovery case, or Florida lien service case above.
+        </div>
+      ) : null}
+    </DashboardSection>
   )
 }
 

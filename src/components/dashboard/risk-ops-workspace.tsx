@@ -152,6 +152,14 @@ const workspaceTabValues = [
 
 export type DashboardWorkspaceTab = (typeof workspaceTabValues)[number]
 
+export type DashboardJobContext = {
+  city?: string
+  jobId?: string
+  jobTitle?: string
+  state?: string
+  tradeCategory?: string
+}
+
 const workspaceTabs = new Set<string>(workspaceTabValues)
 
 const workspaceRoutes: Record<DashboardWorkspaceTab, string> = {
@@ -246,18 +254,34 @@ function normalizeWorkspaceTab(value: string | null) {
   return normalized && workspaceTabs.has(normalized) ? (normalized as DashboardWorkspaceTab) : "overview"
 }
 
+function JobContextHiddenField({ jobContext }: { jobContext?: DashboardJobContext | null }) {
+  if (!jobContext?.jobId) return null
+
+  return (
+    <>
+      <input type="hidden" name="projectJobId" value={jobContext.jobId} />
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+        This record will be saved back to the private job file
+        {jobContext.jobTitle ? `: ${jobContext.jobTitle}` : "."}
+      </div>
+    </>
+  )
+}
+
 export function RiskOpsWorkspace({
   focusTab,
   riskOps,
   clients,
   subscription,
   billingAvailability,
+  jobContext,
 }: {
   focusTab?: DashboardWorkspaceTab
   riskOps: ContractorRiskOpsData
   clients: ClientProfile[]
   subscription?: Subscription
   billingAvailability?: BillingAvailability
+  jobContext?: DashboardJobContext | null
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -616,7 +640,7 @@ export function RiskOpsWorkspace({
                 title="Open managed case"
                 text="Use this when you want Client Bureau to help seek a documented payment resolution."
               >
-                <ManagedRecoveryCaseForm />
+                <ManagedRecoveryCaseForm jobContext={jobContext} />
               </CreatePanel>
               <div className="grid gap-3 md:grid-cols-2">
                 {riskOps.managedRecoveryCases.map((item) => (
@@ -658,7 +682,7 @@ export function RiskOpsWorkspace({
               title="Create internal tracking record"
               text="Use this for your own invoice timeline, call logging, and follow-up notes."
             >
-              <PaymentRecoveryForm />
+              <PaymentRecoveryForm jobContext={jobContext} />
             </CreatePanel>
             <div className="space-y-3">
               {riskOps.paymentRecoveryCases.map((item) => (
@@ -774,7 +798,7 @@ export function RiskOpsWorkspace({
                 title="Start Florida lien case"
                 text="Use for a Florida notice packet or claim-of-lien filing workflow."
               >
-                <FloridaLienCaseForm />
+                <FloridaLienCaseForm jobContext={jobContext} />
               </CreatePanel>
               <div className="grid gap-3 md:grid-cols-2">
                 {riskOps.floridaLienCases.map((item) => (
@@ -814,7 +838,7 @@ export function RiskOpsWorkspace({
                 title="Create internal checklist"
                 text="Use this for early deadline and document review before starting a managed Florida service case."
               >
-                <LienNoticeDraftForm />
+                <LienNoticeDraftForm jobContext={jobContext} />
               </CreatePanel>
               <div className="space-y-3">
                 {riskOps.lienNoticeDrafts.map((item) => (
@@ -869,7 +893,7 @@ export function RiskOpsWorkspace({
             title="Create agreement template"
             text="Prepare reusable agreement controls before generating a signing packet."
           >
-            <ContractWorkspaceForm />
+            <ContractWorkspaceForm jobContext={jobContext} />
           </CreatePanel>
           <div className="grid gap-3 md:grid-cols-2">
             {riskOps.contractDocuments.map((item) => (
@@ -902,7 +926,7 @@ export function RiskOpsWorkspace({
                 title="Create agreement packet"
                 text="Prepare the private signing packet before sending it to a client."
               >
-                <ContractPacketForm />
+                <ContractPacketForm jobContext={jobContext} />
               </CreatePanel>
               <div className="grid gap-3 md:grid-cols-2">
                 {riskOps.contractPackets.map((item) => (
@@ -940,7 +964,7 @@ export function RiskOpsWorkspace({
               title="Save report draft"
               text="Start a draft when you need time to gather invoices, access records, or communication history."
             >
-              <ReportDraftForm clients={clients} />
+              <ReportDraftForm clients={clients} jobContext={jobContext} />
             </CreatePanel>
             <div className="space-y-3">
               {riskOps.reportDrafts.map((draft) => (
@@ -1579,13 +1603,14 @@ function IntakeAssessmentForm() {
   )
 }
 
-function ReportDraftForm({ clients }: { clients: ClientProfile[] }) {
+function ReportDraftForm({ clients, jobContext }: { clients: ClientProfile[]; jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(saveReportDraftAction, draftState)
 
   useToastState(state)
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <JobContextHiddenField jobContext={jobContext} />
       <select name="clientId" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
         <option value="">No matched profile yet</option>
         {clients.map((client) => (
@@ -1599,6 +1624,7 @@ function ReportDraftForm({ clients }: { clients: ClientProfile[] }) {
         id="report-draft-project-type"
         name="projectType"
         otherName="otherProjectTypeDetail"
+        defaultValue={jobContext?.tradeCategory}
         label="Project type"
         required
       />
@@ -1661,17 +1687,18 @@ function DraftCard({ draft }: { draft: ReportDraft }) {
   )
 }
 
-function ManagedRecoveryCaseForm() {
+function ManagedRecoveryCaseForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(submitManagedRecoveryCaseAction, managedRecoveryState)
 
   useToastState(state)
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <JobContextHiddenField jobContext={jobContext} />
       <div className="grid gap-3 sm:grid-cols-[1fr_100px_160px]">
         <Input name="clientName" placeholder="Client name" />
-        <Input name="city" placeholder="City" />
-        <StateSelect id="managedRecoveryState" name="state" ariaLabel="Managed recovery state" />
+        <Input name="city" placeholder="City" defaultValue={jobContext?.city} />
+        <StateSelect id="managedRecoveryState" name="state" defaultValue={jobContext?.state} ariaLabel="Managed recovery state" />
       </div>
       <Input name="clientEmail" type="email" placeholder="Client email for private matching (optional)" />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -1985,17 +2012,18 @@ function ManagedRecoveryCaseCard({
   )
 }
 
-function PaymentRecoveryForm() {
+function PaymentRecoveryForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createPaymentRecoveryCaseAction, recoveryState)
 
   useToastState(state)
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <JobContextHiddenField jobContext={jobContext} />
       <div className="grid gap-3 sm:grid-cols-[1fr_100px_160px]">
         <Input name="clientName" placeholder="Client name" />
-        <Input name="city" placeholder="City" />
-        <StateSelect id="paymentRecoveryState" name="state" ariaLabel="Payment recovery state" />
+        <Input name="city" placeholder="City" defaultValue={jobContext?.city} />
+        <StateSelect id="paymentRecoveryState" name="state" defaultValue={jobContext?.state} ariaLabel="Payment recovery state" />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="amountDue" type="number" placeholder="Amount due" />
@@ -2176,13 +2204,14 @@ function PaymentPlanCard({ item }: { item: PaymentPlan }) {
   )
 }
 
-function FloridaLienCaseForm() {
+function FloridaLienCaseForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(submitFloridaLienCaseAction, floridaLienState)
 
   useToastState(state)
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <JobContextHiddenField jobContext={jobContext} />
       <select name="workflowType" defaultValue="claim_of_lien_filing" className="h-10 rounded-md border border-input bg-white px-3 text-sm">
         <option value="notice_packet">Florida notice packet</option>
         <option value="claim_of_lien_filing">Florida claim of lien filing</option>
@@ -2193,8 +2222,8 @@ function FloridaLienCaseForm() {
       </div>
       <div className="grid gap-3 sm:grid-cols-[1fr_1fr_160px]">
         <FloridaCountySelect id="floridaLienPropertyCounty" name="propertyCounty" labelClassName="sr-only" />
-        <Input name="propertyCity" placeholder="Property city" />
-        <StateSelect id="floridaLienState" name="state" defaultValue="FL" ariaLabel="Florida lien state" />
+        <Input name="propertyCity" placeholder="Property city" defaultValue={jobContext?.city} />
+        <StateSelect id="floridaLienState" name="state" defaultValue={jobContext?.state ?? "FL"} ariaLabel="Florida lien state" />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <Input name="parcelNumber" placeholder="Parcel number (optional)" />
@@ -2210,6 +2239,7 @@ function FloridaLienCaseForm() {
         id="floridaLienProjectType"
         name="projectType"
         otherName="otherProjectTypeDetail"
+        defaultValue={jobContext?.tradeCategory}
         label="Project type / trade category"
         required
       />
@@ -2327,24 +2357,26 @@ function FloridaLienCaseCard({
   )
 }
 
-function LienNoticeDraftForm() {
+function LienNoticeDraftForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createLienNoticeDraftAction, lienNoticeState)
 
   useToastState(state)
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <JobContextHiddenField jobContext={jobContext} />
       <Input name="clientName" placeholder="Client name" />
       <TradeCategorySelect
         id="lienNoticeProjectType"
         name="projectType"
         otherName="otherProjectTypeDetail"
+        defaultValue={jobContext?.tradeCategory}
         label="Project type / trade category"
         required
       />
       <div className="grid gap-3 sm:grid-cols-[1fr_160px]">
-        <Input name="propertyCity" placeholder="Property city" />
-        <StateSelect id="lienNoticeState" name="state" defaultValue="FL" ariaLabel="Lien notice state" />
+        <Input name="propertyCity" placeholder="Property city" defaultValue={jobContext?.city} />
+        <StateSelect id="lienNoticeState" name="state" defaultValue={jobContext?.state ?? "FL"} ariaLabel="Lien notice state" />
       </div>
       <Input name="amountDue" type="number" placeholder="Amount due" />
       <div className="grid gap-3 sm:grid-cols-2">
@@ -2391,18 +2423,20 @@ function LienNoticeCard({ item }: { item: LienNoticeDraft }) {
   )
 }
 
-function ContractWorkspaceForm() {
+function ContractWorkspaceForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createContractWorkspaceItemAction, contractState)
 
   useToastState(state)
 
   return (
     <form action={action} className="grid gap-3 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <JobContextHiddenField jobContext={jobContext} />
       <Input name="clientName" placeholder="Client name" />
       <TradeCategorySelect
         id="contractWorkspaceProjectType"
         name="projectType"
         otherName="otherProjectTypeDetail"
+        defaultValue={jobContext?.tradeCategory}
         label="Project type / trade category"
         required
       />
@@ -2459,7 +2493,7 @@ function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
   )
 }
 
-function ContractPacketForm() {
+function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createContractPacketAction, contractPacketState)
   const [activeTemplate, setActiveTemplate] = useState<"blank" | "florida">("blank")
   const templateValues = activeTemplate === "florida"
@@ -2525,6 +2559,7 @@ function ContractPacketForm() {
             Build the private record first. Send the signing link only after scope, payment terms, and policies are ready.
           </p>
         </div>
+        <JobContextHiddenField jobContext={jobContext} />
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Input name="clientName" placeholder="Client display name" />
@@ -2534,7 +2569,7 @@ function ContractPacketForm() {
             id="contract-packet-project-type"
             name="projectType"
             otherName="otherProjectTypeDetail"
-            defaultValue={templateValues?.projectType}
+            defaultValue={templateValues?.projectType ?? jobContext?.tradeCategory}
             label="Project type"
             required
           />
