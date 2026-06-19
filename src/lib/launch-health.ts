@@ -166,6 +166,17 @@ export const requiredFlexibleJobColumns = [
   { table: "project_job_profiles", name: "updated_at" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
+export const requiredJobToolLinkColumns = [
+  { table: "report_drafts", name: "project_job_id" },
+  { table: "payment_recovery_cases", name: "project_job_id" },
+  { table: "managed_recovery_cases", name: "project_job_id" },
+  { table: "lien_notice_drafts", name: "project_job_id" },
+  { table: "florida_lien_cases", name: "project_job_id" },
+  { table: "contract_workspace_items", name: "project_job_id" },
+  { table: "contract_packets", name: "project_job_id" },
+  { table: "evidence_vault_items", name: "project_job_id" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
 export const optionalLaunchEnhancementColumns = [
   { table: "saved_client_searches", name: "profile_type" },
   { table: "saved_client_searches", name: "trade_category" },
@@ -178,7 +189,8 @@ const requiredPlatformColumnTotal =
   requiredRevenueWorkflowColumns.length +
   requiredMultiProfileColumns.length +
   requiredRatingTransparencyColumns.length +
-  requiredFlexibleJobColumns.length
+  requiredFlexibleJobColumns.length +
+  requiredJobToolLinkColumns.length
 
 type LaunchColumnStatus = {
   table: RequiredTable
@@ -293,12 +305,20 @@ async function checkRequiredColumns() {
       message: "Supabase service role is not configured.",
     }))
 
+    const jobToolLinkColumns: LaunchColumnStatus[] = requiredJobToolLinkColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
+
     return [
       ...contractColumns,
       ...revenueColumns,
       ...multiProfileColumns,
       ...ratingTransparencyColumns,
       ...flexibleJobColumns,
+      ...jobToolLinkColumns,
     ]
   }
 
@@ -314,6 +334,7 @@ async function checkRequiredColumns() {
     ...requiredMultiProfileColumns,
     ...requiredRatingTransparencyColumns,
     ...requiredFlexibleJobColumns,
+    ...requiredJobToolLinkColumns,
   ]
 
   return Promise.all(

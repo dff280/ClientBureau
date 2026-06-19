@@ -1,6 +1,6 @@
 # Client Bureau Live Workflow QA Runbook
 
-Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency and flexible Jobs participant roles.
+Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency, flexible Jobs participant roles, and Jobs cross-tool link columns. For the private Jobs project-file workflow, use `docs/JOBS_PROJECT_FILE_RUNBOOK.md` alongside this checklist.
 
 ## 1. Release And Health Gate
 
@@ -57,6 +57,7 @@ Required result:
 - `/api/version` shows the expected package version and Git commit.
 - `/api/health` reports `coreLiveReady: true`.
 - If `PLATFORM_FEATURE_DATA_MODE=supabase`, `/api/health` must also report `platformCanUseSupabase: true` and `recommendedPlatformFeatureDataMode: supabase`.
+- Jobs cross-tool link readiness must be green before declaring private project files fully live: report drafts, contracts, evidence vault items, recovery cases, managed recovery cases, lien readiness drafts, and Florida lien cases should all support nullable `project_job_id`.
 - `/api/health` reports optional saved-search enhancement readiness through `optionalEnhancementColumns` and `readiness.enhancementColumnCount`. Missing `0021` saved-search filter columns may warn, but should be applied before marketing pushes that rely on saved subcontractor/trade searches.
 - If `PLATFORM_FEATURE_DATA_MODE=mock`, `/api/health` may warn that a newer advanced-platform column is missing or that an ops workflow is in rollback mode; core auth, reports, admin approval, and public profiles should remain live.
 - `/api/version`, `/api/health`, `/api/session`, and `/api/admin/session` include `Cache-Control: no-store`.
@@ -80,6 +81,8 @@ Use a real contractor/business-owner account.
 3. Confirm each route loads content or a clear empty state, never a blank page.
 4. Create or update one safe test record in each live-backed tool:
    - create a private Job and add a participant role
+   - from that Job, create a contract packet and confirm it appears under linked records on `/dashboard/jobs/[jobId]`
+   - from that Job, create a recovery or Florida lien service record and confirm it appears under linked records on `/dashboard/jobs/[jobId]`
    - save a search or watch a client
    - save a report draft
    - create an agreement packet

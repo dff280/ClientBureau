@@ -1287,6 +1287,7 @@ export function saveReportDraft(input: {
   contractorId: string
   draftId?: string
   clientId?: string
+  projectJobId?: string
   clientName: string
   projectType: string
   estimatedValue: number
@@ -1301,6 +1302,7 @@ export function saveReportDraft(input: {
     id: input.draftId || `draft_${Date.now()}`,
     contractorId: input.contractorId,
     clientId: input.clientId,
+    projectJobId: input.projectJobId,
     clientName: input.clientName,
     projectType: input.projectType,
     estimatedValue: input.estimatedValue,
@@ -1403,6 +1405,7 @@ export function createPaymentRecoveryCase(
   return {
     id: `recovery_${Date.now()}`,
     contractorId,
+    projectJobId: input.projectJobId,
     clientName: input.clientName,
     city: input.city,
     state: input.state.toUpperCase(),
@@ -1436,6 +1439,7 @@ export function submitManagedRecoveryCase(
   return {
     id: `managed_recovery_${Date.now()}`,
     contractorId,
+    projectJobId: input.projectJobId,
     clientName: input.clientName,
     clientEmailMasked: input.clientEmail ? maskEmail(input.clientEmail) : undefined,
     city: input.city,
@@ -1591,6 +1595,7 @@ export function createLienNoticeDraft(
   return {
     id: `lien_notice_${Date.now()}`,
     contractorId,
+    projectJobId: input.projectJobId,
     clientName: input.clientName,
     projectType: input.projectType,
     propertyCity: input.propertyCity,
@@ -1617,6 +1622,7 @@ export function submitFloridaLienCase(
   return {
     id: `florida_lien_${Date.now()}`,
     contractorId,
+    projectJobId: input.projectJobId,
     workflowType: input.workflowType,
     clientName: input.clientName,
     ownerName: input.ownerName,
@@ -1771,6 +1777,7 @@ export function createContractWorkspaceItem(
   return {
     id: `contract_${Date.now()}`,
     contractorId,
+    projectJobId: input.projectJobId,
     clientName: input.clientName,
     projectType: input.projectType,
     templateType: input.templateType,
@@ -1894,6 +1901,7 @@ export function createContractPacket(contractorId: string, input: ContractPacket
   return {
     id: `contract_packet_${Date.now()}`,
     contractorId,
+    projectJobId: input.projectJobId,
     clientName: input.clientName,
     clientLegalName: input.clientLegalName,
     contractorLegalName: input.contractorLegalName,
