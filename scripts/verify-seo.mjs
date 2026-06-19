@@ -852,6 +852,31 @@ async function verifyEntityProfileDetail(profileType) {
 
   pass(`${profilePath} returns 200`)
 
+  if (profileType === "subcontractor") {
+    const verifiedTradeContext = [
+      "Verification context reviewed",
+      "Claimed profile",
+      "Verified business",
+      "Business verified",
+      "Claim or Verify Trade Profile",
+    ].some((text) => profilePage.text.includes(text))
+    const tradeDossierContext = [
+      "Trade partner dossier",
+      "Scope, relationship, and payment-chain context",
+      "GC/sub relationship",
+      "payment-chain",
+    ].some((text) => profilePage.text.includes(text))
+
+    if (verifiedTradeContext && tradeDossierContext) {
+      pass(`${profilePath} verified subcontractor launch context`, "verified trade/profile signals present")
+    } else {
+      warn(
+        `${profilePath} verified subcontractor launch context`,
+        "A subcontractor detail page exists, but verified trade/profile launch signals were not detected. Publish only real verified trade records before acquisition campaigns.",
+      )
+    }
+  }
+
   for (const type of ["WebPage", "ProfilePage", "Organization", "BreadcrumbList", "ItemList"]) {
     if (profilePage.text.includes(`"@type":"${type}"`) || profilePage.text.includes(`"@type": "${type}"`)) {
       pass(`${profilePath} ${type} schema present`)

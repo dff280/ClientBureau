@@ -1341,7 +1341,7 @@ const publicIndexablePages = [
     path: "/businesses",
     requiredTexts: [
       "Business trust profiles",
-      "Find verified contractors and service business owners.",
+      "Find contractor and service-business trust profiles.",
       "not customer star reviews or guarantees",
     ],
   },

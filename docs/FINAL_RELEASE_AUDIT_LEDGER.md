@@ -63,8 +63,8 @@ No secrets or full environment dumps were recorded.
 | 03 | Pricing, capabilities, deferred billing truth | Completed | Command and browser evidence recorded below |
 | 04 | Search | Completed | Command and browser evidence recorded below |
 | 05 | Client Database and rating semantics | Completed | Command and browser evidence recorded below |
-| 06 | Contractor/Business Database | Not started | Needs command and browser evidence |
-| 07 | Subcontractor/Trade Database | Not started | Needs command and browser evidence |
+| 06 | Contractor/Business Database | Completed | PR #8 merged, deployed, and live release identity verified at commit `671db36f823acf268708daf00841456e3943c160` |
+| 07 | Subcontractor/Trade Database | PR-ready | Local command, SEO, and browser evidence recorded on `codex/subcontractor-database-launch-final`; deploy after PR review |
 | 08 | Auth, onboarding, sessions, capabilities | Not started | Needs command and browser evidence |
 | 09 | Jobs and participants | Not started | Needs command and browser evidence |
 | 10 | Contractor dashboard | Not started | Needs command and browser evidence |
@@ -77,6 +77,23 @@ No secrets or full environment dumps were recorded.
 | 17 | Accessibility, mobile web, performance, resilience | Not started | Needs command and browser evidence |
 | 18 | Final release candidate and scope freeze | Not started | Needs all prior prompt evidence |
 | 19 | Stripe test-mode validation | Deferred | Optional and owner-approved only |
+
+## Prompt 06 / 07 Continuation Evidence
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Prompt 06 PR | PR #8 `codex/contractor-database-final` merged into `main` | Pass |
+| Prompt 06 deploy | VPS `/api/version` reports `0.4.2` at `671db36f823acf268708daf00841456e3943c160` | Pass |
+| Prompt 06 live health | `/api/health` reports `coreLiveReady: true`, `platformCanUseSupabase: true`, and 78/78 platform columns | Pass |
+| Prompt 06 live SEO | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
+| Prompt 07 branch | `codex/subcontractor-database-launch-final` from updated `main` | In review |
+| Prompt 07 tests | `npm test` | Pass, 135 tests |
+| Prompt 07 lint | `npm run lint` | Pass |
+| Prompt 07 build | `npm run build` | Pass |
+| Prompt 07 route inventory | `npm run route:check` | Pass |
+| Prompt 07 SEO local | `npm run seo:check:local` | Pass; subcontractor launch-context check passes when verified trade signals exist |
+| Prompt 07 mobile readiness | `npm run mobile:check` | Pass |
+| Prompt 07 browser sample | Local production preview at `http://127.0.0.1:4300` checked `/profiles/subcontractor`, `/profiles/subcontractor/bright-line-electric-orlando-fl`, `/search?profileType=subcontractor&tradeCategory=Electrical`, and `/admin/profiles?type=subcontractor` at mobile width | Pass; no public overflow or private-data leak found |
 
 ## Command Evidence
 

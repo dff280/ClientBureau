@@ -57,6 +57,10 @@ import {
 } from "@/lib/schemas/client-bureau"
 import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
 import {
+  subcontractorLaunchReadiness,
+  subcontractorPublicTextFindings,
+} from "@/lib/subcontractor-launch-readiness"
+import {
   calculateClientBureauScore,
   getReportedBalanceSummary,
   getScoreCategoryBreakdown,
@@ -254,7 +258,7 @@ import {
   updateEvidenceVaultStatusSchema,
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
-import type { ClientReport } from "@/lib/types"
+import type { ClientReport, EntityProfile } from "@/lib/types"
 import {
   buildFloridaLienReadinessSummary,
   buildRecoveryReadinessSummary,
@@ -427,6 +431,104 @@ describe("Client Bureau unified profiles", () => {
     expect(subcontractorView?.safeDescription).toContain("payment-chain signals")
     expect(JSON.stringify(contractorView)).not.toContain("businessPhone")
     expect(JSON.stringify(subcontractorView)).not.toContain("internal note")
+  })
+
+  function readySubcontractorProfile(overrides: Partial<EntityProfile> = {}): EntityProfile {
+    const source = entityProfiles.find((profile) => profile.businessName === "Bright Line Electric") ?? entityProfiles[0]
+
+    return {
+      ...source,
+      profileType: "subcontractor",
+      accountCapabilities: ["subcontractor"],
+      displayName: "Bright Line Electric",
+      businessName: "Bright Line Electric",
+      city: "Orlando",
+      state: "FL",
+      slug: "bright-line-electric-orlando-fl",
+      profileSubtype: "Licensed subcontractor",
+      tradeCategory: "Electrical",
+      claimedStatus: "verified",
+      verificationLevel: "business_verified",
+      verificationBadges: ["Verified business"],
+      duplicateGroupKey: undefined,
+      publicFieldRedactions: {},
+      redactionNote: undefined,
+      ratingScore: 88,
+      ratingBand: "A",
+      ratingModel: "subcontractor_trade_partner_reliability_v3",
+      ratingVersion: "business-rating-v3",
+      ratingConfidence: "Moderate",
+      reportCount: 1,
+      evidenceOnFileCount: 1,
+      publicSummary:
+        "Verified electrical trade partner profile with documented specialty scope, GC/sub relationship context, and payment-chain readiness for public review.",
+      isPublic: true,
+      ...overrides,
+    }
+  }
+
+  it("blocks incomplete subcontractor launch candidates before public acquisition use", () => {
+    const profile = readySubcontractorProfile({
+      tradeCategory: undefined,
+      profileSubtype: undefined,
+      publicSummary: "Too short.",
+      claimedStatus: "unclaimed",
+      verificationLevel: undefined,
+      verificationBadges: [],
+      isPublic: false,
+      ratingModel: "contractor_business_reliability_v3",
+      ratingScore: 0,
+    })
+
+    const readiness = subcontractorLaunchReadiness(profile)
+
+    expect(readiness.ready).toBe(false)
+    expect(readiness.stage).toBe("blocked")
+    expect(readiness.missing).toEqual(
+      expect.arrayContaining([
+        "Subcontractor subtype",
+        "Canonical trade category or clear trade subtype",
+        "Neutral public-safe summary",
+        "Claim, verification, or documented moderator context",
+        "Public visibility enabled after review",
+        "Rating model set to Trade Partner Reliability",
+        "Trade Partner Reliability Rating",
+      ]),
+    )
+  })
+
+  it("marks a real verified subcontractor profile ready without creating duplicate records", () => {
+    const readiness = subcontractorLaunchReadiness(readySubcontractorProfile())
+
+    expect(readiness.ready).toBe(true)
+    expect(readiness.score).toBe(100)
+    expect(readiness.missing).toEqual([])
+  })
+
+  it("requires duplicate identity review before a subcontractor profile is launch-ready", () => {
+    const readiness = subcontractorLaunchReadiness(readySubcontractorProfile(), { duplicateCount: 2 })
+
+    expect(readiness.ready).toBe(false)
+    expect(readiness.missing).toContain("Duplicate identity group reviewed or resolved")
+  })
+
+  it("requires the Trade Partner Reliability rating model for subcontractor launch", () => {
+    const readiness = subcontractorLaunchReadiness(
+      readySubcontractorProfile({ ratingModel: "contractor_business_reliability_v3" }),
+    )
+
+    expect(readiness.ready).toBe(false)
+    expect(readiness.missing).toContain("Rating model set to Trade Partner Reliability")
+  })
+
+  it("redacts private fields from subcontractor public summary candidates", () => {
+    const unsafeText =
+      "Electrical subcontractor record includes admin note, mike@example.com, 407-555-1212, uploads/private-evidence.pdf, and gate code 1234."
+
+    expect(subcontractorPublicTextFindings(unsafeText)).toEqual(
+      expect.arrayContaining(["raw email address", "raw phone number", "private evidence path", "internal/admin note", "private access detail"]),
+    )
+    expect(subcontractorLaunchReadiness(readySubcontractorProfile({ publicSummary: unsafeText })).ready).toBe(false)
   })
 
   it("filters unified search by profile type and state", () => {
