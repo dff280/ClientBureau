@@ -128,6 +128,10 @@ import {
 } from "@/lib/trust-verification"
 import { buildEnterpriseDashboardSummary } from "@/lib/enterprise-dashboard"
 import {
+  buildDashboardToolConfidence,
+  dashboardToolRouteChecklist,
+} from "@/lib/dashboard-tool-confidence"
+import {
   getMobileAppApiBacklog,
   getMobileFirstWorkflows,
   getMobileReadinessSummary,
@@ -968,6 +972,63 @@ describe("product positioning", () => {
     expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/admin/recovery",
     )
+  })
+
+  it("keeps focused dashboard tool routes covered by confidence summaries", () => {
+    const dashboard = getContractorDashboard("user_contractor_01")
+    const riskOps = getContractorRiskOpsData("user_contractor_01")
+
+    if (!dashboard || !riskOps) throw new Error("Expected contractor dashboard fixtures")
+
+    const dashboardHrefs = contractorDashboardGroups.flatMap((group) => group.links).map((item) => item.href)
+    const checklistHrefs = dashboardToolRouteChecklist.map((item) => item.href)
+
+    expect(checklistHrefs).toEqual([
+      "/dashboard/activity",
+      "/dashboard/alerts",
+      "/dashboard/billing",
+      "/dashboard/contracts",
+      "/dashboard/evidence",
+      "/dashboard/growth",
+      "/dashboard/lien-readiness",
+      "/dashboard/recovery",
+      "/dashboard/reports",
+      "/dashboard/watchlist",
+    ])
+
+    for (const href of checklistHrefs) {
+      expect(dashboardHrefs).toContain(href)
+    }
+
+    expect(
+      buildDashboardToolConfidence({
+        reports: dashboard.reports,
+        riskOps,
+        savedSearchCount: dashboard.savedSearches.length,
+        subscription: dashboard.subscription,
+        tool: "reports",
+      }).recordCount,
+    ).toBe(dashboard.reports.length + riskOps.reportDrafts.length)
+
+    expect(
+      buildDashboardToolConfidence({
+        reports: dashboard.reports,
+        riskOps,
+        savedSearchCount: dashboard.savedSearches.length,
+        subscription: dashboard.subscription,
+        tool: "contracts",
+      }).recordCount,
+    ).toBe(riskOps.contractDocuments.length + riskOps.contractPackets.length)
+
+    expect(
+      buildDashboardToolConfidence({
+        reports: dashboard.reports,
+        riskOps,
+        savedSearchCount: dashboard.savedSearches.length,
+        subscription: dashboard.subscription,
+        tool: "watchlist",
+      }).recordCount,
+    ).toBe(riskOps.watchlist.length + dashboard.savedSearches.length)
   })
 
   it("defines authority content for all three public database pillars", () => {

@@ -26,6 +26,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { getBillingAvailability } from "@/lib/billing-availability"
 import { getClientDashboardData } from "@/lib/dashboard-data"
+import {
+  buildDashboardToolConfidence,
+  dashboardToolRouteChecklist,
+  type DashboardToolSlug,
+} from "@/lib/dashboard-tool-confidence"
 import { getPlatformFeatureDataMode, getSiteUrl } from "@/lib/env"
 import { getMockGrowthEngineData } from "@/lib/growth-engine"
 
@@ -62,6 +67,8 @@ type DashboardToolConfig = {
   tab: DashboardToolTab
   title: string
 }
+
+const dashboardToolSlugs = new Set<string>(dashboardToolRouteChecklist.map((item) => item.slug))
 
 function firstSearchValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
@@ -620,6 +627,18 @@ export default async function DashboardToolPage({
 
       {jobContext ? <JobContextBanner context={jobContext} toolTitle={config.title} /> : null}
 
+      {dashboardToolSlugs.has(tool) ? (
+        <ToolStateConfidencePanel
+          confidence={buildDashboardToolConfidence({
+            reports: dashboard.reports,
+            riskOps,
+            savedSearchCount: dashboard.savedSearches.length,
+            subscription: dashboard.subscription,
+            tool: tool as DashboardToolSlug,
+          })}
+        />
+      ) : null}
+
       {config.tab === "growth" ? (
         <ContractorGrowthEngine data={getMockGrowthEngineData(dashboard.contractor, getSiteUrl())} />
       ) : null}
@@ -712,5 +731,41 @@ export default async function DashboardToolPage({
         />
       ) : null}
     </ClientDashboardShell>
+  )
+}
+
+function ToolStateConfidencePanel({
+  confidence,
+}: {
+  confidence: ReturnType<typeof buildDashboardToolConfidence>
+}) {
+  return (
+    <DashboardSection
+      eyebrow="Current records"
+      title="What is saved in this tool right now"
+      description="Use this quick check before opening a create panel. It helps confirm whether your last action saved and what still needs review."
+    >
+      <div className="grid gap-3 md:grid-cols-3">
+        <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase text-slate-500">Saved records</p>
+          <p className="mt-2 text-3xl font-semibold text-slate-950">{confidence.recordCount}</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">{confidence.recordLabel}</p>
+        </div>
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs font-semibold uppercase text-amber-700">Needs attention</p>
+          <p className="mt-2 text-3xl font-semibold text-amber-950">{confidence.attentionCount}</p>
+          <p className="mt-1 text-sm leading-6 text-amber-900">{confidence.attentionLabel}</p>
+        </div>
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-xs font-semibold uppercase text-emerald-700">Verify after saving</p>
+          <p className="mt-2 text-sm leading-6 text-emerald-950">{confidence.verifyAfterSave}</p>
+        </div>
+      </div>
+      {confidence.recordCount === 0 ? (
+        <div className="mt-3 rounded-md border border-dashed border-slate-300 bg-white p-4 text-sm leading-6 text-slate-600">
+          <span className="font-semibold text-slate-950">{confidence.emptyTitle}:</span> {confidence.emptyDetail}
+        </div>
+      ) : null}
+    </DashboardSection>
   )
 }

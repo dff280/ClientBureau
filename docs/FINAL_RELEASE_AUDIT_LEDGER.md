@@ -67,7 +67,7 @@ No secrets or full environment dumps were recorded.
 | 07 | Subcontractor/Trade Database | Completed | PR #9 merged, deployed, and live release identity verified at commit `d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f` |
 | 08 | Auth, onboarding, sessions, capabilities | In progress | Local command, browser, and route-transition evidence recorded on `codex/auth-onboarding-final`; PR pending |
 | 09 | Jobs and participants | Not started | Needs command and browser evidence |
-| 10 | Contractor dashboard | Not started | Needs command and browser evidence |
+| 10 | Contractor dashboard | Completed locally | Command evidence and local protected-route smoke recorded below; signed-in visual QA still needs disposable credentials |
 | 11 | Reports, response, disputes, claims | Not started | Needs command and browser evidence |
 | 12 | Contracts and Evidence Vault | Not started | Needs command and browser evidence |
 | 13 | Recovery, lien services, billing safety | Not started | Needs command and browser evidence |
@@ -141,6 +141,60 @@ Browser checks were run against a local production preview at `http://127.0.0.1:
 - Admin authorization error copy no longer exposes internal allowlist or Supabase implementation details.
 - Password reset requests do not reveal whether an account exists for a valid-looking email address.
 - Owner action: after this PR is merged and deployed, perform one production password-reset email test with a disposable account and rerun live verification.
+
+## Prompt 10 - Contractor Dashboard Command Center
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Branch | `codex/dashboard-command-center-final` from updated `main` at `f31f12b` | In progress |
+| Scope | `/dashboard/[tool]` focused tool pages, dashboard tool route coverage, current private-record confidence summaries | Pass locally |
+| Prompt 06/07 release state | Contractor and subcontractor database patches are already represented in `main`; live `/api/version` reports `0.4.2` at `f31f12bd2e152b5907fbcf91071c203a7b343498` | Pass |
+| Live release verification | `LIVE_BASE_URL=https://clientbureau.com npm run verify:live` | Pass with expected Stripe warning only |
+| Live SEO verification | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
+
+### Prompt 10 Findings
+
+| Severity | Finding | Evidence | Outcome |
+| --- | --- | --- | --- |
+| P1 daily-use clarity | Focused dashboard tool pages needed a current-records-first confidence layer so contractors can tell what is already saved before opening create panels. | Audit of `/dashboard/[tool]`, `RiskOpsWorkspace`, dashboard navigation, and tool configs. | Added a reusable dashboard tool confidence helper and rendered a compact `Current records` section before each focused tool workspace. |
+| P1 regression coverage | Dashboard tool routes and record-count source mappings were not protected by a focused test. | Audit of dashboard navigation and focused tool config coverage. | Added a unit test that locks route coverage and verifies reports, contracts, and watchlist counts are derived from the real source arrays. |
+| P2 local QA limitation | In-app browser localhost navigation was blocked by the browser client on the sampled preview URL. | Browser attempt returned `net::ERR_BLOCKED_BY_CLIENT`. | Used local production HTTP smoke checks for protected dashboard routes and recorded that signed-in visual QA still needs disposable contractor credentials. |
+
+### Prompt 10 Changes
+
+- Added `src/lib/dashboard-tool-confidence.ts` with route checklist coverage and per-tool summaries for saved records, attention counts, empty-state guidance, and how to verify saved records after mutations.
+- Updated `/dashboard/[tool]` to render a compact `Current records` panel ahead of each focused tool workspace for reports, contracts, recovery, Florida lien service, evidence, watchlist, billing, activity, alerts, and growth.
+- Added test coverage tying focused dashboard tool links to `contractorDashboardGroups` and validating that key tool counts come from the same real dashboard/risk-ops records shown elsewhere.
+- Updated the changelog with the contractor dashboard confidence summary improvement.
+
+### Prompt 10 Command Evidence
+
+| Command | Result | Notes |
+| --- | --- | --- |
+| `npm run lint` | Pass | ESLint passed. |
+| `npm test` | Pass | 136 tests passed, including dashboard tool confidence coverage. |
+| `npm run route:check` | Pass | Dashboard tool routes and private navigation resolve correctly. |
+| `npm run workspace:check` | Pass | Dashboard/admin private workspace quality gates passed. |
+| `npm run mobile:check` | Pass | Mobile readiness unaffected. |
+| `npm run build` | Pass | Next.js production build passed with 71 generated static pages. |
+| `npm run seo:check:local` | Pass | Local SEO verification passed; one search signup-handoff check warned because local mock auth rendered signed-in watchlist actions instead of logged-out signup CTAs. |
+
+Note: one earlier `npm run build`/`npm run seo:check:local` attempt failed because both were run in parallel and Windows locked `.next/standalone`. The commands passed when rerun sequentially.
+
+### Prompt 10 Route Smoke Evidence
+
+Local production preview was started from `.next/standalone/server.js` on `http://127.0.0.1:4302` / `4303`.
+
+| Scenario | Result |
+| --- | --- |
+| `/dashboard`, `/dashboard/reports`, `/dashboard/contracts`, `/dashboard/recovery`, `/dashboard/lien-readiness`, `/dashboard/evidence`, `/dashboard/watchlist`, `/dashboard/billing`, `/dashboard/activity`, `/dashboard/alerts`, `/dashboard/growth` | Pass: all returned `200` in local mock-auth preview with `Cache-Control: no-store, max-age=0`. |
+| Representative focused tool pages | Pass: `/dashboard/reports`, `/dashboard/contracts`, `/dashboard/recovery`, `/dashboard/lien-readiness`, `/dashboard/evidence`, `/dashboard/watchlist`, `/dashboard/billing`, and `/dashboard/activity` include `What is saved in this tool right now`, `Saved records`, and `Verify after saving`. |
+
+### Prompt 10 Privacy, Security, And Owner Actions
+
+- Dashboard routes remain private, `noindex/nofollow`, and no-store.
+- The new confidence panel summarizes counts and safe workflow guidance only; it does not expose public/private identifiers, raw evidence paths, private job notes, emails, phones, addresses, admin notes, or contract snapshots.
+- Owner action: run signed-in browser QA with disposable contractor credentials to visually confirm records, create panels, mutation confirmations, and persistence on production after this PR is merged.
 
 ## Command Evidence
 

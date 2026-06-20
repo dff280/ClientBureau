@@ -6,6 +6,7 @@ All notable Client Bureau product changes should be documented here before a rel
 
 ### Improved
 
+- Added focused contractor dashboard confidence summaries so each tool page shows current private record counts, attention counts, and how to verify saved records before create panels.
 - Added an auth/onboarding hardening pass with stricter safe return-path handling, client-safe signup destinations, public password recovery/reset pages, Supabase-backed reset routes, and an auth lifecycle runbook.
 - Added a Subcontractor/Trade Database launch-readiness policy with shared admin/test guardrails for real verified trade profiles, duplicate identity review, correct Trade Partner rating models, and private-marker redaction.
 - Improved the Subcontractor Database public directory with a compact verified-trade launch standard panel and no-fake-inventory messaging for low or zero inventory markets.
