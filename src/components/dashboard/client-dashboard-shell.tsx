@@ -20,6 +20,7 @@ import {
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { SiteIssueReporter } from "@/components/support/site-issue-reporter"
 import { contractorDashboardGroups } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
@@ -216,6 +217,7 @@ export function ClientDashboardShell({
         </aside>
         <main className="min-w-0 space-y-5 sm:space-y-6">{children}</main>
       </div>
+      <SiteIssueReporter context="workspace" />
     </section>
   )
 }

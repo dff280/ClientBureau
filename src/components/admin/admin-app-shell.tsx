@@ -19,6 +19,7 @@ import {
 
 import { AdminActionTokenProvider } from "@/components/admin/admin-action-token-context"
 import { BrandMark } from "@/components/brand/brand-mark"
+import { SiteIssueReporter } from "@/components/support/site-issue-reporter"
 import { Button } from "@/components/ui/button"
 import { adminNavigationGroups } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
@@ -181,6 +182,7 @@ export function AdminAppShell({
 
           <div className="bureau-paper min-h-screen text-slate-950">{children}</div>
         </div>
+        <SiteIssueReporter context="admin" />
       </div>
     </AdminActionTokenProvider>
   )

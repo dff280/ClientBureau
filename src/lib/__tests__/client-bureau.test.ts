@@ -1261,7 +1261,7 @@ describe("launch health gates", () => {
       exists: !missing.includes(`${column.table}.${column.name}`),
     }))
 
-    const jobToolLinkColumns = requiredJobToolLinkColumns.map((column) => ({
+    const jobCrossToolColumns = requiredJobCrossToolLinkColumns.map((column) => ({
       table: column.table,
       name: column.name,
       exists: !missing.includes(`${column.table}.${column.name}`),
@@ -1273,7 +1273,7 @@ describe("launch health gates", () => {
       ...multiProfileColumns,
       ...ratingTransparencyColumns,
       ...flexibleJobColumns,
-      ...jobToolLinkColumns,
+      ...jobCrossToolColumns,
     ]
   }
 

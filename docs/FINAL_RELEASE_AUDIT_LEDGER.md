@@ -82,13 +82,13 @@ No secrets or full environment dumps were recorded.
 
 | Item | Evidence | Result |
 | --- | --- | --- |
-| Local/GitHub main | `c7dcb021c87d92b72c6a774807c5510b7896926f` (`Finalize contractor dashboard command center`) | Pass |
-| Live `/api/version` | `0.4.2` at `c7dcb021c87d92b72c6a774807c5510b7896926f` on `main` | Pass |
-| Live `/api/health` | `status: ok`, `DATA_MODE=supabase`, `PLATFORM_FEATURE_DATA_MODE=supabase`, platform Supabase ready | Pass |
-| Live release verification | `LIVE_BASE_URL=https://clientbureau.com npm run verify:live` | Pass; Stripe warning expected/deferred |
+| Local/GitHub main | `9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f` (`Add admin error log and completion audit foundation`) | Pass |
+| Live `/api/version` | `0.4.2` at `9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f` on `main` | Pass |
+| Live `/api/health` | `status: ok`, `DATA_MODE=supabase`, `PLATFORM_FEATURE_DATA_MODE=supabase`, platform schema `86/86`, optional enhancements `4/4` | Pass |
+| Live release verification | `LIVE_BASE_URL=https://clientbureau.com EXPECTED_GIT_COMMIT=9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f npm run verify:live` | Pass; Stripe warning expected/deferred |
 | Live SEO verification | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
-| Error reporting | `0025_site_error_reports.sql`, `/api/error-reports`, and `/admin/error-log` added in the completion pass | Pending migration/deploy |
-| Jobs cross-tool links | `0024_job_cross_tool_links.sql` added and included in health gate | Pending migration/deploy |
+| Error reporting | `0025_site_error_reports.sql`, `/api/error-reports`, `/admin/error-log`, and private workspace issue reporter | Live in RC branch; deployed foundation live |
+| Jobs cross-tool links | `0024_job_cross_tool_links.sql` applied, health gate green, linked Job UI/revalidation added in RC branch | In RC verification |
 
 ## Prompt 06 / 07 Continuation Evidence
 
