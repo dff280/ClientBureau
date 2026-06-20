@@ -87,6 +87,7 @@ No secrets or full environment dumps were recorded.
 | Live `/api/health` | `status: ok`, `DATA_MODE=supabase`, `PLATFORM_FEATURE_DATA_MODE=supabase`, platform schema `86/86`, optional enhancements `4/4` | Pass |
 | Live release verification | `LIVE_BASE_URL=https://clientbureau.com EXPECTED_GIT_COMMIT=9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f npm run verify:live` | Pass; Stripe warning expected/deferred |
 | Live SEO verification | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
+| Strict signed-in QA | `npm run verify:live:auth:strict` on RC branch | Blocked until `.env.qa.local` contains disposable contractor/admin QA credentials; live health preflight passed |
 | Error reporting | `0025_site_error_reports.sql`, `/api/error-reports`, `/admin/error-log`, and private workspace issue reporter | Live in RC branch; deployed foundation live |
 | Jobs cross-tool links | `0024_job_cross_tool_links.sql` applied, health gate green, linked Job UI/revalidation added in RC branch | In RC verification |
 
