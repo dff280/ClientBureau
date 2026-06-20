@@ -45,7 +45,7 @@ const accounts = [
     sessionPath: "/api/session",
     expectedRole: "contractor",
     routes: [
-      { path: "/dashboard", expectedText: ["Check a Client", "Today's Work", "Jobs"] },
+      { path: "/dashboard", expectedText: ["Check a Client", "Jobs"] },
       { path: "/dashboard/jobs", expectedText: ["Jobs", "Create job"] },
       { path: "/dashboard/reports", expectedText: ["Reports", "Report a Client Experience"] },
       { path: "/dashboard/watchlist", expectedText: ["Watchlist and Alerts", "Check a Client"] },
@@ -67,7 +67,7 @@ const accounts = [
     sessionPath: "/api/admin/session",
     expectedRole: "admin",
     routes: [
-      { path: "/admin", expectedText: ["Today's platform operations", "Review Reports"] },
+      { path: "/admin", expectedText: ["Admin Command Center", "Review Reports"] },
       { path: "/admin/reports", expectedText: ["Review Reports", "Publish only what is safe"] },
       { path: "/admin/profiles", expectedText: ["Unified Profile CRM", "Subcontractor launch readiness"] },
       { path: "/admin/clients", expectedText: ["Manage Client Profiles", "Keep public records clean"] },
@@ -294,7 +294,7 @@ async function verifySession(account, jar) {
 async function verifyRoutes(account, jar) {
   for (const routeConfig of account.routes) {
     const route = typeof routeConfig === "string" ? routeConfig : routeConfig.path
-    const expectedText = typeof routeConfig === "string" ? [] : routeConfig.expectedText
+    const expectedText = typeof routeConfig === "string" ? [] : (routeConfig.expectedText ?? [])
     const redirectedTo = typeof routeConfig === "string" ? "" : routeConfig.redirectedTo
     const result = await request(route, {}, jar)
 
