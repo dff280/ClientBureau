@@ -29,6 +29,7 @@ import type {
   RecoveryComplianceReview,
   ReportDraft,
   SearchFilters,
+  SiteErrorReport,
   WatchlistStatus,
 } from "@/lib/types"
 import type {
@@ -50,6 +51,7 @@ import type {
   RecoveryComplianceReviewInput,
   RemoveProjectJobParticipantInput,
   ReportDraftInput,
+  SiteErrorReportInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
   UpdateProjectJobInput,
@@ -108,4 +110,7 @@ export interface ClientBureauRepository {
     decisionReason: ModerationDecisionReason,
     moderatorNote?: string,
   ): ModerationCase
+  getSiteErrorReports(): SiteErrorReport[]
+  createSiteErrorReport(input: SiteErrorReportInput, reporterUserId?: string, reporterRole?: string): SiteErrorReport
+  updateSiteErrorReportStatus(reportId: string, status: SiteErrorReport["status"]): SiteErrorReport
 }

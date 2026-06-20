@@ -77,6 +77,7 @@ const accounts = [
       { path: "/admin/contracts", expectedText: ["Contracts", "Private signing system"] },
       { path: "/admin/recovery", expectedText: ["Recovery Cases", "Florida lien service"] },
       { path: "/admin/audit-log", expectedText: ["Audit Log", "Filter audit trail"] },
+      { path: "/admin/error-log", expectedText: ["Error Log", "Filter site issues"] },
       { path: "/admin/reviews", redirectedTo: "/admin/reports" },
       { path: "/admin/settings", expectedText: ["Settings", "Admin operating defaults"] },
     ],

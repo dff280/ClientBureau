@@ -11,6 +11,7 @@ import {
   createContractPacket,
   createContractShareLink,
   createPublicInquiry,
+  createSiteErrorReport,
   createPaymentPlan,
   createProjectJob,
   createServiceFeeOrder,
@@ -33,6 +34,7 @@ import {
   getPublicEntityProfiles,
   getProfileClaims,
   getPublicInquiries,
+  getSiteErrorReports,
   getContractPacketByShareToken,
   deleteAdminRecord,
   logPaymentRecoveryAttempt,
@@ -55,6 +57,7 @@ import {
   searchClients,
   searchProfiles,
   hasRecentPublicInquiry,
+  updateSiteErrorReportStatus,
   setMockModerationDecisionReason,
   mergeEntityProfiles,
   reassignReportProfile,
@@ -98,6 +101,7 @@ import {
   createPaymentPlanSupabase,
   createPaymentRecoveryCaseSupabase,
   createPublicInquirySupabase,
+  createSiteErrorReportSupabase,
   createProjectJobSupabase,
   createServiceFeeOrderSupabase,
   createWatchlistItemSupabase,
@@ -120,6 +124,7 @@ import {
   getPublicEntityProfilesSupabase,
   getProfileClaimsSupabase,
   getPublicInquiriesSupabase,
+  getSiteErrorReportsSupabase,
   linkEvidenceToServiceCaseSupabase,
   logPaymentRecoveryAttemptSupabase,
   logResolutionDeskContactSupabase,
@@ -170,6 +175,7 @@ import {
   addProjectJobParticipantSupabase,
   updateProjectJobParticipantSupabase,
   removeProjectJobParticipantSupabase,
+  updateSiteErrorReportStatusSupabase,
   updateWatchlistItemSupabase,
 } from "@/lib/repositories/client-bureau-supabase"
 import type {
@@ -216,6 +222,7 @@ import type {
   UpdateProjectJobParticipantInput,
   WatchlistItemInput,
   PublicInquiryInput,
+  SiteErrorReportInput,
   ProfileClaimInput,
   AdminProfileClaimReviewInput,
   AdminProfileMergeInput,
@@ -241,6 +248,7 @@ import type {
   SavedClientSearch,
   SearchAnalyticsEvent,
   SearchFilters,
+  SiteErrorReport,
   User,
   WatchlistStatus,
 } from "@/lib/types"
@@ -472,6 +480,12 @@ export async function getPublicInquiriesService(): Promise<PublicInquiry[]> {
   return getPublicInquiries()
 }
 
+export async function getSiteErrorReportsService(): Promise<SiteErrorReport[]> {
+  if (shouldUseSupabase()) return getSiteErrorReportsSupabase()
+
+  return getSiteErrorReports()
+}
+
 export async function getContractorRiskOpsDataService(userId: string) {
   if (shouldUsePlatformSupabase()) return getContractorRiskOpsDataSupabase(userId)
 
@@ -552,6 +566,25 @@ export async function createPublicInquiryService(input: PublicInquiryInput): Pro
   if (shouldUseSupabase()) return createPublicInquirySupabase(input)
 
   return createPublicInquiry(input)
+}
+
+export async function createSiteErrorReportService(
+  input: SiteErrorReportInput,
+  reporterUserId?: string,
+  reporterRole?: string,
+): Promise<SiteErrorReport> {
+  if (shouldUseSupabase()) return createSiteErrorReportSupabase(input, reporterUserId, reporterRole)
+
+  return createSiteErrorReport(input, reporterUserId, reporterRole)
+}
+
+export async function updateSiteErrorReportStatusService(
+  reportId: string,
+  status: SiteErrorReport["status"],
+): Promise<SiteErrorReport> {
+  if (shouldUseSupabase()) return updateSiteErrorReportStatusSupabase(reportId, status)
+
+  return updateSiteErrorReportStatus(reportId, status)
 }
 
 export async function reviewReportService(

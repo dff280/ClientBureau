@@ -212,6 +212,7 @@ export const adminNavigationGroups: NavigationGroup[] = [
     title: "Platform",
     links: [
       { href: "/admin/audit-log", label: "Audit Log", description: "Track admin actions, status changes, and publication decisions." },
+      { href: "/admin/error-log", label: "Error Log", description: "Review user-reported site bugs, browser issues, and launch QA findings." },
       { href: "/admin/settings", label: "Settings", description: "Configure moderation, publication, evidence privacy, and workflow defaults." },
     ],
   },

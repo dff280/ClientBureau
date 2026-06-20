@@ -70,6 +70,7 @@ const privateNoindexRoutes = new Set([
   "/admin/contractors",
   "/admin/contracts",
   "/admin/discussions",
+  "/admin/error-log",
   "/admin/profiles",
   "/admin/recovery",
   "/admin/reports",
@@ -161,6 +162,7 @@ const adminNavigationHrefs = new Set([
   "/admin/recovery",
   "/admin/contracts",
   "/admin/audit-log",
+  "/admin/error-log",
   "/admin/settings",
 ])
 

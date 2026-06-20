@@ -82,6 +82,7 @@ import type {
   SearchAnalyticsEventInput,
   ServiceFeeCheckoutInput,
   ServicePrecheckInput,
+  SiteErrorReportInput,
   ProfileShareEventInput,
   UpdateClientPipelineStageInput,
   UpdateContractPacketStatusInput,
@@ -158,6 +159,7 @@ import type {
   SavedSearch,
   SearchAnalyticsEvent,
   SearchFilters,
+  SiteErrorReport,
   Subscription,
   ServiceFeeOrder,
   User,
@@ -165,6 +167,7 @@ import type {
   WatchlistStatus,
   ServiceReadinessSummary,
 } from "@/lib/types"
+import { sanitizeSiteErrorReportInput } from "@/lib/site-error-reports"
 
 type Tables = Database["public"]["Tables"]
 type UserRow = Tables["users"]["Row"]
@@ -178,6 +181,7 @@ type AdminReviewRow = Tables["admin_reviews"]["Row"]
 type CommunityDiscussionRow = Tables["community_discussions"]["Row"]
 type AuditLogRow = Tables["audit_logs"]["Row"]
 type PublicInquiryRow = Tables["public_inquiries"]["Row"]
+type SiteErrorReportRow = Tables["site_error_reports"]["Row"]
 type ContractorWatchlistRow = Tables["contractor_watchlist_items"]["Row"]
 type WatchlistAlertRow = Tables["watchlist_alerts"]["Row"]
 type ReportDraftRow = Tables["report_drafts"]["Row"]
@@ -825,6 +829,34 @@ function mapPublicInquiry(row: PublicInquiryRow): PublicInquiry {
     adminNote: row.admin_note ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  }
+}
+
+function mapSiteErrorReport(row: SiteErrorReportRow): SiteErrorReport {
+  const metadata =
+    row.metadata && typeof row.metadata === "object" && !Array.isArray(row.metadata)
+      ? (row.metadata as Record<string, string | number | boolean | null>)
+      : {}
+
+  return {
+    id: row.id,
+    reporterUserId: row.reporter_user_id ?? undefined,
+    reporterRole: row.reporter_role ?? undefined,
+    severity: row.severity,
+    status: row.status,
+    source: row.source === "browser" || row.source === "server" || row.source === "qa" ? row.source : "manual",
+    route: row.route,
+    pageTitle: row.page_title ?? undefined,
+    message: row.message,
+    notes: row.notes ?? undefined,
+    userAgent: row.user_agent ?? undefined,
+    browserLanguage: row.browser_language ?? undefined,
+    viewportWidth: row.viewport_width ?? undefined,
+    viewportHeight: row.viewport_height ?? undefined,
+    metadata,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+    resolvedAt: row.resolved_at ?? undefined,
   }
 }
 
@@ -3087,6 +3119,7 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     responsesResult,
     discussionsResult,
     auditResult,
+    siteErrorsResult,
     entityProfilesResult,
     reviews,
   ] = await Promise.all([
@@ -3098,6 +3131,7 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     supabase.from("client_responses").select("*").order("created_at", { ascending: false }),
     supabase.from("community_discussions").select("*").order("created_at", { ascending: false }),
     supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(200),
+    supabase.from("site_error_reports").select("*").order("created_at", { ascending: false }).limit(200),
     supabase.from("entity_profiles").select("*").order("updated_at", { ascending: false }),
     getPendingAdminReviewsSupabase(),
   ])
@@ -3119,6 +3153,10 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
 
   if (auditResult.error && !isMissingRelationError(auditResult.error)) {
     throw new Error(auditResult.error.message)
+  }
+
+  if (siteErrorsResult.error && !isMissingRelationError(siteErrorsResult.error)) {
+    throw new Error(siteErrorsResult.error.message)
   }
 
   if (entityProfilesResult.error && !isMissingRelationError(entityProfilesResult.error)) {
@@ -3144,6 +3182,7 @@ export async function getAdminWorkspaceDataSupabase(): Promise<AdminWorkspaceDat
     discussions: discussionsResult.error ? [] : (discussionsResult.data ?? []).map(mapCommunityDiscussion),
     reviews,
     auditLog: auditResult.error ? [] : (auditResult.data ?? []).map(mapAuditLog),
+    siteErrors: siteErrorsResult.error ? [] : (siteErrorsResult.data ?? []).map(mapSiteErrorReport),
   }
 }
 
@@ -3218,6 +3257,96 @@ export async function createPublicInquirySupabase(input: PublicInquiryInput): Pr
   })
 
   return inquiry
+}
+
+export async function getSiteErrorReportsSupabase(): Promise<SiteErrorReport[]> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("site_error_reports")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(200)
+
+  if (isMissingRelationError(error)) return []
+  if (error) throw new Error(error.message)
+
+  return (data ?? []).map(mapSiteErrorReport)
+}
+
+export async function createSiteErrorReportSupabase(
+  input: SiteErrorReportInput,
+  reporterUserId?: string,
+  reporterRole?: string,
+): Promise<SiteErrorReport> {
+  const supabase = createServiceClient()
+  const clean = sanitizeSiteErrorReportInput(input)
+  const now = new Date().toISOString()
+  const { data, error } = await supabase
+    .from("site_error_reports")
+    .insert({
+      reporter_user_id: reporterUserId ?? null,
+      reporter_role: reporterRole ?? null,
+      severity: clean.severity ?? "medium",
+      status: clean.status ?? "new",
+      source: clean.source ?? "manual",
+      route: clean.route ?? "/",
+      page_title: clean.pageTitle ?? null,
+      message: clean.message,
+      notes: clean.notes ?? null,
+      user_agent: clean.userAgent ?? null,
+      browser_language: clean.browserLanguage ?? null,
+      viewport_width: clean.viewportWidth ?? null,
+      viewport_height: clean.viewportHeight ?? null,
+      metadata: clean.metadata ?? {},
+    })
+    .select("*")
+    .single()
+
+  if (isMissingRelationError(error)) {
+    return {
+      id: `site_error_pending_${Date.now()}`,
+      reporterUserId,
+      reporterRole,
+      severity: clean.severity ?? "medium",
+      status: "new",
+      source: clean.source ?? "manual",
+      route: clean.route ?? "/",
+      pageTitle: clean.pageTitle,
+      message: clean.message,
+      notes: "Apply migration 0025_site_error_reports.sql for persistent admin-visible error logs.",
+      userAgent: clean.userAgent,
+      browserLanguage: clean.browserLanguage,
+      viewportWidth: clean.viewportWidth,
+      viewportHeight: clean.viewportHeight,
+      metadata: clean.metadata ?? {},
+      createdAt: now,
+      updatedAt: now,
+    }
+  }
+  if (error) throw new Error(error.message)
+
+  return mapSiteErrorReport(data)
+}
+
+export async function updateSiteErrorReportStatusSupabase(
+  reportId: string,
+  status: SiteErrorReport["status"],
+): Promise<SiteErrorReport> {
+  const supabase = createServiceClient()
+  const { data, error } = await supabase
+    .from("site_error_reports")
+    .update({
+      status,
+      resolved_at: status === "resolved" ? new Date().toISOString() : null,
+    })
+    .eq("id", reportId)
+    .select("*")
+    .single()
+
+  if (isMissingRelationError(error)) throw new Error("Site error reporting table is not applied yet.")
+  if (error) throw new Error(error.message)
+
+  return mapSiteErrorReport(data)
 }
 
 async function maybeCreateProjectJobGraph(

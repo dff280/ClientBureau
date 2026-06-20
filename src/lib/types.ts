@@ -371,6 +371,11 @@ export type AdminEntityType =
   | "assignment"
   | "compliance_review"
   | "setting"
+export const siteErrorSeverities = ["info", "low", "medium", "high", "critical"] as const
+export const siteErrorStatuses = ["new", "triaged", "in_progress", "resolved", "ignored"] as const
+export type SiteErrorSeverity = (typeof siteErrorSeverities)[number]
+export type SiteErrorStatus = (typeof siteErrorStatuses)[number]
+export type SiteErrorSource = "manual" | "browser" | "server" | "qa"
 export type TimelineEventType =
   | "submitted"
   | "evidence_uploaded"
@@ -569,6 +574,27 @@ export interface PublicInquiry {
   adminNote?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface SiteErrorReport {
+  id: string
+  reporterUserId?: string
+  reporterRole?: string
+  severity: SiteErrorSeverity
+  status: SiteErrorStatus
+  source: SiteErrorSource
+  route: string
+  pageTitle?: string
+  message: string
+  notes?: string
+  userAgent?: string
+  browserLanguage?: string
+  viewportWidth?: number
+  viewportHeight?: number
+  metadata: Record<string, string | number | boolean | null>
+  createdAt: string
+  updatedAt: string
+  resolvedAt?: string
 }
 
 export interface ProjectJob {
@@ -1523,6 +1549,7 @@ export interface AdminWorkspaceData {
     checklist: ReviewChecklistItem[]
   }[]
   auditLog: AuditLogEntry[]
+  siteErrors: SiteErrorReport[]
 }
 
 export interface BulkUploadPreviewRow {

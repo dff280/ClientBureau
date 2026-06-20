@@ -16,6 +16,7 @@ import {
   adminReportReassignmentSchema,
   adminReviewSchema,
   adminSavedViewSchema,
+  adminSiteErrorStatusSchema,
   bulkAdminReviewSchema,
   bulkUploadImportSchema,
   clientPipelineItemSchema,
@@ -101,6 +102,7 @@ import type {
   ReportDraft,
   ServiceFeeOrder,
   ServiceReadinessSummary,
+  SiteErrorReport,
   ProfileShareEvent,
   PublicInquiry,
   ProfileClaim,
@@ -132,6 +134,7 @@ import {
   assignModerationCaseService,
   createContractWorkspaceItemService,
   createPublicInquiryService,
+  updateSiteErrorReportStatusService,
   createContractShareLinkService,
   createClientPipelineItemService,
   createClientRiskRoomService,
@@ -2583,6 +2586,31 @@ export async function saveAdminQueueViewAction(
     return ok(view, "Admin queue view saved.")
   } catch (error) {
     return fail(actionErrorMessage(error, "Admin queue view could not be saved."))
+  }
+}
+
+export async function updateSiteErrorReportStatusAction(
+  _previousState: ActionResult<SiteErrorReport>,
+  formData: FormData,
+): Promise<ActionResult<SiteErrorReport>> {
+  const parsed = adminSiteErrorStatusSchema.safeParse(formDataToObject(formData))
+
+  if (!parsed.success) {
+    return fail("Select an error report and status.", zodFieldErrors(parsed.error))
+  }
+
+  const adminResult = await getAdminMutationUser("site error triage", formData)
+  if (!adminResult.ok) return fail(adminResult.message)
+
+  try {
+    const report = await updateSiteErrorReportStatusService(parsed.data.reportId, parsed.data.status)
+
+    revalidatePath("/admin")
+    revalidatePath("/admin/error-log")
+
+    return ok(report, "Site error status updated.")
+  } catch (error) {
+    return fail(error instanceof Error ? error.message : "Unable to update the site error report.")
   }
 }
 

@@ -1053,6 +1053,7 @@ const protectedRoutes = [
   { path: "/admin/contracts", expectedNext: "/admin" },
   { path: "/admin/recovery", expectedNext: "/admin" },
   { path: "/admin/audit-log", expectedNext: "/admin" },
+  { path: "/admin/error-log", expectedNext: "/admin" },
   { path: "/admin/reviews", expectedNext: "/admin" },
   { path: "/admin/settings", expectedNext: "/admin" },
 ]

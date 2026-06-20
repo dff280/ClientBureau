@@ -30,6 +30,8 @@ import {
   reportCategories,
   reportRelationshipTypes,
   riskLevels,
+  siteErrorSeverities,
+  siteErrorStatuses,
   subcontractorProfileSubtypes,
 } from "@/lib/types"
 
@@ -1210,6 +1212,31 @@ export const publicInquirySchema = z.object({
   website: z.string().trim().max(0, "Leave this field blank.").optional(),
 })
 
+export const siteErrorReportSchema = z.object({
+  severity: z.enum(siteErrorSeverities).default("medium"),
+  status: z.enum(siteErrorStatuses).default("new"),
+  source: z.enum(["manual", "browser", "server", "qa"]).default("manual"),
+  route: z
+    .string()
+    .trim()
+    .max(180, "Keep the route under 180 characters.")
+    .optional()
+    .transform((value) => (value && value.startsWith("/") ? value : "/")),
+  pageTitle: z.string().trim().max(160, "Keep the page title under 160 characters.").optional().transform((value) => value || undefined),
+  message: requiredText("Issue summary", 8).max(700, "Keep the issue summary under 700 characters."),
+  notes: z.string().trim().max(1200, "Keep notes under 1,200 characters.").optional().transform((value) => value || undefined),
+  userAgent: z.string().trim().max(240, "Keep the user agent under 240 characters.").optional().transform((value) => value || undefined),
+  browserLanguage: z.string().trim().max(40, "Keep browser language under 40 characters.").optional().transform((value) => value || undefined),
+  viewportWidth: z.coerce.number().int().min(0).max(10000).optional(),
+  viewportHeight: z.coerce.number().int().min(0).max(10000).optional(),
+  metadata: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.null()])).optional(),
+})
+
+export const adminSiteErrorStatusSchema = z.object({
+  reportId: requiredText("Error report ID"),
+  status: z.enum(siteErrorStatuses),
+})
+
 export const moderationCaseAssignmentSchema = z.object({
   caseId: requiredText("Case ID"),
   assignedTo: requiredText("Reviewer ID"),
@@ -1284,6 +1311,8 @@ export type UpdateEvidenceVaultStatusInput = z.infer<typeof updateEvidenceVaultS
 export type AdminSavedViewInput = z.infer<typeof adminSavedViewSchema>
 export type RecoveryComplianceReviewInput = z.infer<typeof recoveryComplianceReviewSchema>
 export type PublicInquiryInput = z.infer<typeof publicInquirySchema>
+export type SiteErrorReportInput = z.infer<typeof siteErrorReportSchema>
+export type AdminSiteErrorStatusInput = z.infer<typeof adminSiteErrorStatusSchema>
 export type SavedClientSearchInput = z.infer<typeof savedClientSearchSchema>
 export type SearchAnalyticsEventInput = z.infer<typeof searchAnalyticsEventSchema>
 export type ProfileShareEventInput = z.infer<typeof profileShareEventSchema>

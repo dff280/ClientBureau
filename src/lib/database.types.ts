@@ -58,6 +58,8 @@ import type {
   ProfileRatingModel,
   ReportConfidenceLevel,
   ReportRelationshipType,
+  SiteErrorSeverity,
+  SiteErrorStatus,
   VerificationLevel,
 } from "@/lib/types"
 
@@ -917,6 +919,50 @@ export interface Database {
           updated_at?: string
         }
         Update: Partial<Database["public"]["Tables"]["public_inquiries"]["Insert"]>
+        Relationships: []
+      }
+      site_error_reports: {
+        Row: {
+          id: string
+          reporter_user_id: string | null
+          reporter_role: string | null
+          severity: SiteErrorSeverity
+          status: SiteErrorStatus
+          source: string
+          route: string
+          page_title: string | null
+          message: string
+          notes: string | null
+          user_agent: string | null
+          browser_language: string | null
+          viewport_width: number | null
+          viewport_height: number | null
+          metadata: Json
+          created_at: string
+          updated_at: string
+          resolved_at: string | null
+        }
+        Insert: {
+          id?: string
+          reporter_user_id?: string | null
+          reporter_role?: string | null
+          severity?: SiteErrorSeverity
+          status?: SiteErrorStatus
+          source?: string
+          route?: string
+          page_title?: string | null
+          message: string
+          notes?: string | null
+          user_agent?: string | null
+          browser_language?: string | null
+          viewport_width?: number | null
+          viewport_height?: number | null
+          metadata?: Json
+          created_at?: string
+          updated_at?: string
+          resolved_at?: string | null
+        }
+        Update: Partial<Database["public"]["Tables"]["site_error_reports"]["Insert"]>
         Relationships: []
       }
       contractor_watchlist_items: DbTable<{

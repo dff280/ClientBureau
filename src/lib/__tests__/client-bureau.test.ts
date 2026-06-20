@@ -41,6 +41,7 @@ import {
   platformLaunchTables,
   requiredContractPacketColumns,
   requiredFlexibleJobColumns,
+  requiredJobCrossToolLinkColumns,
   requiredLaunchTables,
   requiredMultiProfileColumns,
   requiredRatingTransparencyColumns,
@@ -60,6 +61,7 @@ import {
   publicInquirySchema,
   savedClientSearchSchema,
   searchAnalyticsEventSchema,
+  siteErrorReportSchema,
 } from "@/lib/schemas/client-bureau"
 import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
 import {
@@ -181,6 +183,7 @@ import {
   getEntityProfiles,
   getProjectJobDetail,
   getProjectJobs,
+  createSiteErrorReport,
   recordSearchEvent,
   signLienFilingAuthorization,
   searchClients,
@@ -967,10 +970,14 @@ describe("product positioning", () => {
       "Recovery Cases",
       "Contracts",
       "Audit Log",
+      "Error Log",
       "Settings",
     ])
     expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
       "/admin/recovery",
+    )
+    expect(adminNavigationGroups.flatMap((group) => group.links).map((item) => item.href)).toContain(
+      "/admin/error-log",
     )
   })
 
@@ -1297,13 +1304,15 @@ describe("launch health gates", () => {
         requiredRevenueWorkflowColumns.length +
         requiredMultiProfileColumns.length +
         requiredRatingTransparencyColumns.length +
-        requiredFlexibleJobColumns.length,
+        requiredFlexibleJobColumns.length +
+        requiredJobCrossToolLinkColumns.length,
       total:
         requiredContractPacketColumns.length +
         requiredRevenueWorkflowColumns.length +
         requiredMultiProfileColumns.length +
         requiredRatingTransparencyColumns.length +
-        requiredFlexibleJobColumns.length,
+        requiredFlexibleJobColumns.length +
+        requiredJobCrossToolLinkColumns.length,
     })
     expect(summary.enhancementColumnCount).toEqual({
       ready: optionalLaunchEnhancementColumns.length,
@@ -3249,6 +3258,37 @@ describe("platform expansion schemas", () => {
     expect(hashInquiryEmail("Morgan@RidgeBuild.example")).toMatch(/^sha256:/)
   })
 
+  it("stores site error reports with sensitive details redacted", () => {
+    const parsed = siteErrorReportSchema.safeParse({
+      severity: "high",
+      source: "browser",
+      route: "/admin/reports",
+      pageTitle: "Admin Reports",
+      message: "Password: hunter2. Report page froze for morgan@example.com.",
+      notes: "Call 407-555-0199 and check storage/v1/object/private/report-evidence/file.pdf.",
+      userAgent: "Playwright QA",
+      browserLanguage: "en-US",
+      viewportWidth: 390,
+      viewportHeight: 844,
+      metadata: { action: "approve report", token: "bearer token=abc123" },
+    })
+
+    expect(parsed.success).toBe(true)
+    if (!parsed.success) throw new Error("Expected valid site error payload")
+
+    const report = createSiteErrorReport(parsed.data, "user_admin_01", "admin")
+    const serialized = JSON.stringify(report)
+
+    expect(report.route).toBe("/admin/reports")
+    expect(report.severity).toBe("high")
+    expect(serialized).not.toContain("hunter2")
+    expect(serialized).not.toContain("morgan@example.com")
+    expect(serialized).not.toContain("407-555-0199")
+    expect(serialized).not.toContain("storage/v1/object")
+    expect(serialized).toContain("[redacted-email]")
+    expect(serialized).toContain("[redacted-secret]")
+  })
+
   it("covers Supabase contract packet migration fields in database types", () => {
     const typedInsert: Database["public"]["Tables"]["contract_packets"]["Insert"] = {
       contractor_id: "contractor_01",
@@ -3271,5 +3311,6 @@ describe("platform expansion schemas", () => {
     expect(requiredContractPacketColumns).toContain("signed_snapshot")
     expect(requiredFlexibleJobColumns).toContainEqual({ table: "project_jobs", name: "job_number" })
     expect(requiredFlexibleJobColumns).toContainEqual({ table: "project_job_profiles", name: "participant_status" })
+    expect(requiredJobCrossToolLinkColumns).toContainEqual({ table: "contract_packets", name: "project_job_id" })
   })
 })

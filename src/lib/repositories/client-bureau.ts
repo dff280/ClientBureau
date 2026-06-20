@@ -84,6 +84,7 @@ import type {
   SearchAnalyticsEventInput,
   ServiceFeeCheckoutInput,
   ServicePrecheckInput,
+  SiteErrorReportInput,
   ProfileShareEventInput,
   UpdateContractPacketStatusInput,
   UpdateEvidenceVaultStatusInput,
@@ -138,6 +139,7 @@ import type {
   SearchFilters,
   SavedClientSearch,
   SearchAnalyticsEvent,
+  SiteErrorReport,
   ProfileShareEvent,
   ProfileClaim,
   ProfileMergeEvent,
@@ -150,6 +152,7 @@ import type {
   ReportReassignmentEvent,
   Subscription,
 } from "@/lib/types"
+import { sanitizeSiteErrorReportInput } from "@/lib/site-error-reports"
 import { hashInquiryEmail, maskInquiryEmail, normalizeInquiryEmail } from "@/lib/support-inquiries"
 import {
   buildFloridaLienReadinessSummary,
@@ -170,6 +173,7 @@ const profileMergeEvents: ProfileMergeEvent[] = []
 const reportReassignmentEvents: ReportReassignmentEvent[] = []
 const profileRedactionEvents: ProfileRedactionEvent[] = []
 const publicInquiryRecords: PublicInquiry[] = []
+const siteErrorReportRecords: SiteErrorReport[] = []
 
 type SimulatedClientReportInput = Partial<ClientReportInput> &
   Pick<
@@ -621,6 +625,7 @@ export function getAdminWorkspaceData(): AdminWorkspaceData {
     discussions: communityDiscussions,
     reviews: getPendingAdminReviews(),
     auditLog: auditLogs,
+    siteErrors: getSiteErrorReports(),
   }
 }
 
@@ -637,6 +642,66 @@ export function hasRecentPublicInquiry(email: string, topic: PublicInquiryInput[
     inquiry.topic === topic &&
     new Date(inquiry.createdAt).getTime() >= recentCutoff,
   )
+}
+
+export function getSiteErrorReports(): SiteErrorReport[] {
+  return [...siteErrorReportRecords].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export function createSiteErrorReport(
+  input: SiteErrorReportInput,
+  reporterUserId?: string,
+  reporterRole?: string,
+): SiteErrorReport {
+  const clean = sanitizeSiteErrorReportInput(input)
+  const now = new Date().toISOString()
+  const report: SiteErrorReport = {
+    id: `site_error_${Date.now()}`,
+    reporterUserId,
+    reporterRole,
+    severity: clean.severity ?? "medium",
+    status: clean.status ?? "new",
+    source: clean.source ?? "manual",
+    route: clean.route ?? "/",
+    pageTitle: clean.pageTitle,
+    message: clean.message,
+    notes: clean.notes,
+    userAgent: clean.userAgent,
+    browserLanguage: clean.browserLanguage,
+    viewportWidth: clean.viewportWidth,
+    viewportHeight: clean.viewportHeight,
+    metadata: sanitizeSiteErrorReportInput(clean).metadata ?? {},
+    createdAt: now,
+    updatedAt: now,
+  }
+
+  siteErrorReportRecords.unshift(report)
+
+  return report
+}
+
+export function updateSiteErrorReportStatus(reportId: string, status: SiteErrorReport["status"]): SiteErrorReport {
+  const existing = siteErrorReportRecords.find((report) => report.id === reportId)
+  const updated: SiteErrorReport = {
+    ...(existing ?? {
+      id: reportId,
+      severity: "medium",
+      source: "manual",
+      route: "/",
+      message: "Site issue status updated.",
+      metadata: {},
+      createdAt: new Date().toISOString(),
+    }),
+    status,
+    updatedAt: new Date().toISOString(),
+    resolvedAt: status === "resolved" ? new Date().toISOString() : existing?.resolvedAt,
+  }
+
+  const index = siteErrorReportRecords.findIndex((report) => report.id === reportId)
+  if (index >= 0) siteErrorReportRecords[index] = updated
+  else siteErrorReportRecords.unshift(updated)
+
+  return updated
 }
 
 export function createPublicInquiry(input: PublicInquiryInput): PublicInquiry {

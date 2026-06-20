@@ -45,6 +45,10 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
    - `supabase/migrations/0019_contractor_subcontractor_rating_transparency.sql`
    - `supabase/migrations/0020_job_participants_flexible_roles.sql`
    - `supabase/migrations/0021_saved_search_filter_context.sql`
+   - `supabase/migrations/0022_business_rating_v3_safe_backfill.sql`
+   - `supabase/migrations/0023_public_inquiry_intake.sql`
+   - `supabase/migrations/0024_job_cross_tool_links.sql`
+   - `supabase/migrations/0025_site_error_reports.sql`
 3. Confirm the private Storage bucket `report-evidence` exists.
 4. Copy these values for `.env.production`:
    - `NEXT_PUBLIC_SUPABASE_URL`

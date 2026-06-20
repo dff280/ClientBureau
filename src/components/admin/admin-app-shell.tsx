@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import {
   ClipboardCheck,
+  Bug,
   History,
   LogOut,
   MessageSquareText,
@@ -33,6 +34,7 @@ const adminIcons = {
   "/admin/recovery": PhoneCall,
   "/admin/contracts": Signature,
   "/admin/audit-log": History,
+  "/admin/error-log": Bug,
   "/admin/settings": Settings,
 }
 

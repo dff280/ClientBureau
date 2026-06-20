@@ -1,6 +1,6 @@
 # Client Bureau Live Workflow QA Runbook
 
-Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency and flexible Jobs participant roles.
+Use this after every production deploy while `DATA_MODE=supabase` is active. Production should normally run `PLATFORM_FEATURE_DATA_MODE=supabase` after `/api/health` confirms all platform columns through the current migrations, including rating transparency, flexible Jobs participant roles, Jobs cross-tool links, and admin-visible site error reporting.
 
 ## 1. Release And Health Gate
 
@@ -58,6 +58,7 @@ Required result:
 - `/api/health` reports `coreLiveReady: true`.
 - If `PLATFORM_FEATURE_DATA_MODE=supabase`, `/api/health` must also report `platformCanUseSupabase: true` and `recommendedPlatformFeatureDataMode: supabase`.
 - `/api/health` reports optional saved-search enhancement readiness through `optionalEnhancementColumns` and `readiness.enhancementColumnCount`. Missing `0021` saved-search filter columns may warn, but should be applied before marketing pushes that rely on saved subcontractor/trade searches.
+- `/admin/error-log` is protected, loads for admins, and can triage browser/manual issue reports after `0025_site_error_reports.sql` is applied.
 - If `PLATFORM_FEATURE_DATA_MODE=mock`, `/api/health` may warn that a newer advanced-platform column is missing or that an ops workflow is in rollback mode; core auth, reports, admin approval, and public profiles should remain live.
 - `/api/version`, `/api/health`, `/api/session`, and `/api/admin/session` include `Cache-Control: no-store`.
 - Logged-out dashboard, submit-report, and admin routes redirect to safe internal `/login` URLs, preserve the expected `next` return path, and include `Cache-Control: no-store`.
@@ -108,7 +109,7 @@ Use a real admin account.
    - reassign a report
    - redact a public field
 6. Confirm moderator/audit notes are required where expected.
-7. Review `/admin/recovery`, `/admin/contracts`, `/admin/discussions`, `/admin/uploads`, `/admin/audit-log`, and `/admin/settings` for clear queues and no blank states.
+7. Review `/admin/recovery`, `/admin/contracts`, `/admin/discussions`, `/admin/uploads`, `/admin/audit-log`, `/admin/error-log`, and `/admin/settings` for clear queues and no blank states.
 
 ## 4. Public Profile QA
 

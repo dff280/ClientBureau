@@ -166,6 +166,17 @@ export const requiredFlexibleJobColumns = [
   { table: "project_job_profiles", name: "updated_at" },
 ] as const satisfies { table: RequiredTable; name: string }[]
 
+export const requiredJobCrossToolLinkColumns = [
+  { table: "report_drafts", name: "project_job_id" },
+  { table: "payment_recovery_cases", name: "project_job_id" },
+  { table: "managed_recovery_cases", name: "project_job_id" },
+  { table: "lien_notice_drafts", name: "project_job_id" },
+  { table: "florida_lien_cases", name: "project_job_id" },
+  { table: "contract_workspace_items", name: "project_job_id" },
+  { table: "contract_packets", name: "project_job_id" },
+  { table: "evidence_vault_items", name: "project_job_id" },
+] as const satisfies { table: RequiredTable; name: string }[]
+
 export const optionalLaunchEnhancementColumns = [
   { table: "saved_client_searches", name: "profile_type" },
   { table: "saved_client_searches", name: "trade_category" },
@@ -178,7 +189,8 @@ const requiredPlatformColumnTotal =
   requiredRevenueWorkflowColumns.length +
   requiredMultiProfileColumns.length +
   requiredRatingTransparencyColumns.length +
-  requiredFlexibleJobColumns.length
+  requiredFlexibleJobColumns.length +
+  requiredJobCrossToolLinkColumns.length
 
 type LaunchColumnStatus = {
   table: RequiredTable
@@ -292,6 +304,12 @@ async function checkRequiredColumns() {
       exists: false,
       message: "Supabase service role is not configured.",
     }))
+    const jobCrossToolColumns: LaunchColumnStatus[] = requiredJobCrossToolLinkColumns.map((column) => ({
+      table: column.table,
+      name: column.name,
+      exists: false,
+      message: "Supabase service role is not configured.",
+    }))
 
     return [
       ...contractColumns,
@@ -299,6 +317,7 @@ async function checkRequiredColumns() {
       ...multiProfileColumns,
       ...ratingTransparencyColumns,
       ...flexibleJobColumns,
+      ...jobCrossToolColumns,
     ]
   }
 
@@ -314,6 +333,7 @@ async function checkRequiredColumns() {
     ...requiredMultiProfileColumns,
     ...requiredRatingTransparencyColumns,
     ...requiredFlexibleJobColumns,
+    ...requiredJobCrossToolLinkColumns,
   ]
 
   return Promise.all(
@@ -400,11 +420,11 @@ export function summarizeLaunchHealth(input: {
   } else if (!platformTablesReady) {
     readinessLabel = "Guided ops required"
     readinessMessage =
-      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0020 before moving advanced tools to live account records."
+      "Core records are reachable, but platform operations tables are missing. Apply migrations 0003 through 0025 before moving advanced tools to live account records."
   } else if (!platformSchemaReady) {
     readinessLabel = "Platform schema migration needed"
     readinessMessage =
-      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, flexible job participants, response graph, or rating transparency columns are missing. Apply migrations through 0020 before using live advanced workflows."
+      "Platform tables exist, but contract signing, revenue workflow, unified profile, project/job graph, flexible job participants, response graph, rating transparency, or Jobs cross-tool link columns are missing. Apply migrations through 0025 before using live advanced workflows."
   } else if (input.platformFeatureDataMode === "supabase") {
     readinessLabel = "Live ops active"
     readinessMessage = "Advanced dashboard and admin operations are saving to live account records."

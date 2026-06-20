@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react"
 import Link from "next/link"
 import {
   Activity,
+  Bug,
   ClipboardCheck,
   Database,
   History,
@@ -96,6 +97,10 @@ export default async function AdminHomePage() {
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 5)
+  const openSiteErrors = data.siteErrors.filter((item) => !["resolved", "ignored"].includes(item.status)).length
+  const criticalSiteErrors = data.siteErrors.filter((item) =>
+    ["critical", "high"].includes(item.severity) && !["resolved", "ignored"].includes(item.status),
+  ).length
   const newUsers = data.users
     .slice()
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
@@ -131,11 +136,12 @@ export default async function AdminHomePage() {
           }
         />
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatCard label="Review Reports" value={pendingReports} helper="Queued reports and dispute reviews" icon={ClipboardCheck} tone={pendingReports > 0 ? "amber" : "emerald"} href="/admin/reports" />
           <StatCard label="Evidence Review" value={evidenceAwaitingReview} helper="Private evidence attached to reports" icon={UploadCloud} tone={evidenceAwaitingReview > 0 ? "blue" : "slate"} href="/admin/reports" />
           <StatCard label="Discussions / Responses" value={pendingDiscussions + pendingResponses} helper="Pending public comments, responses, or corrections" icon={MessageSquareText} tone={pendingDiscussions + pendingResponses > 0 ? "amber" : "slate"} href="/admin/discussions" />
           <StatCard label="Audit Events" value={data.auditLog.length} helper="Approvals, edits, imports, deletes, and status changes" icon={History} tone="slate" href="/admin/audit-log" />
+          <StatCard label="Site Issues" value={openSiteErrors} helper={`${criticalSiteErrors} high-attention reports`} icon={Bug} tone={criticalSiteErrors > 0 ? "rose" : openSiteErrors > 0 ? "amber" : "emerald"} href="/admin/error-log" />
         </div>
 
         <DashboardSection
@@ -196,6 +202,13 @@ export default async function AdminHomePage() {
               title="Audit Trail"
               description="Review recent approvals, edits, imports, deletes, and visibility changes."
               badge={`${data.auditLog.length} events`}
+            />
+            <QuickActionCard
+              href="/admin/error-log"
+              icon={Bug}
+              title="Error Log"
+              description="Review reported browser issues, QA findings, broken flows, and launch blockers."
+              badge={`${openSiteErrors} open`}
             />
           </div>
         </DashboardSection>

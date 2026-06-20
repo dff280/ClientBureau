@@ -65,9 +65,9 @@ No secrets or full environment dumps were recorded.
 | 05 | Client Database and rating semantics | Completed | Command and browser evidence recorded below |
 | 06 | Contractor/Business Database | Completed | PR #8 merged, deployed, and live release identity verified at commit `671db36f823acf268708daf00841456e3943c160` |
 | 07 | Subcontractor/Trade Database | Completed | PR #9 merged, deployed, and live release identity verified at commit `d3e963fbe46b2a4bda75ddb3698c56f2e5364e1f` |
-| 08 | Auth, onboarding, sessions, capabilities | In progress | Local command, browser, and route-transition evidence recorded on `codex/auth-onboarding-final`; PR pending |
-| 09 | Jobs and participants | Not started | Needs command and browser evidence |
-| 10 | Contractor dashboard | Completed locally | Command evidence and local protected-route smoke recorded below; signed-in visual QA still needs disposable credentials |
+| 08 | Auth, onboarding, sessions, capabilities | Completed | Merged to `main` at `f31f12b`; live route/session protection verified |
+| 09 | Jobs and participants | In progress | Private Jobs foundation is live; `0024_job_cross_tool_links.sql` and linked Jobs QA are pending release |
+| 10 | Contractor dashboard | Completed | Merged to `main` at `c7dcb02`; live release identity, route protection, SEO, and health verified |
 | 11 | Reports, response, disputes, claims | Not started | Needs command and browser evidence |
 | 12 | Contracts and Evidence Vault | Not started | Needs command and browser evidence |
 | 13 | Recovery, lien services, billing safety | Not started | Needs command and browser evidence |
@@ -77,6 +77,18 @@ No secrets or full environment dumps were recorded.
 | 17 | Accessibility, mobile web, performance, resilience | Not started | Needs command and browser evidence |
 | 18 | Final release candidate and scope freeze | Not started | Needs all prior prompt evidence |
 | 19 | Stripe test-mode validation | Deferred | Optional and owner-approved only |
+
+## Current Production Snapshot - 2026-06-20
+
+| Item | Evidence | Result |
+| --- | --- | --- |
+| Local/GitHub main | `c7dcb021c87d92b72c6a774807c5510b7896926f` (`Finalize contractor dashboard command center`) | Pass |
+| Live `/api/version` | `0.4.2` at `c7dcb021c87d92b72c6a774807c5510b7896926f` on `main` | Pass |
+| Live `/api/health` | `status: ok`, `DATA_MODE=supabase`, `PLATFORM_FEATURE_DATA_MODE=supabase`, platform Supabase ready | Pass |
+| Live release verification | `LIVE_BASE_URL=https://clientbureau.com npm run verify:live` | Pass; Stripe warning expected/deferred |
+| Live SEO verification | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
+| Error reporting | `0025_site_error_reports.sql`, `/api/error-reports`, and `/admin/error-log` added in the completion pass | Pending migration/deploy |
+| Jobs cross-tool links | `0024_job_cross_tool_links.sql` added and included in health gate | Pending migration/deploy |
 
 ## Prompt 06 / 07 Continuation Evidence
 
