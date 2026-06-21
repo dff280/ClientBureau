@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { buildBusinessSlug } from "@/lib/business-rating"
+import { planInterestLabel } from "@/lib/billing-availability"
 import { getClientDashboardData } from "@/lib/dashboard-data"
 import { buildEnterpriseDashboardSummary } from "@/lib/enterprise-dashboard"
 import { buildTodaysWorkItems } from "@/lib/platform-features"
@@ -94,6 +95,7 @@ export default async function DashboardPage({
   }
 
   const subscriptionTier = dashboard.subscription?.tier ?? "free"
+  const subscriptionLabel = planInterestLabel(subscriptionTier)
   const projectJobs = await getProjectJobsService(user.id)
   const businessProfileHref = `/business/${buildBusinessSlug(dashboard.contractor)}`
   const unreadAlerts = riskOps.watchlistAlerts.filter((item) => !item.readAt).length
@@ -174,7 +176,7 @@ export default async function DashboardPage({
   return (
     <ClientDashboardShell
       activeHref="/dashboard"
-      badge={`${subscriptionTier.replace("_", " ")} plan`}
+      badge={`${subscriptionLabel} plan`}
       description="A private command center for checking clients, documenting experiences, managing contracts, organizing evidence, and handling payment follow-up before a project becomes harder to control."
       primaryAction={{ href: "/search", label: "Check a Client", icon: Search }}
       secondaryAction={{ href: "/submit-report", label: "Report a Client Experience", icon: FilePlus2 }}
@@ -183,7 +185,7 @@ export default async function DashboardPage({
       <div className="grid gap-3 md:grid-cols-5">
         <CompactStatusCard
           label="Current plan"
-          value={subscriptionTier.replace("_", " ")}
+          value={subscriptionLabel}
           helper="Search, reports, contracts, and private tools"
         />
         <CompactStatusCard

@@ -87,8 +87,8 @@ export function isBillingPlanInterest(value?: string | null): value is BillingPl
 }
 
 export function planInterestLabel(value?: string | null) {
-  if (value === "pro") return "Pro Contractor"
-  if (value === "bureau_team") return "Bureau Team"
+  if (value === "pro") return "Pro Check"
+  if (value === "bureau_team") return "Bureau Pro"
   if (value === "enterprise") return "Enterprise"
 
   return "Free"

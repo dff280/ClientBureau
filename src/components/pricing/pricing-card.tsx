@@ -14,9 +14,9 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
     tier.id === "free"
       ? "Create free account"
       : tier.id === "pro"
-        ? "Create account for Pro"
+        ? "Start Pro Check"
         : tier.id === "bureau_team"
-          ? "Request team review"
+          ? "Start Bureau Pro"
           : "Request enterprise review"
 
   return (
@@ -31,7 +31,7 @@ export function PricingCard({ tier }: { tier: PricingTier }) {
           <CardTitle className="text-xl text-slate-950">{tier.name}</CardTitle>
           {tier.featured ? (
             <span className="rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white">
-              Most used
+              Best value
             </span>
           ) : null}
         </div>

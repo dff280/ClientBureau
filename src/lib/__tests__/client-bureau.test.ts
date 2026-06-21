@@ -1188,7 +1188,7 @@ describe("deployment URL helpers", () => {
       "/search?q=John&state=FL",
     )
     expect(billingInterestSignupHref("pro")).toBe("/signup?plan=pro")
-    expect(planInterestLabel("bureau_team")).toBe("Bureau Team")
+    expect(planInterestLabel("bureau_team")).toBe("Bureau Pro")
   })
 })
 

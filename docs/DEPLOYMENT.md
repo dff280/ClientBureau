@@ -89,10 +89,10 @@ It returns non-secret readiness information for data mode, platform feature mode
 
 ## 3. Stripe Billing
 
-1. Create products for Pro Contractor and Bureau Team.
+1. Create products for Pro Check and Bureau Pro.
 2. Create recurring monthly prices and copy them into:
    - `STRIPE_PRICE_PRO_MONTHLY`
-   - `STRIPE_PRICE_TEAM_MONTHLY`
+   - `STRIPE_PRICE_TEAM_MONTHLY` (Bureau Pro public plan)
 3. Copy the Stripe secret key into `STRIPE_SECRET_KEY`.
 4. Add a webhook endpoint:
 

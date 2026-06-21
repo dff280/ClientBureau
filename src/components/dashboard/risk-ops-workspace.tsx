@@ -351,17 +351,17 @@ export function RiskOpsWorkspace({
     {
       label: "Saved searches",
       value: clients.length,
-      limit: subscription?.tier === "free" || !subscription ? 5 : 100,
+      limit: subscription?.tier === "bureau_team" ? 250 : subscription?.tier === "pro" ? 50 : 3,
     },
     {
       label: "Watchlist records",
       value: riskOps.watchlist.length,
-      limit: subscription?.tier === "bureau_team" ? 250 : subscription?.tier === "pro" ? 75 : 10,
+      limit: subscription?.tier === "bureau_team" ? 250 : subscription?.tier === "pro" ? 25 : 3,
     },
     {
       label: "Contract packets",
       value: riskOps.contractPackets.length,
-      limit: subscription?.tier === "free" || !subscription ? 3 : 100,
+      limit: subscription?.tier === "bureau_team" ? 100 : subscription?.tier === "pro" ? 5 : 1,
     },
   ]
   const summaryMetrics = [

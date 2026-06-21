@@ -64,7 +64,7 @@ export default function EnterprisePage() {
       <PremiumHero
         eyebrow="Enterprise"
         title="Client-risk operations for teams that cannot afford scattered records."
-        description="Bureau Team and Enterprise help contractor groups coordinate client checks, reports, contracts, evidence, recovery workflows, Florida lien service activity, and audit visibility across the business."
+        description="Bureau Pro and Enterprise review help contractor groups coordinate client checks, reports, contracts, evidence, recovery workflows, Florida lien service activity, and audit visibility across the business."
         primary={{ href: "#enterprise-inquiry", label: "Request enterprise review", icon: Building2 }}
         secondary={{ href: "/pricing", label: "Compare plans", icon: ArrowRight }}
         aside={

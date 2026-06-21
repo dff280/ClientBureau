@@ -21,32 +21,34 @@ import { pricingTiers } from "@/lib/stripe/pricing"
 export const metadata: Metadata = {
   title: "Pricing for Contractors and Service Businesses",
   description:
-    "Client Bureau pricing for client checks, documented reports, contracts, evidence records, payment recovery workflows, Florida lien service, and team controls.",
+    "Client Bureau pricing for client checks, profile monitoring, jobs, contracts, evidence records, payment recovery workflows, and Florida lien service.",
   alternates: {
     canonical: "/pricing",
   },
 }
 
 const proof = [
-  { label: "Start", value: "$0", text: "Create an account, check clients, and document a first experience without a card." },
-  { label: "Best fit", value: "Pro", text: "Daily client checks, watchlists, contracts, evidence, recovery, and lien-service workspace." },
-  { label: "Teams", value: "Scoped", text: "Team usage, CSV intake, review controls, and seats are reviewed before rollout." },
-  { label: "Service work", value: "Reviewed", text: "Recovery and Florida lien service fees are handled separately from contractor-direct payments." },
+  { label: "Start", value: "$0", text: "Browse the databases and understand how Client Bureau protects job intake." },
+  { label: "Check", value: "$29", text: "Client checks, saved searches, watchlists, profile alerts, and report context." },
+  { label: "Protect", value: "$99", text: "Jobs, contracts, evidence, recovery, Florida lien service, and priority review." },
+  { label: "Service fees", value: "Separate", text: "Recovery, vendor, attorney, e-recording, county, and pass-through costs stay separate." },
 ]
 
 const comparisonRows = [
-  ["Client Database search", "Open", "Daily use", "Team workflow review", "Custom review"],
-  ["Watchlists and saved searches", "Basic", "Included", "Shared-process scoping", "Advanced review"],
-  ["Client experience reports", "First report path", "Report workflow", "Manager review scoping", "Custom policy review"],
-  ["Contract signing links", "Starter visibility", "Included workspace", "Team process review", "Custom workflow review"],
-  ["Evidence Vault", "Basic private records", "Expanded workflow", "Operating-process review", "Retention review"],
-  ["Payment recovery workflow", "Private notes", "Managed case workspace", "Team coordination review", "Specialist review"],
-  ["Florida lien service", "Information pages", "Case workspace", "Team review path", "Specialist review"],
+  ["Client Database search", "Limited", "Daily intake", "Daily intake plus project context"],
+  ["Saved searches and watchlists", "Starter", "50 saved / 25 watched", "250 saved / 250 watched"],
+  ["Client reports and response context", "First path", "Report and monitor", "Report, monitor, and tie to jobs"],
+  ["Jobs project files", "Starter view", "Basic list", "Full project files and participant roles"],
+  ["Contract signing links", "One starter packet", "Starter visibility", "Full contract packet workspace"],
+  ["Evidence Vault", "Starter notes", "Basic summaries", "Full private evidence workflow"],
+  ["Payment Recovery", "Not included", "Not included", "Recovery workspace and case intake"],
+  ["Florida Lien Service", "Information pages", "Information pages", "Florida case workspace and readiness review"],
 ]
 
 const faqs = [
-  ["Can I start free?", "Yes. Free is designed for basic client checks and an initial documented client experience report."],
-  ["What plan should an active contractor choose?", "Pro Contractor is the clearest fit for businesses that want client checks, watchlists, contracts, evidence, recovery, and report workflows in daily use."],
+  ["Can I start free?", "Yes. Free is designed to let you browse the three databases, understand public profiles, and create a starter account without a card."],
+  ["Which paid plan should most contractors start with?", "Pro Check is the fastest entry point if your main need is checking clients, saving searches, watching profiles, and reviewing public report context."],
+  ["When does Bureau Pro make sense?", "Bureau Pro is for businesses that want the complete workflow: Jobs, contracts, evidence, recovery, Florida lien service, and activity history around the same client-risk process."],
   ["Do recovery and lien services guarantee payment?", "No. Client Bureau does not guarantee collection, lien rights, recording results, legal outcomes, or payment timing."],
   ["Are private emails, phone numbers, addresses, or evidence public?", "No. Private identifiers and raw evidence stay private and are not displayed on public client profiles."],
 ]
@@ -75,19 +77,19 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
     <>
       <PremiumHero
         eyebrow="Pricing"
-        title="Start free. Review paid activation when your workflow needs it."
-        description="Client Bureau pricing is built around one practical idea: check the client first, then decide whether daily contracts, evidence, recovery, lien service, or team workflow belongs in your process."
+        title="Start free. Upgrade when one client check needs to become a system."
+        description="Pro Check gives contractors the client-checking membership. Bureau Pro unlocks the full business-protection workspace for jobs, contracts, evidence, recovery, and Florida lien service."
         primary={{ href: "/signup?plan=free", label: "Create Free Account", icon: ArrowRight }}
         secondary={{ href: "/search", label: "Check a Client", icon: Radar }}
         aside={
           <ProductMockupFrame
             dark
-            eyebrow="Pro workflow"
-            title="One plan. One intake process."
-            description="Search, contract, document, recover, and monitor from the same private workspace. Paid activation is reviewed before billing is collected."
+            eyebrow="Bureau Pro workspace"
+            title="The full protection stack."
+            description="Search before the job. Document during the job. Protect payment after the job. Paid activation is reviewed before billing is collected."
             imageSrc={searchDossierAsset.src}
             imageAlt={searchDossierAsset.alt}
-            points={["Free account setup", "Private evidence records", "Recovery and lien-service paths"]}
+            points={["Client checks", "Jobs, contracts, and evidence", "Recovery and lien-service paths"]}
           />
         }
       />
@@ -103,7 +105,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                     : billing.publicStatusLabel}
                 </p>
                 <p className="mt-1 text-sm leading-6 text-amber-950">
-                  {billing.publicStatusDetail} Create a free account now, then use Billing or Enterprise review when you are ready to activate paid access.
+                  {billing.publicStatusDetail} Create a free account now, then use Billing review when you are ready to activate Pro Check or Bureau Pro.
                 </p>
               </div>
               <Button asChild className="bg-slate-950 text-white hover:bg-slate-800">
@@ -119,25 +121,25 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         compact
         eyebrow="What every plan supports"
         title="Pricing starts with access to the three core databases."
-        description="Client checks, contractor profiles, and subcontractor records are the front door. Contracts, evidence, recovery, and lien workflows support what happens after the search."
+        description="Client checks, contractor profiles, and subcontractor records are the front door. Bureau Pro adds the private operating workspace around what happens after the search."
       />
 
       <section className="bureau-section bg-slate-100">
         <div className="bureau-container space-y-10">
           <NextBestStepCard
-            eyebrow="Most contractors start here"
-            title="Pro Contractor is the everyday operating plan."
-            description="Free is useful for a first check. Pro is the plan interest for businesses that want Client Bureau in daily intake, contracts, evidence, recovery, and monitoring."
-            primary={{ href: "/signup?plan=pro", label: "Create account for Pro", icon: ShieldCheck }}
-            secondary={{ href: "/search", label: "Check a Client First", icon: Radar }}
+            eyebrow="Best value"
+            title="Bureau Pro is the complete business-protection workspace."
+            description="Pro Check is built to attract every contractor into better client screening. Bureau Pro is where the serious tools live: Jobs, contracts, evidence, recovery, Florida lien service, and activity history."
+            primary={{ href: "/signup?plan=bureau_team", label: "Start Bureau Pro", icon: ShieldCheck }}
+            secondary={{ href: "/signup?plan=pro", label: "Start Pro Check", icon: Radar }}
             points={[
               "Client checks before estimates",
-              "Contracts and evidence records",
-              "Recovery and lien-service paths",
+              "Contracts, Jobs, and evidence records",
+              "Recovery and Florida lien-service workspace",
             ]}
           />
 
-          <div className="grid gap-5 lg:grid-cols-4">
+          <div className="grid gap-5 lg:grid-cols-3">
             {pricingTiers.map((tier) => (
               <PlanCard key={tier.id} tier={tier} />
             ))}
@@ -149,20 +151,19 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
         <div className="bureau-container space-y-8">
           <PremiumSectionHeader
             eyebrow="Feature comparison"
-            title="Compare plans by the workflow you want to protect."
-            description="The biggest difference is how much client-risk work you want inside Client Bureau: search volume, saved monitoring, evidence depth, contracts, service workflows, and team controls."
+            title="Compare the check-first plan against the full protection workspace."
+            description="The $29 plan should feel impossible to ignore for checking clients. The $99 plan is where Client Bureau becomes the operating system for protecting jobs and payment."
           />
           <Card className="overflow-hidden rounded-md border-slate-200 bg-white shadow-sm">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[800px] text-left text-sm">
+                <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="bg-slate-950 text-xs uppercase text-slate-300">
                     <tr>
                       <th className="p-4">Workflow</th>
                       <th className="p-4">Free</th>
-                      <th className="p-4">Pro Contractor</th>
-                      <th className="p-4">Bureau Team</th>
-                      <th className="p-4">Enterprise</th>
+                      <th className="p-4">Pro Check</th>
+                      <th className="p-4">Bureau Pro</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -204,9 +205,9 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
       <PremiumCtaBand
         eyebrow="Make it part of intake"
         title="Before the next estimate, check the client."
-        description="Start with a free account, then upgrade when search, contracts, evidence, recovery, and team workflows become part of your business process."
-        primary={{ href: "/signup?plan=pro", label: "Start Pro Contractor", icon: ShieldCheck }}
-        secondary={{ href: "/enterprise", label: "View Enterprise", icon: Users }}
+        description="Start with client checks, then upgrade to the full workspace when you want jobs, contracts, evidence, recovery, and Florida lien service tied together."
+        primary={{ href: "/signup?plan=bureau_team", label: "Start Bureau Pro", icon: ShieldCheck }}
+        secondary={{ href: "/enterprise", label: "Need multi-location review?", icon: Users }}
       />
     </>
   )
@@ -221,9 +222,9 @@ function PlanCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
     tier.id === "free"
       ? "Create free account"
       : tier.id === "pro"
-        ? "Create account for Pro"
+        ? "Start Pro Check"
         : tier.id === "bureau_team"
-          ? "Request team review"
+          ? "Start Bureau Pro"
           : "Request enterprise review"
 
   return (
@@ -234,7 +235,7 @@ function PlanCard({ tier }: { tier: (typeof pricingTiers)[number] }) {
             <p className={tier.featured ? "text-xl font-semibold text-white" : "text-xl font-semibold text-slate-950"}>{tier.name}</p>
             <p className={tier.featured ? "mt-2 text-sm leading-6 text-slate-300" : "mt-2 text-sm leading-6 text-slate-600"}>{tier.description}</p>
           </div>
-          {tier.featured ? <Badge className="rounded-md bg-amber-400 text-slate-950">Best fit</Badge> : null}
+          {tier.featured ? <Badge className="rounded-md bg-amber-400 text-slate-950">Best value</Badge> : null}
         </div>
         <div className="flex flex-wrap items-end gap-x-2 gap-y-1">
           <span className={tier.featured ? "text-4xl font-semibold text-white" : "text-4xl font-semibold text-slate-950"}>{tier.price}</span>

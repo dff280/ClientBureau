@@ -18,8 +18,8 @@ Client Bureau now uses one server-side billing gate:
 | Plan | Public availability | Safe CTA | Implementation truth |
 | --- | --- | --- | --- |
 | Free | Open | `Create Free Account` | Signup, search handoff, dashboard entry, reports, profile claim/response paths, and core private tools are available subject to auth and moderation rules. |
-| Pro Contractor | Activation review | `Create account for Pro` | The product workflows exist, but paid activation is not self-serve until billing checkout is explicitly enabled and QA-tested. Plan interest is saved during signup. |
-| Bureau Team | Scoped review | `Request team review` | Team-facing workflows can be planned and reviewed, but seat management, manager controls, shared-team authorization, shared watchlist ownership, and export governance are not launch-proven self-serve features. |
+| Pro Check | Activation review | `Start Pro Check` | The $29 plan is the client-checking and monitoring membership. It should not market full contracts, recovery, lien, or full evidence workflows as included. Plan interest is saved during signup. |
+| Bureau Pro | Scoped review | `Start Bureau Pro` | The $99 plan is the complete protection workspace. Internal tier key remains `bureau_team`; public copy should call it Bureau Pro. Team seats and manager controls still require review until QA-proven. |
 | Enterprise | Scoped review | `Request enterprise review` | Enterprise inquiries are collected and reviewed privately. API/data partnerships, custom exports, SSO, procurement, and managed rollout terms require separate approval and implementation review. |
 
 ## Feature Classification
@@ -30,11 +30,11 @@ Client Bureau now uses one server-side billing gate:
 | Report submission and moderation | Implemented | Emphasize moderated, contractor-submitted experiences. |
 | Client response/correction | Implemented | Emphasize fairness and response rights. |
 | Contractor and subcontractor public profiles | Implemented | Describe as public trust/profile database surfaces, not guarantees or star reviews. |
-| Jobs and participant roles | Implemented private workflow | Describe as private job records and role context, not public job disclosure. |
-| Contracts/signing packets | Implemented private workflow | Describe as private signing packets and agreement records. Avoid legal-advice language. |
-| Evidence Vault | Implemented private workflow | Describe as private documentation summaries. Do not imply public evidence files are shown. |
-| Payment Recovery | Implemented service workflow, billing deferred | Describe as managed review/resolution workflow. Do not imply automatic collection or open checkout while billing is deferred. |
-| Florida Lien Service | Implemented service workflow, billing deferred | Describe as Florida-first, review-gated, contractor-authorized workflow. Do not imply legal outcome, priority, or enforceability. |
+| Jobs and participant roles | Implemented private workflow | Market as a Bureau Pro workspace capability. Describe as private job records and role context, not public job disclosure. |
+| Contracts/signing packets | Implemented private workflow | Market full packet workflow under Bureau Pro. Avoid legal-advice language. |
+| Evidence Vault | Implemented private workflow | Market full workflow under Bureau Pro. Pro Check may mention starter evidence notes/summaries only. |
+| Payment Recovery | Implemented service workflow, billing deferred | Market workspace/case intake under Bureau Pro. Do not imply automatic collection or open checkout while billing is deferred. |
+| Florida Lien Service | Implemented service workflow, billing deferred | Market workspace/case readiness under Bureau Pro. Do not imply legal outcome, priority, or enforceability. |
 | Team seats and manager controls | Partial/planned | Use review/scoping language only. Do not promise active self-serve seat administration. |
 | Shared team watchlists/jobs/contracts/evidence | Partial/planned | Use "team workflow review" until authorization, ownership, and audit behavior are QA-proven. |
 | CSV exports/imports | Partial/planned | Use "review path" language, not live export promises. |
@@ -45,7 +45,7 @@ Client Bureau now uses one server-side billing gate:
 
 Do not set `BILLING_CHECKOUT_ENABLED=true` until these checks pass with disposable test accounts and Stripe test mode:
 
-1. Pro and Team price IDs exist and match the intended pricing.
+1. Pro Check and Bureau Pro price IDs exist and match the intended pricing.
 2. Checkout create, cancel, and return flows work.
 3. Webhook signature validation works.
 4. Subscription status updates in Supabase after webhook delivery.
