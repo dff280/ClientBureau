@@ -60,6 +60,9 @@ import {
   type SavedClientSearch,
   type SearchAnalyticsEvent,
 } from "@/lib/types"
+import {
+  savedSearchBrowserFallbackMessage,
+} from "@/lib/workflow-messages"
 
 interface InitialSavedSearch {
   id: string
@@ -71,6 +74,7 @@ interface InitialSavedSearch {
   profileType?: ProfileType
   tradeCategory?: string
   resultCount?: number
+  source?: SavedClientSearch["source"]
   createdAt?: string
 }
 
@@ -81,6 +85,7 @@ interface SavedSearchRecord extends InitialSavedSearch {
   tradeCategory?: string
   resultCount?: number
   createdAt: string
+  source?: SavedClientSearch["source"]
 }
 
 interface SearchCommandCenterProps {
@@ -127,6 +132,13 @@ function savedSearchFilterSummary(search: SavedSearchRecord) {
   ]
     .filter(Boolean)
     .join(" / ")
+}
+
+function savedSearchSourceLabel(source?: SavedSearchRecord["source"]) {
+  if (source === "local") return "Browser saved"
+  if (source === "supabase" || source === "mock") return "Account saved"
+
+  return undefined
 }
 
 function reportPrefillHref(query: string, state?: string, profileType?: ProfileType, tradeCategory?: string) {
@@ -316,7 +328,7 @@ export function SearchCommandCenter({
     const next = uniqueSavedSearches([nextSearch, ...savedSearches]).slice(0, 8)
 
     setSavedSearches(next)
-    setSavedMessage("Search saved.")
+    setSavedMessage(isAuthenticated ? "Saving search..." : savedSearchBrowserFallbackMessage)
 
     try {
       window.localStorage.setItem(savedSearchStorageKey, JSON.stringify(next))
@@ -343,7 +355,7 @@ export function SearchCommandCenter({
           trackSearchEvent("save_search", nextSearch.resultCount ?? 0)
 
           if (!result.ok) {
-            setSavedMessage("Search saved in this browser.")
+            setSavedMessage(savedSearchBrowserFallbackMessage)
             return
           }
 
@@ -357,6 +369,7 @@ export function SearchCommandCenter({
             profileType: result.data.profileType,
             tradeCategory: result.data.tradeCategory,
             resultCount: result.data.resultCount,
+            source: result.data.source,
             createdAt: result.data.createdAt,
           }
           const updated = uniqueSavedSearches([serverSearch, ...next]).slice(0, 8)
@@ -369,7 +382,7 @@ export function SearchCommandCenter({
             // Local persistence can be blocked; the server action already completed.
           }
         } catch {
-          setSavedMessage("Search saved in this browser.")
+          setSavedMessage(savedSearchBrowserFallbackMessage)
         }
       })()
     })
@@ -763,6 +776,11 @@ export function SearchCommandCenter({
                         <span className="block truncate text-xs text-slate-300">
                           {savedSearchFilterSummary(search) || "All filters"}
                         </span>
+                        {savedSearchSourceLabel(search.source) ? (
+                          <span className="mt-1 inline-flex rounded-md border border-white/15 bg-white/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-amber-100">
+                            {savedSearchSourceLabel(search.source)}
+                          </span>
+                        ) : null}
                       </Link>
                       <button
                         type="button"

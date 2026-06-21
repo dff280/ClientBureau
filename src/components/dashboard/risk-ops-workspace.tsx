@@ -2542,9 +2542,16 @@ function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
 function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createContractPacketAction, contractPacketState)
   const [activeTemplate, setActiveTemplate] = useState<"blank" | "florida">("blank")
+  const [openPolicySection, setOpenPolicySection] = useState<string | undefined>(undefined)
   const templateValues = activeTemplate === "florida"
     ? floridaResidentialServiceAgreementTemplate.fields
     : undefined
+  const packetErrors = state.ok ? undefined : state.fieldErrors
+  const policyNeedsAttention = Boolean(
+    packetErrors?.changeOrderPolicy?.length || packetErrors?.cancellationPolicy?.length,
+  )
+  const policySectionValue = policyNeedsAttention ? "policies" : openPolicySection
+  const createdPacket = state.ok ? state.data : undefined
 
   useToastState(state)
 
@@ -2595,8 +2602,47 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
               Replace the 0 milestone amounts with real deposit, progress, and final-payment amounts before sharing.
             </p>
           </div>
-        ) : null}
+        ) : (
+          <p className="mt-3 rounded-md border border-dashed border-amber-300 bg-white/70 p-3 text-xs leading-5 text-amber-950">
+            Blank packets require scope, included work, payment terms, change-order policy, cancellation policy,
+            and next action.
+          </p>
+        )}
       </div>
+
+      {createdPacket ? (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold">Agreement packet created.</p>
+              <p className="mt-1 text-emerald-900">
+                Review the packet, create a private signing link, and keep the job file connected before work is
+                scheduled.
+              </p>
+            </div>
+            <Badge className="rounded-md bg-emerald-700 text-white">Ready for review</Badge>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline" className="border-emerald-300 bg-white text-emerald-950">
+              <Link href={`#contract-packet-${createdPacket.id}`}>
+                <FileText aria-hidden="true" />
+                Review packet
+              </Link>
+            </Button>
+            <span className="inline-flex min-h-9 items-center rounded-md border border-emerald-200 bg-white px-3 text-xs font-semibold text-emerald-900">
+              Create the signing link from the packet card below.
+            </span>
+            {createdPacket.projectJobId ? (
+              <Button asChild size="sm" variant="outline" className="border-emerald-300 bg-white text-emerald-950">
+                <Link href={`/dashboard/jobs/${createdPacket.projectJobId}`}>
+                  <FolderKanban aria-hidden="true" />
+                  Return to Job file
+                </Link>
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
 
       <form key={activeTemplate} action={action} className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
         <div>
@@ -2679,9 +2725,24 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
           className="min-h-24"
         />
 
-        <Accordion type="single" collapsible className="rounded-md border border-slate-200 bg-white px-3">
+        <Accordion
+          type="single"
+          collapsible
+          value={policySectionValue}
+          onValueChange={setOpenPolicySection}
+          className="rounded-md border border-slate-200 bg-white px-3"
+        >
           <AccordionItem value="policies" className="border-none">
-            <AccordionTrigger className="text-sm font-semibold text-slate-950">Agreement policies</AccordionTrigger>
+            <AccordionTrigger className="text-sm font-semibold text-slate-950">
+              <span className="flex flex-wrap items-center gap-2">
+                <span>Agreement policies</span>
+                {policyNeedsAttention ? (
+                  <Badge variant="outline" className="rounded-md border-red-200 bg-red-50 text-red-700">
+                    Agreement policies need attention
+                  </Badge>
+                ) : null}
+              </span>
+            </AccordionTrigger>
             <AccordionContent className="grid gap-3">
               <Textarea
                 name="changeOrderPolicy"
@@ -2689,12 +2750,14 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
                 defaultValue={templateValues?.changeOrderPolicy}
                 className="min-h-20"
               />
+              <FieldError name="changeOrderPolicy" errors={packetErrors} />
               <Textarea
                 name="cancellationPolicy"
                 placeholder="Cancellation policy: pause, reschedule, materials, completed work, and written notice"
                 defaultValue={templateValues?.cancellationPolicy}
                 className="min-h-20"
               />
+              <FieldError name="cancellationPolicy" errors={packetErrors} />
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -2709,17 +2772,64 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
           <Checkbox name="requiredBeforeScheduling" defaultChecked={templateValues?.requiredBeforeScheduling} />
           Require this signed packet before scheduling work
         </label>
+        <ContractPacketValidationSummary errors={packetErrors} />
         <PendingSubmitButton pendingText="Creating..." className="bg-slate-950 text-white hover:bg-slate-800">
           <Signature aria-hidden="true" />
           Create agreement packet
         </PendingSubmitButton>
-        <FieldError name="scopeSummary" errors={state.ok ? undefined : state.fieldErrors} />
-        <FieldError name="includedWork" errors={state.ok ? undefined : state.fieldErrors} />
-        <FieldError name="paymentTerms" errors={state.ok ? undefined : state.fieldErrors} />
-        <FieldError name="changeOrderPolicy" errors={state.ok ? undefined : state.fieldErrors} />
-        <FieldError name="cancellationPolicy" errors={state.ok ? undefined : state.fieldErrors} />
-        <FieldError name="depositRequired" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="clientName" errors={packetErrors} />
+        <FieldError name="projectType" errors={packetErrors} />
+        <FieldError name="packetValue" errors={packetErrors} />
+        <FieldError name="depositRequired" errors={packetErrors} />
+        <FieldError name="milestoneCount" errors={packetErrors} />
+        <FieldError name="scopeSummary" errors={packetErrors} />
+        <FieldError name="includedWork" errors={packetErrors} />
+        <FieldError name="paymentTerms" errors={packetErrors} />
+        <FieldError name="milestoneSchedule" errors={packetErrors} />
+        <FieldError name="projectEndDate" errors={packetErrors} />
+        <FieldError name="nextAction" errors={packetErrors} />
       </form>
+    </div>
+  )
+}
+
+const contractPacketErrorLabels: Record<string, string> = {
+  cancellationPolicy: "Cancellation policy",
+  changeOrderPolicy: "Change-order policy",
+  clientName: "Client display name",
+  depositRequired: "Deposit required",
+  includedWork: "Included work",
+  milestoneCount: "Milestone count",
+  milestoneSchedule: "Milestone schedule",
+  nextAction: "Next action",
+  packetValue: "Agreement value",
+  paymentTerms: "Payment terms",
+  projectEndDate: "Projected end date",
+  projectType: "Project type",
+  scopeSummary: "Scope summary",
+}
+
+function ContractPacketValidationSummary({ errors }: { errors?: Record<string, string[]> }) {
+  const entries = Object.entries(errors ?? {})
+    .filter(([, messages]) => messages.length > 0)
+    .map(([field, messages]) => ({
+      field,
+      label: contractPacketErrorLabels[field] ?? field,
+      message: messages[0],
+    }))
+
+  if (entries.length === 0) return null
+
+  return (
+    <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-800">
+      <p className="font-semibold text-red-900">Finish these agreement fields before creating the packet:</p>
+      <ul className="mt-2 grid gap-1 sm:grid-cols-2">
+        {entries.map((entry) => (
+          <li key={entry.field}>
+            <span className="font-semibold">{entry.label}:</span> {entry.message}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -2740,7 +2850,7 @@ function ContractPacketCard({ item }: { item: ContractPacket }) {
   useToastState(shareState)
 
   return (
-    <div className="rounded-md border border-slate-200 p-4">
+    <div id={`contract-packet-${displayItem.id}`} className="scroll-mt-24 rounded-md border border-slate-200 p-4">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline" className="rounded-md capitalize">{displayItem.status.replaceAll("_", " ")}</Badge>
         <Badge variant="secondary" className="rounded-md capitalize">{displayItem.templateType.replaceAll("_", " ")}</Badge>

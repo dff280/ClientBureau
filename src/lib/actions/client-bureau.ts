@@ -130,6 +130,12 @@ import { getDataMode, getSiteUrl } from "@/lib/env"
 import { normalizeCityName, normalizeStateCode } from "@/lib/locations"
 import { safeSearchQueryForStorage } from "@/lib/search-experience"
 import {
+  contractPacketCreatedMessage,
+  contractPacketValidationMessage,
+  savedSearchAccountSuccessMessage,
+  savedSearchBrowserFallbackMessage,
+} from "@/lib/workflow-messages"
+import {
   deleteAdminRecordService,
   assignModerationCaseService,
   createContractWorkspaceItemService,
@@ -563,11 +569,11 @@ export async function saveClientSearchAction(
         createdAt: new Date().toISOString(),
         lastRunAt: new Date().toISOString(),
       },
-      "Search saved for this browser. Apply the optional search activation migration for account-level saved searches.",
+      savedSearchBrowserFallbackMessage,
     )
   }
 
-  return ok(saved, "Search saved to your account.")
+  return ok(saved, savedSearchAccountSuccessMessage)
 }
 
 export async function deleteSavedSearchAction(
@@ -2357,7 +2363,9 @@ export async function createContractPacketAction(
   })
 
   if (!parsed.success) {
-    return fail("Please correct the contract link fields.", zodFieldErrors(parsed.error))
+    const fieldErrors = zodFieldErrors(parsed.error)
+
+    return fail(contractPacketValidationMessage(fieldErrors), fieldErrors)
   }
 
   const user = await requireContractorAccess()
@@ -2369,7 +2377,7 @@ export async function createContractPacketAction(
     revalidatePath("/dashboard")
     revalidatePath("/dashboard/contracts")
     revalidateJobContext(packet.projectJobId)
-    return ok(packet, "Contract signing link workspace created.")
+    return ok(packet, contractPacketCreatedMessage)
   } catch (error) {
     return fail(actionErrorMessage(error, "Contract signing link could not be created."))
   }

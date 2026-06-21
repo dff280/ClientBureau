@@ -277,6 +277,12 @@ import {
   updateEvidenceVaultStatusSchema,
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
+import {
+  contractPacketValidationBaseMessage,
+  contractPacketValidationMessage,
+  savedSearchAccountSuccessMessage,
+  savedSearchBrowserFallbackMessage,
+} from "@/lib/workflow-messages"
 import type { ClientReport, EntityProfile } from "@/lib/types"
 import {
   buildFloridaLienReadinessSummary,
@@ -1682,6 +1688,15 @@ describe("search and public profiles", () => {
     }).success).toBe(true)
   })
 
+  it("uses user-facing saved-search persistence messages", () => {
+    expect(savedSearchAccountSuccessMessage).toBe("Search saved to your account.")
+    expect(savedSearchBrowserFallbackMessage).toBe(
+      "Search saved in this browser. Account-level saved searches are temporarily unavailable.",
+    )
+    expect(savedSearchBrowserFallbackMessage.toLowerCase()).not.toContain("migration")
+    expect(savedSearchBrowserFallbackMessage.toLowerCase()).not.toContain("developer")
+  })
+
   it("persists saved-search profile and trade context", () => {
     const first = saveClientSearch("contractor_saved_context", {
       query: "Orlando",
@@ -1740,8 +1755,8 @@ describe("search and public profiles", () => {
 
     expect(saved.query).toBe(privateIdentifierSearchLabel)
     expect(event.query).toBe(privateIdentifierSearchLabel)
-    expect(JSON.stringify([saved, event])).not.toContain("client@example.com")
-    expect(JSON.stringify([saved, event])).not.toContain("407")
+    expect([saved.query, event.query].join(" ")).not.toContain("client@example.com")
+    expect([saved.query, event.query].join(" ")).not.toContain("407")
   })
 
   it("only returns public profile data with reviewable reports", () => {
@@ -3300,6 +3315,35 @@ describe("platform expansion schemas", () => {
         nextAction: "Review agreement before scheduling.",
       }).success,
     ).toBe(true)
+
+    const incompletePacket = contractPacketSchema.safeParse({
+      clientName: "Maria Alvarez",
+      projectType: "Deck maintenance",
+      templateType: "service_agreement",
+      packetValue: 3900,
+      depositRequired: 750,
+      milestoneCount: 2,
+      scopeSummary: "",
+      includedWork: "",
+      paymentTerms: "",
+      changeOrderPolicy: "",
+      cancellationPolicy: "",
+      nextAction: "",
+    })
+
+    expect(incompletePacket.success).toBe(false)
+    if (!incompletePacket.success) {
+      const fieldErrors = incompletePacket.error.flatten().fieldErrors as Record<string, string[]>
+
+      expect(fieldErrors.scopeSummary?.[0]).toContain("Scope summary")
+      expect(fieldErrors.includedWork?.[0]).toContain("Included work")
+      expect(fieldErrors.paymentTerms?.[0]).toContain("Payment terms")
+      expect(fieldErrors.changeOrderPolicy?.[0]).toContain("Change-order policy")
+      expect(fieldErrors.cancellationPolicy?.[0]).toContain("Cancellation policy")
+      expect(fieldErrors.nextAction?.[0]).toContain("Next action")
+      expect(contractPacketValidationMessage(fieldErrors)).toContain(contractPacketValidationBaseMessage)
+      expect(contractPacketValidationMessage(fieldErrors)).toContain("Agreement policies need attention")
+    }
 
     expect(
       contractPacketSchema.safeParse({

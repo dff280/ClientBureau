@@ -75,6 +75,13 @@ function firstSearchValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value
 }
 
+function savedSearchSourceLabel(source?: string) {
+  if (source === "local") return "Browser saved"
+  if (source === "supabase" || source === "mock") return "Account saved"
+
+  return undefined
+}
+
 function getJobContext(searchParams: Awaited<DashboardToolSearchParams>): DashboardJobContext | null {
   const jobId = firstSearchValue(searchParams.jobId)
   const jobTitle = firstSearchValue(searchParams.jobTitle)
@@ -684,7 +691,14 @@ export default async function DashboardToolPage({
                     href={`/search?q=${encodeURIComponent(savedSearch.query)}${savedSearch.state ? `&state=${savedSearch.state}` : ""}`}
                     className="rounded-md border border-slate-200 bg-white p-3 text-sm transition hover:border-amber-300"
                   >
-                    <span className="font-semibold text-slate-950">{savedSearch.query}</span>
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-slate-950">{savedSearch.query}</span>
+                      {savedSearchSourceLabel(savedSearch.source) ? (
+                        <StatusBadge tone={savedSearch.source === "local" ? "amber" : "emerald"}>
+                          {savedSearchSourceLabel(savedSearch.source)}
+                        </StatusBadge>
+                      ) : null}
+                    </span>
                     <span className="mt-1 block text-xs text-slate-500">
                       {savedSearch.city}, {savedSearch.state}
                     </span>

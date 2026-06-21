@@ -54,6 +54,19 @@ not submitted for public approval.
 - Saved searches gracefully fall back to browser-level storage, but account-backed saved search behavior should
   be checked before marketing saved searches as a paid-account guarantee.
 
+## Workflow Polish Follow-Up
+
+- Contract packet validation now returns plain-English copy: "Finish the required agreement fields before creating
+  the packet." The dashboard form also shows a compact validation summary, surfaces accordion-held policy errors,
+  and labels the policy trigger when agreement policies need attention.
+- Contract packet success now gives clearer next actions: review the packet, create the private signing link from
+  the packet card, and return to the linked Job file when the packet is tied to a Job.
+- Saved-search messaging no longer references migrations or developer setup. Account-backed saves report
+  "Search saved to your account."; fallback saves report browser-level persistence and explain that account-level
+  saved searches are temporarily unavailable.
+- After deployment, retest `/dashboard/contracts`, a Job-linked contract packet flow, `/search`, and
+  `/dashboard/watchlist` to confirm the production UX matches these notes.
+
 ## Notes
 
 - Credentials were injected through process environment variables only and were not written to `.env.qa.local`.
