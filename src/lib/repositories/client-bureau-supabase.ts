@@ -5170,6 +5170,7 @@ export async function createLienNoticeDraftSupabase(userId: string, input: LienN
     .from("lien_notice_drafts")
     .insert({
       contractor_id: contractorId,
+      project_job_id: input.projectJobId || null,
       client_name: input.clientName,
       project_type: input.projectType,
       property_city: input.propertyCity,

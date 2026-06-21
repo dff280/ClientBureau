@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { existsSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 
 import { formDataToObject } from "@/lib/actions/result"
@@ -3469,5 +3469,15 @@ describe("platform expansion schemas", () => {
     expect(requiredFlexibleJobColumns).toContainEqual({ table: "project_jobs", name: "job_number" })
     expect(requiredFlexibleJobColumns).toContainEqual({ table: "project_job_profiles", name: "participant_status" })
     expect(requiredJobCrossToolLinkColumns).toContainEqual({ table: "contract_packets", name: "project_job_id" })
+  })
+
+  it("persists Supabase lien notice draft job links", () => {
+    const source = readFileSync(
+      path.join(process.cwd(), "src/lib/repositories/client-bureau-supabase.ts"),
+      "utf8",
+    )
+    const functionBody = source.match(/export async function createLienNoticeDraftSupabase[\s\S]*?export async function submitFloridaLienCaseSupabase/)?.[0]
+
+    expect(functionBody).toContain("project_job_id: input.projectJobId || null")
   })
 })
