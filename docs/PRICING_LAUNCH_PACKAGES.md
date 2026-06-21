@@ -26,8 +26,20 @@ Client Bureau launches with one free plan and two paid packages:
 
 1. Complete - `/pricing` shows Free, Pro Check, and Bureau Pro as the main plans.
 2. Complete - Bureau Pro is visually featured as the best value.
-3. Complete - dashboard billing labels display Bureau Pro instead of Bureau Team.
+3. Complete - dashboard billing labels display Bureau Pro instead of the old internal plan label.
 4. Complete - checkout remains in review mode while billing is deferred.
 5. Next before enabling billing: create Stripe monthly prices for Pro Check and Bureau Pro, then set:
    - `STRIPE_PRICE_PRO_MONTHLY`
    - `STRIPE_PRICE_TEAM_MONTHLY`
+
+## Stripe Test-Mode Readiness Gate
+
+Keep `BILLING_CHECKOUT_ENABLED=false` until a disposable test account proves the full billing loop:
+
+1. Pro Check and Bureau Pro monthly prices exist in Stripe test mode.
+2. `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_PRO_MONTHLY`, and `STRIPE_PRICE_TEAM_MONTHLY` are configured only in the target environment.
+3. Checkout creation, cancel, and return flows work for both paid packages.
+4. Webhook signature validation updates Supabase subscription rows.
+5. Duplicate webhook delivery is idempotent.
+6. Failed-payment, cancelled-subscription, and no-webhook states show clear dashboard copy.
+7. Service-fee checkout for Payment Recovery and Florida Lien Service is tested separately before public service-fee billing opens.

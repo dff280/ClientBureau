@@ -78,16 +78,16 @@ No secrets or full environment dumps were recorded.
 | 18 | Final release candidate and scope freeze | Not started | Needs all prior prompt evidence |
 | 19 | Stripe test-mode validation | Deferred | Optional and owner-approved only |
 
-## Current Production Snapshot - 2026-06-20
+## Current Production Snapshot - 2026-06-21
 
 | Item | Evidence | Result |
 | --- | --- | --- |
-| Local/GitHub main | `9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f` (`Add admin error log and completion audit foundation`) | Pass |
-| Live `/api/version` | `0.4.2` at `9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f` on `main` | Pass |
+| Verified code baseline | `de02f73e0f706b4722647a18943cf1c8aa3b6846` (`Highlight Bureau Pro dashboard workflows`) before this docs-only QA evidence update | Pass |
+| Live `/api/version` | `0.4.3` at the deployed `main` commit; final deploy verification is the source of truth after docs-only evidence updates | Pass |
 | Live `/api/health` | `status: ok`, `DATA_MODE=supabase`, `PLATFORM_FEATURE_DATA_MODE=supabase`, platform schema `86/86`, optional enhancements `4/4` | Pass |
-| Live release verification | `LIVE_BASE_URL=https://clientbureau.com EXPECTED_GIT_COMMIT=9565d2870a7d11e2a5eb4a2a2ef37d70b11d5d7f npm run verify:live` | Pass; Stripe warning expected/deferred |
+| Live release verification | `LIVE_BASE_URL=https://clientbureau.com npm run verify:live` | Pass; Stripe warning expected/deferred |
 | Live SEO verification | `SEO_BASE_URL=https://clientbureau.com npm run seo:check` | Pass |
-| Strict signed-in QA | `npm run verify:live:auth:strict` on RC branch | Blocked until `.env.qa.local` contains disposable contractor/admin QA credentials; live health preflight passed |
+| Strict signed-in QA | `npm run verify:live:auth:strict` | Pass; see `docs/SIGNED_IN_LAUNCH_QA_2026-06-21.md` |
 | Error reporting | `0025_site_error_reports.sql`, `/api/error-reports`, `/admin/error-log`, and private workspace issue reporter | Live in RC branch; deployed foundation live |
 | Jobs cross-tool links | `0024_job_cross_tool_links.sql` applied, health gate green, linked Job UI/revalidation added in RC branch | In RC verification |
 
