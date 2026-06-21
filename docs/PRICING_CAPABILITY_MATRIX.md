@@ -1,6 +1,6 @@
 # Client Bureau Pricing Capability Matrix
 
-Last updated: 2026-06-18
+Last updated: 2026-06-21
 
 This matrix records what the pricing page may safely claim before public launch. Stripe and service-fee checkout remain intentionally deferred until the checkout flag, Stripe credentials, webhook, and end-to-end QA all pass.
 

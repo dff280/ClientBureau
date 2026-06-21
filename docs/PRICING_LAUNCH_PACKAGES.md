@@ -1,6 +1,6 @@
 # Client Bureau Launch Packages
 
-Last updated: 2026-06-20
+Last updated: 2026-06-21
 
 ## Current Pricing Direction
 
@@ -24,11 +24,10 @@ Client Bureau launches with one free plan and two paid packages:
 
 ## Continue-From-Here Checklist
 
-1. Confirm `/pricing` shows Free, Pro Check, and Bureau Pro as the main plans.
-2. Confirm Bureau Pro is visually featured as the best value.
-3. Confirm dashboard billing labels display Bureau Pro instead of Bureau Team.
-4. Confirm checkout remains in review mode while billing is deferred.
-5. Before enabling billing, create Stripe monthly prices for Pro Check and Bureau Pro, then set:
+1. Complete - `/pricing` shows Free, Pro Check, and Bureau Pro as the main plans.
+2. Complete - Bureau Pro is visually featured as the best value.
+3. Complete - dashboard billing labels display Bureau Pro instead of Bureau Team.
+4. Complete - checkout remains in review mode while billing is deferred.
+5. Next before enabling billing: create Stripe monthly prices for Pro Check and Bureau Pro, then set:
    - `STRIPE_PRICE_PRO_MONTHLY`
    - `STRIPE_PRICE_TEAM_MONTHLY`
-

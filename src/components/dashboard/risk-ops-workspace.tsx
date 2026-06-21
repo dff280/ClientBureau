@@ -1197,7 +1197,7 @@ export function RiskOpsWorkspace({
                   <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
                     {billingReviewMode
                       ? "Plan changes and service fees are reviewed before billing is collected. Your private workspace remains available for account records."
-                      : "Plan changes and payment updates should be reviewed from this billing workspace before expanding search, contract, recovery, and team usage."}
+                      : "Plan changes and payment updates should be reviewed from this billing workspace before expanding search, contracts, recovery, lien service, and workspace usage."}
                   </div>
                 </CardContent>
               </Card>

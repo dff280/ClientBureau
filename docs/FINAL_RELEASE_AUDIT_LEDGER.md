@@ -349,7 +349,7 @@ Prompt 00 established reliable release truth. Production is current with `origin
 | Branch | `codex/public-ia-homepage-final` |
 | Starting commit | `3fce077` (`Add final release audit baseline`) |
 | Scope | Homepage, public IA guardrails, copy-safety checks, SEO verifier homepage rules |
-| Status | `PASS` locally; pending PR/release review |
+| Status | `PASS`; released and live |
 
 ### Section And CTA Inventory
 
@@ -488,7 +488,7 @@ The public contact and enterprise surfaces now have real, privacy-safe inquiry p
 | Branch | `codex/pricing-capability-truth` |
 | Starting commit | `ef8c194` (`Add public inquiry intake for contact and enterprise`) |
 | Scope | `/pricing`, plan CTAs, signup plan-interest handoff, dashboard billing copy, subscription/service-fee checkout gates, billing readiness checks, capability documentation |
-| Status | `PASS` locally; pending PR/release review |
+| Status | `PASS`; released and live |
 
 ### Prompt 03 Findings
 
@@ -505,7 +505,7 @@ The public contact and enterprise surfaces now have real, privacy-safe inquiry p
 - Added `BILLING_CHECKOUT_ENABLED=false` to `.env.example` and deployment docs; Stripe keys alone do not open checkout.
 - Exposed billing availability through `/api/health` so live verification can detect readiness drift without exposing secrets.
 - Updated subscription and service-fee checkout routes to redirect/fail safely when billing is not intentionally enabled.
-- Reworked `/pricing` CTAs and plan language around Free account creation, Pro plan interest, Bureau Team review, Enterprise review, and deferred paid activation.
+- Reworked `/pricing` CTAs and plan language around Free account creation, Pro Check interest, Bureau Pro review, Enterprise inquiry/review, and deferred paid activation.
 - Removed direct checkout forms from shared pricing cards.
 - Preserved paid plan interest through web signup, mobile signup metadata, and post-signup redirects.
 - Updated dashboard Billing copy to show billing review mode without developer-facing Stripe/webhook wording.
@@ -532,7 +532,7 @@ Browser checks were run against a fresh local production build at `http://127.0.
 
 | Scenario | Result |
 | --- | --- |
-| `/pricing` desktop | Pass: deferred paid-plan copy visible, Free CTA visible, Pro routes to `/signup?plan=pro`, Team uses review language, no direct `/api/stripe/checkout` form, no technical billing markers, no horizontal overflow. |
+| `/pricing` desktop | Pass: deferred paid-plan copy visible, Free CTA visible, Pro Check routes to `/signup?plan=pro`, Bureau Pro uses review language, no direct `/api/stripe/checkout` form, no technical billing markers, no horizontal overflow. |
 | `/signup?plan=pro` desktop | Pass: Pro plan-interest notice visible, hidden `planInterest=pro` input present, no horizontal overflow. |
 | `/dashboard/billing` desktop | Pass: billing review mode visible after dashboard content loaded, request-billing-review action visible, no technical billing markers, no horizontal overflow. |
 | Stale local server note | Port 4200 was serving an older preview during QA; the browser checks were repeated successfully on a fresh port 4201 preview built from this branch. |
@@ -549,14 +549,14 @@ Browser checks were run against a fresh local production build at `http://127.0.
 ### Prompt 03 Owner Actions
 
 - Keep `BILLING_CHECKOUT_ENABLED=false` until subscription checkout, service-fee checkout, webhooks, failed-payment states, and dashboard subscription updates are tested end to end in Stripe test mode.
-- Before enabling checkout, verify Pro and Team price IDs, webhook signature validation, idempotent webhook processing, checkout cancel/return states, service-fee orders, and customer-support copy.
-- Do not market Bureau Team seats, shared team controls, manager controls, CSV exports, or enterprise data partnerships as self-serve until those paths are implementation- and QA-proven.
+- Before enabling checkout, verify Pro Check and Bureau Pro price IDs, webhook signature validation, idempotent webhook processing, checkout cancel/return states, service-fee orders, and customer-support copy.
+- Do not market Bureau Pro seats, shared team controls, manager controls, CSV exports, or enterprise data partnerships as self-serve until those paths are implementation- and QA-proven.
 
 ### Prompt 03 Verdict
 
 `PASS`
 
-Pricing, plan-interest, dashboard billing, and service-fee language now match the current product truth. Free signup remains open, paid interest is preserved for review, and public paid checkout stays closed until the explicit billing launch gate is enabled and QA-proven.
+Pricing, plan-interest, dashboard billing, and service-fee language now match the current product truth. Free signup remains open, Pro Check and Bureau Pro interest is preserved for review, and public paid checkout stays closed until the explicit billing launch gate is enabled and QA-proven.
 
 ## Prompt 04 - Search Product, Filters, Private Matching, No-Result Decisions
 
