@@ -161,6 +161,12 @@ export type DashboardJobContext = {
 }
 
 const workspaceTabs = new Set<string>(workspaceTabValues)
+const bureauProWorkspaceTabs = new Set<DashboardWorkspaceTab>([
+  "contracts",
+  "evidence",
+  "recovery",
+  "lien-readiness",
+])
 
 const workspaceRoutes: Record<DashboardWorkspaceTab, string> = {
   overview: "/dashboard",
@@ -340,6 +346,8 @@ export function RiskOpsWorkspace({
   const openPipelineItems = riskOps.clientPipeline.filter((item) => item.stage !== "closed").length
   const openContractPackets = riskOps.contractPackets.filter((item) => !["signed", "archived"].includes(item.status)).length
   const billingPlan = pricingTiers.find((tier) => tier.id === (subscription?.tier ?? "free")) ?? pricingTiers[0]
+  const subscriptionTier = subscription?.tier ?? "free"
+  const planFitNotice = getPlanFitNotice(activeTab, subscriptionTier)
   const billingStatus = !subscription || subscription.status === "mock" ? "active" : subscription.status.replaceAll("_", " ")
   const billingReviewMode = !billingAvailability?.subscriptionCheckoutAvailable
   const billingPeriodEnd = subscription?.currentPeriodEnd
@@ -407,6 +415,7 @@ export function RiskOpsWorkspace({
 
       <Tabs value={activeTab} onValueChange={updateWorkspaceTab} className="space-y-5">
         {!focusTab ? <WorkspaceTabNavigation /> : null}
+        {planFitNotice ? <PlanFitNotice {...planFitNotice} /> : null}
 
         <TabsContent value="overview" className="space-y-5">
           {toolIntro(
@@ -1295,6 +1304,43 @@ function ToolExplainer({ title, text }: { title: string; text: string }) {
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase text-amber-700">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
+function getPlanFitNotice(tab: DashboardWorkspaceTab, tier: Subscription["tier"] | "free") {
+  if (!bureauProWorkspaceTabs.has(tab) || tier === "bureau_team") return null
+
+  const toolLabel =
+    tab === "lien-readiness"
+      ? "Florida Lien Service"
+      : tab === "recovery"
+        ? "Payment Recovery"
+        : tab === "contracts"
+          ? "Contracts"
+          : "Evidence Vault"
+
+  return {
+    toolLabel,
+    currentPlan: tier === "pro" ? "Pro Check" : "Free",
+  }
+}
+
+function PlanFitNotice({ currentPlan, toolLabel }: { currentPlan: string; toolLabel: string }) {
+  return (
+    <div className="rounded-md border border-amber-200 bg-amber-50 p-4 shadow-sm">
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Bureau Pro workspace</p>
+          <h3 className="mt-1 text-base font-semibold text-amber-950">{toolLabel} is part of the full protection plan.</h3>
+          <p className="mt-1 max-w-3xl text-sm leading-6 text-amber-900">
+            Your current plan is {currentPlan}. Existing private records stay visible, and paid activation is reviewed before billing is collected. Bureau Pro is the best fit when you need jobs, contracts, evidence, recovery, and Florida lien service in one workflow.
+          </p>
+        </div>
+        <Button asChild variant="outline" className="w-fit border-amber-300 bg-white text-amber-950 hover:bg-amber-100">
+          <Link href="/pricing?plan=bureau_team">Review Bureau Pro</Link>
+        </Button>
+      </div>
     </div>
   )
 }
