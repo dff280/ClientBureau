@@ -47,7 +47,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     description:
       "Create contractor agreement packets with scope, payment terms, change-order policy, client signatures, and private audit history.",
     heroCopy:
-      "Build a clear agreement before work starts. Client Bureau helps contractors and service businesses move from client check to scope, payment terms, change-order rules, private signing link, and audit-ready status in one calmer workflow.",
+      "Build a clear agreement before work starts. Client Bureau helps contractors and service businesses move from client check to scope, payment terms, exclusions, change-order rules, private signing link, and audit-ready status in one calmer workflow.",
     primaryCta: {
       label: "Create an agreement packet",
       href: "/dashboard/contracts",
