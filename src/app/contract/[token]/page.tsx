@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { notFound } from "next/navigation"
+import Link from "next/link"
 import {
   BadgeCheck,
   CalendarDays,
@@ -25,8 +25,10 @@ export async function generateMetadata({ params }: ContractSharePageProps): Prom
   const packet = await getContractShareByTokenService(token)
 
   return {
-    title: packet ? `${packet.clientName} Agreement Review` : "Agreement Review",
-    description: "Private Client Bureau agreement review and electronic signature workflow.",
+    title: packet ? `${packet.clientName} Agreement Review` : "Agreement Link Unavailable",
+    description: packet
+      ? "Private Client Bureau agreement review and electronic signature workflow."
+      : "This private Client Bureau agreement link is unavailable, expired, or not ready for review.",
     robots: {
       index: false,
       follow: false,
@@ -40,7 +42,7 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
   const { token } = await params
   const packet = await getContractShareByTokenService(token)
 
-  if (!packet) notFound()
+  if (!packet) return <ContractUnavailablePage />
 
   const signatureStatus = packet.signatureStatus?.replaceAll("_", " ") ?? "not sent"
   const inviteStatus = packet.clientInviteStatus?.replaceAll("_", " ") ?? "not invited"
@@ -254,6 +256,54 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
           <CardContent className="grid gap-4 p-5">
             <SigningReadinessChecklist />
             <ContractSigningForm shareToken={token} />
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  )
+}
+
+function ContractUnavailablePage() {
+  return (
+    <main className="bg-slate-100">
+      <PremiumHero
+        eyebrow="Private agreement review"
+        title="Agreement link unavailable."
+        description="This Client Bureau signing link is unavailable, expired, or not ready for review. Ask the contractor to resend the private agreement link before signing."
+        primary={{ href: "/", label: "Client Bureau", icon: FileSignature }}
+        aside={
+          <div className="space-y-3 text-white">
+            <ShieldCheck className="size-8 text-amber-300" aria-hidden="true" />
+            <p className="text-xl font-semibold">Secure private link</p>
+            <p className="text-sm leading-6 text-slate-300">
+              Agreement links are noindexed, token-based, and separate from public Client Bureau profiles.
+            </p>
+          </div>
+        }
+      />
+      <div className="bureau-container py-8">
+        <Card className="mx-auto max-w-2xl rounded-md border-slate-200 bg-white shadow-sm">
+          <CardHeader className="border-b border-slate-100">
+            <CardTitle>Contract packet unavailable</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 p-5 text-sm leading-6 text-slate-600">
+            <p>
+              This link may have been mistyped, replaced, or not prepared for client review yet.
+              Client Bureau does not expose private agreement packets without a valid signing token.
+            </p>
+            <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-amber-950">
+              <p className="font-semibold">What to do next</p>
+              <p className="mt-1">
+                Ask the contractor to create or resend the private signing link from their Client Bureau
+                Contracts workspace.
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="inline-flex rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800"
+            >
+              Return to Client Bureau
+            </Link>
           </CardContent>
         </Card>
       </div>

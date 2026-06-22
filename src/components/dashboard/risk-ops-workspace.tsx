@@ -2819,6 +2819,9 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
               </span>
             </AccordionTrigger>
             <AccordionContent className="grid gap-3">
+              <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-950">
+                Required before packet creation: Change-order policy and Cancellation policy.
+              </p>
               <Textarea
                 name="changeOrderPolicy"
                 placeholder="Change-order policy: how added work, material changes, or schedule changes are approved"

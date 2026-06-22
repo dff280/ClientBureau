@@ -4,8 +4,8 @@ export default function Loading() {
   return (
     <PremiumRouteLoading
       eyebrow="Secure agreement"
-      title="Loading signing packet"
-      description="Preparing private agreement terms, review checklist, signature state, and secure confirmation details."
+      title="Checking agreement link"
+      description="Confirming whether this private agreement packet is available for review. If the link is unavailable, Client Bureau will show a clear next step."
       tone="services"
     />
   )
