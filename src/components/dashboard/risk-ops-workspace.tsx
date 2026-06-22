@@ -33,7 +33,16 @@ import { FloridaCountySelect } from "@/components/forms/florida-county-select"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
-import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
+import {
+  buildFloridaContractPacketDefaults,
+  contractTemplateLegalWarnings,
+  floridaContractLawSources,
+  floridaContractNoticeChecklist,
+  floridaContractPackTemplates,
+  normalizedFloridaContractApplicability,
+  type FloridaContractApplicabilityInput,
+  type FloridaContractNoticeChecklistItem,
+} from "@/lib/contract-templates"
 import type { BillingAvailability } from "@/lib/billing-availability"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -2539,12 +2548,49 @@ function ContractDocumentCard({ item }: { item: ContractWorkspaceItem }) {
   )
 }
 
+type FloridaApplicabilityFormState = {
+  propertyContext: "residential_1_to_4" | "residential_other" | "commercial_or_other"
+  contractValue: string
+  depositRequired: string
+  permitRequired: boolean
+  homeSolicitationSale: boolean
+  includeConstructionDefectNotice: boolean
+}
+
 function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createContractPacketAction, contractPacketState)
   const [activeTemplate, setActiveTemplate] = useState<"blank" | "florida">("blank")
   const [openPolicySection, setOpenPolicySection] = useState<string | undefined>(undefined)
+  const [templateSeed, setTemplateSeed] = useState(0)
+  const [floridaApplicability, setFloridaApplicability] = useState<FloridaApplicabilityFormState>({
+    propertyContext: "residential_1_to_4",
+    contractValue: "12000",
+    depositRequired: "2500",
+    permitRequired: true,
+    homeSolicitationSale: false,
+    includeConstructionDefectNotice: true,
+  })
+  const floridaChecklistInput = useMemo<FloridaContractApplicabilityInput>(() => {
+    const isResidential = floridaApplicability.propertyContext !== "commercial_or_other"
+
+    return {
+      state: "FL",
+      isFloridaJob: true,
+      isResidentialRealProperty: isResidential,
+      isOneToFourFamilyDwelling: floridaApplicability.propertyContext === "residential_1_to_4",
+      contractValue: Number(floridaApplicability.contractValue),
+      depositRequired: Number(floridaApplicability.depositRequired),
+      permitRequired: floridaApplicability.permitRequired,
+      homeSolicitationSale: floridaApplicability.homeSolicitationSale,
+      includeConstructionDefectNotice: floridaApplicability.includeConstructionDefectNotice,
+    }
+  }, [floridaApplicability])
+  const floridaChecklist = useMemo(
+    () => floridaContractNoticeChecklist(floridaChecklistInput),
+    [floridaChecklistInput],
+  )
   const templateValues = activeTemplate === "florida"
-    ? floridaResidentialServiceAgreementTemplate.fields
+    ? buildFloridaContractPacketDefaults(floridaChecklistInput)
     : undefined
   const packetErrors = state.ok ? undefined : state.fieldErrors
   const policyNeedsAttention = Boolean(
@@ -2560,10 +2606,10 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
       <div className="rounded-md border border-amber-200 bg-amber-50/70 p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-semibold text-slate-950">Start from a reviewed structure</p>
+            <p className="text-sm font-semibold text-slate-950">Florida Contract Pack</p>
             <p className="mt-1 text-xs leading-5 text-slate-600">
-              Use the Florida starter to prefill scope, exclusions, payment timing, change-order rules, and review notes.
-              Edit every field before sending a signing link.
+              Build a source-aware Florida agreement packet with review prompts for lien notices, recovery fund language,
+              deposit timing, construction defect notice, and cancellation context.
             </p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
@@ -2571,10 +2617,13 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
               type="button"
               size="sm"
               className="bg-slate-950 text-white hover:bg-slate-800"
-              onClick={() => setActiveTemplate("florida")}
+              onClick={() => {
+                setActiveTemplate("florida")
+                setTemplateSeed((value) => value + 1)
+              }}
             >
               <ListChecks aria-hidden="true" />
-              Use Florida starter
+              Apply Florida pack
             </Button>
             <Button type="button" size="sm" variant="outline" onClick={() => setActiveTemplate("blank")}>
               Start blank
@@ -2582,25 +2631,13 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
           </div>
         </div>
         {activeTemplate === "florida" ? (
-          <div className="mt-3 grid gap-2 text-xs leading-5 text-slate-600">
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="outline" className="rounded-md border-amber-300 bg-white text-amber-800">
-                Florida-aware
-              </Badge>
-              <Badge variant="outline" className="rounded-md border-amber-300 bg-white text-amber-800">
-                Attorney-review recommended
-              </Badge>
-              <Badge variant="outline" className="rounded-md border-amber-300 bg-white text-amber-800">
-                Private signing packet
-              </Badge>
-            </div>
-            <p>
-              This starter is not legal advice. Florida lien, notice, cancellation, licensing, permit, roofing,
-              and local-code requirements can vary by work type and transaction.
-            </p>
-            <p className="font-medium text-amber-900">
-              Replace the 0 milestone amounts with real deposit, progress, and final-payment amounts before sharing.
-            </p>
+          <div className="mt-4 grid gap-4">
+            <FloridaContractApplicabilityPanel
+              value={floridaApplicability}
+              onChange={setFloridaApplicability}
+            />
+            <FloridaLegalChecklistPanel checklist={floridaChecklist} />
+            <FloridaContractPackTemplates />
           </div>
         ) : (
           <p className="mt-3 rounded-md border border-dashed border-amber-300 bg-white/70 p-3 text-xs leading-5 text-amber-950">
@@ -2644,7 +2681,7 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
         </div>
       ) : null}
 
-      <form key={activeTemplate} action={action} className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
+      <form key={`${activeTemplate}-${templateSeed}`} action={action} className="grid gap-4 rounded-md border border-slate-200 bg-slate-50 p-4">
         <div>
           <p className="text-sm font-semibold text-slate-950">Create agreement packet</p>
           <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -2684,8 +2721,8 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <Input name="packetValue" type="number" placeholder="Agreement value" />
-          <Input name="depositRequired" type="number" placeholder="Deposit required" />
+          <Input name="packetValue" type="number" placeholder="Agreement value" defaultValue={templateValues?.packetValue} />
+          <Input name="depositRequired" type="number" placeholder="Deposit required" defaultValue={templateValues?.depositRequired} />
           <Input
             name="milestoneCount"
             type="number"
@@ -2793,6 +2830,191 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
   )
 }
 
+function FloridaContractApplicabilityPanel({
+  value,
+  onChange,
+}: {
+  value: FloridaApplicabilityFormState
+  onChange: (value: FloridaApplicabilityFormState) => void
+}) {
+  const normalized = normalizedFloridaContractApplicability({
+    state: "FL",
+    contractValue: Number(value.contractValue),
+    depositRequired: Number(value.depositRequired),
+    isResidentialRealProperty: value.propertyContext !== "commercial_or_other",
+    isOneToFourFamilyDwelling: value.propertyContext === "residential_1_to_4",
+    permitRequired: value.permitRequired,
+    homeSolicitationSale: value.homeSolicitationSale,
+    includeConstructionDefectNotice: value.includeConstructionDefectNotice,
+  })
+  const depositPercent = normalized.contractValue > 0
+    ? Math.round((normalized.depositRequired / normalized.contractValue) * 100)
+    : 0
+
+  return (
+    <div className="grid gap-3 rounded-md border border-amber-200 bg-white p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-800">Florida applicability questions</p>
+          <p className="mt-1 text-xs leading-5 text-slate-600">
+            These answers only prepare review prompts. Confirm the final contract with qualified counsel before use.
+          </p>
+        </div>
+        <Badge variant="outline" className="rounded-md border-amber-300 bg-amber-50 text-amber-900">
+          Deposit {depositPercent}%
+        </Badge>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
+          Property context
+          <select
+            value={value.propertyContext}
+            onChange={(event) => onChange({ ...value, propertyContext: event.target.value as FloridaApplicabilityFormState["propertyContext"] })}
+            className="h-10 rounded-md border border-input bg-white px-3 text-sm font-normal text-slate-950"
+          >
+            <option value="residential_1_to_4">Residential 1-4 units</option>
+            <option value="residential_other">Other residential property</option>
+            <option value="commercial_or_other">Commercial / other</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
+          Agreement value
+          <Input
+            value={value.contractValue}
+            onChange={(event) => onChange({ ...value, contractValue: event.target.value })}
+            type="number"
+            className="font-normal"
+          />
+        </label>
+        <label className="grid gap-1 text-xs font-semibold text-slate-600">
+          Deposit required
+          <Input
+            value={value.depositRequired}
+            onChange={(event) => onChange({ ...value, depositRequired: event.target.value })}
+            type="number"
+            className="font-normal"
+          />
+        </label>
+      </div>
+      <div className="grid gap-2 text-xs text-slate-700 sm:grid-cols-3">
+        <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+          <Checkbox
+            checked={value.permitRequired}
+            onCheckedChange={(checked) => onChange({ ...value, permitRequired: checked === true })}
+          />
+          <span>Permit or inspection review may be required.</span>
+        </label>
+        <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+          <Checkbox
+            checked={value.includeConstructionDefectNotice}
+            onCheckedChange={(checked) => onChange({ ...value, includeConstructionDefectNotice: checked === true })}
+          />
+          <span>Include Chapter 558 construction defect notice prompt.</span>
+        </label>
+        <label className="flex items-start gap-2 rounded-md border border-slate-200 bg-slate-50 p-3">
+          <Checkbox
+            checked={value.homeSolicitationSale}
+            onCheckedChange={(checked) => onChange({ ...value, homeSolicitationSale: checked === true })}
+          />
+          <span>Covered home-solicitation sale may apply.</span>
+        </label>
+      </div>
+    </div>
+  )
+}
+
+function FloridaLegalChecklistPanel({ checklist }: { checklist: FloridaContractNoticeChecklistItem[] }) {
+  const triggered = checklist.filter((item) => item.status !== "not_triggered")
+
+  return (
+    <div className="grid gap-3 rounded-md border border-amber-200 bg-white p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase text-amber-800">Florida legal review checklist</p>
+          <p className="mt-1 text-xs leading-5 text-slate-600">
+            Source-linked prompts are based on official Florida references reviewed in 2026.
+          </p>
+        </div>
+        <Badge className="rounded-md bg-slate-950 text-white">
+          {triggered.length} triggered
+        </Badge>
+      </div>
+      <div className="grid gap-2">
+        {checklist.map((item) => (
+          <FloridaLegalChecklistItem key={item.sourceId} item={item} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FloridaLegalChecklistItem({ item }: { item: FloridaContractNoticeChecklistItem }) {
+  const tone = item.status === "not_triggered"
+    ? "border-slate-200 bg-slate-50 text-slate-600"
+    : item.severity === "required"
+      ? "border-amber-300 bg-amber-50 text-amber-950"
+      : "border-sky-200 bg-sky-50 text-sky-950"
+  const source = floridaContractLawSources[item.sourceId]
+
+  return (
+    <article className={`rounded-md border p-3 text-xs leading-5 ${tone}`}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="font-semibold text-slate-950">{item.label}</p>
+          <p className="mt-1">{item.summary}</p>
+        </div>
+        <Badge variant="outline" className="rounded-md bg-white capitalize">
+          {item.status.replaceAll("_", " ")}
+        </Badge>
+      </div>
+      {item.requiredNoticeText ? (
+        <details className="mt-2 rounded-md border border-white/70 bg-white/80 p-2">
+          <summary className="cursor-pointer font-semibold text-slate-900">
+            Source notice text / attorney review
+          </summary>
+          <p className="mt-2 whitespace-pre-line text-slate-700">{item.requiredNoticeText}</p>
+          <p className="mt-2 font-semibold text-slate-600">{source.attorneyReviewWarning}</p>
+        </details>
+      ) : null}
+      <a
+        href={item.officialUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="mt-2 inline-flex font-semibold text-slate-900 underline-offset-4 hover:underline"
+      >
+        Official source: {source.statute}
+      </a>
+    </article>
+  )
+}
+
+function FloridaContractPackTemplates() {
+  return (
+    <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-3">
+      <div>
+        <p className="text-xs font-semibold uppercase text-slate-500">Template pack included</p>
+        <p className="mt-1 text-xs leading-5 text-slate-600">
+          Agreement is ready now. Companion workflows use the same private packet system and job file records.
+        </p>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {floridaContractPackTemplates.map((template) => (
+          <article key={template.id} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="rounded-md bg-white capitalize">
+                {template.templateType.replaceAll("_", " ")}
+              </Badge>
+            </div>
+            <p className="mt-2 font-semibold text-slate-950">{template.title}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">{template.description}</p>
+            <p className="mt-2 text-xs font-semibold text-slate-700">{template.nextAction}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const contractPacketErrorLabels: Record<string, string> = {
   cancellationPolicy: "Cancellation policy",
   changeOrderPolicy: "Change-order policy",
@@ -2845,6 +3067,7 @@ function ContractPacketCard({ item }: { item: ContractPacket }) {
   const signedDigestLabel = displayItem.signedDigest
     ? `${displayItem.signedDigest.slice(0, 18)}...${displayItem.signedDigest.slice(-8)}`
     : undefined
+  const legalWarnings = contractTemplateLegalWarnings(displayItem)
 
   useToastState(statusState)
   useToastState(shareState)
@@ -2860,6 +3083,11 @@ function ContractPacketCard({ item }: { item: ContractPacket }) {
             {displayItem.signatureStatus.replaceAll("_", " ")}
           </Badge>
         ) : null}
+        {legalWarnings.length > 0 ? (
+          <Badge variant="outline" className="rounded-md border-amber-300 bg-amber-50 text-amber-900">
+            Florida legal review
+          </Badge>
+        ) : null}
       </div>
       <h3 className="mt-3 font-semibold text-slate-950">{displayItem.clientName}</h3>
       <p className="mt-1 text-sm text-slate-500">
@@ -2868,6 +3096,18 @@ function ContractPacketCard({ item }: { item: ContractPacket }) {
       <Progress value={completion} className="mt-4" />
       <p className="mt-2 text-xs text-slate-500">{completion}% link readiness / {displayItem.milestoneCount} milestones</p>
       <p className="mt-3 text-sm leading-6 text-slate-700">{displayItem.nextAction}</p>
+      {legalWarnings.length > 0 ? (
+        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+          <p className="font-semibold">Florida notice checklist attached to this packet</p>
+          <ul className="mt-2 grid gap-1">
+            {legalWarnings.map((warning) => (
+              <li key={warning.sourceId}>
+                {warning.label} - {warning.status === "included" ? "include after review" : "review before sending"}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-3 rounded-md border border-slate-200 bg-white p-3">
         <div>

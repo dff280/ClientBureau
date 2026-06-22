@@ -245,7 +245,12 @@ import {
   watchlistAlerts,
 } from "@/lib/mock-data"
 import { acquisitionPages, getAcquisitionPage } from "@/lib/acquisition-pages"
-import { floridaResidentialServiceAgreementTemplate } from "@/lib/contract-templates"
+import {
+  buildFloridaContractPacketDefaults,
+  contractTemplateLegalWarnings,
+  floridaContractNoticeChecklist,
+  floridaResidentialServiceAgreementTemplate,
+} from "@/lib/contract-templates"
 import { pageAssets } from "@/lib/page-assets"
 import { allSeoLandingPages, getSeoLandingPage, seoLandingCanonicalPath } from "@/lib/seo-landing-pages"
 import {
@@ -3390,6 +3395,78 @@ describe("platform expansion schemas", () => {
     ).toBe(true)
     expect(JSON.stringify(floridaResidentialServiceAgreementTemplate)).toContain("Attorney review")
     expect(JSON.stringify(floridaResidentialServiceAgreementTemplate)).not.toContain("blacklist")
+
+    const floridaChecklist = floridaContractNoticeChecklist({
+      state: "FL",
+      isFloridaJob: true,
+      isResidentialRealProperty: true,
+      isOneToFourFamilyDwelling: true,
+      contractValue: 12000,
+      depositRequired: 2500,
+      permitRequired: true,
+      homeSolicitationSale: true,
+      includeConstructionDefectNotice: true,
+    })
+    const triggeredSourceIds = floridaChecklist
+      .filter((item) => item.status !== "not_triggered")
+      .map((item) => item.sourceId)
+
+    expect(triggeredSourceIds).toContain("fl_713_015_lien_notice")
+    expect(triggeredSourceIds).toContain("fl_489_1425_recovery_fund")
+    expect(triggeredSourceIds).toContain("fl_489_126_deposit_permit_timing")
+    expect(triggeredSourceIds).toContain("fl_558_005_construction_defect")
+    expect(triggeredSourceIds).toContain("fl_501_031_home_solicitation")
+    expect(floridaChecklist.find((item) => item.sourceId === "fl_713_015_lien_notice")?.requiredNoticeText).toContain(
+      "FLORIDA'S CONSTRUCTION LIEN LAW",
+    )
+
+    const nonFloridaChecklist = floridaContractNoticeChecklist({
+      state: "GA",
+      isFloridaJob: false,
+      isResidentialRealProperty: true,
+      isOneToFourFamilyDwelling: true,
+      contractValue: 12000,
+      depositRequired: 2500,
+      includeConstructionDefectNotice: true,
+    })
+
+    expect(nonFloridaChecklist.every((item) => item.status === "not_triggered")).toBe(true)
+
+    const floridaDefaults = buildFloridaContractPacketDefaults({
+      state: "FL",
+      isFloridaJob: true,
+      isResidentialRealProperty: true,
+      isOneToFourFamilyDwelling: true,
+      contractValue: 12000,
+      depositRequired: 2500,
+      permitRequired: true,
+      homeSolicitationSale: false,
+      includeConstructionDefectNotice: true,
+    })
+
+    expect(floridaDefaults.paymentTerms).toContain("Florida legal review checklist triggered")
+    expect(floridaDefaults.nextAction).toContain("Review Florida legal checklist")
+    expect(
+      contractPacketSchema.safeParse({
+        ...floridaDefaults,
+        clientName: "Florida Homeowner",
+        clientLegalName: "Florida Homeowner",
+        contractorLegalName: "RidgeBuild Contracting LLC",
+      }).success,
+    ).toBe(true)
+    expect(
+      contractTemplateLegalWarnings({
+        ...floridaDefaults,
+        id: "packet_01",
+        contractorId: "contractor_01",
+        clientName: "Florida Homeowner",
+        status: "draft",
+        milestoneSchedule: [],
+        requiredBeforeScheduling: true,
+        createdAt: "2026-06-21T12:00:00.000Z",
+        updatedAt: "2026-06-21T12:00:00.000Z",
+      }),
+    ).toHaveLength(4)
 
     expect(
       contractPacketSchema.safeParse({

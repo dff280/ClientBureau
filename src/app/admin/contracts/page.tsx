@@ -30,6 +30,7 @@ import {
   getAdminWorkspaceDataService,
   getContractorRiskOpsDataService,
 } from "@/lib/repositories/client-bureau-service"
+import { contractTemplateLegalWarnings } from "@/lib/contract-templates"
 import type { ContractPacket } from "@/lib/types"
 
 export const metadata: Metadata = {
@@ -360,6 +361,7 @@ function ContractLaneCard({
 
 function ContractPacketCard({ packet }: { packet: ContractPacket }) {
   const depositPercent = packet.packetValue > 0 ? Math.round((packet.depositRequired / packet.packetValue) * 100) : 0
+  const legalWarnings = contractTemplateLegalWarnings(packet)
 
   return (
     <article className="rounded-md border border-slate-200 bg-slate-50 p-4">
@@ -370,6 +372,9 @@ function ContractPacketCard({ packet }: { packet: ContractPacket }) {
             <StatusBadge tone={signatureTone(packet.signatureStatus)}>{formatStatus(packet.signatureStatus ?? "not_sent")}</StatusBadge>
             {packet.shareStatus ? (
               <StatusBadge tone={shareTone(packet.shareStatus)}>{formatStatus(packet.shareStatus)}</StatusBadge>
+            ) : null}
+            {legalWarnings.length > 0 ? (
+              <StatusBadge tone="amber">Florida review</StatusBadge>
             ) : null}
           </div>
           <h3 className="mt-3 font-semibold text-slate-950">{packet.clientName}</h3>
@@ -392,6 +397,19 @@ function ContractPacketCard({ packet }: { packet: ContractPacket }) {
         <p className="text-xs font-semibold uppercase text-slate-500">Next action</p>
         <p className="mt-1 text-sm leading-6 text-slate-700">{packet.nextAction}</p>
       </div>
+
+      {legalWarnings.length > 0 ? (
+        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+          <p className="font-semibold">Florida legal review prompts</p>
+          <ul className="mt-2 grid gap-1">
+            {legalWarnings.map((warning) => (
+              <li key={warning.sourceId}>
+                {warning.label} - {warning.status === "included" ? "include notice after review" : "review before sending"}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold uppercase">
         {packet.paymentMode ? <StatusBadge tone="blue">{formatStatus(packet.paymentMode)}</StatusBadge> : null}

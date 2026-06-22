@@ -125,9 +125,9 @@ export const acquisitionPages: AcquisitionPage[] = [
     title: "Florida Contractor Agreement Starter Template",
     h1: "Florida Contractor Agreement Starter Template",
     description:
-      "Start a Florida contractor agreement packet with scope, payment terms, change orders, lien-review prompts, and private e-signature records.",
+      "Create a Florida contractor agreement packet with scope, payment terms, statutory review prompts, change orders, and private e-signature records.",
     heroCopy:
-      "Florida jobs deserve clearer records before labor, materials, scheduling, or deposits are committed. Client Bureau gives contractors a private starter packet for scope, exclusions, payment timing, change-order approvals, cancellation review, lien-notice review, and client signature readiness.",
+      "Florida jobs deserve clearer records before labor, materials, scheduling, or deposits are committed. Client Bureau gives contractors a private Florida Contract Pack for scope, exclusions, payment timing, change-order approvals, cancellation review, lien-law prompts, recovery-fund prompts, Chapter 558 review, and client signature readiness.",
     primaryCta: {
       label: "Use the Florida starter",
       href: "/dashboard/contracts",
@@ -137,24 +137,25 @@ export const acquisitionPages: AcquisitionPage[] = [
       href: "/contractor-contract-template",
     },
     proofLabel: "First template",
-    proofValue: "Florida-ready review structure",
+    proofValue: "Florida source-aware review structure",
     proofDetail:
-      "The starter helps organize the issues Florida contractors often need reviewed before sending a client signing link.",
+      "The starter organizes common Florida statutory review prompts and keeps the final contract packet private until the contractor sends a signing link.",
     useCases: [
-      "Florida residential repair, remodel, installation, and trade-service work that needs a written scope before scheduling.",
+      "Florida residential repair, remodel, installation, and trade-service work that needs a written scope and legal review before scheduling.",
       "Projects where deposits, progress payments, final payment triggers, and change orders should be visible to the client before work begins.",
-      "Jobs where lien-notice, notice-of-commencement, permit, licensing, cancellation, roofing, or local-code review may matter.",
+      "Jobs where lien notice, recovery fund, deposit timing, construction defect notice, cancellation, permit, licensing, or local-code review may matter.",
     ],
     workflow: [
-      "Open Contracts in the dashboard and choose the Florida starter inside the agreement packet form.",
+      "Open Contracts in the dashboard and choose the Florida Contract Pack inside the agreement packet form.",
+      "Answer the Florida applicability questions for property type, contract value, deposit, permit review, home-solicitation context, and Chapter 558 notice review.",
       "Replace starter language with project-specific scope, exclusions, payment terms, dates, and contractor/client legal names.",
-      "Review Florida-specific requirements with qualified counsel or a qualified business advisor when needed.",
+      "Review triggered Florida notices with qualified counsel or a qualified business advisor before sending.",
       "Generate a private signing link only after the packet is complete and ready for client review.",
     ],
     trustPoints: [
       "The template stays private in the contractor workspace and does not publish contract content to public profiles.",
       "Client Bureau does not provide legal advice, guarantee enforceability, or guarantee lien rights, priority, payment, or collection.",
-      "The starter is built around cautious review prompts for Florida construction lien, cancellation, licensing, permit, and local-practice issues.",
+      "The pack references official Florida sources for lien notice, recovery fund, deposit timing, Chapter 558, and cancellation review prompts.",
     ],
     relatedLinks: [
       {
@@ -168,6 +169,11 @@ export const acquisitionPages: AcquisitionPage[] = [
         description: "Document changed scope, added cost, and schedule impact.",
       },
       {
+        label: "Business rating methodology",
+        href: "/business-rating-methodology",
+        description: "See how Client Bureau keeps public trust signals separate from private contract records.",
+      },
+      {
         label: "Florida lien filing service",
         href: "/florida-lien-filing-service",
         description: "Review Florida lien filing workflow gates and private records.",
@@ -177,12 +183,12 @@ export const acquisitionPages: AcquisitionPage[] = [
       {
         question: "Is this a Florida legal contract?",
         answer:
-          "No. It is a private business workflow starter for organizing agreement fields, review prompts, signatures, and audit records. Contractors should get attorney review before relying on it as a legal contract.",
+          "No. It is a private business workflow starter for organizing agreement fields, Florida review prompts, signatures, and audit records. Contractors should get attorney review before relying on it as a legal contract.",
       },
       {
-        question: "Why does the starter mention lien and cancellation review?",
+        question: "Which Florida issues does the pack help contractors review?",
         answer:
-          "Florida construction lien, home-solicitation, licensing, permit, roofing, and local requirements can depend on the work type and transaction. The template prompts review instead of pretending one generic agreement covers every job.",
+          "The pack prompts review for Florida lien notice, recovery fund language, deposit and permit timing, Chapter 558 construction defect notice, home-solicitation cancellation, licensing, permits, and local-practice issues.",
       },
       {
         question: "Can clients sign the packet online?",
