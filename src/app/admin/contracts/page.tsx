@@ -260,6 +260,13 @@ export default async function AdminContractsPage() {
                 detail="Fully signed packets should have signed snapshots, digest records, and timestamped signature state."
                 tone={signedPackets > 0 ? "emerald" : "slate"}
               />
+              <ContractHealthCard
+                icon={ClipboardCheck}
+                title="Florida review"
+                value="5"
+                detail="Legal review prompts are available for lien notice, Recovery Fund notice, deposit / permit timing, Chapter 558, and home-solicitation context."
+                tone="amber"
+              />
             </div>
           </DashboardSection>
         </div>

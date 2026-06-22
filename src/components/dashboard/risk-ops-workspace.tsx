@@ -878,6 +878,7 @@ export function RiskOpsWorkspace({
             "Contracts",
             "Create private agreement links clients can review and sign, invite the client into the workflow, and track signature plus payment timing before work starts.",
           )}
+          <FloridaContractPackPreview />
           {!focusTab ? (
             <div className="grid gap-3 md:grid-cols-3">
               <ToolExplainer
@@ -1313,6 +1314,42 @@ function ToolExplainer({ title, text }: { title: string; text: string }) {
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
       <p className="text-xs font-semibold uppercase text-amber-700">{title}</p>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </div>
+  )
+}
+
+function FloridaContractPackPreview() {
+  const reviewPrompts = [
+    "Lien law notice",
+    "Recovery Fund notice",
+    "Deposit / permit timing",
+    "Chapter 558",
+  ]
+
+  return (
+    <div className="rounded-md border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Florida Contract Pack</p>
+          <h3 className="mt-1 text-lg font-semibold text-slate-950">Build review-ready Florida agreement packets.</h3>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Start with a Florida Residential Contractor Agreement, apply a Florida legal review checklist, and prepare
+            source-labeled prompts before sending a private signing link. Client Bureau organizes the workflow; final
+            language should be reviewed by qualified counsel.
+          </p>
+        </div>
+        <Badge variant="outline" className="w-fit rounded-md border-amber-300 bg-white text-amber-900">
+          Attorney review recommended
+        </Badge>
+      </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {reviewPrompts.map((prompt) => (
+          <div key={prompt} className="rounded-md border border-amber-200 bg-white p-3">
+            <p className="text-sm font-semibold text-slate-950">{prompt}</p>
+            <p className="mt-1 text-xs leading-5 text-slate-600">Included as a source-aware review prompt.</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
