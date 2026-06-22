@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
+import { WorkflowValidationSummary } from "@/components/forms/workflow-validation-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -39,12 +40,31 @@ export function ProfileClaimForm({
       {profileType ? <input type="hidden" name="profileType" value={profileType} /> : null}
       {profileSlug ? <input type="hidden" name="profileSlug" value={profileSlug} /> : null}
       {state.message ? (
-        <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
-          <CheckCircle2 className="size-4" aria-hidden="true" />
+        <Alert
+          variant={state.ok ? "default" : "destructive"}
+          className={state.ok ? "rounded-md border-emerald-200 bg-emerald-50 text-emerald-950" : "rounded-md"}
+        >
+          {state.ok ? <CheckCircle2 className="size-4" aria-hidden="true" /> : null}
           <AlertTitle>{state.ok ? "Claim received" : "Claim needs attention"}</AlertTitle>
-          <AlertDescription>{state.message}</AlertDescription>
+          <AlertDescription>
+            {state.message}
+            {state.ok ? " Staff will review ownership, relationship context, and public visibility before profile status changes." : null}
+          </AlertDescription>
         </Alert>
       ) : null}
+      {!state.ok ? <WorkflowValidationSummary errors={state.fieldErrors} /> : null}
+      <div className="grid gap-3 md:grid-cols-3">
+        {[
+          ["Identify", "Use the name and email tied to the business, trade crew, or authorized representative."],
+          ["Verify", "Explain ownership, management, employment, or correction authority in plain language."],
+          ["Publish safely", "Claim approval can update public status without exposing private emails, phones, raw files, or staff notes."],
+        ].map(([title, text]) => (
+          <div key={title} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{text}</p>
+          </div>
+        ))}
+      </div>
       <div className="grid gap-3 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="claimantName">Your name</Label>

@@ -6,6 +6,7 @@ import { toast } from "sonner"
 
 import { FieldError } from "@/components/forms/field-error"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
+import { WorkflowValidationSummary } from "@/components/forms/workflow-validation-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -50,11 +51,25 @@ export function ClientResponseForm({
           </AlertDescription>
         </Alert>
       ) : null}
+      {!state.ok ? <WorkflowValidationSummary errors={state.fieldErrors} /> : null}
 
       <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
         Use this form to submit a response, dispute, correction request, or resolution update.
         Public display is never automatic; every submission is reviewed for relevance, privacy,
         profile match, tone, and documentation.
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-3">
+        {[
+          ["Match the record", "Provide the profile URL or report reference so staff can connect the request to the correct public context."],
+          ["Verify contact", "Use an email you can access. Phone and documentation links are moderator-only."],
+          ["Add public-safe context", "Explain the response, dispute, correction, or resolution without private identifiers or unsupported claims."],
+        ].map(([title, text]) => (
+          <div key={title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{text}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

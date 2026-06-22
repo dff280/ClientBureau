@@ -130,8 +130,15 @@ import { getDataMode, getSiteUrl } from "@/lib/env"
 import { normalizeCityName, normalizeStateCode } from "@/lib/locations"
 import { safeSearchQueryForStorage } from "@/lib/search-experience"
 import {
+  clientResponseSuccessMessage,
+  clientResponseValidationMessage,
   contractPacketCreatedMessage,
   contractPacketValidationMessage,
+  profileClaimSuccessMessage,
+  profileClaimValidationMessage,
+  reportSubmissionConcernSuccessMessage,
+  reportSubmissionPositiveSuccessMessage,
+  reportSubmissionValidationMessage,
   savedSearchAccountSuccessMessage,
   savedSearchBrowserFallbackMessage,
 } from "@/lib/workflow-messages"
@@ -495,7 +502,8 @@ export async function submitClientReportAction(
   const parsed = clientReportSchema.safeParse(formDataToObject(formData))
 
   if (!parsed.success) {
-    return fail("Please correct the highlighted report fields.", zodFieldErrors(parsed.error))
+    const fieldErrors = zodFieldErrors(parsed.error)
+    return fail(reportSubmissionValidationMessage(fieldErrors), fieldErrors)
   }
 
   const user = await requireContractorAccess()
@@ -510,8 +518,8 @@ export async function submitClientReportAction(
   return ok(
     report,
     isPositiveReportCategory(input.reportCategory)
-      ? "Positive client report received. It is now queued for moderation review."
-      : "Report received. It is now queued for moderation review.",
+      ? reportSubmissionPositiveSuccessMessage
+      : reportSubmissionConcernSuccessMessage,
   )
 }
 
@@ -522,7 +530,8 @@ export async function submitClientResponseAction(
   const parsed = clientResponseSchema.safeParse(formDataToObject(formData))
 
   if (!parsed.success) {
-    return fail("Please correct the highlighted response fields.", zodFieldErrors(parsed.error))
+    const fieldErrors = zodFieldErrors(parsed.error)
+    return fail(clientResponseValidationMessage(fieldErrors), fieldErrors)
   }
 
   const response = await submitClientResponseService(parsed.data)
@@ -531,7 +540,7 @@ export async function submitClientResponseAction(
   revalidatePath("/admin/reports")
   revalidatePath("/admin/discussions")
 
-  return ok(response, "Response received. It is queued for moderation and contact verification.")
+  return ok(response, clientResponseSuccessMessage)
 }
 
 export async function saveClientSearchAction(
@@ -707,7 +716,8 @@ export async function submitProfileClaimAction(
   const parsed = profileClaimSchema.safeParse(formDataToObject(formData))
 
   if (!parsed.success) {
-    return fail("Please correct the highlighted claim fields.", zodFieldErrors(parsed.error))
+    const fieldErrors = zodFieldErrors(parsed.error)
+    return fail(profileClaimValidationMessage(fieldErrors), fieldErrors)
   }
 
   let profileId = parsed.data.profileId
@@ -732,7 +742,7 @@ export async function submitProfileClaimAction(
   revalidatePath("/admin")
   revalidatePath("/admin/profiles")
 
-  return ok(claim, "Profile claim received. Client Bureau will verify the relationship before changing public ownership.")
+  return ok(claim, profileClaimSuccessMessage)
 }
 
 export async function reviewProfileClaimAction(

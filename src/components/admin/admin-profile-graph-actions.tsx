@@ -105,6 +105,10 @@ function ClaimReviewCard({ claims }: { claims: ProfileClaim[] }) {
       title="Review profile claim"
       text="Approve, reject, or dispute a profile claim after checking verification details."
     >
+      <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs leading-5 text-blue-950">
+        Approving a claim can update public ownership and verification context. Rejecting or disputing keeps
+        the profile protected while preserving the audit trail. Private emails, phones, documents, and staff notes stay private.
+      </div>
       <form action={action} className="space-y-3">
         <AdminActionTokenInput />
         <div className="space-y-2">

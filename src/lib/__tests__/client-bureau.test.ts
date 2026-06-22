@@ -278,8 +278,11 @@ import {
   watchlistItemSchema,
 } from "@/lib/schemas/client-bureau"
 import {
+  clientResponseValidationMessage,
   contractPacketValidationBaseMessage,
   contractPacketValidationMessage,
+  profileClaimValidationMessage,
+  reportSubmissionValidationMessage,
   savedSearchAccountSuccessMessage,
   savedSearchBrowserFallbackMessage,
 } from "@/lib/workflow-messages"
@@ -2490,6 +2493,36 @@ describe("schemas and mock actions", () => {
         documentationCertification: true,
       }).success,
     ).toBe(true)
+  })
+
+  it("uses workflow-specific moderation validation messages", () => {
+    expect(
+      reportSubmissionValidationMessage({
+        relationshipVerificationSummary: ["Relationship details are required."],
+        publicSummaryCertification: ["Confirm the public summary rules."],
+        reportSummary: ["Public summary is required."],
+      }),
+    ).toContain("Relationship context needs attention")
+    expect(
+      reportSubmissionValidationMessage({
+        relationshipVerificationSummary: ["Relationship details are required."],
+        publicSummaryCertification: ["Confirm the public summary rules."],
+        reportSummary: ["Public summary is required."],
+      }),
+    ).toContain("Review attestations need confirmation")
+    expect(
+      clientResponseValidationMessage({
+        profileUrl: ["Profile URL is required."],
+        responseSummary: ["Response summary is required."],
+        contactCertification: ["Confirm contact accuracy."],
+      }),
+    ).toContain("Profile reference needs attention")
+    expect(
+      profileClaimValidationMessage({
+        verificationSummary: ["Verification detail is required."],
+        truthfulCertification: ["Confirm accuracy."],
+      }),
+    ).toContain("Verification relationship needs more detail")
   })
 
   it("validates admin profile graph operations with audit reasons", () => {

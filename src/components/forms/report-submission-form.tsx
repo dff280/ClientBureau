@@ -9,6 +9,7 @@ import { FloridaPlaceDatalist } from "@/components/forms/florida-place-datalist"
 import { PendingSubmitButton } from "@/components/forms/pending-submit-button"
 import { StateSelect } from "@/components/forms/state-select"
 import { TradeCategorySelect } from "@/components/forms/trade-category-select"
+import { WorkflowValidationSummary } from "@/components/forms/workflow-validation-summary"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -119,9 +120,12 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
       ) : state.message ? (
         <Alert variant="destructive" className="rounded-md">
           <AlertTitle>Review required</AlertTitle>
-          <AlertDescription>{state.message}</AlertDescription>
+          <AlertDescription>
+            {state.message} Nothing is published until the report passes moderation.
+          </AlertDescription>
         </Alert>
       ) : null}
+      {!state.ok ? <WorkflowValidationSummary errors={state.fieldErrors} /> : null}
 
       <WorkflowStep
         step="1"
@@ -685,6 +689,19 @@ export function ReportSubmissionForm({ defaults = {} }: ReportSubmissionFormProp
           <Attestation name="noHarassmentCertification" label="I will not include threats, harassment, or sensitive personal information in public summaries." errors={state.ok ? undefined : state.fieldErrors} />
         </div>
       </WorkflowStep>
+
+      <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-5 shadow-sm md:grid-cols-3">
+        {[
+          ["Moderation review", "Client Bureau checks identity, relationship context, public-summary safety, and private evidence labels before anything is shown publicly."],
+          ["Private evidence", "Raw files, street addresses, emails, phone numbers, and private job notes stay out of public pages."],
+          ["Response rights", "Reported parties can respond, dispute, correct, or document resolution through the public response workflow."],
+        ].map(([title, text]) => (
+          <div key={title} className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-950">{title}</p>
+            <p className="mt-2 text-xs leading-5 text-slate-600">{text}</p>
+          </div>
+        ))}
+      </div>
 
       <PendingSubmitButton
         pendingText="Queuing report..."

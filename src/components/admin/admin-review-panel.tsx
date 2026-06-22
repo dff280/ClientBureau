@@ -787,6 +787,10 @@ function ModerationWorkspace({
               description="Approve only when the public summary is neutral, supportable, and private-data safe."
             >
               <div className="space-y-3">
+                <div className="rounded-md border border-blue-200 bg-blue-50 p-3 text-xs leading-5 text-blue-950">
+                  Approve publishes the moderated public profile context and revalidates profile, search, sitemap,
+                  and directory paths. Reject or needs-more-information keeps the report private and preserves the audit note.
+                </div>
                 <label className="flex items-start gap-2 text-sm text-slate-700">
                   <Checkbox name="checklistEvidence" defaultChecked={report?.evidenceAttached} />
                   <span>Evidence reviewed</span>
