@@ -47,7 +47,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     description:
       "Create contractor agreement packets with scope, payment terms, change-order policy, client signatures, and private audit history.",
     heroCopy:
-      "Build a clear agreement before work starts. Client Bureau helps contractors and service businesses document scope, payment terms, exclusions, project dates, change-order rules, and client approval in one private signing packet.",
+      "Build a clear agreement before work starts. Client Bureau helps contractors and service businesses move from client check to scope, payment terms, change-order rules, private signing link, and audit-ready status in one calmer workflow.",
     primaryCta: {
       label: "Create an agreement packet",
       href: "/dashboard/contracts",
@@ -66,10 +66,11 @@ export const acquisitionPages: AcquisitionPage[] = [
       "Jobs that may need change orders, completion certificates, or payment-plan documentation later.",
     ],
     workflow: [
-      "Add contractor and client legal names, project address context, and scope summary.",
-      "Define included work, excluded work, payment terms, milestone dates, and cancellation rules.",
-      "Generate a private signing link and invite the client to review the packet.",
-      "Store signature status, timestamp, signed snapshot, and tamper-evidence digest privately.",
+      "Start with the Florida Contract Pack or a blank agreement packet.",
+      "Add contractor and client legal names, project context, scope, included work, and excluded work.",
+      "Define payment terms, deposit, milestone timing, change-order policy, and cancellation rules.",
+      "Create the packet, prepare a private signing link, and invite the client to review before work starts.",
+      "Track signature status, timestamp, signed snapshot, and private digest without publishing contract content.",
     ],
     trustPoints: [
       "Contract packets are private and are not shown on public client profiles.",
@@ -127,7 +128,7 @@ export const acquisitionPages: AcquisitionPage[] = [
     description:
       "Create a Florida contractor agreement packet with scope, payment terms, statutory review prompts, change orders, and private e-signature records.",
     heroCopy:
-      "Florida jobs deserve clearer records before labor, materials, scheduling, or deposits are committed. Client Bureau gives contractors a private Florida Contract Pack for scope, exclusions, payment timing, change-order approvals, cancellation review, lien-law prompts, recovery-fund prompts, Chapter 558 review, and client signature readiness.",
+      "Florida jobs deserve clearer records before labor, materials, scheduling, or deposits are committed. Client Bureau now opens the contract tool on the Florida Contract Pack by default, with scope, exclusions, payment timing, change-order approvals, cancellation review, lien-law prompts, recovery-fund prompts, Chapter 558 review, and private signing readiness.",
     primaryCta: {
       label: "Use the Florida starter",
       href: "/dashboard/contracts",
@@ -146,7 +147,7 @@ export const acquisitionPages: AcquisitionPage[] = [
       "Jobs where lien notice, recovery fund, deposit timing, construction defect notice, cancellation, permit, licensing, or local-code review may matter.",
     ],
     workflow: [
-      "Open Contracts in the dashboard and choose the Florida Contract Pack inside the agreement packet form.",
+      "Open Contracts in the dashboard; the Florida Contract Pack is the default agreement-packet path.",
       "Answer the Florida applicability questions for property type, contract value, deposit, permit review, home-solicitation context, and Chapter 558 notice review.",
       "Replace starter language with project-specific scope, exclusions, payment terms, dates, and contractor/client legal names.",
       "Review triggered Florida notices with qualified counsel or a qualified business advisor before sending.",

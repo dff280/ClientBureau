@@ -2596,7 +2596,7 @@ type FloridaApplicabilityFormState = {
 
 function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext | null }) {
   const [state, action] = useActionState(createContractPacketAction, contractPacketState)
-  const [activeTemplate, setActiveTemplate] = useState<"blank" | "florida">("blank")
+  const [activeTemplate, setActiveTemplate] = useState<"blank" | "florida">("florida")
   const [openPolicySection, setOpenPolicySection] = useState<string | undefined>(undefined)
   const [templateSeed, setTemplateSeed] = useState(0)
   const [floridaApplicability, setFloridaApplicability] = useState<FloridaApplicabilityFormState>({
@@ -2660,7 +2660,7 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
               }}
             >
               <ListChecks aria-hidden="true" />
-              Apply Florida pack
+              {activeTemplate === "florida" ? "Refresh Florida pack" : "Apply Florida pack"}
             </Button>
             <Button type="button" size="sm" variant="outline" onClick={() => setActiveTemplate("blank")}>
               Start blank
@@ -2683,6 +2683,7 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
           </p>
         )}
       </div>
+      <ContractBuilderWorkflow activeTemplate={activeTemplate} />
 
       {createdPacket ? (
         <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950">
@@ -2863,6 +2864,40 @@ function ContractPacketForm({ jobContext }: { jobContext?: DashboardJobContext |
         <FieldError name="projectEndDate" errors={packetErrors} />
         <FieldError name="nextAction" errors={packetErrors} />
       </form>
+    </div>
+  )
+}
+
+function ContractBuilderWorkflow({ activeTemplate }: { activeTemplate: "blank" | "florida" }) {
+  const steps = [
+    {
+      label: "1. Choose packet",
+      text: activeTemplate === "florida"
+        ? "Florida Contract Pack is active and preloads review-ready agreement fields."
+        : "Blank packet is active. Every required agreement field must be completed manually.",
+    },
+    {
+      label: "2. Complete terms",
+      text: "Scope, included work, payment terms, milestones, change orders, cancellation, and next action are required.",
+    },
+    {
+      label: "3. Review before sending",
+      text: "Confirm the checklist, attorney-review notes, client legal name, deposit, and private job context.",
+    },
+    {
+      label: "4. Send private link",
+      text: "Create the packet first, then prepare a tokenized signing link from the packet card.",
+    },
+  ]
+
+  return (
+    <div className="grid gap-2 rounded-md border border-slate-200 bg-white p-3 sm:grid-cols-2 xl:grid-cols-4">
+      {steps.map((step) => (
+        <div key={step.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <p className="text-xs font-semibold uppercase text-slate-500">{step.label}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-700">{step.text}</p>
+        </div>
+      ))}
     </div>
   )
 }

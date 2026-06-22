@@ -405,6 +405,8 @@ function ContractPacketCard({ packet }: { packet: ContractPacket }) {
         <p className="mt-1 text-sm leading-6 text-slate-700">{packet.nextAction}</p>
       </div>
 
+      <AdminContractReviewChecklist packet={packet} legalWarningCount={legalWarnings.length} />
+
       {legalWarnings.length > 0 ? (
         <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
           <p className="font-semibold">Florida legal review prompts</p>
@@ -425,6 +427,53 @@ function ContractPacketCard({ packet }: { packet: ContractPacket }) {
         {packet.signedRecordAt ? <StatusBadge tone="emerald">Recorded {formatContractDate(packet.signedRecordAt)}</StatusBadge> : null}
       </div>
     </article>
+  )
+}
+
+function AdminContractReviewChecklist({
+  legalWarningCount,
+  packet,
+}: {
+  legalWarningCount: number
+  packet: ContractPacket
+}) {
+  const items = [
+    {
+      label: "Scope",
+      ok: Boolean(packet.scopeSummary && packet.includedWork),
+      text: "Scope summary and included work are present.",
+    },
+    {
+      label: "Payment",
+      ok: Boolean(packet.paymentTerms && packet.packetValue >= packet.depositRequired),
+      text: "Payment terms and deposit relationship are reviewable.",
+    },
+    {
+      label: "Signing link",
+      ok: Boolean(packet.shareToken || packet.shareUrl),
+      text: "A private tokenized client signing link exists.",
+    },
+    {
+      label: "Legal review",
+      ok: legalWarningCount === 0 || packet.status !== "draft",
+      text: legalWarningCount > 0
+        ? `${legalWarningCount} Florida prompt(s) need review before sending.`
+        : "No Florida prompt was detected from the packet fields.",
+    },
+  ]
+
+  return (
+    <div className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3 sm:grid-cols-2">
+      {items.map((item) => (
+        <div key={item.label} className="rounded-md border border-slate-200 bg-slate-50 p-3">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase text-slate-500">{item.label}</p>
+            <StatusBadge tone={item.ok ? "emerald" : "amber"}>{item.ok ? "Ready" : "Check"}</StatusBadge>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-slate-600">{item.text}</p>
+        </div>
+      ))}
+    </div>
   )
 }
 

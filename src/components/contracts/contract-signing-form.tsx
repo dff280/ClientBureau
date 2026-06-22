@@ -17,6 +17,7 @@ const initialState: ActionResult<ContractPacket> = { ok: false, message: "" }
 
 export function ContractSigningForm({ shareToken }: { shareToken: string }) {
   const [state, action] = useActionState(signContractShareAction, initialState)
+  const fieldErrors = state.ok ? undefined : state.fieldErrors
 
   useEffect(() => {
     if (state.message) {
@@ -24,77 +25,82 @@ export function ContractSigningForm({ shareToken }: { shareToken: string }) {
     }
   }, [state])
 
+  if (state.ok) {
+    return (
+      <Alert className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-950">
+        <CheckCircle2 className="size-4" aria-hidden="true" />
+        <AlertTitle>Signature recorded</AlertTitle>
+        <AlertDescription>
+          {state.message} Contract status: {state.data.signatureStatus?.replaceAll("_", " ") ?? "client signed"}.
+        </AlertDescription>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-100"
+        >
+          <Printer className="size-4" aria-hidden="true" />
+          Print signed summary
+        </button>
+      </Alert>
+    )
+  }
+
   return (
     <form action={action} className="grid gap-4">
       <input type="hidden" name="shareToken" value={shareToken} />
 
-      {state.ok ? (
-        <Alert className="rounded-md border-emerald-200 bg-emerald-50 text-emerald-950">
-          <CheckCircle2 className="size-4" aria-hidden="true" />
-          <AlertTitle>Signature recorded</AlertTitle>
-          <AlertDescription>
-            {state.message} Contract status: {state.data.signatureStatus?.replaceAll("_", " ") ?? "client signed"}.
-          </AlertDescription>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="mt-3 inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-950 hover:bg-emerald-100"
-          >
-            <Printer className="size-4" aria-hidden="true" />
-            Print signed summary
-          </button>
-        </Alert>
-      ) : state.message ? (
+      {state.message ? (
         <Alert variant="destructive" className="rounded-md">
           <AlertTitle>Review required</AlertTitle>
           <AlertDescription>{state.message}</AlertDescription>
         </Alert>
       ) : null}
+      <SignatureValidationSummary errors={fieldErrors} />
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="signerName">Your legal name</Label>
-          <Input id="signerName" name="signerName" placeholder="Full name" />
-          <FieldError name="signerName" errors={state.ok ? undefined : state.fieldErrors} />
+          <Input id="signerName" name="signerName" autoComplete="name" placeholder="Full name" />
+          <FieldError name="signerName" errors={fieldErrors} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="signerEmail">Email for verification</Label>
-          <Input id="signerEmail" name="signerEmail" type="email" placeholder="you@example.com" />
-          <FieldError name="signerEmail" errors={state.ok ? undefined : state.fieldErrors} />
+          <Input id="signerEmail" name="signerEmail" type="email" autoComplete="email" placeholder="you@example.com" />
+          <FieldError name="signerEmail" errors={fieldErrors} />
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="signatureName">Typed signature</Label>
         <Input id="signatureName" name="signatureName" placeholder="Type your name as your signature" />
-        <FieldError name="signatureName" errors={state.ok ? undefined : state.fieldErrors} />
+        <FieldError name="signatureName" errors={fieldErrors} />
       </div>
 
       <div className="grid gap-3">
         <SigningCheck
           name="scopeReviewCertification"
           label="I reviewed the scope summary, included work, excluded work, change-order policy, and cancellation terms."
-          errors={state.ok ? undefined : state.fieldErrors}
+          errors={fieldErrors}
         />
         <SigningCheck
           name="paymentTermsCertification"
           label="I reviewed the documented payment terms, deposit amount, milestone schedule, and due-date context."
-          errors={state.ok ? undefined : state.fieldErrors}
+          errors={fieldErrors}
         />
         <SigningCheck
           name="consentToElectronicSignature"
           label="I consent to use electronic records and electronic signatures for this agreement."
-          errors={state.ok ? undefined : state.fieldErrors}
+          errors={fieldErrors}
         />
         <SigningCheck
           name="authorityCertification"
           label="I confirm I am authorized to review and sign this agreement."
-          errors={state.ok ? undefined : state.fieldErrors}
+          errors={fieldErrors}
         />
         <SigningCheck
           name="recordsCertification"
           label="I confirm I can access and keep a copy of the agreement electronically."
-          errors={state.ok ? undefined : state.fieldErrors}
+          errors={fieldErrors}
         />
       </div>
 
@@ -103,6 +109,42 @@ export function ContractSigningForm({ shareToken }: { shareToken: string }) {
         Sign agreement
       </PendingSubmitButton>
     </form>
+  )
+}
+
+const signatureErrorLabels: Record<string, string> = {
+  authorityCertification: "Authorization confirmation",
+  consentToElectronicSignature: "Electronic signature consent",
+  paymentTermsCertification: "Payment terms review",
+  recordsCertification: "Electronic records confirmation",
+  scopeReviewCertification: "Scope review",
+  signatureName: "Typed signature",
+  signerEmail: "Verification email",
+  signerName: "Legal name",
+}
+
+function SignatureValidationSummary({ errors }: { errors?: Record<string, string[]> }) {
+  const entries = Object.entries(errors ?? {})
+    .filter(([, messages]) => messages.length > 0)
+    .map(([field, messages]) => ({
+      field,
+      label: signatureErrorLabels[field] ?? field,
+      message: messages[0],
+    }))
+
+  if (entries.length === 0) return null
+
+  return (
+    <div role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-xs leading-5 text-red-800">
+      <p className="font-semibold text-red-900">Finish these signing fields before recording the agreement:</p>
+      <ul className="mt-2 grid gap-1">
+        {entries.map((entry) => (
+          <li key={entry.field}>
+            <span className="font-semibold">{entry.label}:</span> {entry.message}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 

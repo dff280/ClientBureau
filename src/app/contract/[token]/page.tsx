@@ -77,7 +77,24 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
 
       <PremiumProofStrip items={proofItems} dark />
 
-      <div className="bureau-container grid gap-6 py-8 lg:grid-cols-[1fr_420px]">
+      <div className="bureau-container pt-6">
+        <div className="grid gap-3 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950 md:grid-cols-3">
+          <div>
+            <p className="font-semibold">Review before signing</p>
+            <p className="mt-1">Ask the contractor to correct scope, dates, payment terms, or legal names before you sign.</p>
+          </div>
+          <div>
+            <p className="font-semibold">Private by token</p>
+            <p className="mt-1">This agreement page is noindexed and separate from public Client Bureau profiles.</p>
+          </div>
+          <div>
+            <p className="font-semibold">No payment processing here</p>
+            <p className="mt-1">Payment terms are documented, but Client Bureau does not hold or enforce funds from this page.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bureau-container grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_420px]">
         <div className="space-y-5">
           <Card className="rounded-md border-slate-200 bg-white shadow-sm">
             <CardHeader className="border-b border-slate-100">
@@ -223,18 +240,19 @@ export default async function ContractSharePage({ params }: ContractSharePagePro
           </Card>
         </div>
 
-        <Card className="h-fit rounded-md border-slate-200 bg-white shadow-sm">
+        <Card className="h-fit rounded-md border-slate-200 bg-white shadow-sm lg:sticky lg:top-6">
           <CardHeader className="border-b border-slate-100">
-            <CardTitle>Sign agreement</CardTitle>
+            <CardTitle>Review, certify, sign</CardTitle>
             <p className="text-sm leading-6 text-slate-600">
-              Use the same name and email you want associated with this private contract review.
+              Use the same legal name and email you want associated with this private agreement review.
             </p>
             <div className="mt-3 flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
               <CalendarDays className="size-4 text-amber-700" aria-hidden="true" />
               This private signing packet is noindexed and available only by token.
             </div>
           </CardHeader>
-          <CardContent className="p-5">
+          <CardContent className="grid gap-4 p-5">
+            <SigningReadinessChecklist />
             <ContractSigningForm shareToken={token} />
           </CardContent>
         </Card>
@@ -256,7 +274,32 @@ function AgreementBlock({ label, text }: { label: string; text: string }) {
   return (
     <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
       <p className="text-xs font-semibold uppercase text-slate-500">{label}</p>
-      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">{text}</p>
+      <p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
+        {text?.trim() ? text : "No detail was attached to this section. Ask the contractor to complete it before signing."}
+      </p>
+    </div>
+  )
+}
+
+function SigningReadinessChecklist() {
+  const items = [
+    "Scope and exclusions match the job.",
+    "Deposit, milestones, and due dates are clear.",
+    "Change-order and cancellation terms are understood.",
+    "You are authorized to sign electronically.",
+  ]
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+      <p className="text-xs font-semibold uppercase text-slate-500">Before you sign</p>
+      <div className="mt-2 grid gap-2">
+        {items.map((item) => (
+          <div key={item} className="flex gap-2 text-xs leading-5 text-slate-700">
+            <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-700" aria-hidden="true" />
+            <span>{item}</span>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
