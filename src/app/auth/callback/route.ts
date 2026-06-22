@@ -1,8 +1,10 @@
 import type { EmailOtpType } from "@supabase/supabase-js"
+import type { User as SupabaseAuthUser } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
 import { getSafeAuthCallbackReturnPath } from "@/lib/auth"
 import { withNoStore } from "@/lib/http"
+import { bootstrapSignupProfileFromAuthUser } from "@/lib/signup-profile-bootstrap"
 import { createClient } from "@/lib/supabase/server"
 import { getInternalRedirectUrl } from "@/lib/urls"
 
@@ -23,18 +25,32 @@ export async function GET(request: Request) {
   const next = getSafeAuthCallbackReturnPath(requestUrl.searchParams.get("next")) ?? "/dashboard"
   const supabase = await createClient()
 
-  if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+  async function finishAuth(user?: SupabaseAuthUser | null) {
+    const authUser = user ?? (await supabase.auth.getUser()).data.user
 
-    if (!error) return withNoStore(NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 }))
+    if (authUser) {
+      try {
+        await bootstrapSignupProfileFromAuthUser(authUser)
+      } catch (error) {
+        console.warn("Client Bureau signup profile bootstrap failed after auth callback.", error)
+      }
+    }
+
+    return withNoStore(NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 }))
+  }
+
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (!error) return finishAuth(data.user)
 
     return loginRedirect(request, error.message)
   }
 
   if (tokenHash && type) {
-    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
+    const { data, error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type })
 
-    if (!error) return withNoStore(NextResponse.redirect(getInternalRedirectUrl(next, request), { status: 303 }))
+    if (!error) return finishAuth(data.user)
 
     return loginRedirect(request, error.message)
   }

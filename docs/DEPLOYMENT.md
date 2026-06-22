@@ -57,6 +57,12 @@ Keep existing `MX`, `TXT`, SPF, DKIM, and DMARC records if cPanel or another pro
 5. Create the first admin by signing up normally, then update the `users.role` value to `admin` in Supabase.
 6. Add your exact owner login email to `ADMIN_EMAILS` in `.env.production`. The app uses this as a repair guard: a matching signed-in user is restored to `role=admin` with the Supabase service key.
 7. In Supabase Auth settings, set the site URL to `https://clientbureau.com` and add `https://clientbureau.com/auth/callback` as an allowed redirect URL.
+8. Configure production auth email before requiring confirmation:
+   - Verify `clientbureau.com` or an auth subdomain in Resend.
+   - Add the DNS records Resend provides for SPF, DKIM, and return-path.
+   - Add or confirm DMARC monitor mode: `_dmarc.clientbureau.com` with `v=DMARC1; p=none; rua=mailto:support@clientbureau.com`.
+   - In Supabase Auth Email SMTP settings, enable custom SMTP with Resend: host `smtp.resend.com`, port `465`, user `resend`, password as the Resend API key, sender `support@clientbureau.com`, sender name `Client Bureau`.
+   - Test signup confirmation and password reset with disposable accounts, then turn email confirmation back on.
 
 Admin promotion SQL:
 

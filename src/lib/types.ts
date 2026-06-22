@@ -396,6 +396,8 @@ export interface User {
   fullName: string
   role: UserRole
   accountType?: AccountType
+  emailConfirmationRequired?: boolean
+  redirectTo?: string
   createdAt: string
 }
 

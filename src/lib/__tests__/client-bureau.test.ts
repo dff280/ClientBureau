@@ -82,6 +82,7 @@ import {
 } from "@/lib/client-database"
 import { cleanPublicReportText, clientRatingBand } from "@/lib/client-rating"
 import { buildClientSlug, ensureUniqueSlug } from "@/lib/slug"
+import { signupBootstrapInputFromAuthUser } from "@/lib/signup-profile-bootstrap"
 import { getInternalRedirectUrl } from "@/lib/urls"
 import {
   buildSearchHref,
@@ -1203,6 +1204,41 @@ describe("deployment URL helpers", () => {
     )
     expect(billingInterestSignupHref("pro")).toBe("/signup?plan=pro")
     expect(planInterestLabel("bureau_team")).toBe("Bureau Pro")
+  })
+
+  it("builds signup bootstrap input from auth metadata for confirmation callbacks", () => {
+    const input = signupBootstrapInputFromAuthUser({
+      id: "auth-user-1",
+      email: "owner@example.com",
+      user_metadata: {
+        full_name: "Morgan Ellis",
+        business_name: "Ellis Electrical",
+        account_type: "subcontractor",
+        trade: "AC repair",
+        business_type: "Licensed trade business",
+        business_phone: "407-555-1000",
+        website_url: "https://elliselectrical.example",
+        service_area: "Orlando and Orange County",
+        company_size: "2-5",
+        years_in_business: "3-5",
+        primary_goal: "Check clients before taking work",
+        city: "Orlando",
+        state: "fl",
+        license_number: "EC12345",
+      },
+    })
+
+    expect(input).toMatchObject({
+      userId: "auth-user-1",
+      email: "owner@example.com",
+      fullName: "Morgan Ellis",
+      accountType: "subcontractor",
+      businessName: "Ellis Electrical",
+      trade: "HVAC",
+      city: "Orlando",
+      state: "fl",
+      licenseNumber: "EC12345",
+    })
   })
 })
 
@@ -3633,5 +3669,18 @@ describe("platform expansion schemas", () => {
     const functionBody = source.match(/export async function createLienNoticeDraftSupabase[\s\S]*?export async function submitFloridaLienCaseSupabase/)?.[0]
 
     expect(functionBody).toContain("project_job_id: input.projectJobId || null")
+  })
+
+  it("documents production auth email delivery requirements", () => {
+    const runbook = readFileSync(
+      path.join(process.cwd(), "docs/AUTH_ONBOARDING_SESSION_RUNBOOK.md"),
+      "utf8",
+    )
+
+    expect(runbook).toContain("Provider: Resend")
+    expect(runbook).toContain("support@clientbureau.com")
+    expect(runbook).toContain("smtp.resend.com")
+    expect(runbook).toContain("Keep email confirmation disabled until the Resend domain verifies")
+    expect(runbook).toContain("{{ .ConfirmationURL }}")
   })
 })

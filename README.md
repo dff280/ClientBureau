@@ -83,6 +83,7 @@ NEXT_PUBLIC_LINKEDIN_URL=
 
 - Mock and Supabase repository adapters live under `src/lib/repositories/`.
 - Supabase client helpers are in `src/lib/supabase/`.
+- Supabase Auth confirmation and recovery emails should use custom SMTP. Production uses Resend with `support@clientbureau.com`; setup and template copy live in `docs/AUTH_ONBOARDING_SESSION_RUNBOOK.md`.
 - Database and RLS migrations live in `supabase/migrations/`, including graph/rating, Jobs, project participant, recovery/lien, contract, admin operations, and optional saved-search enhancement columns.
 - Stripe tier data, checkout, and webhook helpers are in `src/lib/stripe/` and `src/app/api/stripe/`.
 - Public client/profile pages are generated from approved records only and included in `sitemap.ts`, `llms.txt`, and `ai-index.json`.

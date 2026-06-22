@@ -119,7 +119,6 @@ import { isPositiveReportCategory, reportCategories } from "@/lib/types"
 import { formDataToObject, fail, ok, zodFieldErrors } from "@/lib/actions/result"
 import { getBillingAvailability } from "@/lib/billing-availability"
 import { getClientCityDirectoryHref, getClientStateDirectoryHref } from "@/lib/client-directory"
-import type { Database, Json } from "@/lib/database.types"
 import {
   getAuthCookieDiagnostics,
   getCurrentUser,
@@ -129,6 +128,7 @@ import {
 import { getDataMode, getSiteUrl } from "@/lib/env"
 import { normalizeCityName, normalizeStateCode } from "@/lib/locations"
 import { safeSearchQueryForStorage } from "@/lib/search-experience"
+import { bootstrapSignupProfile } from "@/lib/signup-profile-bootstrap"
 import {
   clientResponseSuccessMessage,
   clientResponseValidationMessage,
@@ -213,9 +213,7 @@ import {
   updateWatchlistItemService,
 } from "@/lib/repositories/client-bureau-service"
 import type { ClientReportInput } from "@/lib/schemas/client-bureau"
-import { buildSignupEntityProfileSeed } from "@/lib/signup-profile-rating"
 import { createClient } from "@/lib/supabase/server"
-import { createServiceClient } from "@/lib/supabase/service"
 import { normalizeTradeCategory } from "@/lib/trade-taxonomy"
 
 const emptyStructuredReportFields = {
@@ -354,26 +352,6 @@ function actionErrorMessage(error: unknown, fallback: string) {
   }
 
   return fallback
-}
-
-function isMissingOnboardingColumn(error: { code?: string; message?: string } | null | undefined) {
-  const message = error?.message?.toLowerCase() ?? ""
-
-  return (
-    error?.code === "42703" ||
-    message.includes("business_type") ||
-    message.includes("business_phone") ||
-    message.includes("account_type") ||
-    message.includes("website_url") ||
-    message.includes("service_area") ||
-    message.includes("company_size") ||
-    message.includes("years_in_business") ||
-    message.includes("primary_goal") ||
-    message.includes("entity_profiles") ||
-    message.includes("profile_type") ||
-    message.includes("claimed_status") ||
-    message.includes("schema cache")
-  )
 }
 
 function yesNo(value?: boolean) {
@@ -872,8 +850,19 @@ export async function signupAction(
           full_name: input.fullName,
           business_name: input.businessName,
           trade: input.trade,
+          other_trade_detail: input.otherTradeDetail,
           account_type: input.accountType,
           plan_interest: input.planInterest ?? "free",
+          business_type: input.businessType,
+          business_phone: input.businessPhone,
+          website_url: input.websiteUrl,
+          service_area: input.serviceArea,
+          company_size: input.companySize,
+          years_in_business: input.yearsInBusiness,
+          primary_goal: input.primaryGoal,
+          city: input.city,
+          state: input.state,
+          license_number: input.licenseNumber,
         },
       },
     })
@@ -881,99 +870,38 @@ export async function signupAction(
     if (error) return fail(error.message)
 
     if (data.user) {
-      const service = createServiceClient()
-      const { error: userError } = await service.from("users").upsert({
-        id: data.user.id,
-        email: input.email,
-        full_name: input.fullName,
-        role: "contractor",
-      })
-
-      if (userError) return fail(userError.message)
-
-      const { error: accountTypeError } = await service
-        .from("users")
-        .update({ account_type: input.accountType })
-        .eq("id", data.user.id)
-
-      if (accountTypeError && !isMissingOnboardingColumn(accountTypeError)) {
-        return fail(accountTypeError.message)
-      }
-
-      const { error: contractorError } = await service.from("contractor_profiles").upsert(
-        {
-          user_id: data.user.id,
-          business_name: input.businessName,
+      try {
+        await bootstrapSignupProfile({
+          userId: data.user.id,
+          accountType: input.accountType,
+          email: input.email,
+          fullName: input.fullName,
+          businessName: input.businessName,
           trade: input.trade,
+          businessType: input.businessType,
+          businessPhone: input.businessPhone,
+          websiteUrl: input.websiteUrl,
+          serviceArea: input.serviceArea,
+          companySize: input.companySize,
+          yearsInBusiness: input.yearsInBusiness,
+          primaryGoal: input.primaryGoal,
           city: input.city,
-          state: input.state.toUpperCase(),
-          license_number: input.licenseNumber ?? null,
-          verification_status: "pending",
-        },
-        { onConflict: "user_id" },
-      )
-
-      if (contractorError) return fail(contractorError.message)
-
-      const optionalProfileFields = {
-        business_type: input.businessType ?? null,
-        business_phone: input.businessPhone ?? null,
-        website_url: input.websiteUrl || null,
-        service_area: input.serviceArea || null,
-        company_size: input.companySize ?? null,
-        years_in_business: input.yearsInBusiness ?? null,
-        primary_goal: input.primaryGoal ?? null,
-      }
-      const hasOptionalProfileFields = Object.values(optionalProfileFields).some(Boolean)
-
-      if (hasOptionalProfileFields) {
-        const { error: optionalProfileError } = await service
-          .from("contractor_profiles")
-          .update(optionalProfileFields)
-          .eq("user_id", data.user.id)
-
-        if (optionalProfileError && !isMissingOnboardingColumn(optionalProfileError)) {
-          return fail(optionalProfileError.message)
-        }
-      }
-
-      const { data: contractorProfileRow } = await service
-        .from("contractor_profiles")
-        .select("id")
-        .eq("user_id", data.user.id)
-        .maybeSingle()
-      const profileSeed = buildSignupEntityProfileSeed({
-        userId: data.user.id,
-        contractorProfileId: contractorProfileRow?.id,
-        accountType: input.accountType,
-        fullName: input.fullName,
-        businessName: input.businessName,
-        trade: input.trade,
-        businessType: input.businessType,
-        businessPhone: input.businessPhone,
-        websiteUrl: input.websiteUrl,
-        serviceArea: input.serviceArea,
-        companySize: input.companySize,
-        yearsInBusiness: input.yearsInBusiness,
-        primaryGoal: input.primaryGoal,
-        city: input.city,
-        state: input.state,
-        licenseNumber: input.licenseNumber,
-      })
-      const { error: entityProfileError } = await service
-        .from("entity_profiles")
-        .upsert(
-          {
-            ...profileSeed.payload,
-            rating_factors: profileSeed.payload.rating_factors as Json,
-          } as Database["public"]["Tables"]["entity_profiles"]["Insert"],
-          { onConflict: "profile_type,slug" },
-        )
-
-      if (entityProfileError && !isMissingOnboardingColumn(entityProfileError)) {
-        return fail(entityProfileError.message)
+          state: input.state,
+          licenseNumber: input.licenseNumber,
+        })
+      } catch (bootstrapError) {
+        return fail(actionErrorMessage(bootstrapError, "Account was created, but profile setup needs attention."))
       }
     }
+
+    const emailConfirmationRequired = !data.session
+    const signupMessage = emailConfirmationRequired
+      ? "Account created. Check your email to confirm your account before signing in."
+      : data.user
+        ? input.accountType === "client"
+          ? "Client account created. You can respond, request correction, or claim a profile."
+          : contractorSignupMessage
+        : "Signup received. Check your email to confirm the account."
 
     return ok(
       {
@@ -982,14 +910,11 @@ export async function signupAction(
         fullName: input.fullName,
         role: "contractor",
         accountType: input.accountType,
+        emailConfirmationRequired,
         redirectTo,
         createdAt: data.user?.created_at ?? new Date().toISOString(),
       },
-      data.user
-        ? input.accountType === "client"
-          ? "Client account created. You can respond, request correction, or claim a profile."
-          : contractorSignupMessage
-        : "Signup received. Check your email to confirm the account.",
+      signupMessage,
     )
   }
 

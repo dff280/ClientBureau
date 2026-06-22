@@ -59,6 +59,57 @@ flowchart TD
 - `/reset-password` updates the password through Supabase `updateUser`, signs the user out, and returns them to `/login?reset=1`.
 - No custom password token logic is implemented.
 
+## Production Email Delivery
+
+Client Bureau uses Supabase Auth for confirmation and password recovery emails. Production must use custom SMTP; the Supabase default sender is only for limited testing.
+
+Recommended provider:
+
+- Provider: Resend
+- Sender email: `support@clientbureau.com`
+- Sender name: `Client Bureau`
+- SMTP host: `smtp.resend.com`
+- SMTP port: `465`
+- SMTP username: `resend`
+- SMTP password: Resend API key stored in Supabase Auth SMTP settings only
+
+DNS checklist:
+
+- Verify `clientbureau.com` or a dedicated auth subdomain in Resend.
+- Add the SPF, DKIM, and return-path records Resend provides.
+- Add DMARC in monitor mode if missing: `_dmarc.clientbureau.com` with `v=DMARC1; p=none; rua=mailto:support@clientbureau.com`.
+- Disable email link tracking for auth messages if it rewrites Supabase confirmation links.
+
+Supabase Auth checklist:
+
+- Site URL: `https://clientbureau.com`
+- Redirect URLs:
+  - `https://clientbureau.com/auth/callback`
+  - `http://localhost:3000/auth/callback`
+  - `http://127.0.0.1:4200/auth/callback`
+- Keep email confirmation disabled until the Resend domain verifies and both confirmation and recovery emails are received.
+- Re-enable required email confirmation after the disposable-account test passes.
+
+Template copy should stay short and transactional. Use `{{ .ConfirmationURL }}` as the only primary link.
+
+Confirmation subject: `Confirm your Client Bureau account`
+
+```html
+<h2>Confirm your email address</h2>
+<p>Follow the secure link below to finish setting up your Client Bureau account.</p>
+<p><a href="{{ .ConfirmationURL }}">Confirm email address</a></p>
+<p>If you did not request this account, you can ignore this email.</p>
+```
+
+Recovery subject: `Reset your Client Bureau password`
+
+```html
+<h2>Reset your password</h2>
+<p>We received a request to reset your Client Bureau password. Follow the secure link below to choose a new password.</p>
+<p><a href="{{ .ConfirmationURL }}">Reset password</a></p>
+<p>If you did not request this, you can ignore this email.</p>
+```
+
 ## Cache And Privacy Rules
 
 - `/api/session`, `/api/admin/session`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/password-reset`, and `/api/auth/update-password` use no-store auth-transition behavior.
@@ -80,8 +131,6 @@ flowchart TD
 
 ## Owner Actions
 
-- Configure Supabase Auth Site URL and redirect URLs for production:
-  - `https://clientbureau.com/auth/callback`
-  - local development callback URLs as needed.
+- Configure Resend, domain DNS, Supabase Auth custom SMTP, Site URL, and redirect URLs before requiring email confirmation.
 - Use disposable QA accounts for strict release-candidate checks. Do not use personal or owner accounts.
 - Keep Stripe and native app builds separate from this auth release unless explicitly approved.

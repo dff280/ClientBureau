@@ -119,9 +119,9 @@ export function SignupForm({
   useEffect(() => {
     if (state.message) toast[state.ok ? "success" : "error"](state.message)
 
-    if (state.ok) {
+    if (state.ok && !state.data.emailConfirmationRequired) {
       const nextPath =
-        "redirectTo" in state.data && typeof state.data.redirectTo === "string"
+        typeof state.data.redirectTo === "string"
           ? state.data.redirectTo
           : state.data.accountType === "client"
             ? "/client-response"
@@ -139,8 +139,24 @@ export function SignupForm({
       {planInterest ? <input type="hidden" name="planInterest" value={planInterest} /> : null}
       {state.message ? (
         <Alert variant={state.ok ? "default" : "destructive"} className="rounded-md">
-          <AlertTitle>{state.ok ? "Profile created" : "Signup needs attention"}</AlertTitle>
+          <AlertTitle>
+            {state.ok
+              ? state.data.emailConfirmationRequired
+                ? "Check your email"
+                : "Profile created"
+              : "Signup needs attention"}
+          </AlertTitle>
           <AlertDescription>{state.message}</AlertDescription>
+          {state.ok && state.data.emailConfirmationRequired ? (
+            <div className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
+              <p>
+                Open the confirmation link from Client Bureau to activate the account. After confirmation, sign in with this email to continue.
+              </p>
+              <Link href={loginHref} className="font-semibold text-amber-700">
+                Go to sign in
+              </Link>
+            </div>
+          ) : null}
         </Alert>
       ) : null}
       {planInterest && planInterest !== "free" ? (
